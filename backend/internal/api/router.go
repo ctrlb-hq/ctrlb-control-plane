@@ -20,6 +20,7 @@ func NewRouter(services *services.Services) *mux.Router {
 	agentAPIsV1.HandleFunc("/config", agentHandler.GetAgentConfig).Methods("GET")
 	agentAPIsV1.HandleFunc("/uptime", agentHandler.GetAgentUptime).Methods("GET")
 	agentAPIsV1.HandleFunc("/status", agentHandler.GetAgentStatus).Methods("GET")
+	agentAPIsV1.HandleFunc("/graph", agentHandler.GetAgentGraph).Methods("GET")
 
 	return router
 }

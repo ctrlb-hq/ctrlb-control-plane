@@ -187,3 +187,25 @@ func (a *AgentHandler) GetAgentStatus(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
+
+func (a *AgentHandler) GetAgentGraph(w http.ResponseWriter, r *http.Request) {
+	var agentGraphRequest models.AgentRequest
+
+	if err := utils.UnmarshalJSONRequest(r, &agentGraphRequest); err != nil {
+		log.Println("Invalid request body")
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	response, err := a.Services.AgentService.GetAgentGraph(agentGraphRequest)
+	if err != nil {
+		if err.Error() == "no agent found to return graph data" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}

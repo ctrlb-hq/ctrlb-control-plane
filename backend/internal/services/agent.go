@@ -280,3 +280,25 @@ func (a *AgentService) GetAgentStatus(agentStatusRequest models.AgentRequest) (m
 
 	return result, nil
 }
+
+func (a *AgentService) GetAgentGraph(agentGraphRequest models.AgentRequest) (map[string]interface{}, error) {
+
+	agentConfig, err := a.AgentRepository.GetAgentConfig(agentGraphRequest.AgentID)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(agentConfig)
+
+	agentType, err := a.AgentRepository.GetAgentType(agentGraphRequest.AgentID)
+	if err != nil {
+		return nil, err
+	}
+
+	graphData, err := utils.DrawGraph(agentConfig, agentType)
+	if err != nil {
+		return nil, err
+	}
+
+	return graphData, nil
+}

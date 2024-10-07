@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -22,7 +21,7 @@ type Pipeline struct {
 
 func parseConfig(configStr string) (*Config, error) {
 	var config Config
-	err = yaml.Unmarshal(configStr, &config)
+	err := yaml.Unmarshal([]byte(configStr), &config)
 	if err != nil {
 		return nil, err
 	}
@@ -208,23 +207,15 @@ func createFlbGraph(config *Config) map[string]interface{} {
 	}
 }
 
-func DrawGraph(configStr string, agentType string) (string, error) {
+func DrawGraph(configStr string, agentType string) (map[string]interface{}, error) {
 	config, err := parseConfig(configStr)
 	if err != nil {
-		return "", fmt.Errorf("error parsing config: %v", err)
+		return nil, fmt.Errorf("error parsing config: %v", err)
 	}
 
-	var graph map[string]interface{}
 	if agentType == "fluent-bit" {
-		graph = createFlbGraph(config)
+		return createFlbGraph(config), nil
 	} else {
-		return "", fmt.Errorf("error while creating graph: agent is not supported yet")
+		return nil, fmt.Errorf("error while creating graph: agent is not supported yet")
 	}
-
-	graphJSON, err := json.MarshalIndent(graph, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("error converting graph to JSON: %v", err)
-	}
-
-	return string(graphJSON), nil
 }

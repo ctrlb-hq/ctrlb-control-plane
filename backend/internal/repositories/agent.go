@@ -101,7 +101,19 @@ func (ar *AgentRepository) GetAgentConfig(agentID string) (string, error) {
 	err := ar.db.QueryRow("SELECT Config FROM agents WHERE ID = ?", agentID).Scan(&config)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", errors.New("no agent found with ID: " + agentID)
+			return "", errors.New("no agent found while searching for Config with ID: " + agentID)
+		}
+		return "", err
+	}
+	return config, nil
+}
+
+func (ar *AgentRepository) GetAgentType(agentID string) (string, error) {
+	var config string
+	err := ar.db.QueryRow("SELECT Type FROM agents WHERE ID = ?", agentID).Scan(&config)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", errors.New("no agent found while searching for Type with ID: " + agentID)
 		}
 		return "", err
 	}
