@@ -267,7 +267,7 @@ export function MembersTable() {
         onPointerEnterCapture={undefined}
         onPointerLeaveCapture={undefined}
       >
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row mt-4">
           <Tabs value="all" className="w-full md:w-max">
             <TabsHeader
               placeholder={undefined}
