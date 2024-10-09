@@ -13,18 +13,16 @@ import (
 )
 
 func InformBackendServerStart() error {
+	var hostname string
 	var err error
 
-	// default case in dev mode when both agent and server are
-	// running in localhost
-	hostname := "localhost"
-	serverUrl := "localhost"
 	if constants.ENV == "prod" {
 		hostname, err = os.Hostname()
 		if err != nil {
 			return fmt.Errorf("failed to get hostname: %v", err)
 		}
-		serverUrl = constants.BACKEND_URL
+	} else {
+		hostname = "localhost"
 	}
 
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
@@ -54,7 +52,7 @@ func InformBackendServerStart() error {
 		return fmt.Errorf("failed to marshal agent request while informing server: %v", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://%s:8096/api/v1/agent/register", serverUrl), bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://%s:8096/api/v1/agent/register", constants.BACKEND_URL), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return fmt.Errorf("error encountered while informing server: %v", err)
 	}
