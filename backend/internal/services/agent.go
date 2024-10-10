@@ -9,9 +9,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/all-father/internal/models"
-	"github.com/ctrlb-hq/all-father/internal/repositories"
-	"github.com/ctrlb-hq/all-father/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 func NewAgentService(agentRepository *repositories.AgentRepository, agentQueue *AgentQueue) *AgentService {

@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/ctrlb-hq/all-father/internal/api"
-	"github.com/ctrlb-hq/all-father/internal/repositories"
-	"github.com/ctrlb-hq/all-father/internal/services"
-	dbcreator "github.com/ctrlb-hq/all-father/pkg/db-creator"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
+	dbcreator "github.com/ctrlb-hq/ctrlb-control-plane/backend/pkg/db-creator"
 	"github.com/joho/godotenv"
 )
 
@@ -37,11 +37,14 @@ func main() {
 	agentQueue := services.NewQueue(workerCount)
 
 	agentRepository := repositories.NewAgentRepository(db)
+	authRepository := repositories.NewAuthRepository(db)
 
 	agentService := services.NewAgentService(agentRepository, agentQueue)
+	authService := services.NewAuthService(authRepository)
 
 	services := services.Services{
 		AgentService: agentService,
+		AuthService:  authService,
 	}
 
 	handler := api.NewRouter(&services)

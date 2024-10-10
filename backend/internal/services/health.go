@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ctrlb-hq/all-father/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type AgentQueue struct {

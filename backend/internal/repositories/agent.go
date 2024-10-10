@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/ctrlb-hq/all-father/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 func NewAgentRepository(db *sql.DB) *AgentRepository {

@@ -1,4 +1,4 @@
-module github.com/ctrlb-hq/all-father
+module github.com/ctrlb-hq/ctrlb-control-plane/backend
 
 go 1.23.1
 
