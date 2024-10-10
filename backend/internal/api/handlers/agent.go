@@ -4,18 +4,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/all-father/internal/models"
-	"github.com/ctrlb-hq/all-father/internal/services"
-	"github.com/ctrlb-hq/all-father/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-var agentHandler *AgentHandler
-
-func NewAgentHandler(services *services.Services) *AgentHandler {
-	agentHandler = &AgentHandler{
-		Services: services,
+func NewAgentHandler(agentServices *services.AgentService) *AgentHandler {
+	return &AgentHandler{
+		AgentService: agentServices,
 	}
-	return agentHandler
 }
 
 func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +24,7 @@ func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reponse, err := a.Services.AgentService.RegisterAgent(registerRequest)
+	reponse, err := a.AgentService.RegisterAgent(registerRequest)
 	if err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -46,7 +43,7 @@ func (a *AgentHandler) RemoveAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.RemoveAgent(unregisterRequest)
+	response, err := a.AgentService.RemoveAgent(unregisterRequest)
 	if err != nil {
 		if err.Error() == "no agent found to delete" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -68,7 +65,7 @@ func (a *AgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.StartAgent(startRequest)
+	response, err := a.AgentService.StartAgent(startRequest)
 	if err != nil {
 		if err.Error() == "no agent found to start" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -90,7 +87,7 @@ func (a *AgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.StopAgent(stopRequest)
+	response, err := a.AgentService.StopAgent(stopRequest)
 	if err != nil {
 		if err.Error() == "no agent found to stop" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -112,7 +109,7 @@ func (a *AgentHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reponse, err := a.Services.AgentService.UpdateConfig(updateRequest)
+	reponse, err := a.AgentService.UpdateConfig(updateRequest)
 	if err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -131,7 +128,7 @@ func (a *AgentHandler) GetAgentConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.GetAgentConfig(agentConfigRequest)
+	response, err := a.AgentService.GetAgentConfig(agentConfigRequest)
 	if err != nil {
 		if err.Error() == "no agent found to fetch config" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -153,7 +150,7 @@ func (a *AgentHandler) GetAgentUptime(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.GetAgentUptime(agentUptimeRequest)
+	response, err := a.AgentService.GetAgentUptime(agentUptimeRequest)
 	if err != nil {
 		if err.Error() == "no agent found to fetch uptime" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -175,7 +172,7 @@ func (a *AgentHandler) GetAgentStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.Services.AgentService.GetAgentStatus(agentStatusRequest)
+	response, err := a.AgentService.GetAgentStatus(agentStatusRequest)
 	if err != nil {
 		if err.Error() == "no agent found to fetch status" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
