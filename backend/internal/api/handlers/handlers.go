@@ -1,9 +1,13 @@
 package handler
 
 import (
-	"github.com/ctrlb-hq/all-father/internal/services"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 )
 
 type AgentHandler struct {
-	Services *services.Services
+	AgentService *services.AgentService
+}
+
+type AuthHandler struct {
+	AuthService *services.AuthService
 }

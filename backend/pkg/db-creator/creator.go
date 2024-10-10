@@ -24,6 +24,11 @@ func DBCreator() (*sql.DB, error) {
 		return nil, err
 	}
 
+	err = createUserTable(db)
+	if err != nil {
+		return nil, err
+	}
+
 	log.Println("Database and tables created/verified successfully")
 
 	// Return the open *sql.DB connection
@@ -63,5 +68,20 @@ func createAgentInfoTable(db *sql.DB) error {
 		return err
 	}
 	log.Println("AgentInfo table created or already exists")
+	return nil
+}
+
+func createUserTable(db *sql.DB) error {
+	createUserTableSQL := `CREATE TABLE IF NOT EXISTS user (
+    	"Email" TEXT PRIMARY KEY,
+    	"Name" TEXT,
+    	"Password" TEXT
+	);`
+	_, err := db.Exec(createUserTableSQL)
+	if err != nil {
+		log.Printf("Error creating User table: %s", err)
+		return err
+	}
+	log.Println("User table created or already exists")
 	return nil
 }

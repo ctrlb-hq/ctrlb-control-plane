@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -67,11 +66,4 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 
 func CreateNewUUID() string {
 	return uuid.New().String()
-}
-
-func CheckEmpty(field interface{}) string {
-	if field == nil {
-		return ""
-	}
-	return fmt.Sprintf("%v", field)
 }

@@ -16,3 +16,14 @@ type ConfigUpdateRequest struct {
 	AgentID string `json:"agentId"`
 	Config  string `json:"config"`
 }
+
+type UserRegisterRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
