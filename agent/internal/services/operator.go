@@ -8,31 +8,40 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
-type OperatorService struct {
-	FluentBitOperator FluentBitOperator
+type Operator interface {
+	GetUptime() (map[string]interface{}, error)
+	UpdateCurrentConfig(interface{}) (map[string]string, error)
+	StartAgent() (map[string]string, error)
+	StopAgent() (map[string]string, error)
+	GracefulShutdown() (map[string]string, error)
+	CurrentStatus() (map[string]string, error)
 }
 
-func NewOperatorService(adapter adapters.Adapter) *OperatorService {
-	fluentBitOperator := NewFluentBitOperator(adapter)
-	return &OperatorService{FluentBitOperator: *fluentBitOperator}
+type OperatorService struct {
+	Operator Operator
+}
+
+func NewOperatorService(adapter adapters.Adapter) (*OperatorService, error) {
+	var operator Operator
+
+	switch constants.AGENT_TYPE {
+	case "fluent-bit":
+		operator = NewFluentBitOperator(adapter)
+	case "otel":
+		operator = NewOtelOperator(adapter)
+	default:
+		return nil, errors.New("agent type not supported yet")
+	}
+	return &OperatorService{Operator: operator}, nil
+
 }
 
 func (o *OperatorService) GetUptime() (map[string]interface{}, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.GetUptime()
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.GetUptime()
 }
 
 func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest interface{}) (interface{}, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.UpdateCurrentConfig(updateConfigRequest)
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
 }
 
 func (o *OperatorService) GetCurrentConfig() (interface{}, error) {
@@ -40,37 +49,17 @@ func (o *OperatorService) GetCurrentConfig() (interface{}, error) {
 }
 
 func (o *OperatorService) StartAgent() (map[string]string, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.StartAgent()
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.StartAgent()
 }
 
 func (o *OperatorService) StopAgent() (map[string]string, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.StopAgent()
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.StopAgent()
 }
 
 func (o *OperatorService) GracefulShutdown() (map[string]string, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.GracefulShutdown()
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.GracefulShutdown()
 }
 
 func (o *OperatorService) CurrentStatus() (map[string]string, error) {
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		return o.FluentBitOperator.CurrentStatus()
-	default:
-		return nil, errors.New("agent type not supported yet")
-	}
+	return o.Operator.CurrentStatus()
 }

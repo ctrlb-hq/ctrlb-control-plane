@@ -1,12 +1,26 @@
+receivers:
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      load:
+      network:
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 500
+
+exporters:
+  logging:
+    verbosity: detailed
+
 service:
-    http_server: "on"
-
-pipeline:
-    inputs:
-        - name: dummy
-          Interval_sec: 20
-        
-
-    outputs:
-        - name: stdout
-          match: "*"
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      processors: [memory_limiter, batch]
+      exporters: [logging]

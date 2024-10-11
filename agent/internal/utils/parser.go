@@ -17,7 +17,7 @@ type FluentBitStatus struct {
 	DroppedRecords     float64
 }
 
-func SaveToYAML(input models.FluentBitConfig, yamlFilePath string) error {
+func SaveToYAML(input interface{}, yamlFilePath string) error {
 	// Convert the input interface to YAML format
 	yamlData, err := yaml.Marshal(input)
 	if err != nil {

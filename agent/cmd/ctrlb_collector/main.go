@@ -11,6 +11,7 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/fluentbit"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/otel"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/api"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/helper"
@@ -22,7 +23,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	constants.AGENT_CONFIG_PATH = *flag.String("config", "./config.yaml", "Path to the agent configuration file")
-	constants.AGENT_TYPE = *flag.String("type", "fluent-bit", "Type of the agent")
+	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
 	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai/", "URL of the backend server")
 	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")
 	constants.ENV = *flag.String("env", "prod", "For testing purpose")
@@ -37,6 +38,8 @@ func main() {
 	switch constants.AGENT_TYPE {
 	case "fluent-bit":
 		adapter = fluentbit.NewFluentBitAdapter(&wg)
+	case "otel":
+		adapter = otel.NewOTELCollectorAdapter(&wg)
 	default:
 		log.Fatal("Agent currently not supported. Exiting....")
 		return
@@ -62,11 +65,14 @@ func main() {
 
 	log.Printf("%s agent started successfully", constants.AGENT_TYPE)
 
-	operator_service := *services.NewOperatorService(adapter)
+	operator_service, err := services.NewOperatorService(adapter)
+	if err != nil {
+		log.Fatalf("Failed to initiate agent operator: %v", err)
+	}
 
 	var handler http.Handler
 
-	handler = api.NewRouter(&operator_service)
+	handler = api.NewRouter(operator_service)
 
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
