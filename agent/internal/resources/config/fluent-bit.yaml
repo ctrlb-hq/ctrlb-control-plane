@@ -1,0 +1,12 @@
+service:
+    http_server: "on"
+
+pipeline:
+    inputs:
+        - name: dummy
+          Interval_sec: 20
+
+
+    outputs:
+        - name: stdout
+          match: "*"
