@@ -24,7 +24,7 @@ func InformBackendServerStart() error {
 	} else {
 		hostname = "localhost"
 	}
-
+	hostname = "localhost"
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 
 	jsonData, err := utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH)

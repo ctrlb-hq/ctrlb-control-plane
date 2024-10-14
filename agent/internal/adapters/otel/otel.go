@@ -259,7 +259,7 @@ func (f *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
 	status := make(map[string]string)
 
 	status["Uptime"] = strconv.Itoa(uptime)
-	status["State"] = state
+	status["Status"] = state
 
 	return status, nil
 }

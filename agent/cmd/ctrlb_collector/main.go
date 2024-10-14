@@ -24,7 +24,7 @@ func main() {
 
 	constants.AGENT_CONFIG_PATH = *flag.String("config", "./internal/resources/config/otel.yaml", "Path to the agent configuration file")
 	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
-	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai/", "URL of the backend server")
+	constants.BACKEND_URL = *flag.String("backend", "localhost", "URL of the backend server")
 	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")
 	constants.ENV = *flag.String("env", "prod", "For testing purpose")
 	flag.Parse()
