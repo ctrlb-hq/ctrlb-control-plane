@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 
@@ -26,11 +25,7 @@ func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
 }
 
 func (otc *OtelOperator) GetUptime() (map[string]interface{}, error) {
-
-	return map[string]interface{}{
-		"status": "ERROR",
-		"uptime": 0,
-	}, errors.New("fatal error: get uptime method is not yet defined for otel")
+	return otc.Adapter.GetUptime()
 }
 
 func (otc *OtelOperator) Initialize() (map[string]string, error) {
@@ -145,6 +140,5 @@ func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (m
 }
 
 func (otc *OtelOperator) CurrentStatus() (map[string]string, error) {
-
-	return nil, fmt.Errorf("fatal error: current status method is not yet implemented for otel agent")
+	return otc.Adapter.CurrentStatus()
 }

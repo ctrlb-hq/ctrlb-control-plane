@@ -24,10 +24,11 @@ type FluentBitAdapter struct {
 	isActive     bool
 	mu           *sync.Mutex
 	wg           *sync.WaitGroup
+	baseUrl      string
 }
 
 func NewFluentBitAdapter(wg *sync.WaitGroup) *FluentBitAdapter {
-	return &FluentBitAdapter{wg: wg}
+	return &FluentBitAdapter{wg: wg, baseUrl: "http://0.0.0.0:2020"}
 }
 
 func (f *FluentBitAdapter) Initialize() error {
@@ -171,9 +172,9 @@ func (f *FluentBitAdapter) GracefulShutdown() error {
 	return nil
 }
 
-func (f *FluentBitAdapter) GetUptime(baseUrl string) (map[string]interface{}, error) {
+func (f *FluentBitAdapter) GetUptime() (map[string]interface{}, error) {
 	// Define the URL of the endpoint
-	url := baseUrl + "/api/v1/uptime"
+	url := f.baseUrl + "/api/v1/uptime"
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -228,8 +229,8 @@ func (f *FluentBitAdapter) GetUptime(baseUrl string) (map[string]interface{}, er
 	}, nil
 }
 
-func (f *FluentBitAdapter) CurrentStatus(baseUrl string) (map[string]string, error) {
-	url := baseUrl + "/api/v1/metrics/prometheus"
+func (f *FluentBitAdapter) CurrentStatus() (map[string]string, error) {
+	url := f.baseUrl + "/api/v1/metrics/prometheus"
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metrics: %v", err)

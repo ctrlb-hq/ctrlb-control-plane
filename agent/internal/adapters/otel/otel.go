@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -185,7 +186,7 @@ func (o *OTELCollectorAdapter) UpdateConfig() error {
 	}
 
 	o.svc.Shutdown()
-
+	o.svc.GetState()
 	svc, err := getNewOTELCollector()
 	if err != nil {
 		return fmt.Errorf("failed to start OTEL collector: %w", err)
@@ -229,4 +230,36 @@ func (o *OTELCollectorAdapter) GracefulShutdown() error {
 	log.Printf("Otel collector has been gracefully shutdown")
 	os.Exit(0)
 	return nil
+}
+
+func (f *OTELCollectorAdapter) GetUptime() (map[string]interface{}, error) {
+	state := f.svc.GetState().String()
+	if state == "Closed" {
+		return map[string]interface{}{
+			"status": "DOWN",
+			"uptime": 0,
+		}, nil
+	} else {
+		// Use time.Since to get the uptime duration
+		uptimeDuration := time.Since(f.startTime)
+
+		// Convert the duration to seconds (as int)
+		uptimeSeconds := int(uptimeDuration.Seconds())
+
+		return map[string]interface{}{
+			"status": "UP",
+			"uptime": uptimeSeconds,
+		}, nil
+	}
+}
+
+func (f *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
+	state := f.svc.GetState().String()
+	uptime := int(time.Since(f.startTime).Seconds())
+	status := make(map[string]string)
+
+	status["Uptime"] = strconv.Itoa(uptime)
+	status["State"] = state
+
+	return status, nil
 }

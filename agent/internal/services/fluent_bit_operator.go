@@ -12,20 +12,17 @@ import (
 )
 
 type FluentBitOperator struct {
-	BaseURL string
 	Adapter adapters.Adapter
 }
 
 func NewFluentBitOperator(adapter adapters.Adapter) *FluentBitOperator {
-	baseURL := "http://0.0.0.0:2020"
 	return &FluentBitOperator{
-		BaseURL: baseURL,
 		Adapter: adapter,
 	}
 }
 
 func (f *FluentBitOperator) GetUptime() (map[string]interface{}, error) {
-	return f.Adapter.GetUptime(f.BaseURL)
+	return f.Adapter.GetUptime()
 }
 
 func (f *FluentBitOperator) Initialize() (map[string]string, error) {
@@ -140,5 +137,5 @@ func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest interface{})
 }
 
 func (f *FluentBitOperator) CurrentStatus() (map[string]string, error) {
-	return f.Adapter.CurrentStatus(f.BaseURL)
+	return f.Adapter.CurrentStatus()
 }
