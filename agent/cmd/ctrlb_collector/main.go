@@ -66,8 +66,8 @@ func main() {
 	log.Printf("%s agent started successfully", constants.AGENT_TYPE)
 
 	operator_service := *services.NewOperatorService(adapter)
-	if err != nil {
-		log.Fatalf("Failed to initiate agent operator: %v", err)
+	if &operator_service == nil {
+		log.Fatalf("Failed to initiate agent operator")
 	}
 
 	var handler http.Handler
