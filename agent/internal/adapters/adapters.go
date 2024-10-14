@@ -7,4 +7,6 @@ type Adapter interface {
 	StartAgent() error
 	StopAgent() error
 	GracefulShutdown() error
+	GetUptime(string) (map[string]interface{}, error)
+	CurrentStatus(string) (map[string]string, error)
 }
