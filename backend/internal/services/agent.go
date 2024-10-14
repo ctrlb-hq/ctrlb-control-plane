@@ -267,17 +267,11 @@ func (a *AgentService) GetAgentStatus(agentStatusRequest models.AgentRequest) (m
 	log.Println("Agent status fetched successfully")
 
 	result := make(map[string]string)
-	if uptime, ok := statusResult["Uptime"].(string); ok {
-		result["Uptime"] = uptime
-	}
-	if exportedDataVolume, ok := statusResult["ExportedDataVolume"].(string); ok {
-		result["ExportedDataVolume"] = exportedDataVolume
-	}
-	if droppedRecords, ok := statusResult["DroppedRecords"].(string); ok {
-		result["DroppedRecords"] = droppedRecords
-	}
-	if status, ok := statusResult["Status"].(string); ok {
-		result["Status"] = status
+
+	for key, value := range statusResult {
+		if strValue, ok := value.(string); ok {
+			result[key] = strValue
+		}
 	}
 
 	return result, nil
