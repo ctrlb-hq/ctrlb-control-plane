@@ -1,8 +1,6 @@
 package services
 
 import (
-	"errors"
-
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
@@ -21,7 +19,7 @@ type OperatorService struct {
 	Operator Operator
 }
 
-func NewOperatorService(adapter adapters.Adapter) (*OperatorService, error) {
+func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	var operator Operator
 
 	switch constants.AGENT_TYPE {
@@ -30,9 +28,9 @@ func NewOperatorService(adapter adapters.Adapter) (*OperatorService, error) {
 	case "otel":
 		operator = NewOtelOperator(adapter)
 	default:
-		return nil, errors.New("agent type not supported yet")
+		return nil
 	}
-	return &OperatorService{Operator: operator}, nil
+	return &OperatorService{Operator: operator}
 
 }
 

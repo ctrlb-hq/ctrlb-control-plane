@@ -50,46 +50,6 @@ func NewOTELCollectorAdapter(wg *sync.WaitGroup) *OTELCollectorAdapter {
 	}
 }
 
-func (o *OTELCollectorAdapter) Initialize() error {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	if o.svc != nil {
-		return fmt.Errorf("OTEL collector already initialized")
-	}
-
-	fmp := fileprovider.NewFactory()
-	configProviderSettings := otelcol.ConfigProviderSettings{
-		ResolverSettings: confmap.ResolverSettings{
-			URIs:              []string{constants.AGENT_CONFIG_PATH},
-			ProviderFactories: []confmap.ProviderFactory{fmp},
-		},
-	}
-
-	settings := otelcol.CollectorSettings{
-		BuildInfo:              component.NewDefaultBuildInfo(),
-		Factories:              componentsFactory,
-		ConfigProviderSettings: configProviderSettings,
-	}
-
-	svc, err := otelcol.NewCollector(settings)
-	if err != nil {
-		return fmt.Errorf("failed to create OTEL collector: %w", err)
-	}
-
-	o.svc = svc
-	o.wg.Add(1)
-	go func() {
-		defer o.wg.Done()
-		if err := o.svc.Run(o.ctx); err != nil {
-			log.Printf("OTEL collector stopped with error: %v", err)
-		}
-	}()
-	o.isActive = true
-	o.startTime = time.Now()
-	return nil
-}
-
 func componentsFactory() (otelcol.Factories, error) {
 	factories := otelcol.Factories{}
 	var err error
@@ -128,14 +88,7 @@ func componentsFactory() (otelcol.Factories, error) {
 	return factories, nil
 }
 
-func (o *OTELCollectorAdapter) StartAgent() error {
-	if o.isActive {
-		return fmt.Errorf("fluent-bit instance already running")
-	}
-
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
+func getNewOTELCollector() (*otelcol.Collector, error) {
 	fmp := fileprovider.NewFactory()
 	configProviderSettings := otelcol.ConfigProviderSettings{
 		ResolverSettings: confmap.ResolverSettings{
@@ -150,7 +103,44 @@ func (o *OTELCollectorAdapter) StartAgent() error {
 		ConfigProviderSettings: configProviderSettings,
 	}
 
-	svc, err := otelcol.NewCollector(settings)
+	return otelcol.NewCollector(settings)
+}
+
+func (o *OTELCollectorAdapter) Initialize() error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.svc != nil {
+		return fmt.Errorf("OTEL collector already initialized")
+	}
+
+	svc, err := getNewOTELCollector()
+	if err != nil {
+		return fmt.Errorf("failed to create OTEL collector: %w", err)
+	}
+
+	o.svc = svc
+	o.wg.Add(1)
+	go func() {
+		defer o.wg.Done()
+		if err := o.svc.Run(o.ctx); err != nil {
+			log.Printf("OTEL collector stopped with error: %v", err)
+		}
+	}()
+	o.isActive = true
+	o.startTime = time.Now()
+	return nil
+}
+
+func (o *OTELCollectorAdapter) StartAgent() error {
+	if o.isActive {
+		return fmt.Errorf("fluent-bit instance already running")
+	}
+
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	svc, err := getNewOTELCollector()
 	if err != nil {
 		return fmt.Errorf("failed to start OTEL collector: %w", err)
 	}
@@ -194,18 +184,21 @@ func (o *OTELCollectorAdapter) UpdateConfig() error {
 		return fmt.Errorf("OTEL collector service not initialized")
 	}
 
-	err := o.StopAgent()
-	if err != nil {
-		return fmt.Errorf("failed to stop OTEL collector for config update: %w", err)
-	}
+	o.svc.Shutdown()
 
-	o.svc = nil
-	o.ctx, o.cancel = context.WithCancel(context.Background())
-
-	err = o.StartAgent()
+	svc, err := getNewOTELCollector()
 	if err != nil {
-		return fmt.Errorf("failed to restart OTEL collector with new config: %w", err)
+		return fmt.Errorf("failed to start OTEL collector: %w", err)
 	}
+	o.svc = svc
+	o.wg.Add(1)
+	go func() {
+		defer o.wg.Done()
+		if err := o.svc.Run(o.ctx); err != nil {
+			log.Printf("OTEL collector stopped with error: %v", err)
+		}
+	}()
+	o.isActive = true
 
 	log.Println("Config updated. OTEL collector restarted")
 	return nil

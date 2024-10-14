@@ -62,6 +62,8 @@ func (a *AgentService) UpdateConfig(request models.ConfigUpdateRequest) (map[str
 		return nil, err
 	}
 
+	log.Println("Attempting to update config for agent: ", request.AgentID, " with host: ", hostname)
+
 	url := fmt.Sprintf("http://%s:443/api/v1/config", hostname)
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(reqBody))
