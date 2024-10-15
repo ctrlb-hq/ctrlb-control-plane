@@ -2,14 +2,18 @@ receivers:
   hostmetrics:
     collection_interval: 10s
     scrapers:
-      cpu:
-      memory:
-      disk:
-      load:
-      network:
+      cpu: {}
+      memory: {}
+      disk: {}
+      load: {}
+      network: {}
+
+  otlp:
+    protocols:
+      http: {}
 
 processors:
-  batch:
+  batch: {}
   memory_limiter:
     check_interval: 5s
     limit_mib: 500
@@ -23,4 +27,9 @@ service:
     metrics:
       receivers: [hostmetrics]
       processors: [memory_limiter, batch]
+      exporters: [logging]
+
+    traces:
+      receivers: [otlp]
+      processors: [batch]
       exporters: [logging]

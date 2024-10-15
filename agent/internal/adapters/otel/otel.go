@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"go.opentelemetry.io/collector/component"
@@ -181,24 +183,20 @@ func (o *OTELCollectorAdapter) UpdateConfig() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	if o.svc == nil {
-		return fmt.Errorf("OTEL collector service not initialized")
-	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGHUP)
 
-	o.svc.Shutdown()
-	o.svc.GetState()
-	svc, err := getNewOTELCollector()
-	if err != nil {
-		return fmt.Errorf("failed to start OTEL collector: %w", err)
-	}
-	o.svc = svc
-	o.wg.Add(1)
 	go func() {
-		defer o.wg.Done()
-		if err := o.svc.Run(o.ctx); err != nil {
-			log.Printf("OTEL collector stopped with error: %v", err)
+		for {
+			sig := <-sigChan
+			fmt.Printf("Received signal for updating config in otel collector: %s\n", sig)
 		}
 	}()
+
+	fmt.Println("Sending SIGHUP signal to Hot-reload Otel collector for updating config...")
+	syscall.Kill(os.Getpid(), syscall.SIGHUP)
+
+	time.Sleep(2 * time.Second)
 	o.isActive = true
 
 	log.Println("Config updated. OTEL collector restarted")
