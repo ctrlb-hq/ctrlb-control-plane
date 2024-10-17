@@ -27,7 +27,7 @@ func InformBackendServerStart() error {
 
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 
-	jsonData, err := utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH)
+	jsonData, err := utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH, constants.AGENT_TYPE)
 	if err != nil {
 		return fmt.Errorf("failed to load YAML config while informing server: %v", err)
 	}

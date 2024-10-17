@@ -43,25 +43,35 @@ func SaveToYAML(input interface{}, yamlFilePath string) error {
 	return nil
 }
 
-func LoadYAMLToJSON(yamlFilePath string) (interface{}, error) {
+func LoadYAMLToJSON(yamlFilePath string, agentType string) (interface{}, error) {
 	yamlData, err := os.ReadFile(yamlFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read YAML file: %v", err)
 	}
 
-	var config models.FluentBitConfig
-	err = yaml.Unmarshal(yamlData, &config)
+	var config interface{}
+	switch agentType {
+	case "fluent-bit":
+		var fluentBitConfig models.FluentBitConfig
+		err = yaml.Unmarshal(yamlData, &fluentBitConfig)
+		config = fluentBitConfig
+	case "otel":
+		var otelConfig models.OTELConfig
+		err = yaml.Unmarshal(yamlData, &otelConfig)
+		config = otelConfig
+	default:
+		return nil, fmt.Errorf("unsupported agent type: %s", agentType)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error parsing YAML: %v", err)
 	}
 
-	// Convert config to JSON format
 	jsonData, err := json.Marshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("error converting to JSON: %v", err)
 	}
 
-	// Parse the JSON data into an interface{}
 	var jsonInterface interface{}
 	err = json.Unmarshal(jsonData, &jsonInterface)
 	if err != nil {

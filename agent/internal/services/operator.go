@@ -43,7 +43,7 @@ func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest interface{}) (
 }
 
 func (o *OperatorService) GetCurrentConfig() (interface{}, error) {
-	return utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH)
+	return utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH, constants.AGENT_TYPE)
 }
 
 func (o *OperatorService) StartAgent() (map[string]string, error) {
