@@ -9,19 +9,19 @@ import (
 )
 
 type FrontendPipelineService struct {
-	FrontendRepository *FrontendPipelineRepository
-	PipelineQueue      *queue.AgentQueue
+	FrontendPipelineRepository *FrontendPipelineRepository
+	PipelineQueue              *queue.AgentQueue
 }
 
 func NewFrontendPipelineService(frontendRepository *FrontendPipelineRepository, pipelineQueue *queue.AgentQueue) *FrontendPipelineService {
 	return &FrontendPipelineService{
-		FrontendRepository: frontendRepository,
-		PipelineQueue:      pipelineQueue,
+		FrontendPipelineRepository: frontendRepository,
+		PipelineQueue:              pipelineQueue,
 	}
 }
 
 func (f *FrontendPipelineService) GetAllPipelines() ([]Pipeline, error) {
-	pipelines, err := f.FrontendRepository.GetAllPipelines()
+	pipelines, err := f.FrontendPipelineRepository.GetAllPipelines()
 	if err != nil {
 		return nil, err
 	}
@@ -29,13 +29,13 @@ func (f *FrontendPipelineService) GetAllPipelines() ([]Pipeline, error) {
 }
 
 func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfig, error) {
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	config, err := f.FrontendRepository.GetConfig(pipeline.ConfigID)
+	config, err := f.FrontendPipelineRepository.GetConfig(pipeline.ConfigID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,12 +56,12 @@ func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfi
 }
 
 func (f *FrontendPipelineService) DeletePipeline(id string) error {
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
 
-	err = f.FrontendRepository.DeletePipeline(pipeline.ID)
+	err = f.FrontendPipelineRepository.DeletePipeline(pipeline.ID)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (f *FrontendPipelineService) DeletePipeline(id string) error {
 func (f *FrontendPipelineService) StartPipeline(id string) error {
 
 	// starting registered pipeline
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (f *FrontendPipelineService) StartPipeline(id string) error {
 
 func (f *FrontendPipelineService) StopPipeline(id string) error {
 	// starting registered pipeline
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (f *FrontendPipelineService) StopPipeline(id string) error {
 }
 
 func (f *FrontendPipelineService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	pipelineMetrics, err := f.FrontendRepository.GetMetrics(id)
+	pipelineMetrics, err := f.FrontendPipelineRepository.GetMetrics(id)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (f *FrontendPipelineService) GetMetrics(id string) (*models.AgentMetrics, e
 }
 
 func (f *FrontendPipelineService) RestartMonitoring(id string) error {
-	agent, err := f.FrontendRepository.GetPipeline(id)
+	agent, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}

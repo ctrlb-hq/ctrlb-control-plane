@@ -9,19 +9,19 @@ import (
 )
 
 type FrontendAgentService struct {
-	FrontendRepository *FrontendAgentRepository
-	AgentQueue         *queue.AgentQueue
+	FrontendAgentRepository *FrontendAgentRepository
+	AgentQueue              *queue.AgentQueue
 }
 
-func NewFrontendAgentService(frontendRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
+func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
 	return &FrontendAgentService{
-		FrontendRepository: frontendRepository,
-		AgentQueue:         agentQueue,
+		FrontendAgentRepository: frontendAgentRepository,
+		AgentQueue:              agentQueue,
 	}
 }
 
 func (f *FrontendAgentService) GetAllAgents() ([]Agent, error) {
-	agents, err := f.FrontendRepository.GetAllAgents()
+	agents, err := f.FrontendAgentRepository.GetAllAgents()
 	if err != nil {
 		return nil, err
 	}
@@ -29,13 +29,13 @@ func (f *FrontendAgentService) GetAllAgents() ([]Agent, error) {
 }
 
 func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, error) {
-	agent, err := f.FrontendRepository.GetAgent(id)
+	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	config, err := f.FrontendRepository.GetConfig(agent.ConfigID)
+	config, err := f.FrontendAgentRepository.GetConfig(agent.ConfigID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,12 +56,12 @@ func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, err
 }
 
 func (f *FrontendAgentService) DeleteAgent(id string) error {
-	agent, err := f.FrontendRepository.GetAgent(id)
+	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
 
-	err = f.FrontendRepository.DeleteAgent(agent.ID)
+	err = f.FrontendAgentRepository.DeleteAgent(agent.ID)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 func (f *FrontendAgentService) StartAgent(id string) error {
 
 	// starting registered agent
-	agent, err := f.FrontendRepository.GetAgent(id)
+	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 
 func (f *FrontendAgentService) StopAgent(id string) error {
 	// starting registered agent
-	agent, err := f.FrontendRepository.GetAgent(id)
+	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 }
 
 func (f *FrontendAgentService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	agentMetrics, err := f.FrontendRepository.GetMetrics(id)
+	agentMetrics, err := f.FrontendAgentRepository.GetMetrics(id)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (f *FrontendAgentService) GetMetrics(id string) (*models.AgentMetrics, erro
 }
 
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
-	agent, err := f.FrontendRepository.GetAgent(id)
+	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
