@@ -8,11 +8,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// FrontendAgentHandler handles frontend agent operations
 type FrontendAgentHandler struct {
 	FrontendAgentService *FrontendAgentService
 	BasicAuthenticator   *auth.BasicAuthenticator
 }
 
+// NewFrontendAgentHandler initializes the handler
 func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService, basicAuthenticator *auth.BasicAuthenticator) *FrontendAgentHandler {
 	return &FrontendAgentHandler{
 		FrontendAgentService: frontendAgentServices,
@@ -20,15 +22,19 @@ func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService, basicA
 	}
 }
 
-func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
+// authenticate validates the token from request headers
+func (f *FrontendAgentHandler) authenticate(w http.ResponseWriter, r *http.Request) bool {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
+	if err != nil || f.BasicAuthenticator.ValidateToken(token) != nil {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
+
+// GetAllAgents retrieves all agents
+func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
+	if !f.authenticate(w, r) {
 		return
 	}
 
@@ -40,147 +46,94 @@ func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Reque
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+// GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
 	response, err := f.FrontendAgentService.GetAgent(id)
 	if err != nil {
-		msg := map[string]string{
-			"message": "Agent not found",
-		}
-		utils.WriteJSONResponse(w, http.StatusNotFound, msg)
+		utils.SendJSONError(w, http.StatusNotFound, "Agent not found")
 		return
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+// DeleteAgent removes an agent by ID
 func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
-	err = f.FrontendAgentService.DeleteAgent(id)
-	if err.Error() == "agent not found" {
-		utils.SendJSONError(w, http.StatusNotFound, err.Error())
+	if err := f.FrontendAgentService.DeleteAgent(id); err != nil {
+		if err.Error() == "agent not found" {
+			utils.SendJSONError(w, http.StatusNotFound, err.Error())
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
-	if err != nil {
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	response := map[string]string{
-		"message": "Agent deleted successfully",
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent deleted successfully"})
 }
 
+// StartAgent starts an agent by ID
 func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
-	err = f.FrontendAgentService.StartAgent(id)
-	if err != nil {
+	if err := f.FrontendAgentService.StartAgent(id); err != nil {
 		if err.Error() == "no agent found to start" {
-			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
+			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-	response := map[string]string{
-		"message": "Agent started successfully",
-	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent started successfully"})
 }
 
+// StopAgent stops an agent by ID
 func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
-
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
-	err = f.FrontendAgentService.StopAgent(id)
-	if err != nil {
+	if err := f.FrontendAgentService.StopAgent(id); err != nil {
 		if err.Error() == "no agent found to stop" {
-			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
+			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-	response := map[string]string{
-		"message": "Agent stopped successfully",
-	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped successfully"})
 }
 
+// GetMetrics retrieves metrics for a specific agent
 func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
 	response, err := f.FrontendAgentService.GetMetrics(id)
 	if err != nil {
 		if err.Error() == "no agent found to fetch config" {
-			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
+			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -190,29 +143,18 @@ func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+// RestartMonitoring restarts monitoring for a specific agent
 func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+	if !f.authenticate(w, r) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := mux.Vars(r)["id"]
 
-	err = f.FrontendAgentService.RestartMonitoring(id)
-	if err != nil {
+	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	response := map[string]string{
-		"message": "Started monitoring the agent",
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Started monitoring the agent"})
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
+	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
@@ -38,13 +39,15 @@ func main() {
 	authRepository := auth.NewAuthRepository(db)
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
+	frontendConfigRepository := frontendconfig.NewFrontendConfigRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
-	frontendService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
-	frontendPipeline := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
+	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
+	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
+	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
 
-	handler := api.NewRouter(agentService, authService, frontendService, frontendPipeline, &basicAuthenticator)
+	handler := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, &basicAuthenticator)
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
 		Handler: handler,

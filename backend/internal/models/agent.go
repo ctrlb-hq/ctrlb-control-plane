@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// AgentWithConfig represents an agent with its configuration details.
 type AgentWithConfig struct {
 	ID           string    `json:"id"`           // Unique ID for the agent
 	Name         string    `json:"name"`         // Descriptive name for the agent
@@ -14,16 +15,7 @@ type AgentWithConfig struct {
 	RegisteredAt time.Time `json:"registeredAt"` // Timestamp when the agent was registered
 }
 
-type Config struct {
-	ID          string    `json:"id"`          // Unique ID of the config
-	Name        string    `json:"name"`        // Name for config
-	Description string    `json:"description"` // Brief description of the config
-	Config      string    `json:"config"`      // Configuration data (usually in JSON or YAML format)
-	TargetAgent string    `json:"targetAgent"` // Type of agent this configuration is applicable to
-	CreatedAt   time.Time `json:"createdAt"`   // Timestamp when the config was created
-	UpdatedAt   time.Time `json:"updatedAt"`   // Timestamp when the config was last updated
-}
-
+// AgentMetrics represents metrics related to an agent's performance.
 type AgentMetrics struct {
 	AgentID            string    `json:"agentId"`            // Unique ID of the agent
 	Status             string    `json:"status"`             // Current status (e.g., running, stopped)
@@ -31,10 +23,4 @@ type AgentMetrics struct {
 	UptimeSeconds      int       `json:"uptimeSeconds"`      // Uptime in seconds
 	DroppedRecords     int       `json:"droppedRecords"`     // Number of records dropped by the agent
 	UpdatedAt          time.Time `json:"updatedAt"`          // Timestamp of the last metrics update
-}
-
-type UserRegisterRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }

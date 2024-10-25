@@ -13,6 +13,7 @@ type FrontendAgentService struct {
 	AgentQueue              *queue.AgentQueue
 }
 
+// NewFrontendAgentService creates a new FrontendAgentService
 func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
 	return &FrontendAgentService{
 		FrontendAgentRepository: frontendAgentRepository,
@@ -20,18 +21,15 @@ func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, a
 	}
 }
 
+// GetAllAgents retrieves all agents
 func (f *FrontendAgentService) GetAllAgents() ([]Agent, error) {
-	agents, err := f.FrontendAgentRepository.GetAllAgents()
-	if err != nil {
-		return nil, err
-	}
-	return agents, nil
+	return f.FrontendAgentRepository.GetAllAgents()
 }
 
+// GetAgent retrieves an agent along with its configuration
 func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, error) {
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -40,7 +38,7 @@ func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, err
 		return nil, err
 	}
 
-	agentWithConfig := &models.AgentWithConfig{
+	return &models.AgentWithConfig{
 		ID:           agent.ID,
 		Name:         agent.Name,
 		Type:         agent.Type,
@@ -50,24 +48,35 @@ func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, err
 		Config:       *config,
 		IsPipeline:   agent.IsPipeline,
 		RegisteredAt: agent.RegisteredAt,
-	}
-
-	return agentWithConfig, nil
+	}, nil
 }
 
+// DeleteAgent removes an agent by ID and shuts it down
 func (f *FrontendAgentService) DeleteAgent(id string) error {
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
 
-	err = f.FrontendAgentRepository.DeleteAgent(agent.ID)
-	if err != nil {
+	// Attempt to delete the agent from the repository
+	if err := f.FrontendAgentRepository.DeleteAgent(agent.ID); err != nil {
 		return err
 	}
 
-	//Shutting down the agent
-	url := fmt.Sprintf("http://%s:443/api/v1/shutdown", agent.Hostname)
+	// Shut down the agent via HTTP request
+	if err := f.shutdownAgent(agent.Hostname); err != nil {
+		return err
+	}
+
+	// Remove agent from the queue
+	f.AgentQueue.RemoveAgent(agent.ID)
+
+	return nil
+}
+
+// shutdownAgent sends a shutdown request to the agent
+func (f *FrontendAgentService) shutdownAgent(hostname string) error {
+	url := fmt.Sprintf("http://%s:443/api/v1/shutdown", hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while removing agent: %w", err)
@@ -75,68 +84,54 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while removing agent: %s", resp.Status)
+		return fmt.Errorf("error encountered while shutting down agent: %s", resp.Status)
 	}
 
-	f.AgentQueue.RemoveAgent(agent.ID)
-
-	return err
+	return nil
 }
 
+// StartAgent sends a start request to the agent
 func (f *FrontendAgentService) StartAgent(id string) error {
-
-	// starting registered agent
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
 
-	// prepare the URL for the start agent request using the extracted hostname
-	url := fmt.Sprintf("http://%s:443/api/v1/start", agent.Hostname)
-	resp, err := http.Post(url, "application/json", nil)
-	if err != nil {
-		return fmt.Errorf("error encountered while starting agent: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while starting agent: %s", resp.Status)
-	}
-
-	return nil
+	return f.sendAgentCommand(agent.Hostname, "start")
 }
 
+// StopAgent sends a stop request to the agent
 func (f *FrontendAgentService) StopAgent(id string) error {
-	// starting registered agent
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
 
-	// prepare the URL for the start agent request using the extracted hostname
-	url := fmt.Sprintf("http://%s:443/api/v1/stop", agent.Hostname)
+	return f.sendAgentCommand(agent.Hostname, "stop")
+}
+
+// sendAgentCommand sends a command (start/stop) to the agent
+func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {
+	url := fmt.Sprintf("http://%s:443/api/v1/%s", hostname, command)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
-		return fmt.Errorf("error encountered while stopping agent: %w", err)
+		return fmt.Errorf("error encountered while %s agent: %w", command, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while stopping agent: %s", resp.Status)
+		return fmt.Errorf("error encountered while %s agent: %s", command, resp.Status)
 	}
 
 	return nil
 }
 
+// GetMetrics retrieves the metrics for a specific agent
 func (f *FrontendAgentService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	agentMetrics, err := f.FrontendAgentRepository.GetMetrics(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return agentMetrics, nil
+	return f.FrontendAgentRepository.GetMetrics(id)
 }
 
+// RestartMonitoring restarts monitoring for the agent
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {

@@ -41,13 +41,13 @@ func (a *AgentService) RegisterAgent(request AgentRegisterRequest) (interface{},
 
 	// Create a new agent instance
 	agent := models.AgentWithConfig{
+		ID:           utils.CreateNewUUID(),
+		Name:         utils.GenerateAgentName(request.Type, request.Version, request.Hostname),
+		Type:         request.Type,
+		Version:      request.Version,
 		Hostname:     request.Hostname,
 		Platform:     request.Platform,
-		Version:      request.Version,
-		Type:         request.Type,
-		Name:         utils.GenerateAgentName(request.Type, request.Version, request.Hostname),
 		Config:       *config,
-		ID:           utils.CreateNewUUID(),
 		IsPipeline:   request.IsPipeline,
 		RegisteredAt: time.Now(),
 	}
