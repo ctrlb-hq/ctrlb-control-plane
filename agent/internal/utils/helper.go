@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
 type ErrorResponse struct {
@@ -100,4 +101,12 @@ func GetLocalIP() (string, error) {
 	}
 
 	return "", fmt.Errorf("no valid IP address found")
+}
+
+func WriteConfigToFile(configData string, filePath string) error {
+	err := os.WriteFile(filePath, []byte(configData), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write config to file: %w", err)
+	}
+	return nil
 }

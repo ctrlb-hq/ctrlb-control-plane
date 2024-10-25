@@ -14,16 +14,19 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/otel"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/agentcomm"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/api"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/config"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
 func main() {
 	var wg sync.WaitGroup
+	currentDir, _ := os.Getwd()
 
-	constants.AGENT_CONFIG_PATH = *flag.String("config", "./config.yaml", "Path to the agent configuration file")
-	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
+	constants.AGENT_CONFIG_PATH = *flag.String("config", currentDir+"/internal/config/fluent-bit.yaml", "Path to the agent configuration file")
+	constants.AGENT_TYPE = *flag.String("type", "fluent-bit", "Type of the agent")
 	constants.IS_PIPELINE = *flag.Bool("isPipeline", false, "Agent or Pipeline")
 	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
 	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")
@@ -52,6 +55,7 @@ func main() {
 		log.Fatalf("Failed to start Agent adapter: %v", err)
 	}
 	log.Printf("%s agent started successfully", constants.AGENT_TYPE)
+	go config.WatchFile(constants.AGENT_CONFIG_PATH, adapter)
 
 	version, err := adapter.GetVersion()
 	if err != nil {
@@ -69,6 +73,11 @@ func main() {
 			log.Fatalf("failed to register with backend server: %v", err)
 		} else {
 			constants.AGENT = agentWithConfig
+			configData := constants.AGENT.Config.Config
+			err = utils.WriteConfigToFile(configData, constants.AGENT_CONFIG_PATH)
+			if err != nil {
+				log.Fatalf("error writing config to file: %v", err)
+			}
 			log.Println("successfully registered with the backend server")
 		}
 	}()

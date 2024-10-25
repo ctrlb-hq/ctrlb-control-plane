@@ -49,7 +49,7 @@ func InformBackendServerStart() (*models.AgentWithConfig, error) {
 	}
 
 	// Step 5: Create the HTTP request to inform the backend server
-	url := fmt.Sprintf("http://%s/api/v1/agent/register", constants.BACKEND_URL)
+	url := fmt.Sprintf("http://%s/api/agent/v1/register", constants.BACKEND_URL)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
