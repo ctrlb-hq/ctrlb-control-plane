@@ -26,7 +26,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
-	agentAPIsV1.HandleFunc("/register", agentHandler.RegisterAgent).Methods("PUT")
+	agentAPIsV1.HandleFunc("/agents", agentHandler.RegisterAgent).Methods("PUT")
 
 	frontendAgentAPIsV1 := router.PathPrefix("/api/frontend/v1").Subrouter()
 
