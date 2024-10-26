@@ -47,7 +47,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/restart-monitoring", frontendPipelineHandler.RestartMonitoring).Methods("POST")
 
 	frontendAgentAPIsV1.HandleFunc("/configs", frontendConfigHandler.GetAllConfig).Methods("GET")
-	frontendAgentAPIsV1.HandleFunc("/configs", frontendConfigHandler.GetAllConfig).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/configs", frontendConfigHandler.CreateConfig).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/configs/{id}", frontendConfigHandler.GetConfig).Methods("GET")
 	frontendAgentAPIsV1.HandleFunc("/configs/{id}", frontendConfigHandler.DeleteConfig).Methods("DELETE")
 	frontendAgentAPIsV1.HandleFunc("/configs/{id}", frontendConfigHandler.UpdateConfig).Methods("PATCH")
