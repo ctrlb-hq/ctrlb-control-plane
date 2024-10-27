@@ -76,7 +76,7 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 
 // shutdownAgent sends a shutdown request to the agent
 func (f *FrontendAgentService) shutdownAgent(hostname string) error {
-	url := fmt.Sprintf("http://%s:443/api/v1/shutdown", hostname)
+	url := fmt.Sprintf("http://%s:443/agent/v1/shutdown", hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while removing agent: %w", err)
@@ -112,7 +112,7 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 
 // sendAgentCommand sends a command (start/stop) to the agent
 func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {
-	url := fmt.Sprintf("http://%s:443/api/v1/%s", hostname, command)
+	url := fmt.Sprintf("http://%s:443/agent/v1/%s", hostname, command)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while %s agent: %w", command, err)

@@ -103,17 +103,9 @@ func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (map[string]string, error) {
+func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest models.UpdateConfigRequest) (map[string]string, error) {
 
-	request, ok := updateConfigRequest.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid request body while updating config, expected a map[string]interface{}")
-	}
-
-	configString, ok := request["Config"].(string)
-	if !ok {
-		return nil, fmt.Errorf("config field is missing or not a string")
-	}
+	configString := updateConfigRequest.Config
 
 	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
 		return nil, err

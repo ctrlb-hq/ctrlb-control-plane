@@ -150,7 +150,7 @@ func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest C
 	}
 
 	for _, hostname := range hostnames {
-		apiEndpoint := fmt.Sprintf("http://%s/api/config", hostname)
+		apiEndpoint := fmt.Sprintf("http://%s:443/agent/v1/config", hostname)
 
 		req, err := http.NewRequest(http.MethodPut, apiEndpoint, bytes.NewBuffer(jsonData))
 		if err != nil {

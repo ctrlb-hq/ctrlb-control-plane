@@ -25,8 +25,8 @@ func main() {
 	var wg sync.WaitGroup
 	currentDir, _ := os.Getwd()
 
-	constants.AGENT_CONFIG_PATH = *flag.String("config", currentDir+"/internal/config/fluent-bit.yaml", "Path to the agent configuration file")
-	constants.AGENT_TYPE = *flag.String("type", "fluent-bit", "Type of the agent")
+	constants.AGENT_CONFIG_PATH = *flag.String("config", currentDir+"/internal/config/otel.yaml", "Path to the agent configuration file")
+	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
 	constants.IS_PIPELINE = *flag.Bool("isPipeline", false, "Agent or Pipeline")
 	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
 	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")

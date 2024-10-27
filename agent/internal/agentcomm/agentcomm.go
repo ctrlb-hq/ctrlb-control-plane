@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"runtime"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
@@ -16,13 +15,13 @@ import (
 
 func InformBackendServerStart() (*models.AgentWithConfig, error) {
 	// Step 1: Get hostname or fallback to IP
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get hostname: %v", err)
-	}
+	hostname := "localhost"
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to get hostname: %v", err)
+	// }
 
 	// Check if the hostname resolves to a valid DNS entry
-	if _, err = net.LookupHost(hostname); err != nil {
+	if _, err := net.LookupHost(hostname); err != nil {
 		// If DNS resolution fails, fallback to IP address
 		hostname, err = utils.GetLocalIP()
 		if err != nil {
@@ -49,7 +48,7 @@ func InformBackendServerStart() (*models.AgentWithConfig, error) {
 	}
 
 	// Step 5: Create the HTTP request to inform the backend server
-	url := fmt.Sprintf("http://%s/api/agent/v1/register", constants.BACKEND_URL)
+	url := fmt.Sprintf("http://%s/api/agent/v1/agents", constants.BACKEND_URL)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)

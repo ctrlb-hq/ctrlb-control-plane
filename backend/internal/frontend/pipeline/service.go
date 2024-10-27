@@ -72,7 +72,7 @@ func (f *FrontendPipelineService) DeletePipeline(id string) error {
 	}
 
 	// Shutdown the pipeline
-	url := fmt.Sprintf("http://%s:443/api/v1/shutdown", pipeline.Hostname)
+	url := fmt.Sprintf("http://%s:443/agent/v1/shutdown", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while removing pipeline: %w", err)
@@ -96,7 +96,7 @@ func (f *FrontendPipelineService) StartPipeline(id string) error {
 	}
 
 	// Prepare the URL for starting the pipeline
-	url := fmt.Sprintf("http://%s:443/api/v1/start", pipeline.Hostname)
+	url := fmt.Sprintf("http://%s:443/agent/v1/start", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while starting pipeline: %w", err)
@@ -118,7 +118,7 @@ func (f *FrontendPipelineService) StopPipeline(id string) error {
 	}
 
 	// Prepare the URL for stopping the pipeline
-	url := fmt.Sprintf("http://%s:443/api/v1/stop", pipeline.Hostname)
+	url := fmt.Sprintf("http://%s:443/agent/v1/stop", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while stopping pipeline: %w", err)

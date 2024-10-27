@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -36,42 +35,18 @@ func SaveToYAML(inputString string, filePath string) error {
 	return nil
 }
 
-func LoadYAMLToJSON(yamlFilePath string, agentType string) (interface{}, error) {
-	yamlData, err := os.ReadFile(yamlFilePath)
+func LoadYAML(yamlFilePath string) (interface{}, error) {
+	data, err := os.ReadFile(yamlFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read YAML file: %v", err)
+		return "", err
 	}
 
-	var config interface{}
-	switch agentType {
-	case "fluent-bit":
-		var fluentBitConfig models.FluentBitConfig
-		err = yaml.Unmarshal(yamlData, &fluentBitConfig)
-		config = fluentBitConfig
-	case "otel":
-		var otelConfig models.OTELConfig
-		err = yaml.Unmarshal(yamlData, &otelConfig)
-		config = otelConfig
-	default:
-		return nil, fmt.Errorf("unsupported agent type: %s", agentType)
+	var content interface{}
+	if err := yaml.Unmarshal(data, &content); err != nil {
+		return "", fmt.Errorf("invalid YAML format: %w", err)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("error parsing YAML: %v", err)
-	}
-
-	jsonData, err := json.Marshal(config)
-	if err != nil {
-		return nil, fmt.Errorf("error converting to JSON: %v", err)
-	}
-
-	var jsonInterface interface{}
-	err = json.Unmarshal(jsonData, &jsonInterface)
-	if err != nil {
-		return nil, fmt.Errorf("error converting JSON to interface{}: %v", err)
-	}
-
-	return jsonInterface, nil
+	return string(data), nil
 }
 
 func ExtractStatusFromPrometheus(metrics map[string]*io_prometheus_client.MetricFamily, collector string) (*models.AgentMetrics, error) {
