@@ -16,7 +16,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/api"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/config"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
@@ -82,7 +82,7 @@ func main() {
 		}
 	}()
 
-	operator_service := *services.NewOperatorService(adapter)
+	operator_service := *operators.NewOperatorService(adapter)
 	if &operator_service == nil {
 		log.Fatalf("Failed to initiate agent operator")
 	}
