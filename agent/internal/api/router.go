@@ -2,11 +2,11 @@ package api
 
 import (
 	api "github.com/ctrlb-hq/ctrlb-collector/internal/api/handlers"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(operatorService *services.OperatorService) *mux.Router {
+func NewRouter(operatorService *operators.OperatorService) *mux.Router {
 	router := mux.NewRouter()
 	operatorHandler := api.NewOperatorHandler(operatorService)
 

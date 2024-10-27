@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
 var operatorHandler *OperatorHandler
 
-func NewOperatorHandler(operatorService *services.OperatorService) *OperatorHandler {
+func NewOperatorHandler(operatorService *operators.OperatorService) *OperatorHandler {
 	operatorHandler = &OperatorHandler{
 		OperatorService: operatorService,
 	}
@@ -31,7 +31,10 @@ func (o *OperatorHandler) GetCurrentConfig(w http.ResponseWriter, r *http.Reques
 }
 
 type UpdateConfigRequest struct {
-	Config string `json:"config"`
+	Name        string `json:"name"`        // Configuration name
+	Description string `json:"description"` // Brief description of the configuration
+	Config      string `json:"config"`      // Configuration content (e.g., JSON or YAML)
+	TargetAgent string `json:"targetAgent"` // Agent type the configuration targets
 }
 
 func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Request) {

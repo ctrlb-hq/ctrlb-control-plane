@@ -47,7 +47,7 @@ func (f *FrontendConfigHandler) CreateConfig(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var createConfigRequest ConfigUpsertRequest
+	var createConfigRequest ConfigUpdateRequest
 	if err := utils.UnmarshalJSONRequest(r, &createConfigRequest); err != nil {
 		log.Println("Invalid request body")
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -105,7 +105,7 @@ func (f *FrontendConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Requ
 	}
 
 	id := mux.Vars(r)["id"]
-	var configUpdateRequest ConfigUpsertRequest
+	var configUpdateRequest ConfigUpdateRequest
 	if err := utils.UnmarshalJSONRequest(r, &configUpdateRequest); err != nil {
 		log.Println("Invalid request body")
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

@@ -1,4 +1,4 @@
-package services
+package operators
 
 import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"

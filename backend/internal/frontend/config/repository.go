@@ -1,10 +1,13 @@
 package frontendconfig
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -115,7 +118,7 @@ func (f *FrontendConfigRepository) DeleteConfig(id string) error {
 }
 
 // UpdateConfig modifies an existing configuration by ID
-func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
+func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest ConfigUpdateRequest) error {
 	query := `
 		UPDATE config 
 		SET Name = ?, Description = ?, Config = ?, TargetAgent = ?, UpdatedAt = ?
@@ -136,5 +139,61 @@ func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest C
 		return fmt.Errorf("no config found with ID: %s", id)
 	}
 
+	hostnames, err := f.getAgentHostnamesByConfigID(id)
+	if err != nil {
+		return fmt.Errorf("error fetching agent hostnames: %v", err)
+	}
+
+	jsonData, err := json.Marshal(configUpdateRequest)
+	if err != nil {
+		return fmt.Errorf("error marshalling config update request: %v", err)
+	}
+
+	for _, hostname := range hostnames {
+		apiEndpoint := fmt.Sprintf("http://%s/api/config", hostname)
+
+		req, err := http.NewRequest(http.MethodPut, apiEndpoint, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return fmt.Errorf("error creating request for hostname %s: %v", hostname, err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("error making API call to hostname %s: %v", hostname, err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("API call to hostname %s failed with status: %s", hostname, resp.Status)
+		}
+	}
+
 	return nil
+}
+
+func (f *FrontendConfigRepository) getAgentHostnamesByConfigID(configID string) ([]string, error) {
+	query := "SELECT hostname FROM agents WHERE configId = ?"
+	rows, err := f.db.Query(query, configID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hostnames []string
+	for rows.Next() {
+		var hostname string
+		if err := rows.Scan(&hostname); err != nil {
+			return nil, err
+		}
+		hostnames = append(hostnames, hostname)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return hostnames, nil
 }

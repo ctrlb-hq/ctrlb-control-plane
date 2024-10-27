@@ -23,7 +23,7 @@ func (f *FrontendConfigService) GetAllConfigs() ([]models.Config, error) {
 }
 
 // CreateConfig creates a new configuration based on the provided request
-func (f *FrontendConfigService) CreateConfig(createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
+func (f *FrontendConfigService) CreateConfig(createConfigRequest ConfigUpdateRequest) (*models.Config, error) {
 	config := &models.Config{
 		ID:          utils.CreateNewUUID(),
 		Name:        createConfigRequest.Name,
@@ -50,6 +50,6 @@ func (f *FrontendConfigService) DeleteConfig(id string) error {
 }
 
 // UpdateConfig modifies an existing configuration by ID
-func (f *FrontendConfigService) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
+func (f *FrontendConfigService) UpdateConfig(id string, configUpdateRequest ConfigUpdateRequest) error {
 	return f.FrontendConfigRepository.UpdateConfig(id, configUpdateRequest)
 }

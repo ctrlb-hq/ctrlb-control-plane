@@ -17,29 +17,22 @@ type Status struct {
 	DroppedRecords     float64
 }
 
-func SaveToYAML(input interface{}, yamlFilePath string) error {
-	// Convert the input interface to YAML format
-	yamlData, err := yaml.Marshal(input)
-	if err != nil {
-		return fmt.Errorf("error converting to YAML: %v", err)
+func SaveToYAML(inputString string, filePath string) error {
+	var validation map[string]interface{}
+	if err := yaml.Unmarshal([]byte(inputString), &validation); err != nil {
+		return fmt.Errorf("invalid YAML format: %v", err)
 	}
 
-	// Check if a YAML file already exists at the given path
-	if _, err := os.Stat(yamlFilePath); err == nil {
-		// Remove the existing file if found
-		err := os.Remove(yamlFilePath)
-		if err != nil {
-			return fmt.Errorf("could not remove existing YAML file: %v", err)
+	if _, err := os.Stat(filePath); err == nil {
+		if err := os.Remove(filePath); err != nil {
+			return fmt.Errorf("could not remove existing file at %s: %v", filePath, err)
 		}
 	}
 
-	// Write the new YAML data to the specified path
-	err = os.WriteFile(yamlFilePath, yamlData, 0644)
-	if err != nil {
+	if err := os.WriteFile(filePath, []byte(inputString), 0644); err != nil {
 		return fmt.Errorf("could not write YAML file: %v", err)
 	}
 
-	// Return nil if no error occurred
 	return nil
 }
 

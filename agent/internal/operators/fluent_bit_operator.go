@@ -1,4 +1,4 @@
-package services
+package operators
 
 import (
 	"encoding/json"
@@ -11,25 +11,22 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
-type OtelOperator struct {
-	BaseURL string
+type FluentBitOperator struct {
 	Adapter adapters.Adapter
 }
 
-func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
-	baseURL := "http://0.0.0.0:2020"
-	return &OtelOperator{
-		BaseURL: baseURL,
+func NewFluentBitOperator(adapter adapters.Adapter) *FluentBitOperator {
+	return &FluentBitOperator{
 		Adapter: adapter,
 	}
 }
 
-func (otc *OtelOperator) Initialize() (map[string]string, error) {
+func (f *FluentBitOperator) Initialize() (map[string]string, error) {
 	go func() {
-		log.Printf("Started procecss of initializing otel agent context")
-		otc.Adapter.Initialize()
+		log.Printf("Started procecss of initializing agent context")
+		f.Adapter.Initialize()
 	}()
-	jsonStr := `{"message": "Otel Agent initializing"}`
+	jsonStr := `{"message": "Agent initializing"}`
 
 	// Create a map to hold the result
 	var result map[string]string
@@ -42,10 +39,10 @@ func (otc *OtelOperator) Initialize() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) StartAgent() (map[string]string, error) {
-	jsonStr := `{"message": "Otel lAgent starting up"}`
-	log.Printf("Otel collector startup process initiated")
-	err := otc.Adapter.StartAgent()
+func (f *FluentBitOperator) StartAgent() (map[string]string, error) {
+	jsonStr := `{"message": "Agent starting up"}`
+	log.Printf("Startup process initiated")
+	err := f.Adapter.StartAgent()
 	if err != nil {
 		log.Printf("error: %s", err.Error())
 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
@@ -62,10 +59,10 @@ func (otc *OtelOperator) StartAgent() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) StopAgent() (map[string]string, error) {
-	jsonStr := `{"message": "Otel Agent stopping"}`
-	log.Printf("Started process of stopping otel agent")
-	err := otc.Adapter.StopAgent()
+func (f *FluentBitOperator) StopAgent() (map[string]string, error) {
+	jsonStr := `{"message": "Agent stopping"}`
+	log.Printf("Started process of stopping agent")
+	err := f.Adapter.StopAgent()
 	if err != nil {
 		log.Printf("error: %s", err.Error())
 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
@@ -82,11 +79,11 @@ func (otc *OtelOperator) StopAgent() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
-	jsonStr := `{"message": "Otel agent shutting down"}`
+func (f *FluentBitOperator) GracefulShutdown() (map[string]string, error) {
+	jsonStr := `{"message": "Agent shutting down"}`
 	go func() {
-		log.Printf("Started process of Shutting down otel agent")
-		err := otc.Adapter.GracefulShutdown()
+		log.Printf("Started process of Shutting down")
+		err := f.Adapter.GracefulShutdown()
 		if err != nil {
 			log.Printf("error: %s", err)
 		}
@@ -103,38 +100,29 @@ func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (map[string]string, error) {
+func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (map[string]string, error) {
 
 	request, ok := updateConfigRequest.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid request body while updating config, expected a map[string]interface{}")
 	}
 
-	configString, ok := request["config"].(string)
+	configString, ok := request["Config"].(string)
 	if !ok {
 		return nil, fmt.Errorf("config field is missing or not a string")
 	}
 
-	var config models.OTELConfig
-
-	err := json.Unmarshal([]byte(configString), &config)
-	if err != nil {
+	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
 		return nil, err
 	}
 
-	if err = utils.SaveToYAML(config, constants.AGENT_CONFIG_PATH); err != nil {
-		return nil, err
-	}
-
-	otc.Adapter.UpdateConfig()
-
-	jsonStr := `{"message": "Configuration for otel agent has been updated"}`
+	jsonStr := `{"message": "Configuration has been updated"}`
 	var result map[string]string
 	_ = json.Unmarshal([]byte(jsonStr), &result)
 
 	return result, nil
 }
 
-func (otc *OtelOperator) CurrentStatus() (*models.AgentMetrics, error) {
-	return otc.Adapter.CurrentStatus()
+func (f *FluentBitOperator) CurrentStatus() (*models.AgentMetrics, error) {
+	return f.Adapter.CurrentStatus()
 }
