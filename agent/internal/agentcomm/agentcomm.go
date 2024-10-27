@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
@@ -15,10 +16,10 @@ import (
 
 func InformBackendServerStart() (*models.AgentWithConfig, error) {
 	// Step 1: Get hostname or fallback to IP
-	hostname := "localhost"
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get hostname: %v", err)
-	// }
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get hostname: %v", err)
+	}
 
 	// Check if the hostname resolves to a valid DNS entry
 	if _, err := net.LookupHost(hostname); err != nil {
