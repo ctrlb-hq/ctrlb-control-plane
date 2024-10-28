@@ -16,6 +16,7 @@ import (
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
@@ -47,10 +48,13 @@ func main() {
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
 
-	handler := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, &basicAuthenticator)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, &basicAuthenticator)
+
+	handlerWithCors := middleware.CorsMiddleware(router)
+
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
-		Handler: handler,
+		Handler: handlerWithCors,
 	}
 
 	go func() {
