@@ -2,7 +2,6 @@ import axios, { AxiosError } from 'axios';
 import { LoginCredentials, RegisterCredentials, AuthResponse, ApiError } from '../types/auth.types';
 
 const apiUrl = import.meta.env.VITE_BACKEND_URI;
-console.log(apiUrl);
 const API_BASE_URL = `${apiUrl}/api/auth/v1`;
 
 const authService = {
