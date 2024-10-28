@@ -12,7 +12,7 @@ type Config struct {
 	UpdatedAt   time.Time `json:"updatedAt"`   // Timestamp when the config was last updated
 }
 
-type ConfigUpdateRequest struct {
+type ConfigUpsertRequest struct {
 	Name        string `json:"name"`        // Configuration name
 	Description string `json:"description"` // Brief description of the configuration
 	Config      string `json:"config"`      // Configuration content (e.g., JSON or YAML)

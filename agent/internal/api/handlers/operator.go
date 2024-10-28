@@ -34,7 +34,7 @@ func (o *OperatorHandler) GetCurrentConfig(w http.ResponseWriter, r *http.Reques
 func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Request) {
 	// TODO: Add Auth
 
-	var updateConfigRequest models.ConfigUpdateRequest
+	var updateConfigRequest models.ConfigUpsertRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &updateConfigRequest); err != nil {
 		log.Println(err)

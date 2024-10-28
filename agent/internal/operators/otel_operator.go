@@ -103,7 +103,7 @@ func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpdateRequest) (map[string]string, error) {
+func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
 
 	configString := updateConfigRequest.Config
 

@@ -100,7 +100,7 @@ func (f *FluentBitOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest models.UpdateConfigRequest) (map[string]string, error) {
+func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
 
 	configString := updateConfigRequest.Config
 

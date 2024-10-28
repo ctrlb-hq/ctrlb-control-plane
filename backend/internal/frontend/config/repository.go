@@ -118,7 +118,7 @@ func (f *FrontendConfigRepository) DeleteConfig(id string) error {
 }
 
 // UpdateConfig modifies an existing configuration by ID
-func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest ConfigUpdateRequest) error {
+func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
 	query := `
 		UPDATE config 
 		SET Name = ?, Description = ?, Config = ?, TargetAgent = ?, UpdatedAt = ?
