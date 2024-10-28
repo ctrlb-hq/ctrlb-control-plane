@@ -1,9 +1,16 @@
 name: Release Control Plane Backend
 
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:   # Manual trigger
+
+env:
+  VERSION: v0.0.0
+  VERSION_NUM: 0.0.0
 
 jobs:
   release:
@@ -45,6 +52,8 @@ jobs:
           
           # Build for Windows
           GOOS=windows GOARCH=amd64 go build -v -ldflags="-X 'main.Version=${{ env.VERSION }}'" -o ../dist/ctrlb-backend-windows-amd64.exe ./cmd/backend
+          
+          cd ..
 
       - name: Create DEB packages
         run: |
@@ -106,62 +115,72 @@ jobs:
           WantedBy=multi-user.target
           EOF
 
+      - name: Prepare RPM build environment
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          # Copy binaries and service file to SOURCE
+          cp -r dist/* ~/rpmbuild/SOURCES/
+          cp ctrlb-backend.service ~/rpmbuild/SOURCES/
+
       - name: Create RPM spec file
         run: |
-          cat > ctrlb-backend.spec << EOF
+          cat > ~/rpmbuild/SPECS/ctrlb-backend.spec << EOF
           Name:           ctrlb-backend
           Version:        ${{ env.VERSION_NUM }}
           Release:        1%{?dist}
           Summary:        CTRLB Control Plane Backend
-
+          
           License:        Proprietary
           URL:           https://github.com/yourusername/ctrlb-control-plane
-
+          Source0:        ctrlb-backend-linux-amd64
+          Source1:        ctrlb-backend-linux-arm64
+          Source2:        ctrlb-backend.service
+          
           %description
           Backend service for the CTRLB Control Plane system.
-
+          
           %pre
           getent group ctrlb >/dev/null || groupadd -r ctrlb
           getent passwd ctrlb >/dev/null || \
               useradd -r -g ctrlb -d /var/lib/ctrlb -s /sbin/nologin \
               -c "CTRLB Control Plane User" ctrlb
           exit 0
-
+          
           %install
           mkdir -p %{buildroot}/usr/local/bin
           mkdir -p %{buildroot}/var/lib/ctrlb
           mkdir -p %{buildroot}/etc/systemd/system
           
           %ifarch x86_64
-          install -m 755 dist/ctrlb-backend-linux-amd64 %{buildroot}/usr/local/bin/ctrlb-backend
+          install -m 755 %{SOURCE0} %{buildroot}/usr/local/bin/ctrlb-backend
           %endif
           %ifarch aarch64
-          install -m 755 dist/ctrlb-backend-linux-arm64 %{buildroot}/usr/local/bin/ctrlb-backend
+          install -m 755 %{SOURCE1} %{buildroot}/usr/local/bin/ctrlb-backend
           %endif
           
-          install -m 644 ctrlb-backend.service %{buildroot}/etc/systemd/system/ctrlb-backend.service
-
+          install -m 644 %{SOURCE2} %{buildroot}/etc/systemd/system/ctrlb-backend.service
+          
           %files
           %attr(755, root, root) /usr/local/bin/ctrlb-backend
           %attr(644, root, root) /etc/systemd/system/ctrlb-backend.service
           %attr(755, ctrlb, ctrlb) /var/lib/ctrlb
-
+          
           %post
           systemctl daemon-reload
           systemctl enable ctrlb-backend.service
           systemctl start ctrlb-backend.service
-
+          
           %preun
           if [ $1 -eq 0 ]; then
               systemctl stop ctrlb-backend.service
               systemctl disable ctrlb-backend.service
           fi
-
+          
           %postun
           if [ $1 -eq 0 ]; then
               systemctl daemon-reload
           fi
-
+          
           %changelog
           * $(date '+%a %b %d %Y') CTRLB Team <your.email@example.com> - ${{ env.VERSION_NUM }}-1
           - First package release
@@ -169,13 +188,6 @@ jobs:
 
       - name: Create RPM packages
         run: |
-          # Create RPM build directory structure
-          mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-          
-          # Copy spec file and service file
-          cp ctrlb-backend.spec ~/rpmbuild/SPECS/
-          cp ctrlb-backend.service ~/rpmbuild/SOURCES/
-          
           # Build RPM for amd64
           rpmbuild -bb --target x86_64 ~/rpmbuild/SPECS/ctrlb-backend.spec
           cp ~/rpmbuild/RPMS/x86_64/*.rpm dist/
