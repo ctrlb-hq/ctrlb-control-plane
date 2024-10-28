@@ -154,7 +154,7 @@ func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest C
 
 		req, err := http.NewRequest(http.MethodPut, apiEndpoint, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return fmt.Errorf("error creating request for hostname %s: %v", hostname, err)
+			log.Printf("Error creating request for hostname %s: %v", hostname, err)
 		}
 
 		req.Header.Set("Content-Type", "application/json")
@@ -162,12 +162,12 @@ func (f *FrontendConfigRepository) UpdateConfig(id string, configUpdateRequest C
 		client := &http.Client{Timeout: 10 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
-			return fmt.Errorf("error making API call to hostname %s: %v", hostname, err)
+			log.Printf("Error making API call to hostname %s: %v", hostname, err)
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("API call to hostname %s failed with status: %s", hostname, resp.Status)
+			log.Printf("API call to hostname %s failed with status: %s", hostname, resp.Status)
 		}
 	}
 
