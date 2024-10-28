@@ -39,16 +39,21 @@ func checkExistingDefault(db *sql.DB) bool {
 }
 
 func defaultFBConfig() models.Config {
-	configString := `
-[INPUT]
-	Name        cpu
-	Tag         cpu_metrics
-	Interval_Sec 1
+	configString :=
+		`
+service:
+    http_server: "on"
 
-[OUTPUT]
-	Name        stdout
-	Match       cpu_metrics
-	`
+pipeline:
+    inputs:
+        - name: dummy
+          Interval_sec: 5
+
+
+    outputs:
+        - name: stdout
+          match: "*"
+`
 	constants.DEFAULT_CONFIG_FB_ID = utils.CreateNewUUID()
 	config := models.Config{
 		ID:          constants.DEFAULT_CONFIG_FB_ID,
@@ -63,7 +68,8 @@ func defaultFBConfig() models.Config {
 }
 
 func defaultOTELConfig() models.Config {
-	otelConfigString := `
+	otelConfigString :=
+		`
 receivers:
 otlp:
 	protocols:
@@ -79,7 +85,7 @@ pipelines:
 	traces:
 	receivers: [otlp]
 	exporters: [logging]
-	`
+`
 
 	constants.DEFAULT_CONFIG_OTEL_ID = utils.CreateNewUUID()
 	config := models.Config{

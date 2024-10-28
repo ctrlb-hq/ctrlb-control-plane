@@ -1,4 +1,4 @@
-package services
+package operators
 
 import (
 	"encoding/json"
@@ -103,30 +103,13 @@ func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (map[string]string, error) {
+func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
 
-	request, ok := updateConfigRequest.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid request body while updating config, expected a map[string]interface{}")
-	}
+	configString := updateConfigRequest.Config
 
-	configString, ok := request["config"].(string)
-	if !ok {
-		return nil, fmt.Errorf("config field is missing or not a string")
-	}
-
-	var config models.OTELConfig
-
-	err := json.Unmarshal([]byte(configString), &config)
-	if err != nil {
+	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
 		return nil, err
 	}
-
-	if err = utils.SaveToYAML(config, constants.AGENT_CONFIG_PATH); err != nil {
-		return nil, err
-	}
-
-	otc.Adapter.UpdateConfig()
 
 	jsonStr := `{"message": "Configuration for otel agent has been updated"}`
 	var result map[string]string

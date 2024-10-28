@@ -1,4 +1,4 @@
-package services
+package operators
 
 import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
@@ -8,7 +8,7 @@ import (
 )
 
 type Operator interface {
-	UpdateCurrentConfig(interface{}) (map[string]string, error)
+	UpdateCurrentConfig(models.ConfigUpsertRequest) (map[string]string, error)
 	StartAgent() (map[string]string, error)
 	StopAgent() (map[string]string, error)
 	GracefulShutdown() (map[string]string, error)
@@ -34,12 +34,12 @@ func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 
 }
 
-func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest interface{}) (interface{}, error) {
+func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (interface{}, error) {
 	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
 }
 
 func (o *OperatorService) GetCurrentConfig() (interface{}, error) {
-	return utils.LoadYAMLToJSON(constants.AGENT_CONFIG_PATH, constants.AGENT_TYPE)
+	return utils.LoadYAML(constants.AGENT_CONFIG_PATH)
 }
 
 func (o *OperatorService) StartAgent() (map[string]string, error) {

@@ -4,13 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
 var operatorHandler *OperatorHandler
 
-func NewOperatorHandler(operatorService *services.OperatorService) *OperatorHandler {
+func NewOperatorHandler(operatorService *operators.OperatorService) *OperatorHandler {
 	operatorHandler = &OperatorHandler{
 		OperatorService: operatorService,
 	}
@@ -30,14 +31,10 @@ func (o *OperatorHandler) GetCurrentConfig(w http.ResponseWriter, r *http.Reques
 
 }
 
-type UpdateConfigRequest struct {
-	Config string `json:"config"`
-}
-
 func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Request) {
 	// TODO: Add Auth
 
-	var updateConfigRequest interface{}
+	var updateConfigRequest models.ConfigUpsertRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &updateConfigRequest); err != nil {
 		log.Println(err)

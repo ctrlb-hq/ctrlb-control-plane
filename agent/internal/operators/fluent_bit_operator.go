@@ -1,4 +1,4 @@
-package services
+package operators
 
 import (
 	"encoding/json"
@@ -100,30 +100,13 @@ func (f *FluentBitOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (map[string]string, error) {
+func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
 
-	request, ok := updateConfigRequest.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid request body while updating config, expected a map[string]interface{}")
-	}
+	configString := updateConfigRequest.Config
 
-	configString, ok := request["config"].(string)
-	if !ok {
-		return nil, fmt.Errorf("config field is missing or not a string")
-	}
-
-	var config models.FluentBitConfig
-
-	err := json.Unmarshal([]byte(configString), &config)
-	if err != nil {
+	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
 		return nil, err
 	}
-
-	if err = utils.SaveToYAML(config, constants.AGENT_CONFIG_PATH); err != nil {
-		return nil, err
-	}
-
-	f.Adapter.UpdateConfig()
 
 	jsonStr := `{"message": "Configuration has been updated"}`
 	var result map[string]string

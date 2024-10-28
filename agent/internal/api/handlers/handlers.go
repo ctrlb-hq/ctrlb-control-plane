@@ -1,9 +1,9 @@
 package api
 
 import (
-	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
 )
 
 type OperatorHandler struct {
-	OperatorService *services.OperatorService
+	OperatorService *operators.OperatorService
 }
