@@ -23,9 +23,8 @@ import (
 
 func main() {
 	var wg sync.WaitGroup
-	currentDir, _ := os.Getwd()
 
-	constants.AGENT_CONFIG_PATH = *flag.String("config", currentDir+"/internal/config/otel.yaml", "Path to the agent configuration file")
+	constants.AGENT_CONFIG_PATH = *flag.String("config", "./config.yaml", "Path to the agent configuration file")
 	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
 	constants.IS_PIPELINE = *flag.Bool("isPipeline", false, "Agent or Pipeline")
 	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
