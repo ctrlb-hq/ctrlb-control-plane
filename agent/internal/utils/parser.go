@@ -22,10 +22,8 @@ func SaveToYAML(inputString string, filePath string) error {
 		return fmt.Errorf("invalid YAML format: %v", err)
 	}
 
-	if _, err := os.Stat(filePath); err == nil {
-		if err := os.Remove(filePath); err != nil {
-			return fmt.Errorf("could not remove existing file at %s: %v", filePath, err)
-		}
+	if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("config already exists, but unable to remove at %s: %v", filePath, err)
 	}
 
 	if err := os.WriteFile(filePath, []byte(inputString), 0644); err != nil {
