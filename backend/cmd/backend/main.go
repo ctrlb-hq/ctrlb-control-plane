@@ -11,6 +11,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
+	sessionManager "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth/session-manager"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
@@ -34,21 +35,20 @@ func main() {
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT, db)
 	agentQueue.StartStatusCheck()
 
-	basicAuthenticator := auth.NewBasicAuthenticator()
-
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendConfigRepository := frontendconfig.NewFrontendConfigRepository(db)
 
+	authSessionManager := sessionManager.NewSessionManager()
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
-	authService := auth.NewAuthService(authRepository)
+	authService := auth.NewAuthService(authRepository, authSessionManager)
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, &basicAuthenticator)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, authService.SessionManager)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 

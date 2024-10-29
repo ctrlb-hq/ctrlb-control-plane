@@ -3,7 +3,6 @@ package frontendagent
 import (
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
 )
@@ -11,32 +10,17 @@ import (
 // FrontendAgentHandler handles frontend agent operations
 type FrontendAgentHandler struct {
 	FrontendAgentService *FrontendAgentService
-	BasicAuthenticator   *auth.BasicAuthenticator
 }
 
 // NewFrontendAgentHandler initializes the handler
-func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService, basicAuthenticator *auth.BasicAuthenticator) *FrontendAgentHandler {
+func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService) *FrontendAgentHandler {
 	return &FrontendAgentHandler{
 		FrontendAgentService: frontendAgentServices,
-		BasicAuthenticator:   basicAuthenticator,
 	}
-}
-
-// authenticate validates the token from request headers
-func (f *FrontendAgentHandler) authenticate(w http.ResponseWriter, r *http.Request) bool {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil || f.BasicAuthenticator.ValidateToken(token) != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return false
-	}
-	return true
 }
 
 // GetAllAgents retrieves all agents
 func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	response, err := f.FrontendAgentService.GetAllAgents()
 	if err != nil {
@@ -48,9 +32,6 @@ func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Reque
 
 // GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 
@@ -64,9 +45,6 @@ func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) 
 
 // DeleteAgent removes an agent by ID
 func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 
@@ -84,9 +62,6 @@ func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Reques
 
 // StartAgent starts an agent by ID
 func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 
@@ -104,9 +79,6 @@ func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request
 
 // StopAgent stops an agent by ID
 func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 
@@ -124,9 +96,6 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 
 // GetMetrics retrieves metrics for a specific agent
 func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 
@@ -145,9 +114,6 @@ func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request
 
 // RestartMonitoring restarts monitoring for a specific agent
 func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
-	if !f.authenticate(w, r) {
-		return
-	}
 
 	id := mux.Vars(r)["id"]
 

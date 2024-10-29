@@ -4,21 +4,18 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 // AgentHandler is responsible for handling HTTP requests related to agents.
 type AgentHandler struct {
-	AgentService       *AgentService            // Service for managing agent operations
-	BasicAuthenticator *auth.BasicAuthenticator // Basic authentication service
+	AgentService *AgentService // Service for managing agent operations
 }
 
 // NewAgentHandler creates a new instance of AgentHandler with the provided services.
-func NewAgentHandler(agentServices *AgentService, basicAuthenticator *auth.BasicAuthenticator) *AgentHandler {
+func NewAgentHandler(agentServices *AgentService) *AgentHandler {
 	return &AgentHandler{
-		AgentService:       agentServices,      // Assign the agent service
-		BasicAuthenticator: basicAuthenticator, // Assign the basic authenticator
+		AgentService: agentServices, // Assign the agent service\
 	}
 }
 
