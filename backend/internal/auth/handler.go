@@ -11,14 +11,12 @@ import (
 )
 
 type AuthHandler struct {
-	AuthService        *AuthService
-	BasicAuthenticator *BasicAuthenticator
+	AuthService *AuthService
 }
 
-func NewAuthHandler(authService *AuthService, basicAuthenticator *BasicAuthenticator) *AuthHandler {
+func NewAuthHandler(authService *AuthService) *AuthHandler {
 	return &AuthHandler{
-		AuthService:        authService,
-		BasicAuthenticator: basicAuthenticator,
+		AuthService: authService,
 	}
 }
 
@@ -89,17 +87,48 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.AuthService.Login(&loginRequest)
+	// Login and get session ID
+	sessionID, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
-		utils.WriteJSONResponse(w, http.StatusUnauthorized, err)
+		utils.WriteJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 		return
 	}
 
-	token := a.BasicAuthenticator.GenerateToken(user.Email, user.Password)
+	// Set session ID as a cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    sessionID,
+		HttpOnly: true,
+		Path:     "/",
+	})
 
 	response := map[string]string{
-		"token":   token,
 		"message": "Login successful",
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Get session ID from cookie
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		utils.WriteJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "no session found"})
+		return
+	}
+
+	// Delete session
+	a.AuthService.Logout(cookie.Value)
+
+	// Clear the cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session_id",
+		Value:  "",
+		MaxAge: -1,
+		Path:   "/",
+	})
+
+	response := map[string]string{
+		"message": "Logout successful",
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }

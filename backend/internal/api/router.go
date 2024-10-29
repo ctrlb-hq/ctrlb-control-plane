@@ -3,32 +3,36 @@ package api
 import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
+	sessionManager "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth/session-manager"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, basicAuth *auth.BasicAuthenticator) *mux.Router {
+func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, sessionManager *sessionManager.SessionManager) *mux.Router {
 	router := mux.NewRouter()
 
-	agentHandler := agent.NewAgentHandler(agentService, basicAuth)
+	agentHandler := agent.NewAgentHandler(agentService)
 
-	authHandler := auth.NewAuthHandler(authService, basicAuth)
-	frontendAgentHandler := frontendagent.NewFrontendAgentHandler(frontendAgentService, basicAuth)
-	frontendPipelineHandler := frontendpipeline.NewFrontendPipelineHandler(frontendPipelineService, basicAuth)
-	frontendConfigHandler := frontendconfig.NewFrontendAgentHandler(frontendConfigServices, basicAuth)
+	authHandler := auth.NewAuthHandler(authService)
+	frontendAgentHandler := frontendagent.NewFrontendAgentHandler(frontendAgentService)
+	frontendPipelineHandler := frontendpipeline.NewFrontendPipelineHandler(frontendPipelineService)
+	frontendConfigHandler := frontendconfig.NewFrontendAgentHandler(frontendConfigServices)
 
 	authAPIsV1 := router.PathPrefix("/api/auth/v1").Subrouter()
 
 	authAPIsV1.HandleFunc("/register", authHandler.Register).Methods("POST")
 	authAPIsV1.HandleFunc("/login", authHandler.Login).Methods("POST")
+	authAPIsV1.HandleFunc("/logout", authHandler.Logout).Methods("POST")
 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
 	agentAPIsV1.HandleFunc("/agents", agentHandler.RegisterAgent).Methods("PUT")
 
 	frontendAgentAPIsV1 := router.PathPrefix("/api/frontend/v1").Subrouter()
+	frontendAgentAPIsV1.Use(middleware.AuthMiddleware(sessionManager))
 
 	frontendAgentAPIsV1.HandleFunc("/agents", frontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.GetAgent).Methods("GET")

@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
+	"github.com/mattn/go-sqlite3"
 )
 
 type AuthRepository struct {
@@ -18,22 +19,41 @@ func NewAuthRepository(db *sql.DB) *AuthRepository {
 }
 
 func (a *AuthRepository) RegisterUser(user User) error {
-	_, err := a.db.Exec("INSERT INTO user(email,name, password) VALUES(? , ?, ?)", user.Email, user.Name, user.Password)
+	// Use transaction to handle user creation
+	tx, err := a.db.Begin()
 	if err != nil {
-		if err.Error() == "UNIQUE constraint failed: user.Email" {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Attempt to insert user
+	_, err = tx.Exec("INSERT INTO user (email, name, password) VALUES (?, ?, ?)", user.Email, user.Name, user.Password)
+	if err != nil {
+		if isUniqueViolation(err) {
 			log.Println("User already exists:", user)
 			return utils.ErrUserAlreadyExists
 		}
-		return errors.New("failed to register user")
+		return fmt.Errorf("failed to register user: %w", err)
 	}
-	log.Println("User register:", user)
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	log.Println("User registered:", user)
 	return nil
 }
 
-func (a *AuthRepository) Login(email string, password string) (*User, error) {
+func (a *AuthRepository) Login(email string) (*User, error) {
 	var user User
 
-	// Prepare the SQL statement
+	// Prepare and execute the SQL statement
 	stmt, err := a.db.Prepare("SELECT email, name, password FROM user WHERE email = ?")
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %v", err)
@@ -43,15 +63,18 @@ func (a *AuthRepository) Login(email string, password string) (*User, error) {
 	// Execute the query
 	err = stmt.QueryRow(email).Scan(&user.Email, &user.Name, &user.Password)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("user not found")
 		}
 		return nil, fmt.Errorf("failed to query user: %v", err)
 	}
 
-	if user.Password != password {
-		return nil, errors.New("invalid password")
-	}
-
 	return &user, nil
+}
+
+func isUniqueViolation(err error) bool {
+	if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
+		return true
+	}
+	return false
 }
