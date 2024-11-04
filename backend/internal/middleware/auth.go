@@ -1,28 +1,36 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 
-	sessionManager "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth/session-manager"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-// AuthMiddleware checks if the user is authenticated
-func AuthMiddleware(sessionManager *sessionManager.SessionManager) func(http.Handler) http.Handler {
+// Define a custom type for the context key
+type contextKey string
+
+const emailContextKey contextKey = "email"
+
+// AuthMiddleware verifies JWT token validity on protected routes
+func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cookie, err := r.Cookie("session_id")
-			if err != nil || cookie.Value == "" {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			tokenString := r.Header.Get("Authorization")
+			if tokenString == "" {
+				http.Error(w, "Missing token", http.StatusUnauthorized)
 				return
 			}
 
-			_, err = sessionManager.GetSession(cookie.Value)
+			email, err := utils.ValidateJWT(tokenString)
 			if err != nil {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			// Set the email in the request context
+			ctx := context.WithValue(r.Context(), emailContextKey, email)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

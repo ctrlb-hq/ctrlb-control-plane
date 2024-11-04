@@ -1,17 +1,16 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
-	sessionManager "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth/session-manager"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
@@ -19,13 +18,45 @@ import (
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	constants.WORKER_COUNT = *flag.Int("wc", 4, "Number of worker threads")
-	constants.PORT = *flag.String("port", "8096", "Server port for communication")
-	constants.ENV = *flag.String("env", "prod", "For testing purpose")
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Access your JWT secret from environment variables
+	constants.JWT_SECRET = os.Getenv("JWT_SECRET")
+	if constants.JWT_SECRET == "" {
+		log.Fatal("JWT_SECRET is not set in .env file")
+	}
+
+	workerCountEnv := os.Getenv("WORKER_COUNT")
+	if workerCountEnv != "" {
+		count, err := strconv.Atoi(workerCountEnv)
+		if err != nil {
+			constants.WORKER_COUNT = 4
+		} else {
+			constants.WORKER_COUNT = count
+		}
+	} else {
+		constants.WORKER_COUNT = 4
+	}
+
+	if portEnv := os.Getenv("PORT"); portEnv != "" {
+		constants.PORT = portEnv
+	} else {
+		constants.PORT = "8096" // Default value
+	}
+
+	// Read ENV from environment variable or set default
+	if envEnv := os.Getenv("ENV"); envEnv != "" {
+		constants.ENV = envEnv
+	} else {
+		constants.ENV = "prod" // Default value
+	}
 
 	db, err := database.InitializeDB()
 	if err != nil {
@@ -41,14 +72,13 @@ func main() {
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendConfigRepository := frontendconfig.NewFrontendConfigRepository(db)
 
-	authSessionManager := sessionManager.NewSessionManager()
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
-	authService := auth.NewAuthService(authRepository, authSessionManager)
+	authService := auth.NewAuthService(authRepository)
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, authService.SessionManager)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
