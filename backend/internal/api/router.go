@@ -7,7 +7,8 @@ import (
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
+
+	// "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -32,7 +33,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	agentAPIsV1.HandleFunc("/agents", agentHandler.RegisterAgent).Methods("PUT")
 
 	frontendAgentAPIsV1 := router.PathPrefix("/api/frontend/v1").Subrouter()
-	frontendAgentAPIsV1.Use(middleware.AuthMiddleware(sessionManager))
+	// frontendAgentAPIsV1.Use(middleware.AuthMiddleware(sessionManager))
 
 	frontendAgentAPIsV1.HandleFunc("/agents", frontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.GetAgent).Methods("GET")

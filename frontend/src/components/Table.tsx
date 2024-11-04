@@ -1,5 +1,7 @@
 import { PencilIcon } from "@heroicons/react/24/solid";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import authService from "../services/authService";
+// import queryService from "../services/queryService";
 import {
   Card,
   Typography,
@@ -18,6 +20,7 @@ import {
 } from "@material-tailwind/react";
 
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const TABS = [
   {
@@ -117,36 +120,21 @@ function AgentsTable() {
       <tbody>
         {TABLE_ROWS.map(
           ({ img, name, type, version, status, exportedVolume }, index) => {
-            const isLast = index === TABLE_ROWS.length - 1;
-            const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
+          const isLast = index === TABLE_ROWS.length - 1;
+          const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
-            return (
-              <tr key={name}>
-                <td className={classes}>
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={img}
-                      alt={name}
-                      size="sm"
-                      placeholder={"NA"}
-                      onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}
-                    />
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                        placeholder={undefined}
-                        onPointerEnterCapture={undefined}
-                        onPointerLeaveCapture={undefined}
-                      >
-                        {name}
-                      </Typography>
-                    </div>
-                  </div>
-                </td>
-                <td className={classes}>
+          return (
+            <tr key={name}>
+              <td className={classes}>
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    src={img}
+                    alt={name}
+                    size="sm"
+                    placeholder={"NA"}
+                    onPointerEnterCapture={undefined}
+                    onPointerLeaveCapture={undefined}
+                  />
                   <div className="flex flex-col">
                     <Typography
                       variant="small"
@@ -156,31 +144,13 @@ function AgentsTable() {
                       onPointerEnterCapture={undefined}
                       onPointerLeaveCapture={undefined}
                     >
-                      {type}
-                    </Typography>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal opacity-70"
-                      placeholder={undefined}
-                      onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}
-                    >
-                      {version}
+                      {name}
                     </Typography>
                   </div>
-                </td>
-                <td className={classes}>
-                  <div className="w-max">
-                    <Chip
-                      variant="ghost"
-                      size="sm"
-                      value={status}
-                      color={status == "Active" ? "green" : "red"}
-                    />
-                  </div>
-                </td>
-                <td className={classes}>
+                </div>
+              </td>
+              <td className={classes}>
+                <div className="flex flex-col">
                   <Typography
                     variant="small"
                     color="blue-gray"
@@ -189,26 +159,58 @@ function AgentsTable() {
                     onPointerEnterCapture={undefined}
                     onPointerLeaveCapture={undefined}
                   >
-                    {exportedVolume}
+                    {type}
                   </Typography>
-                </td>
-                <td className={classes}>
-                  <Tooltip content="Edit Config">
-                    <IconButton
-                      variant="text"
-                      placeholder={undefined}
-                      onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}
-                      onClick={handleClick}
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </IconButton>
-                  </Tooltip>
-                </td>
-              </tr>
-            );
-          }
-        )}
+                  <Typography
+                    variant="small"
+                    color="blue-gray"
+                    className="font-normal opacity-70"
+                    placeholder={undefined}
+                    onPointerEnterCapture={undefined}
+                    onPointerLeaveCapture={undefined}
+                  >
+                    {version}
+                  </Typography>
+                </div>
+              </td>
+              <td className={classes}>
+                <div className="w-max">
+                  <Chip
+                    variant="ghost"
+                    size="sm"
+                    value={status}
+                    color={status == "Active" ? "green" : "red"}
+                  />
+                </div>
+              </td>
+              <td className={classes}>
+                <Typography
+                  variant="small"
+                  color="blue-gray"
+                  className="font-normal"
+                  placeholder={undefined}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
+                >
+                  {exportedVolume}
+                </Typography>
+              </td>
+              <td className={classes}>
+                <Tooltip content="Edit Config">
+                  <IconButton
+                    variant="text"
+                    placeholder={undefined}
+                    onPointerEnterCapture={undefined}
+                    onPointerLeaveCapture={undefined}
+                    onClick={handleClick}
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </IconButton>
+                </Tooltip>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -252,6 +254,19 @@ function Pagination() {
 }
 
 export function MembersTable() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("agents"); 
+  // queryService.fetchAgents()
+  // queryService.fetchPipelines()
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate("/login");
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
   return (
     <Card
       className="h-full w-full"
@@ -268,42 +283,53 @@ export function MembersTable() {
         onPointerLeaveCapture={undefined}
       >
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row mt-4">
-          <Tabs value="all" className="w-full md:w-max">
-            <TabsHeader
-              placeholder={undefined}
-              onPointerEnterCapture={undefined}
+          {/* Logout Button */}
+          <div className="flex justify-end w-full md:w-auto">
+            <Tooltip content="Logout">
+              <IconButton variant="text" onClick={handleLogout} placeholder={undefined}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}>
+                <ArrowRightOnRectangleIcon className="h-5 w-5 text-blue-gray-500" />
+              </IconButton>
+            </Tooltip>
+          </div>
+          <Tabs value={activeTab} className="w-full md:w-max" onChange={setActiveTab}>
+            <TabsHeader 
+              placeholder={undefined} 
+              onPointerEnterCapture={undefined} 
               onPointerLeaveCapture={undefined}
-            >
+              
+              >
               {TABS.map(({ label, value }) => (
-                <Tab
-                  key={value}
-                  value={value}
-                  placeholder={undefined}
-                  onPointerEnterCapture={undefined}
-                  onPointerLeaveCapture={undefined}
-                >
+                <Tab 
+                  key={value} 
+                  value={value} 
+                  placeholder={undefined} 
+                  onPointerEnterCapture={undefined} 
+                  onPointerLeaveCapture={undefined}>
                   &nbsp;&nbsp;{label}&nbsp;&nbsp;
+
                 </Tab>
               ))}
             </TabsHeader>
           </Tabs>
           <div className="w-full md:w-72">
-            <Input
-              label="Search"
-              icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-              onPointerEnterCapture={undefined}
-              onPointerLeaveCapture={undefined}
-              crossOrigin={undefined}
-            />
+            <Input 
+              label="Search" 
+              icon={<MagnifyingGlassIcon className="h-5 w-5" />} 
+              onPointerEnterCapture={undefined} 
+              onPointerLeaveCapture={undefined} 
+              crossOrigin={undefined} 
+              />
           </div>
         </div>
       </CardHeader>
-      <CardBody
-        className="overflow-scroll px-0 p-4"
-        placeholder={undefined}
-        onPointerEnterCapture={undefined}
+      <CardBody 
+        className="overflow-scroll px-0 p-4" 
+        placeholder={undefined} 
+        onPointerEnterCapture={undefined} 
         onPointerLeaveCapture={undefined}
-      >
+        >
         <AgentsTable />
       </CardBody>
       {TABS.length > 10 && (
@@ -312,7 +338,7 @@ export function MembersTable() {
           placeholder={undefined}
           onPointerEnterCapture={undefined}
           onPointerLeaveCapture={undefined}
-        >
+          >
           <Pagination />
         </CardFooter>
       )}

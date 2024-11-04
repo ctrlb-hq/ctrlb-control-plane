@@ -98,7 +98,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
-		HttpOnly: true,
+		HttpOnly: false,
 		Path:     "/",
 	})
 

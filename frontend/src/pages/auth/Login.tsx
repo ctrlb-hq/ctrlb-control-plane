@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import { LoginCredentials } from '../../types/auth.types';
 
@@ -10,6 +10,7 @@ const Login: React.FC = () => {
     password: '',
   });
   const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -22,13 +23,16 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
-    
+    setIsLoading(true);
+
     try {
       const response = await authService.login(formData);
       console.log('Login successful:', response);
       navigate('/');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,7 +40,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <h2 className="text-center text-3xl font-bold">Sign In</h2>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
@@ -56,10 +60,11 @@ const Login: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium">
                 Password
@@ -71,6 +76,7 @@ const Login: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
@@ -78,10 +84,29 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={isLoading}
+            className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Sign In
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Signing in...
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
+
+          <p className="text-center mt-4 text-sm">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-blue-600 hover:underline">
+              Register here
+            </Link>
+          </p>
         </form>
       </div>
     </div>
