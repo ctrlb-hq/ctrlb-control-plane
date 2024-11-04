@@ -3,20 +3,18 @@ package auth
 import (
 	"errors"
 
-	sessionManager "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth/session-manager"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
 	AuthRepository *AuthRepository
-	SessionManager *sessionManager.SessionManager
 }
 
-func NewAuthService(authRepository *AuthRepository, sessionManager *sessionManager.SessionManager) *AuthService {
+func NewAuthService(authRepository *AuthRepository) *AuthService {
 	return &AuthService{
 		AuthRepository: authRepository,
-		SessionManager: sessionManager,
 	}
 }
 
@@ -51,16 +49,10 @@ func (a *AuthService) Login(request *LoginRequest) (string, error) {
 		return "", errors.New("invalid credentials")
 	}
 
-	// Generate session
-	sessionID, err := a.SessionManager.CreateSession(user.Email)
+	// Generate token
+	token, err := utils.GenerateJWT(request.Email)
 	if err != nil {
-		return "", errors.New("could not create session")
+		return "", err
 	}
-
-	return sessionID, nil
-}
-
-func (a *AuthService) Logout(sessionID string) error {
-	a.SessionManager.DeleteSession(sessionID)
-	return nil
+	return token, nil
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -82,4 +83,17 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 
 func CreateNewUUID() string {
 	return uuid.New().String()
+}
+
+func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {
+	if request.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+	if request.Email == "" {
+		return errors.New("email cannot be empty")
+	}
+	if request.Password == "" {
+		return errors.New("password cannot be empty")
+	}
+	return nil
 }
