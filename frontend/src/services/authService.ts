@@ -45,11 +45,6 @@ const authService = {
       throw new Error('Logout failed');
     }
   },
-
-  getAuthHeaders: () => {
-    const token = localStorage.getItem('authToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
 };
 
 export default authService;
