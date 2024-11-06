@@ -1,5 +1,6 @@
 import { PencilIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import queryService from "../services/queryServices";
 import {
   Card,
   Typography,
@@ -254,6 +255,9 @@ function Pagination() {
 
 export function MembersTable() {
   const navigate = useNavigate();
+
+  // queryService.fetchAgents()
+  // queryService.fetchPipelines()
 
   const handleLogout = async () => {
     try {
