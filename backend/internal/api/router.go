@@ -24,6 +24,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	authAPIsV1.HandleFunc("/register", authHandler.Register).Methods("POST")
 	authAPIsV1.HandleFunc("/login", authHandler.Login).Methods("POST")
+	authAPIsV1.HandleFunc("/refresh", authHandler.RefreshToken).Methods("POST")
 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 

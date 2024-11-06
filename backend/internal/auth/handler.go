@@ -88,15 +88,30 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Login and get session ID
-	token, err := a.AuthService.Login(&loginRequest)
+	response, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 		return
 	}
 
-	response := map[string]string{
-		"message": "Login successful",
-		"token":   token,
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	response, err := a.AuthService.RefreshToken(req)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "Invalid or expired refresh token" {
+			status = http.StatusUnauthorized
+		}
+		utils.SendJSONError(w, status, err.Error())
+		return
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }

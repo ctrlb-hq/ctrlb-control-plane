@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -38,21 +39,55 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) error {
 	return nil
 }
 
-func (a *AuthService) Login(request *LoginRequest) (string, error) {
+// Login handles user login and returns both access and refresh tokens
+func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
 	user, err := a.AuthRepository.Login(request.Email)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Compare the provided password with the hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return nil, errors.New("invalid credentials")
 	}
 
-	// Generate token
-	token, err := utils.GenerateJWT(request.Email)
+	// Generate access token (short-lived)
+	accessToken, err := utils.GenerateAccessToken(request.Email)
 	if err != nil {
-		return "", err
+		log.Println(err)
+		return nil, err
 	}
-	return token, nil
+
+	// Generate refresh token (long-lived)
+	refreshToken, err := utils.GenerateRefreshToken(request.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return both tokens
+	return &LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Message:      "Login successful",
+	}, nil
+}
+
+// Login handles user login and returns both access and refresh tokens
+func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error) {
+
+	// Validate the refresh token
+	email, err := utils.ValidateJWT(req.RefreshToken)
+	if err != nil {
+		return nil, errors.New("invalid or expired refresh token")
+	}
+
+	// Generate a new access token
+	accessToken, err := utils.GenerateAccessToken(email)
+	if err != nil {
+		return nil, errors.New("failed to generate access token")
+	}
+	response := map[string]string{
+		"access_token": accessToken,
+	}
+	return response, nil
 }

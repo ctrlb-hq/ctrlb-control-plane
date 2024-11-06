@@ -2,6 +2,7 @@ package frontendpipeline
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -35,7 +36,7 @@ func (f *FrontendPipelineService) GetAllPipelines() ([]Pipeline, error) {
 func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfig, error) {
 	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err.Error())
 		return nil, err
 	}
 

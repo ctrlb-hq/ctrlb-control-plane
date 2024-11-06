@@ -3,15 +3,13 @@ package utils
 import (
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var jwtSecret = []byte("your_secret_key") // Store securely in env or config
-
-// GenerateJWT generates a JWT token for a given user ID
-func GenerateJWT(email string) (string, error) {
-	expirationTime := time.Now().Add(15 * 24 * time.Hour) // Token valid for 15 day
-
+// GenerateJWT generates a JWT token for a given email and expiration time
+func GenerateJWT(email string, expiration time.Duration) (string, error) {
+	expirationTime := time.Now().Add(expiration)
 	// Set email as the subject claim
 	claims := &jwt.RegisteredClaims{
 		Subject:   email,
@@ -20,7 +18,27 @@ func GenerateJWT(email string) (string, error) {
 
 	// Create the token and sign it with the secret
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString([]byte(constants.JWT_SECRET))
+}
+
+// GenerateAccessToken generates a short-lived access token
+func GenerateAccessToken(email string) (string, error) {
+	return GenerateJWT(email, 15*time.Minute) // 15 minutes
+}
+
+// GenerateRefreshToken generates a long-lived refresh token
+func GenerateRefreshToken(email string) (string, error) {
+	return GenerateJWT(email, 30*24*time.Hour) // 30 days
+}
+
+// RefreshToken generates a new access token using a valid refresh token
+func RefreshToken(refreshToken string) (string, error) {
+	email, err := ValidateJWT(refreshToken)
+	if err != nil {
+		return "", err // Invalid refresh token
+	}
+	// Generate a new access token
+	return GenerateAccessToken(email)
 }
 
 // ValidateJWT parses and validates a JWT token and returns the email if valid
@@ -29,7 +47,7 @@ func ValidateJWT(tokenString string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return jwtSecret, nil
+		return []byte(constants.JWT_SECRET), nil
 	})
 	if err != nil {
 		return "", err
