@@ -57,12 +57,12 @@ func (a *AgentService) RegisterAgent(request AgentRegisterRequest) (interface{},
 	// Register the agent in the repository
 	err := a.AgentRepository.RegisterAgent(&agent)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
 	log.Println("Agent registered with ID:", agent.ID)
-	// TODO: Add agent to AgentQueue
+
+	a.AgentQueue.AddAgent(agent.ID, agent.Hostname)
 
 	return agent, nil // Return the registered agent
 }
