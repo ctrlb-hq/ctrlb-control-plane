@@ -2,7 +2,6 @@ package utils
 
 import (
 	"time"
-
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -10,6 +9,7 @@ import (
 // GenerateJWT generates a JWT token for a given email and expiration time
 func GenerateJWT(email string, expiration time.Duration) (string, error) {
 	expirationTime := time.Now().Add(expiration)
+  
 	// Set email as the subject claim
 	claims := &jwt.RegisteredClaims{
 		Subject:   email,
@@ -48,6 +48,7 @@ func ValidateJWT(tokenString string) (string, error) {
 			return nil, jwt.ErrSignatureInvalid
 		}
 		return []byte(constants.JWT_SECRET), nil
+
 	})
 	if err != nil {
 		return "", err

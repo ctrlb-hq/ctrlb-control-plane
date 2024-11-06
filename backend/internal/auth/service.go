@@ -50,7 +50,7 @@ func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
-
+  
 	// Generate access token (short-lived)
 	accessToken, err := utils.GenerateAccessToken(request.Email)
 	if err != nil {
