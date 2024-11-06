@@ -1,5 +1,6 @@
 import { PencilIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import queryService from "../services/queryServices";
 import {
   Card,
   Typography,
@@ -18,6 +19,7 @@ import {
 } from "@material-tailwind/react";
 
 import { useNavigate } from "react-router-dom";
+import authService from "../services/authService";
 
 const TABS = [
   {
@@ -252,6 +254,20 @@ function Pagination() {
 }
 
 export function MembersTable() {
+  const navigate = useNavigate();
+
+  // queryService.fetchAgents()
+  // queryService.fetchPipelines()
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <Card
       className="h-full w-full"
@@ -268,33 +284,63 @@ export function MembersTable() {
         onPointerLeaveCapture={undefined}
       >
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row mt-4">
-          <Tabs value="all" className="w-full md:w-max">
-            <TabsHeader
-              placeholder={undefined}
-              onPointerEnterCapture={undefined}
-              onPointerLeaveCapture={undefined}
-            >
-              {TABS.map(({ label, value }) => (
-                <Tab
-                  key={value}
-                  value={value}
-                  placeholder={undefined}
+          <div className="flex items-center justify-between w-full">
+            <Tabs value="all" className="w-full md:w-max">
+              <TabsHeader
+                placeholder={undefined}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+              >
+                {TABS.map(({ label, value }) => (
+                  <Tab
+                    key={value}
+                    value={value}
+                    placeholder={undefined}
+                    onPointerEnterCapture={undefined}
+                    onPointerLeaveCapture={undefined}
+                  >
+                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
+                  </Tab>
+                ))}
+              </TabsHeader>
+            </Tabs>
+            
+            <div className="flex items-center gap-4">
+              <div className="w-72">
+                <Input
+                  label="Search"
+                  icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                   onPointerEnterCapture={undefined}
                   onPointerLeaveCapture={undefined}
+                  crossOrigin={undefined}
+                />
+              </div>
+              <Button
+                size="sm"
+                variant="outlined"
+                className="flex items-center gap-2 text-red-500 border-red-500 hover:bg-red-50"
+                onClick={handleLogout}
+                placeholder={undefined}
+                onPointerEnterCapture={undefined}
+                onPointerLeaveCapture={undefined}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="h-4 w-4"
                 >
-                  &nbsp;&nbsp;{label}&nbsp;&nbsp;
-                </Tab>
-              ))}
-            </TabsHeader>
-          </Tabs>
-          <div className="w-full md:w-72">
-            <Input
-              label="Search"
-              icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-              onPointerEnterCapture={undefined}
-              onPointerLeaveCapture={undefined}
-              crossOrigin={undefined}
-            />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+                  />
+                </svg>
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
