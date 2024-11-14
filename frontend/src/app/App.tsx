@@ -4,13 +4,14 @@ import { MembersTable } from '../components/Table';
 import { EditConfig } from '../components/EditConfig';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Signup';
+import { ROUTES } from '../constants/routes';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('authToken');
   const location = useLocation();
 
   if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -21,7 +22,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   if (token) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.MEMBERS} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -32,7 +33,7 @@ function App() {
     <Router>
       <Routes>
         <Route
-          path="/login"
+          path={ROUTES.LOGIN}
           element={
             <PublicRoute>
               <Login />
@@ -40,31 +41,34 @@ function App() {
           }
         />
         <Route
-          path="/register"
+          path={ROUTES.REGISTER}
           element={
             <PublicRoute>
               <Register />
             </PublicRoute>
           }
         />
-
         <Route
-          path="/"
+          path={ROUTES.MEMBERS}
           element={
             <ProtectedRoute>
               <MembersTable />
             </ProtectedRoute>
           }
         />
-        <Route path="/config/:agentId"
+        <Route
+          path="/"
+          element={<Navigate to={ROUTES.MEMBERS} replace />}
+        />
+        <Route 
+          path={`${ROUTES.CONFIG}/:agentId`}
           element={
             <ProtectedRoute>
               <EditConfig />
             </ProtectedRoute>
           }
         />
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
       </Routes>
     </Router>
   );
