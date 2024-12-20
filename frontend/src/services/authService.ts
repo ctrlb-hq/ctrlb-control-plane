@@ -66,8 +66,7 @@ const authService = {
   },
   logout: async () => {
     try {
-      localStorage.removeItem('authToken');
-      sessionStorage.clear();
+      localStorage.clear();
       return true;
     } catch (error) {
       console.error('Logout error:', error);
