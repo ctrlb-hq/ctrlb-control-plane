@@ -4,6 +4,7 @@ import authService from "../services/authService";
 import { AgentsTable } from "./Agents/AgentsTable";
 import { EmptyPipelineMessage } from "./Pipelines/EmptyPipeline";
 import { PlusIcon } from "@heroicons/react/24/solid";
+import { ROUTES } from "../constants/routes";
 
 const TABS = [
   { label: "Agents", value: "agents" },
@@ -17,9 +18,11 @@ export function MembersTable() {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      navigate("/login");
+      navigate(ROUTES.LOGIN, { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
+      localStorage.removeItem('authToken');
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   };
 

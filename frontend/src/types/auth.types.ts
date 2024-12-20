@@ -12,6 +12,7 @@ export interface RegisterCredentials {
 export interface AuthResponse {
   access_token: string;
   refresh_token: string;
+  token: string;
   message: string;
 }
 

@@ -64,14 +64,14 @@ const authService = {
       throw new Error(axiosError.response?.data?.message || 'Token refresh failed');
     }
   },
-
-  logout: async (): Promise<void> => {
+  logout: async () => {
     try {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('authToken');
+      sessionStorage.clear();
+      return true;
     } catch (error) {
       console.error('Logout error:', error);
-      throw new Error('Logout failed');
+      throw error;
     }
   },
 };
