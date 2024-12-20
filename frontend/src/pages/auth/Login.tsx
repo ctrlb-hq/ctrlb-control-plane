@@ -29,6 +29,7 @@ const Login: React.FC = () => {
     try {
       const response = await authService.login(formData);
       if (response) {
+        localStorage.setItem('authToken', response.token);
         const from = ROUTES.MEMBERS;
         navigate(from, { replace: true });
       }
