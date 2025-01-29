@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
 	"gopkg.in/yaml.v3"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
 	"github.com/fsnotify/fsnotify"
 )
 

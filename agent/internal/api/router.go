@@ -1,8 +1,8 @@
 package api
 
 import (
-	api "github.com/ctrlb-hq/ctrlb-collector/internal/api/handlers"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
+	api "github.com/ctrlb-hq/ctrlb-collector/agent/internal/api/handlers"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/operators"
 	"github.com/gorilla/mux"
 )
 

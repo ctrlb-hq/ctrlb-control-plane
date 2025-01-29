@@ -9,9 +9,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 func InformBackendServerStart() (*models.AgentWithConfig, error) {

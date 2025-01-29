@@ -1,6 +1,6 @@
 package adapters
 
-import "github.com/ctrlb-hq/ctrlb-collector/internal/models"
+import "github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
 
 // Design decision: Adapter wont be responsible to write file to disk. It would read config from disk
 type Adapter interface {

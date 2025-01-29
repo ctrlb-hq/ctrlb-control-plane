@@ -12,10 +12,10 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/shutdownhelper"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 	"github.com/prometheus/common/expfmt"
 )
 

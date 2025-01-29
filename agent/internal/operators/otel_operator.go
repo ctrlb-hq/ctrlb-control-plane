@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 type OtelOperator struct {

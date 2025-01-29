@@ -1,6 +1,6 @@
 package constants
 
-import "github.com/ctrlb-hq/ctrlb-collector/internal/models"
+import "github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
 
 var (
 	AGENT_CONFIG_PATH = "./config.yaml"

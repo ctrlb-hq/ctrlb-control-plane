@@ -9,16 +9,16 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/fluentbit"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/otel"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/agentcomm"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/api"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/config"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters/fluentbit"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters/otel"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/agentcomm"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/api"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/config"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/operators"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/shutdownhelper"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 func main() {

@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/operators"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/operators"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 var operatorHandler *OperatorHandler
