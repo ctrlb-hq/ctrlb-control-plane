@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     flex \
     bison \
     libyaml-dev \
-    libssl-dev
+    libssl-dev \
+    libc-ares-dev
 
 WORKDIR /app
 
@@ -21,11 +22,14 @@ RUN make
 
 WORKDIR /app
 
+ENV PKG_CONFIG_PATH=/app/ctrlb-fluent-bit/build/lib/pkgconfig
+ENV CGO_CFLAGS="-I/app/ctrlb-fluent-bit/lib/monkey/include -I/app/ctrlb-fluent-bit/include"
+ENV LD_LIBRARY_PATH=/app/ctrlb-fluent-bit/build/lib
+
 COPY go.mod ./
 RUN go mod download
 
 COPY . .
 
-ENV LD_LIBRARY_PATH=/app/ctrlb-fluent-bit/build/lib
 RUN CGO_ENABLED=1 go build -o ctrlb-collector cmd/ctrlb_collector/main.go
 ENTRYPOINT ["/app/ctrlb-collector"]
