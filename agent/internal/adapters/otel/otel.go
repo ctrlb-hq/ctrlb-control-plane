@@ -19,7 +19,7 @@ import (
 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
 	"go.opentelemetry.io/collector/connector"
 	"go.opentelemetry.io/collector/exporter"
-	"go.opentelemetry.io/collector/exporter/loggingexporter"
+	"go.opentelemetry.io/collector/exporter/debugexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
 	"go.opentelemetry.io/collector/extension"
 	"go.opentelemetry.io/collector/otelcol"
@@ -34,6 +34,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"github.com/prometheus/common/expfmt"
 )
@@ -74,13 +75,14 @@ func componentsFactory() (otelcol.Factories, error) {
 	if factories.Processors, err = processor.MakeFactoryMap(
 		batchprocessor.NewFactory(),
 		memorylimiterprocessor.NewFactory(),
+		probabilisticsamplerprocessor.NewFactory(),
 	); err != nil {
 		return factories, fmt.Errorf("failed to create processor factory map: %w", err)
 	}
 
 	if factories.Exporters, err = exporter.MakeFactoryMap(
 		otlpexporter.NewFactory(),
-		loggingexporter.NewFactory(),
+		debugexporter.NewFactory(),
 	); err != nil {
 		return factories, fmt.Errorf("failed to create exporter factory map: %w", err)
 	}

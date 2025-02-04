@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters/fluentbit"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters/otel"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/agentcomm"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/api"
@@ -37,16 +36,7 @@ func main() {
 	}
 
 	var adapter adapters.Adapter
-
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		adapter = fluentbit.NewFluentBitAdapter(&wg)
-	case "otel":
-		adapter = otel.NewOTELCollectorAdapter(&wg)
-	default:
-		log.Fatal("Agent currently not supported. Exiting....")
-		return
-	}
+	adapter = otel.NewOTELCollectorAdapter(&wg)
 
 	// 3. Start the agent
 	err := adapter.Initialize()
