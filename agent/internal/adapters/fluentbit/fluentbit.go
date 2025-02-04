@@ -1,4 +1,4 @@
-// package fluentbit
+package fluentbit
 
 // import (
 // 	"encoding/json"

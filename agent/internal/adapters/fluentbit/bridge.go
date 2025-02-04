@@ -1,7 +1,7 @@
-// package fluentbit
+package fluentbit
 
 // /*
-// #cgo CFLAGS: -I/app/ctrlb-fluent-bit/include -I/app/ctrlb-fluent-bit/build/lib/monkey/include/monkey -I/app/ctrlb-fluent-bit/lib/cmetrics/include -I/app/ctrlb-fluent-bit/lib/ctraces/include -I/app/ctrlb-fluent-bit/lib/mpack-amalgamation-1.1.1/src -I/app/ctrlb-fluent-bit/lib/msgpack-c/include -I/app/ctrlb-fluent-bit/lib/monkey/include/ -I/app/ctrlb-fluent-bit/lib/cfl/include/ -I/app/ctrlb-fluent-bit/lib/cfl/lib/xxhash/ -I/app/ctrlb-fluent-bit/lib/flb_libco/ -I/app/ctrlb-fluent-bit/lib/c-ares-1.33.1/include
+// #cgo CFLAGS: -I/app/ctrlb-fluent-bit/include -I/app/ctrlb-fluent-bit/build/lib/monkey/include/monkey -I/app/ctrlb-fluent-bit/lib/cmetrics/include -I/app/ctrlb-fluent-bit/lib/ctraces/include -I/app/ctrlb-fluent-bit/lib/mpack-amalgamation-1.1.1/src -I/app/ctrlb-fluent-bit/lib/msgpack-c/include -I/app/ctrlb-fluent-bit/lib/monkey/include/ -I/app/ctrlb-fluent-bit/lib/cfl/include/ -I/app/ctrlb-fluent-bit/lib/cfl/lib/xxhash/ -I/app/ctrlb-fluent-bit/lib/flb_libco/ -I/app/ctrlb-fluent-bit/lib/c-ares-1.33.1/include;
 // #cgo LDFLAGS: -L/app/ctrlb-fluent-bit/build/lib  -lfluent-bit -lm -ldl -lpthread
 // #include <fluent-bit.h>
 // #include <stdlib.h>
