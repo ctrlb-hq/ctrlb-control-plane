@@ -22,6 +22,10 @@ func (f *FrontendConfigService) GetAllConfigs() ([]models.Config, error) {
 	return f.FrontendConfigRepository.GetAllConfigs()
 }
 
+func (f *FrontendConfigService) GetAllConfigsV2() ([]models.Config, error) {
+	return f.FrontendConfigRepository.GetAllConfigs()
+}
+
 // CreateConfig creates a new configuration based on the provided request
 func (f *FrontendConfigService) CreateConfig(createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
 	config := &models.Config{

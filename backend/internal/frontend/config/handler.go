@@ -31,6 +31,17 @@ func (f *FrontendConfigHandler) GetAllConfig(w http.ResponseWriter, r *http.Requ
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+// GetAllConfig retrieves all configurations V2
+func (f *FrontendConfigHandler) GetAllConfigV2(w http.ResponseWriter, r *http.Request) {
+
+	response, err := f.FrontendConfigService.GetAllConfigsV2()
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
 // CreateConfig creates a new configuration
 func (f *FrontendConfigHandler) CreateConfig(w http.ResponseWriter, r *http.Request) {
 

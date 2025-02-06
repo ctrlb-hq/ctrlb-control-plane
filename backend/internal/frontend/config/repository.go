@@ -61,6 +61,43 @@ func (f *FrontendConfigRepository) GetAllConfigs() ([]models.Config, error) {
 	return configs, nil
 }
 
+func (f *FrontendConfigRepository) GetAllConfigsV2() ([]models.Config, error) {
+	var configs []models.Config
+
+	rows, err := f.db.Query("SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var config models.Config
+		var createdAt, updatedAt sql.NullTime
+
+		// Scan data into struct fields
+		if err := rows.Scan(&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+
+		// Set CreatedAt and UpdatedAt if valid
+		if createdAt.Valid {
+			config.CreatedAt = createdAt.Time
+		}
+		if updatedAt.Valid {
+			config.UpdatedAt = updatedAt.Time
+		}
+
+		configs = append(configs, config)
+	}
+
+	// Handle any errors encountered during row iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return configs, nil
+}
+
 // CreateConfig inserts a new configuration into the database
 func (f *FrontendConfigRepository) CreateConfig(config *models.Config) error {
 	query := `
