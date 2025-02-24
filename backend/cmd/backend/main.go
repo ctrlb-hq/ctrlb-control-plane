@@ -72,14 +72,14 @@ func main() {
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendConfigRepository := frontendconfig.NewFrontendConfigRepositoryV2(db)
-	frontendConfigRepositoryV2 := frontendconfigV2.NewFrontendConfigRepositoryV2(db)
+	frontendConfigRepositoryV2 := frontendconfigV2.NewFrontendConfigRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
-	frontendConfigServiceV2 := frontendconfigV2.NewFrontendAgentServiceV2(frontendConfigRepositoryV2)
+	frontendConfigServiceV2 := frontendconfigV2.NewFrontendAgentService(frontendConfigRepositoryV2)
 
 	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendConfigServiceV2)
 

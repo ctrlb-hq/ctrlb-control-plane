@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, frontendConfigServicesV2 *frontendconfigV2.FrontendConfigServiceV2) *mux.Router {
+func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, frontendConfigServicesV2 *frontendconfigV2.FrontendConfigService) *mux.Router {
 	router := mux.NewRouter()
 
 	agentHandler := agent.NewAgentHandler(agentService)
@@ -20,7 +20,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentHandler := frontendagent.NewFrontendAgentHandler(frontendAgentService)
 	frontendPipelineHandler := frontendpipeline.NewFrontendPipelineHandler(frontendPipelineService)
 	frontendConfigHandler := frontendconfig.NewFrontendAgentHandler(frontendConfigServices)
-	frontendConfigHandlerV2 := frontendconfigV2.NewFrontendAgentHandlerV2(frontendConfigServicesV2)
+	frontendConfigHandlerV2 := frontendconfigV2.NewFrontendAgentHandler(frontendConfigServicesV2)
 
 	authAPIsV1 := router.PathPrefix("/api/auth/v1").Subrouter()
 
@@ -60,7 +60,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
 	frontendAgentAPIsV2.Use(middleware.AuthMiddleware())
 
-	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.GetAllConfig).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.GetAllConfigs).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.CreateConfig).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.GetConfig).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.DeleteConfig).Methods("DELETE")

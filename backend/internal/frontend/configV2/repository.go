@@ -2,6 +2,7 @@ package frontendconfigV2
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -11,57 +12,71 @@ import (
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-// FrontendConfigRepositoryV2 provides methods to interact with the config database table
-type FrontendConfigRepositoryV2 struct {
+// FrontendConfigRepository provides methods to interact with the config database table
+type FrontendConfigRepository struct {
 	db *sql.DB
 }
 
-// NewFrontendConfigRepositoryV2 initializes FrontendConfigRepository
-func NewFrontendConfigRepositoryV2(db *sql.DB) *FrontendConfigRepositoryV2 {
-	return &FrontendConfigRepositoryV2{db: db}
+// NewFrontendConfigRepository initializes FrontendConfigRepository
+func NewFrontendConfigRepository(db *sql.DB) *FrontendConfigRepository {
+	return &FrontendConfigRepository{db: db}
 }
 
 // GetAllConfigs retrieves all configurations from the database
-func (f *FrontendConfigRepositoryV2) GetAllConfigs() ([]models.Config, error) {
-	var configs []models.Config
+func (f *FrontendConfigRepository) GetAllConfigs(ctx context.Context) ([]models.ConfigSet, error) {
+	query := `
+		SELECT id, version, log_level, credentials, created_at, updated_at 
+		FROM config_sets
+	`
 
-	rows, err := f.db.Query("SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config")
+	// Execute the query with context
+	rows, err := f.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch config sets: %w", err)
 	}
 	defer rows.Close()
 
+	var configSets []models.ConfigSet
+
 	for rows.Next() {
-		var config models.Config
+		var configSet models.ConfigSet
+		var credentialsJSON string
 		var createdAt, updatedAt sql.NullTime
 
-		// Scan data into struct fields
-		if err := rows.Scan(&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent, &createdAt, &updatedAt); err != nil {
-			return nil, err
+		// Scan values from the row
+		if err := rows.Scan(
+			&configSet.ID, &configSet.Version, &configSet.LogLevel, &credentialsJSON,
+			&createdAt, &updatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		// Set CreatedAt and UpdatedAt if valid
-		if createdAt.Valid {
-			config.CreatedAt = createdAt.Time
-		}
-		if updatedAt.Valid {
-			config.UpdatedAt = updatedAt.Time
+		// Parse credentials JSON if it's not empty
+		if credentialsJSON != "" {
+			if err := json.Unmarshal([]byte(credentialsJSON), &configSet.Credentials); err != nil {
+				return nil, fmt.Errorf("failed to parse credentials JSON: %w", err)
+			}
 		}
 
-		configs = append(configs, config)
+		// Assign timestamps only if they are valid
+		configSet.CreatedAt = utils.ParseNullTime(createdAt)
+		configSet.UpdatedAt = utils.ParseNullTime(updatedAt)
+
+		configSets = append(configSets, configSet)
 	}
 
-	// Handle any errors encountered during row iteration
+	// Check for errors during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	return configs, nil
+	return configSets, nil
 }
 
-func (f *FrontendConfigRepositoryV2) GetAllConfigsV2() ([]models.Config, error) {
+func (f *FrontendConfigRepository) GetAllConfigsV2() ([]models.Config, error) {
 	var configs []models.Config
 
 	rows, err := f.db.Query("SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config")
@@ -99,7 +114,7 @@ func (f *FrontendConfigRepositoryV2) GetAllConfigsV2() ([]models.Config, error) 
 }
 
 // CreateConfig inserts a new configuration into the database
-func (f *FrontendConfigRepositoryV2) CreateConfig(config *models.Config) error {
+func (f *FrontendConfigRepository) CreateConfig(ctx context.Context, config *models.Config) error {
 	query := `
 		INSERT INTO config (ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -114,12 +129,12 @@ func (f *FrontendConfigRepositoryV2) CreateConfig(config *models.Config) error {
 }
 
 // GetConfig retrieves a specific configuration by ID
-func (f *FrontendConfigRepositoryV2) GetConfig(id string) (*models.Config, error) {
+func (f *FrontendConfigRepository) GetConfig(ctx context.Context, id string) (*models.Config, error) {
 	config := &models.Config{}
 	query := "SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE ID = ?"
 
 	// Use QueryRow for single row and handle missing entries explicitly
-	err := f.db.QueryRow(query, id).Scan(
+	err := f.db.QueryRowContext(ctx, query, id).Scan(
 		&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent,
 		&config.CreatedAt, &config.UpdatedAt,
 	)
@@ -136,8 +151,8 @@ func (f *FrontendConfigRepositoryV2) GetConfig(id string) (*models.Config, error
 }
 
 // DeleteConfig removes a configuration by ID
-func (f *FrontendConfigRepositoryV2) DeleteConfig(id string) error {
-	result, err := f.db.Exec("DELETE FROM config WHERE ID = ?", id)
+func (f *FrontendConfigRepository) DeleteConfig(ctx context.Context, id string) error {
+	result, err := f.db.ExecContext(ctx, "DELETE FROM config WHERE ID = ?", id)
 	if err != nil {
 		return err
 	}
@@ -155,14 +170,14 @@ func (f *FrontendConfigRepositoryV2) DeleteConfig(id string) error {
 }
 
 // UpdateConfig modifies an existing configuration by ID
-func (f *FrontendConfigRepositoryV2) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
+func (f *FrontendConfigRepository) UpdateConfig(ctx context.Context, id string, configUpdateRequest ConfigUpsertRequest) error {
 	query := `
 		UPDATE config 
 		SET Name = ?, Description = ?, Config = ?, TargetAgent = ?, UpdatedAt = ?
 		WHERE ID = ?
 	`
 
-	result, err := f.db.Exec(query, configUpdateRequest.Name, configUpdateRequest.Description, configUpdateRequest.Config, configUpdateRequest.TargetAgent, time.Now(), id)
+	result, err := f.db.ExecContext(ctx, query, configUpdateRequest.Name, configUpdateRequest.Description, configUpdateRequest.Config, configUpdateRequest.TargetAgent, time.Now(), id)
 	if err != nil {
 		return err
 	}
@@ -176,7 +191,7 @@ func (f *FrontendConfigRepositoryV2) UpdateConfig(id string, configUpdateRequest
 		return fmt.Errorf("no config found with ID: %s", id)
 	}
 
-	hostnames, err := f.getAgentHostnamesByConfigID(id)
+	hostnames, err := f.getAgentHostnamesByConfigID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("error fetching agent hostnames: %v", err)
 	}
@@ -189,7 +204,7 @@ func (f *FrontendConfigRepositoryV2) UpdateConfig(id string, configUpdateRequest
 	for _, hostname := range hostnames {
 		apiEndpoint := fmt.Sprintf("http://%s:443/agent/v1/config", hostname)
 
-		req, err := http.NewRequest(http.MethodPut, apiEndpoint, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, apiEndpoint, bytes.NewBuffer(jsonData))
 		if err != nil {
 			log.Printf("Error creating request for hostname %s: %v", hostname, err)
 		}
@@ -211,9 +226,9 @@ func (f *FrontendConfigRepositoryV2) UpdateConfig(id string, configUpdateRequest
 	return nil
 }
 
-func (f *FrontendConfigRepositoryV2) getAgentHostnamesByConfigID(configID string) ([]string, error) {
+func (f *FrontendConfigRepository) getAgentHostnamesByConfigID(ctx context.Context, configID string) ([]string, error) {
 	query := "SELECT hostname FROM agents WHERE configId = ?"
-	rows, err := f.db.Query(query, configID)
+	rows, err := f.db.QueryContext(ctx, query, configID)
 	if err != nil {
 		return nil, err
 	}
