@@ -1,4 +1,4 @@
-package frontendconfig
+package frontendconfigV2
 
 import (
 	"log"
@@ -8,20 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// FrontendConfigHandler handles configuration-related requests
-type FrontendConfigHandler struct {
-	FrontendConfigService *FrontendConfigService
+// FrontendConfigHandlerV2 handles configuration-related requests
+type FrontendConfigHandlerV2 struct {
+	FrontendConfigService *FrontendConfigServiceV2
 }
 
-// NewFrontendAgentHandler initializes FrontendConfigHandler
-func NewFrontendAgentHandler(frontendConfigServices *FrontendConfigService) *FrontendConfigHandler {
-	return &FrontendConfigHandler{
+// NewFrontendAgentHandlerV2 initializes FrontendConfigHandler
+func NewFrontendAgentHandlerV2(frontendConfigServices *FrontendConfigServiceV2) *FrontendConfigHandlerV2 {
+	return &FrontendConfigHandlerV2{
 		FrontendConfigService: frontendConfigServices,
 	}
 }
 
 // GetAllConfig retrieves all configurations
-func (f *FrontendConfigHandler) GetAllConfig(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendConfigHandlerV2) GetAllConfig(w http.ResponseWriter, r *http.Request) {
 
 	response, err := f.FrontendConfigService.GetAllConfigs()
 	if err != nil {
@@ -31,8 +31,19 @@ func (f *FrontendConfigHandler) GetAllConfig(w http.ResponseWriter, r *http.Requ
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+// GetAllConfig retrieves all configurations V2
+func (f *FrontendConfigHandlerV2) GetAllConfigV2(w http.ResponseWriter, r *http.Request) {
+
+	response, err := f.FrontendConfigService.GetAllConfigsV2()
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
 // CreateConfig creates a new configuration
-func (f *FrontendConfigHandler) CreateConfig(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendConfigHandlerV2) CreateConfig(w http.ResponseWriter, r *http.Request) {
 
 	var createConfigRequest ConfigUpsertRequest
 	if err := utils.UnmarshalJSONRequest(r, &createConfigRequest); err != nil {
@@ -50,7 +61,7 @@ func (f *FrontendConfigHandler) CreateConfig(w http.ResponseWriter, r *http.Requ
 }
 
 // GetConfig retrieves a specific configuration by ID
-func (f *FrontendConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendConfigHandlerV2) GetConfig(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 	response, err := f.FrontendConfigService.GetConfig(id)
@@ -62,7 +73,7 @@ func (f *FrontendConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request
 }
 
 // DeleteConfig deletes a configuration by ID
-func (f *FrontendConfigHandler) DeleteConfig(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendConfigHandlerV2) DeleteConfig(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 	if err := f.FrontendConfigService.DeleteConfig(id); err != nil {
@@ -74,7 +85,7 @@ func (f *FrontendConfigHandler) DeleteConfig(w http.ResponseWriter, r *http.Requ
 }
 
 // UpdateConfig updates an existing configuration by ID
-func (f *FrontendConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendConfigHandlerV2) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 	var configUpdateRequest ConfigUpsertRequest

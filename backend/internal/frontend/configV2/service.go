@@ -1,4 +1,4 @@
-package frontendconfig
+package frontendconfigV2
 
 import (
 	"time"
@@ -7,23 +7,27 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-// FrontendConfigService manages frontend configuration operations
-type FrontendConfigService struct {
+// FrontendConfigServiceV2 manages frontend configuration operations
+type FrontendConfigServiceV2 struct {
 	FrontendConfigRepository *FrontendConfigRepositoryV2
 }
 
-// NewFrontendAgentService initializes FrontendConfigService
-func NewFrontendAgentService(frontendConfigRepository *FrontendConfigRepositoryV2) *FrontendConfigService {
-	return &FrontendConfigService{FrontendConfigRepository: frontendConfigRepository}
+// NewFrontendAgentServiceV2 initializes FrontendConfigService
+func NewFrontendAgentServiceV2(frontendConfigRepository *FrontendConfigRepositoryV2) *FrontendConfigServiceV2 {
+	return &FrontendConfigServiceV2{FrontendConfigRepository: frontendConfigRepository}
 }
 
 // GetAllConfigs retrieves all configurations
-func (f *FrontendConfigService) GetAllConfigs() ([]models.Config, error) {
+func (f *FrontendConfigServiceV2) GetAllConfigs() ([]models.Config, error) {
+	return f.FrontendConfigRepository.GetAllConfigs()
+}
+
+func (f *FrontendConfigServiceV2) GetAllConfigsV2() ([]models.Config, error) {
 	return f.FrontendConfigRepository.GetAllConfigs()
 }
 
 // CreateConfig creates a new configuration based on the provided request
-func (f *FrontendConfigService) CreateConfig(createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
+func (f *FrontendConfigServiceV2) CreateConfig(createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
 	config := &models.Config{
 		ID:          utils.CreateNewUUID(),
 		Name:        createConfigRequest.Name,
@@ -40,16 +44,16 @@ func (f *FrontendConfigService) CreateConfig(createConfigRequest ConfigUpsertReq
 }
 
 // GetConfig retrieves a specific configuration by ID
-func (f *FrontendConfigService) GetConfig(id string) (*models.Config, error) {
+func (f *FrontendConfigServiceV2) GetConfig(id string) (*models.Config, error) {
 	return f.FrontendConfigRepository.GetConfig(id)
 }
 
 // DeleteConfig removes a configuration by ID
-func (f *FrontendConfigService) DeleteConfig(id string) error {
+func (f *FrontendConfigServiceV2) DeleteConfig(id string) error {
 	return f.FrontendConfigRepository.DeleteConfig(id)
 }
 
 // UpdateConfig modifies an existing configuration by ID
-func (f *FrontendConfigService) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
+func (f *FrontendConfigServiceV2) UpdateConfig(id string, configUpdateRequest ConfigUpsertRequest) error {
 	return f.FrontendConfigRepository.UpdateConfig(id, configUpdateRequest)
 }
