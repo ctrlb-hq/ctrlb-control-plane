@@ -33,20 +33,21 @@ type Pipeline struct {
 	ID          int       `json:"id"`
 	ConfigSetID int       `json:"config_set_id"`
 	Name        string    `json:"name"`
+	Type        string    `json:"type"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // PipelineComponent represents the `pipeline_components` table.
 type PipelineComponent struct {
-	ID         int            `json:"id"`
-	PipelineID int            `json:"pipeline_id"`
-	Section    string         `json:"section"` // 'source', 'processor', 'destination'
-	Type       string         `json:"type"`
-	Name       string         `json:"name"`
-	Config     map[string]any `json:"config"` // Stored as JSON
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
+	ID            int            `json:"id"`
+	PipelineID    int            `json:"pipeline_id"`
+	ComponentType string         `json:"componentType"` // 'source', 'processor', 'destination'
+	Type          string         `json:"type"`
+	Name          string         `json:"name"`
+	Config        map[string]any `json:"config"` // Stored as JSON
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 // MarshalExtra converts Extra (map) to JSON string for DB storage.

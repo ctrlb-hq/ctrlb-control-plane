@@ -185,7 +185,7 @@ func createNewConfigTables(db *sql.DB) error {
 
 		`CREATE TABLE IF NOT EXISTS pipeline_components (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			pipeline_id INTEGER NOT NULL,
+			pipeline_id INTEGER,
 			component_type TEXT CHECK (component_type IN ('receivers', 'processors', 'exporters')),
 			type TEXT NOT NULL, -- Example: "otlp", "batch", "clickhouse"
 			name TEXT NOT NULL, -- Unique identifier for the component

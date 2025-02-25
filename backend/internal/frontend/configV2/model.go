@@ -13,3 +13,16 @@ type ConfigSetUpsertRequest struct {
 	Name        string            `json:"name"`                  // Configuration name
 	Credentials map[string]string `json:"credentials,omitempty"` // Stored as JSON
 }
+
+type CreatePipelinesRequest struct {
+	Name string `json:"name"` // Pipeline name
+	Type string `json:"type"` // Pipeline type
+}
+
+type CreatePipelineComponentRequest struct {
+	Name          string         `json:"name"`          // Component name
+	Type          string         `json:"type"`          // Component type
+	Config        map[string]any `json:"config"`        // Component configuration
+	ComponentType string         `json:"componentType"` // Component type
+	PipelineID    int            `json:"pipelineID"`    // Pipeline ID
+}

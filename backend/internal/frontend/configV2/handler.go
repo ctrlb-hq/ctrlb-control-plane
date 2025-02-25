@@ -3,6 +3,7 @@ package frontendconfigV2
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
@@ -57,6 +58,56 @@ func (f *FrontendConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request
 
 	id := mux.Vars(r)["id"]
 	response, err := f.FrontendConfigService.GetConfig(ctx, id)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendConfigHandler) GetPipelines(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := mux.Vars(r)["id"]
+	response, err := f.FrontendConfigService.GetPipelines(ctx, id)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendConfigHandler) CreatePipelines(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	var createPipelinesRequest *CreatePipelinesRequest
+	if err := utils.UnmarshalJSONRequest(r, createPipelinesRequest); err != nil {
+		log.Println("Invalid request body")
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	response, err := f.FrontendConfigService.CreatePipelines(ctx, id, createPipelinesRequest)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendConfigHandler) CreatePipelineComponent(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	var createPipelineComponentRequest *CreatePipelineComponentRequest
+	if err := utils.UnmarshalJSONRequest(r, createPipelineComponentRequest); err != nil {
+		log.Println("Invalid request body")
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	response, err := f.FrontendConfigService.CreatePipelineComponents(ctx, id, createPipelineComponentRequest)
 	if err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return

@@ -155,6 +155,69 @@ func (f *FrontendConfigRepository) GetConfig(ctx context.Context, id string) (ma
 	return jsonConfig, nil
 }
 
+func (f *FrontendConfigRepository) GetPipelines(ctx context.Context, id string) ([]models.Pipeline, error) {
+	query := `
+		SELECT id, name, type, created_at, updated_at
+		FROM pipelines
+		WHERE config_set_id = ?
+	`
+
+	rows, err := f.db.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var pipelines []models.Pipeline
+	for rows.Next() {
+		var pipeline models.Pipeline
+		var createdAt, updatedAt int64
+
+		if err := rows.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Type, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+
+		pipeline.CreatedAt = time.Unix(createdAt, 0)
+		pipeline.UpdatedAt = time.Unix(updatedAt, 0)
+
+		pipelines = append(pipelines, pipeline)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return pipelines, nil
+}
+
+func (f *FrontendConfigRepository) CreatePipelines(ctx context.Context, pipeline models.Pipeline) error {
+	query := `
+		INSERT INTO pipelines (name, type, created_at, updated_at, config_set_id)
+		VALUES (?, ?, ?, ?, ?)
+	`
+
+	_, err := f.db.ExecContext(ctx, query, pipeline.Name, pipeline.Type, pipeline.CreatedAt.Unix(), pipeline.UpdatedAt.Unix(), pipeline.ConfigSetID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *FrontendConfigRepository) CreatePipelineComponents(ctx context.Context, pipelineComponent models.PipelineComponent) error {
+	query := `
+		INSERT INTO pipeline_components (pipeline_id, component_type, type, name, config, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+
+	_, err := f.db.ExecContext(ctx, query, pipelineComponent.PipelineID, pipelineComponent.ComponentType, pipelineComponent.Type, pipelineComponent.Name, pipelineComponent.Config, pipelineComponent.CreatedAt.Unix(), pipelineComponent.UpdatedAt.Unix())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteConfig removes a configuration by ID
 func (f *FrontendConfigRepository) DeleteConfig(ctx context.Context, id string) error {
 	result, err := f.db.ExecContext(ctx, "DELETE FROM config WHERE ID = ?", id)
