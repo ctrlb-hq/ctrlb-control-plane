@@ -9,6 +9,7 @@ import (
 // ConfigSet represents the `config_sets` table.
 type ConfigSet struct {
 	ID          int               `json:"id"`
+	Name        string            `json:"name" validate:"required"`
 	Version     string            `json:"version"`
 	Credentials map[string]string `json:"credentials,omitempty"` // Stored as JSON
 	CreatedAt   time.Time         `json:"created_at"`

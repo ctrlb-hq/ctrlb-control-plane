@@ -7,3 +7,9 @@ type ConfigUpsertRequest struct {
 	Config      string `json:"config"`      // Configuration content (e.g., JSON or YAML)
 	TargetAgent string `json:"targetAgent"` // Agent type the configuration targets
 }
+
+// ConfigUpsertRequest represents the structure for creating or updating a configuration
+type ConfigSetUpsertRequest struct {
+	Name        string            `json:"name"`                  // Configuration name
+	Credentials map[string]string `json:"credentials,omitempty"` // Stored as JSON
+}

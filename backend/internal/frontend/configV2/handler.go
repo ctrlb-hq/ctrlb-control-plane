@@ -32,18 +32,18 @@ func (f *FrontendConfigHandler) GetAllConfigs(w http.ResponseWriter, r *http.Req
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-// CreateConfig creates a new configuration
-func (f *FrontendConfigHandler) CreateConfig(w http.ResponseWriter, r *http.Request) {
+// CreateConfigSet creates a new configuration
+func (f *FrontendConfigHandler) CreateConfigSet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var createConfigRequest ConfigUpsertRequest
-	if err := utils.UnmarshalJSONRequest(r, &createConfigRequest); err != nil {
+	var createConfigSetRequest ConfigSetUpsertRequest
+	if err := utils.UnmarshalJSONRequest(r, &createConfigSetRequest); err != nil {
 		log.Println("Invalid request body")
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	response, err := f.FrontendConfigService.CreateConfig(ctx, createConfigRequest)
+	response, err := f.FrontendConfigService.CreateConfigSet(ctx, &createConfigSetRequest)
 	if err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return

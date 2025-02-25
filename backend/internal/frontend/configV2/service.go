@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 // FrontendConfigService manages frontend configuration operations
@@ -29,20 +28,19 @@ func (f *FrontendConfigService) GetConfig(ctx context.Context, id string) (map[s
 }
 
 // CreateConfig creates a new configuration based on the provided request
-func (f *FrontendConfigService) CreateConfig(ctx context.Context, createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
-	config := &models.Config{
-		ID:          utils.CreateNewUUID(),
-		Name:        createConfigRequest.Name,
-		Description: createConfigRequest.Description,
-		Config:      createConfigRequest.Config,
-		TargetAgent: createConfigRequest.TargetAgent,
+func (f *FrontendConfigService) CreateConfigSet(ctx context.Context, congigSetUpsertRequest *ConfigSetUpsertRequest) (*models.ConfigSet, error) {
+	congigSet := &models.ConfigSet{
+		Name:        congigSetUpsertRequest.Name,
+		Credentials: congigSetUpsertRequest.Credentials,
+		Version:     "v0.0.1",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if err := f.FrontendConfigRepository.CreateConfig(ctx, config); err != nil {
+
+	if err := f.FrontendConfigRepository.CreateConfigSet(ctx, congigSet); err != nil {
 		return nil, err
 	}
-	return config, nil
+	return congigSet, nil
 }
 
 // DeleteConfig removes a configuration by ID

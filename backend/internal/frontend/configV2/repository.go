@@ -76,13 +76,13 @@ func (f *FrontendConfigRepository) GetAllConfigs(ctx context.Context) ([]models.
 }
 
 // CreateConfig inserts a new configuration into the database
-func (f *FrontendConfigRepository) CreateConfig(ctx context.Context, config *models.Config) error {
+func (f *FrontendConfigRepository) CreateConfigSet(ctx context.Context, configSet *models.ConfigSet) error {
 	query := `
-		INSERT INTO config (ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO config_sets (name, version, credentials, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
 	`
 
-	_, err := f.db.Exec(query, config.ID, config.Name, config.Description, config.Config, config.TargetAgent, config.CreatedAt, config.UpdatedAt)
+	_, err := f.db.Exec(query, configSet.Name, configSet.Version, configSet.Version, configSet.CreatedAt.Unix(), configSet.UpdatedAt.Unix())
 	if err != nil {
 		return fmt.Errorf("failed to insert config: %w", err)
 	}
