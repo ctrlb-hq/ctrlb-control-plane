@@ -157,43 +157,59 @@ func createNewConfigTables(db *sql.DB) error {
 
 	statements := []string{
 		`CREATE TABLE IF NOT EXISTS config_sets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            version TEXT,
-            log_level TEXT,
-            credentials TEXT,
-            created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now'))
-        )`,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			version TEXT,
+			credentials TEXT,
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now'))
+		)`,
+
 		`CREATE TABLE IF NOT EXISTS extensions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            config_set_id INTEGER NOT NULL,
-            extension_name TEXT,
-            enabled BOOLEAN,
-            endpoint TEXT,
-            extra TEXT,
-            created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (config_set_id) REFERENCES config_sets(id) ON DELETE CASCADE
-        )`,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			config_set_id INTEGER NOT NULL,
+			extension_name TEXT NOT NULL,
+			enabled BOOLEAN NOT NULL DEFAULT 0,
+			endpoint TEXT,
+			extra TEXT, -- JSON string for extension-specific config
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (config_set_id) REFERENCES config_sets(id) ON DELETE CASCADE
+		)`,
+
 		`CREATE TABLE IF NOT EXISTS pipelines (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            config_set_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (config_set_id) REFERENCES config_sets(id) ON DELETE CASCADE
-        )`,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			config_set_id INTEGER NOT NULL,
+			name TEXT NOT NULL, 
+			type TEXT CHECK (type IN ('traces', 'metrics', 'logs')),
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (config_set_id) REFERENCES config_sets(id) ON DELETE CASCADE
+		)`,
+
 		`CREATE TABLE IF NOT EXISTS pipeline_components (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pipeline_id INTEGER NOT NULL,
-            section TEXT CHECK (section IN ('source','processor','destination')),
-            type TEXT,
-            name TEXT,
-            config TEXT,
-            created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (pipeline_id) REFERENCES pipelines(id) ON DELETE CASCADE
-        )`,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pipeline_id INTEGER NOT NULL,
+			component_type TEXT CHECK (component_type IN ('receivers', 'processors', 'exporters')),
+			type TEXT NOT NULL, -- Example: "otlp", "batch", "clickhouse"
+			name TEXT NOT NULL, -- Unique identifier for the component
+			config TEXT, -- JSON blob for component-specific settings
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (pipeline_id) REFERENCES pipelines(id) ON DELETE CASCADE
+		)`,
+
+		`CREATE TABLE IF NOT EXISTS telemetry_settings (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			config_set_id INTEGER NOT NULL,
+			metrics_enabled BOOLEAN DEFAULT 1, -- Enables/disables internal metrics
+			metrics_endpoint TEXT DEFAULT '0.0.0.0:8888', -- Exposes telemetry metrics
+			logs_level TEXT CHECK (logs_level IN ('debug', 'info', 'warn', 'error')) DEFAULT 'info',
+			traces_enabled BOOLEAN DEFAULT 0, -- Enables OpenTelemetry self-tracing
+			traces_endpoint TEXT, -- Where to send telemetry traces (optional)
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now')),
+			FOREIGN KEY (config_set_id) REFERENCES config_sets(id) ON DELETE CASCADE
+		)`,
 	}
 
 	for _, stmt := range statements {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,7 +27,7 @@ func NewFrontendConfigRepository(db *sql.DB) *FrontendConfigRepository {
 // GetAllConfigs retrieves all configurations from the database
 func (f *FrontendConfigRepository) GetAllConfigs(ctx context.Context) ([]models.ConfigSet, error) {
 	query := `
-		SELECT id, version, log_level, credentials, created_at, updated_at 
+		SELECT id, version, credentials, created_at, updated_at 
 		FROM config_sets
 	`
 
@@ -48,7 +47,7 @@ func (f *FrontendConfigRepository) GetAllConfigs(ctx context.Context) ([]models.
 
 		// Scan values from the row
 		if err := rows.Scan(
-			&configSet.ID, &configSet.Version, &configSet.LogLevel, &credentialsJSON,
+			&configSet.ID, &configSet.Version, &credentialsJSON,
 			&createdAt, &updatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
@@ -76,43 +75,6 @@ func (f *FrontendConfigRepository) GetAllConfigs(ctx context.Context) ([]models.
 	return configSets, nil
 }
 
-func (f *FrontendConfigRepository) GetAllConfigsV2() ([]models.Config, error) {
-	var configs []models.Config
-
-	rows, err := f.db.Query("SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var config models.Config
-		var createdAt, updatedAt sql.NullTime
-
-		// Scan data into struct fields
-		if err := rows.Scan(&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent, &createdAt, &updatedAt); err != nil {
-			return nil, err
-		}
-
-		// Set CreatedAt and UpdatedAt if valid
-		if createdAt.Valid {
-			config.CreatedAt = createdAt.Time
-		}
-		if updatedAt.Valid {
-			config.UpdatedAt = updatedAt.Time
-		}
-
-		configs = append(configs, config)
-	}
-
-	// Handle any errors encountered during row iteration
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return configs, nil
-}
-
 // CreateConfig inserts a new configuration into the database
 func (f *FrontendConfigRepository) CreateConfig(ctx context.Context, config *models.Config) error {
 	query := `
@@ -129,25 +91,68 @@ func (f *FrontendConfigRepository) CreateConfig(ctx context.Context, config *mod
 }
 
 // GetConfig retrieves a specific configuration by ID
-func (f *FrontendConfigRepository) GetConfig(ctx context.Context, id string) (*models.Config, error) {
-	config := &models.Config{}
-	query := "SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE ID = ?"
+func (f *FrontendConfigRepository) GetConfig(ctx context.Context, id string) (map[string]any, error) {
+	query := `
+	SELECT json_object(
+		'config_set', json_object(
+			'id', cs.id,
+			'version', cs.version,
+			'credentials', cs.credentials,
+			'created_at', cs.created_at,
+			'updated_at', cs.updated_at
+		),
+		'telemetry_settings', json_object(
+			'metrics_enabled', ts.metrics_enabled,
+			'metrics_endpoint', ts.metrics_endpoint,
+			'logs_level', ts.logs_level,
+			'traces_enabled', ts.traces_enabled,
+			'traces_endpoint', ts.traces_endpoint
+		),
+		'extensions', json_group_array(
+			json_object(
+				'id', e.id,
+				'extension_name', e.extension_name,
+				'enabled', e.enabled,
+				'endpoint', e.endpoint,
+				'extra', e.extra
+			)
+		),
+		'pipelines', json_group_array(
+			json_object(
+				'id', p.id,
+				'name', p.name,
+				'type', p.type,
+				'created_at', p.created_at,
+				'updated_at', p.updated_at,
+				'components', (
+					SELECT json_group_array(
+						json_object(
+							'id', pc.id,
+							'component_type', pc.component_type,
+							'type', pc.type,
+							'name', pc.name,
+							'config', pc.config
+						)
+					)
+					FROM pipeline_components pc WHERE pc.pipeline_id = p.id
+				)
+			)
+		)
+	) AS full_config
+	FROM config_sets cs
+	LEFT JOIN telemetry_settings ts ON cs.id = ts.config_set_id
+	LEFT JOIN extensions e ON cs.id = e.config_set_id
+	LEFT JOIN pipelines p ON cs.id = p.config_set_id
+	WHERE cs.id = ?
+	GROUP BY cs.id;
+`
 
-	// Use QueryRow for single row and handle missing entries explicitly
-	err := f.db.QueryRowContext(ctx, query, id).Scan(
-		&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent,
-		&config.CreatedAt, &config.UpdatedAt,
-	)
+	var jsonConfig map[string]any
+	err := f.db.QueryRow(query, id).Scan(&jsonConfig)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Printf("No config found with ID: %s", id)
-			return nil, errors.New("no config found with specified ID")
-		}
-		log.Printf("Error retrieving config ID %s: %v", id, err)
 		return nil, err
 	}
-
-	return config, nil
+	return jsonConfig, nil
 }
 
 // DeleteConfig removes a configuration by ID

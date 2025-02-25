@@ -10,7 +10,6 @@ import (
 type ConfigSet struct {
 	ID          int               `json:"id"`
 	Version     string            `json:"version"`
-	LogLevel    string            `json:"log_level"`
 	Credentials map[string]string `json:"credentials,omitempty"` // Stored as JSON
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`

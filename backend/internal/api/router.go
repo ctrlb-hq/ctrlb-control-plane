@@ -61,8 +61,9 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.Use(middleware.AuthMiddleware())
 
 	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.GetAllConfigs).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.CreateConfig).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.GetConfig).Methods("GET")
+
+	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.CreateConfig).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.DeleteConfig).Methods("DELETE")
 	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.UpdateConfig).Methods("PATCH")
 

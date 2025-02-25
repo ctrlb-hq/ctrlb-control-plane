@@ -23,6 +23,11 @@ func (f *FrontendConfigService) GetAllConfigs(ctx context.Context) ([]models.Con
 	return f.FrontendConfigRepository.GetAllConfigs(ctx)
 }
 
+// GetConfig retrieves a specific configuration by ID
+func (f *FrontendConfigService) GetConfig(ctx context.Context, id string) (map[string]any, error) {
+	return f.FrontendConfigRepository.GetConfig(ctx, id)
+}
+
 // CreateConfig creates a new configuration based on the provided request
 func (f *FrontendConfigService) CreateConfig(ctx context.Context, createConfigRequest ConfigUpsertRequest) (*models.Config, error) {
 	config := &models.Config{
@@ -38,11 +43,6 @@ func (f *FrontendConfigService) CreateConfig(ctx context.Context, createConfigRe
 		return nil, err
 	}
 	return config, nil
-}
-
-// GetConfig retrieves a specific configuration by ID
-func (f *FrontendConfigService) GetConfig(ctx context.Context, id string) (*models.Config, error) {
-	return f.FrontendConfigRepository.GetConfig(ctx, id)
 }
 
 // DeleteConfig removes a configuration by ID
