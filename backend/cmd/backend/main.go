@@ -15,7 +15,6 @@ import (
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
-	frontendconfigV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/configV2"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
@@ -61,6 +60,7 @@ func main() {
 
 	db, err := database.InitializeDB()
 	if err != nil {
+		log.Fatal("Failed to initialize DB:", err)
 		return
 	}
 
@@ -72,16 +72,14 @@ func main() {
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendConfigRepository := frontendconfig.NewFrontendConfigRepositoryV2(db)
-	frontendConfigRepositoryV2 := frontendconfigV2.NewFrontendConfigRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
-	frontendConfigServiceV2 := frontendconfigV2.NewFrontendAgentService(frontendConfigRepositoryV2)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendConfigServiceV2)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 

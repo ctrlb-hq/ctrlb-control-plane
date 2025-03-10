@@ -5,13 +5,12 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
-	frontendconfigV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/configV2"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, frontendConfigServicesV2 *frontendconfigV2.FrontendConfigService) *mux.Router {
+func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService) *mux.Router {
 	router := mux.NewRouter()
 
 	agentHandler := agent.NewAgentHandler(agentService)
@@ -20,7 +19,6 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentHandler := frontendagent.NewFrontendAgentHandler(frontendAgentService)
 	frontendPipelineHandler := frontendpipeline.NewFrontendPipelineHandler(frontendPipelineService)
 	frontendConfigHandler := frontendconfig.NewFrontendAgentHandler(frontendConfigServices)
-	frontendConfigHandlerV2 := frontendconfigV2.NewFrontendAgentHandler(frontendConfigServicesV2)
 
 	authAPIsV1 := router.PathPrefix("/api/auth/v1").Subrouter()
 
@@ -60,15 +58,12 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
 	frontendAgentAPIsV2.Use(middleware.AuthMiddleware())
 
-	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.GetAllConfigs).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.GetConfig).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/configs", frontendConfigHandlerV2.CreateConfigSet).Methods("POST")
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}/pipeline", frontendConfigHandlerV2.GetPipelines).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}/pipeline", frontendConfigHandlerV2.CreatePipelines).Methods("POST")
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}/pipeline_component", frontendConfigHandlerV2.CreatePipelineComponent).Methods("POST")
-
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.DeleteConfig).Methods("DELETE")
-	frontendAgentAPIsV2.HandleFunc("/configs/{id}", frontendConfigHandlerV2.UpdateConfig).Methods("PATCH")
+	frontendAgentAPIsV2.HandleFunc("/agents", frontendAgentHandler.GetAllAgents).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.GetAgent).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.DeleteAgent).Methods("DELETE")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/start", frontendAgentHandler.StartAgent).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/stop", frontendAgentHandler.StopAgent).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.RestartMonitoring).Methods("POST")
 
 	return router
 }

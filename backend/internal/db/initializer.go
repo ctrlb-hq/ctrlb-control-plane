@@ -5,11 +5,7 @@ import (
 )
 
 func InitializeDB() (*sql.DB, error) {
-	db, err := dbCreator()
-	if err != nil {
-		return nil, err
-	}
-	err = createDefaultConfig(db)
+	db, err := DBInit()
 	if err != nil {
 		return nil, err
 	}
