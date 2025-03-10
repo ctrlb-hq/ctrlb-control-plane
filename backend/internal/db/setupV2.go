@@ -21,10 +21,13 @@ func DBInit() (*sql.DB, error) {
 	}
 
 	// Create tables
-	if err := createUserTableV2(db); err != nil {
+	if err := createUserTable(db); err != nil {
 		return nil, err
 	}
 	if err := createAgentsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createAgentMetricsTable(db); err != nil {
 		return nil, err
 	}
 	if err := createExtensionsTable(db); err != nil {
@@ -41,7 +44,7 @@ func DBInit() (*sql.DB, error) {
 	return db, nil
 }
 
-func createUserTableV2(db *sql.DB) error {
+func createUserTable(db *sql.DB) error {
 	createUserTableSQL := `
 CREATE TABLE IF NOT EXISTS user (
     "email" TEXT PRIMARY KEY,
@@ -72,6 +75,24 @@ CREATE TABLE IF NOT EXISTS agents (
 	_, err := db.Exec(query)
 	if err != nil {
 		log.Printf("Error creating agents table: %v", err)
+	}
+	return err
+}
+
+func createAgentMetricsTable(db *sql.DB) error {
+	query := `
+CREATE TABLE IF NOT EXISTS agent_metrics (
+    agent_id INTEGER PRIMARY KEY,
+    incoming_bytes INTEGER DEFAULT 0,
+    outgoing_bytes INTEGER DEFAULT 0,
+    uptime_seconds INTEGER DEFAULT 0,
+    dropped_records INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+);`
+	_, err := db.Exec(query)
+	if err != nil {
+		log.Printf("Error creating agent_metrics table: %v", err)
 	}
 	return err
 }

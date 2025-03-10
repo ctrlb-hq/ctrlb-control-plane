@@ -58,7 +58,7 @@ func main() {
 		constants.ENV = "prod" // Default value
 	}
 
-	db, err := database.InitializeDB()
+	db, err := database.DBInit()
 	if err != nil {
 		log.Fatal("Failed to initialize DB:", err)
 		return
