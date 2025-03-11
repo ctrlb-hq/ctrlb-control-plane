@@ -32,7 +32,7 @@ func (a *AuthRepository) RegisterUser(user User) error {
 	}()
 
 	// Attempt to insert user
-	_, err = tx.Exec("INSERT INTO user (email, name, password) VALUES (?, ?, ?)", user.Email, user.Name, user.Password)
+	_, err = tx.Exec("INSERT INTO user (email, name, password, role) VALUES (?, ?, ?,?)", user.Email, user.Name, user.Password, user.Role)
 	if err != nil {
 		if isUniqueViolation(err) {
 			log.Println("User already exists:", user)

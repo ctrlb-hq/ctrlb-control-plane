@@ -16,6 +16,8 @@ import (
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
+	frontendagentV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/agent"
+	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 	"github.com/joho/godotenv"
@@ -69,17 +71,25 @@ func main() {
 
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
+
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendConfigRepository := frontendconfig.NewFrontendConfigRepositoryV2(db)
 
+	frontendAgentRepositoryV2 := frontendagentV2.NewFrontendAgentRepository(db)
+	frontendPipelineRepositoryV2 := frontendpipelineV2.NewFrontendPipelineRepository(db)
+
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
+
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService)
+	frontendAgentServiceV2 := frontendagentV2.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
+	frontendPipelineServiceV2 := frontendpipelineV2.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
+
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendAgentServiceV2, frontendPipelineServiceV2)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
