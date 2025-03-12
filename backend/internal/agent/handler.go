@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -26,15 +26,15 @@ func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
 
 	// Unmarshal the JSON request body into the registerRequest struct
 	if err := utils.UnmarshalJSONRequest(r, &registerRequest); err != nil {
-		log.Println("Invalid request body")                          // Log the error for debugging
+		utils.Logger.Error("Invalid request body")                   // Log the error for debugging
 		http.Error(w, "Invalid request body", http.StatusBadRequest) // Respond with a bad request status
 		return
 	}
-
+	utils.Logger.Info(fmt.Sprintf("Received registration request from agent: %s", registerRequest.Hostname))
 	// Call the RegisterAgent method of the AgentService to process the registration
 	reponse, err := a.AgentService.RegisterAgent(registerRequest)
 	if err != nil {
-		// If an error occurs, send a JSON error response with a server error status
+		utils.Logger.Error(fmt.Sprintf("Error registering agent: %v", err)) // Log the error for debugging
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

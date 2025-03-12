@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -55,7 +54,6 @@ func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
 	// Generate access token (short-lived)
 	accessToken, err := utils.GenerateAccessToken(request.Email)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 

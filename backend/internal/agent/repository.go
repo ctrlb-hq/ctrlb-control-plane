@@ -3,7 +3,6 @@ package agent
 import (
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
@@ -25,10 +24,8 @@ func (ar *AgentRepository) RegisterAgent(agent *models.AgentWithConfig) error {
 	// Check if the agent is already registered
 	err := ar.db.QueryRow("SELECT ID FROM agents WHERE Name = ?", agent.Name).Scan(&existingAgent)
 	if err == nil {
-		log.Printf("Agent already registered: %s", agent.Name)
 		return errors.New("agent " + agent.Name + " already exists")
 	} else if err != sql.ErrNoRows {
-		log.Println(err)
 		return errors.New("error checking database: " + err.Error())
 	}
 
@@ -36,11 +33,9 @@ func (ar *AgentRepository) RegisterAgent(agent *models.AgentWithConfig) error {
 	_, err = ar.db.Exec("INSERT INTO agents (ID, Name, Type, Version, Hostname, Platform, ConfigID, IsPipeline, RegisteredAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		agent.ID, agent.Name, agent.Type, agent.Version, agent.Hostname, agent.Platform, agent.Config.ID, agent.IsPipeline, agent.RegisteredAt)
 	if err != nil {
-		log.Println(err)
 		return errors.New("error adding new agent: " + err.Error())
 	}
 
-	log.Println("New agent added:", agent.Name)
 	return nil
 }
 
@@ -64,12 +59,10 @@ func (f *AgentRepository) GetConfig(id string) (*models.Config, error) {
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// If no rows were returned, return a specific error
-			log.Printf("No config found with ID: %s", id)
+			// If no rows were returned, return a specific er
 			return nil, errors.New("no config found with ID")
 		}
 		// Log and return other errors
-		log.Printf("Error scanning config with ID %s: %v", id, err)
 		return nil, err
 	}
 

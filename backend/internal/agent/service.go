@@ -2,7 +2,6 @@ package agent
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
@@ -52,15 +51,11 @@ func (a *AgentService) RegisterAgent(request AgentRegisterRequest) (interface{},
 		RegisteredAt: time.Now(),
 	}
 
-	log.Println("Received registration request from agent:", agent.Name)
-
 	// Register the agent in the repository
 	err := a.AgentRepository.RegisterAgent(&agent)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("Agent registered with ID:", agent.ID)
 
 	a.AgentQueue.AddAgent(agent.ID, agent.Hostname)
 

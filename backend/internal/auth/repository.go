@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/mattn/go-sqlite3"
@@ -35,7 +34,6 @@ func (a *AuthRepository) RegisterUser(user User) error {
 	_, err = tx.Exec("INSERT INTO user (email, name, password, role) VALUES (?, ?, ?,?)", user.Email, user.Name, user.Password, user.Role)
 	if err != nil {
 		if isUniqueViolation(err) {
-			log.Println("User already exists:", user)
 			return utils.ErrUserAlreadyExists
 		}
 		return fmt.Errorf("failed to register user: %w", err)
@@ -46,7 +44,6 @@ func (a *AuthRepository) RegisterUser(user User) error {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	log.Println("User registered:", user)
 	return nil
 }
 

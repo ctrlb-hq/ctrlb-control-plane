@@ -3,11 +3,12 @@ package queue
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 // NewQueue creates a new AgentQueue with the specified number of workers.
@@ -24,15 +25,17 @@ func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 }
 
 // AddAgent adds a new agent to the queue.
-func (q *AgentQueue) AddAgent(ID, Hostname string) {
+func (q *AgentQueue) AddAgent(id, Hostname string) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	q.agents[ID] = &AgentStatus{
-		AgentID:        ID,
+	//TODO: Check if agent already exists
+	q.agents[id] = &AgentStatus{
+		AgentID:        id,
 		Hostname:       Hostname,
 		CurrentStatus:  "UNKNOWN",
 		RetryRemaining: 3,
 	}
+	utils.Logger.Info(fmt.Sprintf("Successfully queued agent with ID: %s.", id))
 }
 
 // RemoveAgent removes an agent from the queue by ID.
@@ -40,6 +43,7 @@ func (q *AgentQueue) RemoveAgent(id string) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	delete(q.agents, id)
+	utils.Logger.Info(fmt.Sprintf("Successfully removed agent with ID: %s.", id))
 }
 
 // StartStatusCheck starts a goroutine that checks the status of all agents at regular intervals.
@@ -114,7 +118,7 @@ func (q *AgentQueue) checkAgentStatus(agentStatus *AgentStatus) {
 
 			decoder := json.NewDecoder(resp.Body)
 			if err := decoder.Decode(&agentMetrics); err != nil {
-				log.Printf("error decoding status response: %v", err)
+				utils.Logger.Error(fmt.Sprintf("error decoding status response: %v", err))
 				return
 			}
 			agentMetrics.AgentID = agentStatus.AgentID

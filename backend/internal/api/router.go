@@ -70,6 +70,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/start", frontendAgentHandlerV2.StartAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/stop", frontendAgentHandlerV2.StopAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandlerV2.RestartMonitoring).Methods("POST")
+	frontendAgentAPIsV2.HandleFunc("/agents/{id}/metrics", frontendAgentHandlerV2.GetMetricsForGraph).Methods("GET")
 
 	frontendAgentAPIsV2.HandleFunc("/pipeline", frontendPipelineHandlerV2.GetAllPipelines).Methods("GET")
 

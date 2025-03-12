@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -27,7 +27,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&userRegisterRequest)
 	if err != nil {
 		// Log the error for debugging purposes
-		log.Printf("Error decoding request body: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
 
 		// Respond with a generic error message
 		response := map[string]string{
@@ -40,7 +40,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	err = utils.ValidateUserRegistrationRequest(&userRegisterRequest)
 	if err != nil {
 		// Log the error for debugging purposes
-		log.Printf("Error decoding request body: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
 
 		// Respond with a generic error message
 		response := map[string]string{
@@ -55,7 +55,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	err = a.AuthService.RegisterUser(&userRegisterRequest)
 	if err != nil {
 		// Log the actual error
-		log.Printf("Error registering user: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
 
 		// Send a generic error message to the client
 		response := map[string]string{
@@ -83,6 +83,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&loginRequest)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
@@ -91,6 +92,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	response, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error logging in user %s: %v", loginRequest.Email, err))
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 		return
 	}

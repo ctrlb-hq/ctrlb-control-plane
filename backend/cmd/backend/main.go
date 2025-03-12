@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,19 +20,22 @@ import (
 	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 
+	utils.InitLogger()
+
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		utils.Logger.Fatal("Error loading .env file")
 	}
 
 	// Access your JWT secret from environment variables
 	constants.JWT_SECRET = os.Getenv("JWT_SECRET")
 	if constants.JWT_SECRET == "" {
-		log.Fatal("JWT_SECRET is not set in .env file")
+		utils.Logger.Fatal("JWT_SECRET is not set in .env file")
 	}
 
 	workerCountEnv := os.Getenv("WORKER_COUNT")
@@ -62,7 +65,7 @@ func main() {
 
 	db, err := database.DBInit()
 	if err != nil {
-		log.Fatal("Failed to initialize DB:", err)
+		utils.Logger.Fatal(fmt.Sprintf("Failed to initialize DB: %s", err))
 		return
 	}
 
@@ -99,10 +102,10 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server started on :", constants.PORT)
+		utils.Logger.Info(fmt.Sprintf("Server started on: %s", constants.PORT))
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Fatal("Failed to start Server:", err)
+			utils.Logger.Fatal(fmt.Sprintf("Failed to start Server: %s", err))
 		}
 	}()
 

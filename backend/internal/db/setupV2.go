@@ -2,8 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -16,7 +17,7 @@ func DBInit() (*sql.DB, error) {
 
 	// Enforce foreign keys in SQLite
 	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
-		log.Printf("Error enabling foreign keys: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error enabling foreign keys: %v", err))
 		return nil, err
 	}
 
@@ -46,7 +47,7 @@ func DBInit() (*sql.DB, error) {
 		return nil, err
 	}
 
-	log.Println("All tables created (or verified) successfully.")
+	utils.Logger.Info("All tables created (or verified) successfully.")
 	return db, nil
 }
 
@@ -60,7 +61,7 @@ func createUserTable(db *sql.DB) error {
     );`
 	_, err := db.Exec(createUserTableSQL)
 	if err != nil {
-		log.Printf("Error creating User table: %s", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating User table: %s", err))
 		return err
 	}
 	return nil
@@ -84,7 +85,7 @@ func createAgentsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating agents table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating agents table: %v", err))
 	}
 	return err
 }
@@ -103,7 +104,7 @@ func createAgentsLabelsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating agents_labels table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating agents_labels table: %v", err))
 	}
 	return err
 }
@@ -123,7 +124,7 @@ func createAggregatedAgentMetricsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating aggregated_agent_metrics table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating aggregated_agent_metrics table: %v", err))
 	}
 	return err
 }
@@ -145,7 +146,7 @@ func createRealtimeAgentMetricsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating realtime_agent_metrics table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating realtime_agent_metrics table: %v", err))
 	}
 	return err
 }
@@ -172,7 +173,7 @@ func createExtensionsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating extensions table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating extensions table: %v", err))
 	}
 	return err
 }
@@ -192,7 +193,7 @@ func createPipelinesTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating pipelines table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating pipelines table: %v", err))
 	}
 	return err
 }
@@ -215,7 +216,7 @@ func createPipelineComponentsTable(db *sql.DB) error {
     `
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating pipeline_components table: %v", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_components table: %v", err))
 	}
 	return err
 }

@@ -1,13 +1,10 @@
 package utils
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/google/uuid"
@@ -68,7 +65,7 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	// Marshal the error response struct to JSON
 	jsonData, err := json.Marshal(errResp)
 	if err != nil {
-		log.Printf("Failed to marshal error response to JSON: %s", err.Error())
+		Logger.Error(fmt.Sprintf("Failed to marshal error response to JSON: %p", err))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -98,11 +95,4 @@ func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error 
 		return errors.New("password cannot be empty")
 	}
 	return nil
-}
-
-func ParseNullTime(nt sql.NullTime) time.Time {
-	if nt.Valid {
-		return nt.Time
-	}
-	return time.Time{} // Returns zero-value time if NULL
 }
