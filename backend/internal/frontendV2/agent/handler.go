@@ -105,13 +105,26 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped [ID: " + id + "]."})
 }
 
-// GetMetricsForGraph retrieves metrics for a specific agent
-func (f *FrontendAgentHandler) GetMetricsForGraph(w http.ResponseWriter, r *http.Request) {
+// RestartMonitoring restarts monitoring for a specific agent
+func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
-	utils.Logger.Info(fmt.Sprintf("Getting metrics for agent with ID: %s", id))
 
-	response, err := f.FrontendAgentService.GetMetricsForGraph(id)
+	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Monitoring started for agent [ID: " + id + "]."})
+}
+
+// GetHealthMetricsForGraph retrieves metrics for a specific agent
+func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r *http.Request) {
+
+	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Getting health metrics for agent with ID: %s", id))
+
+	response, err := f.FrontendAgentService.GetHealthMetricsForGraph(id)
 	if err != nil {
 		if err.Error() == "agent disconnected" {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -124,15 +137,20 @@ func (f *FrontendAgentHandler) GetMetricsForGraph(w http.ResponseWriter, r *http
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-// RestartMonitoring restarts monitoring for a specific agent
-func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) GetRateMetricsForGraph(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Getting rate metrics for agent with ID: %s", id))
 
-	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+	response, err := f.FrontendAgentService.GetRateMetricsForGraph(id)
+	if err != nil {
+		if err.Error() == "agent disconnected" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Monitoring started for agent [ID: " + id + "]."})
+	utils.WriteJSONResponse(w, http.StatusOK, response)
 }

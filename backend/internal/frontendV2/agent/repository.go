@@ -2,8 +2,6 @@ package frontendagent
 
 import (
 	"database/sql"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type FrontendAgentRepository struct {
@@ -96,8 +94,62 @@ func (f *FrontendAgentRepository) DeleteAgent(id string) error {
 	return nil
 }
 
-// GetMetricsForGraph retrieves metrics for a specific agent
-func (f *FrontendAgentRepository) GetMetricsForGraph(id string) (*models.AgentMetrics, error) {
-	//TODO: Implement this
-	return nil, nil
+// GetHealthMetricsForGraph retrieves metrics for a specific agent
+func (f *FrontendAgentRepository) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	rows, err := f.db.Query("SELECT cpu_utilization, memory_utilization, timestamp FROM realtime_agent_metrics WHERE agent_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cpuDataPoints []DataPoint
+	var memoryDataPoints []DataPoint
+
+	for rows.Next() {
+		var cpu, memory float64
+		var timestamp int64
+		err := rows.Scan(&cpu, &memory, &timestamp)
+		if err != nil {
+			return nil, err
+		}
+		cpuDataPoints = append(cpuDataPoints, DataPoint{Timestamp: timestamp, Value: cpu})
+		memoryDataPoints = append(memoryDataPoints, DataPoint{Timestamp: timestamp, Value: memory})
+	}
+
+	metrics := []AgentMetrics{
+		{MetricName: "cpu_utilization", DataPoints: cpuDataPoints},
+		{MetricName: "memory_utilization", DataPoints: memoryDataPoints},
+	}
+
+	return &metrics, nil
+}
+
+func (f *FrontendAgentRepository) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	rows, err := f.db.Query("SELECT traces_rate_sent, metrics_rate_sent, logs_rate_sent, timestamp FROM realtime_agent_metrics WHERE agent_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tracesRateDataPoints, metricsRateDataPoints, logRateDataPoints []DataPoint
+
+	for rows.Next() {
+		var traceRate, metricsRate, logsRate float64
+		var timestamp int64
+		err := rows.Scan(&logsRate, &traceRate, &metricsRate, &timestamp)
+		if err != nil {
+			return nil, err
+		}
+		tracesRateDataPoints = append(tracesRateDataPoints, DataPoint{Timestamp: timestamp, Value: traceRate})
+		logRateDataPoints = append(logRateDataPoints, DataPoint{Timestamp: timestamp, Value: logsRate})
+		metricsRateDataPoints = append(metricsRateDataPoints, DataPoint{Timestamp: timestamp, Value: metricsRate})
+	}
+
+	metrics := []AgentMetrics{
+		{MetricName: "traces_rate_sent", DataPoints: tracesRateDataPoints},
+		{MetricName: "metrics_rate_sent", DataPoints: metricsRateDataPoints},
+		{MetricName: "log_rate_sent", DataPoints: logRateDataPoints},
+	}
+
+	return &metrics, nil
 }

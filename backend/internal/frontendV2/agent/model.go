@@ -23,3 +23,13 @@ type AgentInfoWithLabels struct {
 	Platform     string            `json:"platform"`     // Operating system platform (e.g., linux, windows)
 	Labels       map[string]string `json:"labels"`       // Labels associated with the agent
 }
+
+type AgentMetrics struct {
+	MetricName string      `json:"metric_name"`
+	DataPoints []DataPoint `json:"data_points"`
+}
+
+type DataPoint struct {
+	Timestamp int64   `json:"timestamp"` // Unix timestamp for efficiency
+	Value     float64 `json:"value"`
+}

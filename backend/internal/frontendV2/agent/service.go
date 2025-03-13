@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
@@ -87,10 +86,6 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 
 }
 
-func (f *FrontendAgentService) GetMetricsForGraph(id string) (*models.AgentMetrics, error) {
-	return f.FrontendAgentRepository.GetMetricsForGraph(id)
-}
-
 // RestartMonitoring restarts monitoring for the agent
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
 	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
@@ -101,6 +96,14 @@ func (f *FrontendAgentService) RestartMonitoring(id string) error {
 	f.AgentQueue.AddAgent(id, hostname)
 
 	return nil
+}
+
+func (f *FrontendAgentService) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	return f.FrontendAgentRepository.GetHealthMetricsForGraph(id)
+}
+
+func (f *FrontendAgentService) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	return f.FrontendAgentRepository.GetRateMetricsForGraph(id)
 }
 
 func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {

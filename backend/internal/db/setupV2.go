@@ -135,12 +135,12 @@ func createRealtimeAgentMetricsTable(db *sql.DB) error {
     CREATE TABLE IF NOT EXISTS realtime_agent_metrics (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         agent_id INTEGER NOT NULL,
-        log_rate_sent INTEGER DEFAULT 0,
+        logs_rate_sent INTEGER DEFAULT 0,
         traces_rate_sent INTEGER DEFAULT 0,
         metrics_rate_sent INTEGER DEFAULT 0,
         cpu_utilization REAL,
         memory_utilization REAL,
-        updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        timestamp INTEGER DEFAULT (strftime('%s', 'now'), -- Unix timestamp
         FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
     );
     `
