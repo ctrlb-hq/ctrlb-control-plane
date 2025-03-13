@@ -20,10 +20,10 @@ func NewFrontendPipelineHandler(frontendPipelineServices *FrontendPipelineServic
 
 func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http.Request) {
 
-	// response, err := f.FrontendPipelineService.GetAllPipelines()
-	// if err != nil {
-	// 	utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-	// 	return
-	// }
-	utils.WriteJSONResponse(w, http.StatusOK, nil)
+	response, err := f.FrontendPipelineService.GetAllPipelines()
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
 }

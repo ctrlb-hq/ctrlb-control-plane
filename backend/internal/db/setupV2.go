@@ -140,7 +140,7 @@ func createRealtimeAgentMetricsTable(db *sql.DB) error {
         metrics_rate_sent INTEGER DEFAULT 0,
         cpu_utilization REAL,
         memory_utilization REAL,
-        timestamp INTEGER DEFAULT (strftime('%s', 'now'), -- Unix timestamp
+        timestamp INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
         FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
     );
     `

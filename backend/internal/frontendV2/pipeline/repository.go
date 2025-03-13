@@ -12,3 +12,7 @@ type FrontendPipelineRepository struct {
 func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 	return &FrontendPipelineRepository{db: db}
 }
+
+func (f *FrontendPipelineRepository) GetAllPipelines() ([]*Pipeline, error) {
+	return nil, nil
+}

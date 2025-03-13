@@ -14,3 +14,7 @@ func NewFrontendPipelineService(frontendPipelineRepository *FrontendPipelineRepo
 		AgentQueue:                 agentQueue,
 	}
 }
+
+func (f *FrontendPipelineService) GetAllPipelines() ([]*Pipeline, error) {
+	return f.FrontendPipelineRepository.GetAllPipelines()
+}
