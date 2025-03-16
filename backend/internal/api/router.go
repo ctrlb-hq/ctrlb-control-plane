@@ -73,7 +73,13 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/healthmetrics", frontendAgentHandlerV2.GetHealthMetricsForGraph).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ratemetrics", frontendAgentHandlerV2.GetRateMetricsForGraph).Methods("GET")
 
+	frontendAgentAPIsV2.HandleFunc("/unassigned-agents", frontendAgentHandlerV2.GetUnmanagedAgents).Methods("GET")
+
 	frontendAgentAPIsV2.HandleFunc("/pipeline", frontendPipelineHandlerV2.GetAllPipelines).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}", frontendPipelineHandlerV2.GetPipelineInfo).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}", frontendPipelineHandlerV2.DeletePipeline).Methods("DELETE")
+
+	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agents", frontendPipelineHandlerV2.GetPipelineInfo).Methods("GET")
 
 	return router
 }

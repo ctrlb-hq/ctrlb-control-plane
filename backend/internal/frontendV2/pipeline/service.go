@@ -18,3 +18,15 @@ func NewFrontendPipelineService(frontendPipelineRepository *FrontendPipelineRepo
 func (f *FrontendPipelineService) GetAllPipelines() ([]*Pipeline, error) {
 	return f.FrontendPipelineRepository.GetAllPipelines()
 }
+
+func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo, error) {
+	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
+}
+
+func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
+	return f.FrontendPipelineRepository.DeletePipeline(pipelineId)
+}
+
+func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int) ([]AgentInfoHome, error) {
+	return f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
+}

@@ -42,6 +42,16 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 	return agents, nil
 }
 
+func (f *FrontendAgentRepository) GetAllUnmanagedAgents() ([]UnmanagedAgents, error) {
+	var agents []UnmanagedAgents
+	row, err := f.db.Query("SELECT id, name, type, version, hostname, platform FROM agents WHERE pipeline_id IS NULL AND status = 'connected'")
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+	return agents, nil
+}
+
 // GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, error) {
 	agent := &AgentInfoWithLabels{}

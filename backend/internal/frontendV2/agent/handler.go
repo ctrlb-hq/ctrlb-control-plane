@@ -32,15 +32,25 @@ func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Reque
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+func (f *FrontendAgentHandler) GetUnmanagedAgents(w http.ResponseWriter, r *http.Request) {
+	utils.Logger.Info("Received request to get all agents")
+	response, err := f.FrontendAgentService.GetAllUnmanagedAgents()
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
 // GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-
 	utils.Logger.Info(fmt.Sprintf("Getting agent with ID: %s", id))
 
 	response, err := f.FrontendAgentService.GetAgent(id)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error getting agent: %v", err))
+		utils.Logger.Error(fmt.Sprintf("Error getting agent [ID: %s]: %v", id, err))
 		utils.SendJSONError(w, http.StatusNotFound, "Agent not found")
 		return
 	}
@@ -49,13 +59,11 @@ func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) 
 
 // DeleteAgent removes an agent by ID
 func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
-
 	utils.Logger.Info(fmt.Sprintf("Deleting agent with ID: %s", id))
 
 	if err := f.FrontendAgentService.DeleteAgent(id); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error deleting agent: %s", err))
+		utils.Logger.Error(fmt.Sprintf("Error deleting agent [ID: %s]: %s", id, err))
 		if err.Error() == "agent not found" {
 			utils.SendJSONError(w, http.StatusNotFound, err.Error())
 		} else {
@@ -63,18 +71,16 @@ func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
-
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent deleted [ID: " + id + "]."})
 }
 
 // StartAgent starts an agent by ID
 func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
-
 	utils.Logger.Info(fmt.Sprintf("Starting agent with ID: %s", id))
+
 	if err := f.FrontendAgentService.StartAgent(id); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error starting agent: %s", err))
+		utils.Logger.Error(fmt.Sprintf("Error starting agent [ID: %s]: %s", id, err))
 		if err.Error() == "no agent found to start" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -82,18 +88,16 @@ func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
-
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent started [ID: " + id + "]."})
 }
 
 // StopAgent stops an agent by ID
 func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
 	utils.Logger.Info(fmt.Sprintf("Stopping agent with ID: %s", id))
 
 	if err := f.FrontendAgentService.StopAgent(id); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error stopping agent: %s", err))
+		utils.Logger.Error(fmt.Sprintf("Error stopping agent [ID: %s]: %s", id, err))
 		if err.Error() == "no agent found to stop" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -101,7 +105,6 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped [ID: " + id + "]."})
 }
 

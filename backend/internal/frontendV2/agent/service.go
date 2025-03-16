@@ -25,6 +25,10 @@ func (f *FrontendAgentService) GetAllAgents() ([]AgentInfoHome, error) {
 	return f.FrontendAgentRepository.GetAllAgents()
 }
 
+func (f *FrontendAgentService) GetAllUnmanagedAgents() ([]UnmanagedAgents, error) {
+	return f.FrontendAgentRepository.GetAllUnmanagedAgents()
+}
+
 // GetAgent retrieves an agent along with its configuration
 func (f *FrontendAgentService) GetAgent(id string) (*AgentInfoWithLabels, error) {
 	agent, err := f.FrontendAgentRepository.GetAgent(id)

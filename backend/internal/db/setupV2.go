@@ -81,6 +81,7 @@ func createAgentsTable(db *sql.DB) error {
         pipeline_name TEXT,
         registered_at INTEGER DEFAULT (strftime('%s', 'now')), -- Stores Unix timestamp
         FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE SET NULL
+        FOREIGN KEY (pipeline_name) REFERENCES pipelines(name) ON DELETE SET NULL
     );
     `
 	_, err := db.Exec(query)
@@ -183,12 +184,10 @@ func createPipelinesTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS pipelines (
         pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT CHECK (
-            type IN ('metrics','traces','logs')
-        ),
         name TEXT NOT NULL,
-        description TEXT,
-        created_at INTEGER DEFAULT (strftime('%s', 'now')) -- Unix timestamp
+        created_by TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')) 
+        updated_at INTEGER DEFAULT (strftime('%s', 'now')) 
     );
     `
 	_, err := db.Exec(query)
