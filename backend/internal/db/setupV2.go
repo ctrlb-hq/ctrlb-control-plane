@@ -114,14 +114,16 @@ func createAgentsLabelsTable(db *sql.DB) error {
 func createAggregatedAgentMetricsTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS aggregated_agent_metrics (
-        agent_id INTEGER PRIMARY KEY,
-        log_rate_sent INTEGER DEFAULT 0,
-        traces_rate_sent INTEGER DEFAULT 0,
-        metrics_rate_sent INTEGER DEFAULT 0,
-        status TEXT CHECK(status IN ('connected', 'disconnected', 'stopped')),
-        updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
-        FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
-    );
+		agent_id INTEGER PRIMARY KEY,
+		logs_rate_sent INTEGER DEFAULT 0,
+		traces_rate_sent INTEGER DEFAULT 0,
+		metrics_rate_sent INTEGER DEFAULT 0,
+		data_sent_bytes INTEGER DEFAULT 0, -- Total bytes sent
+		data_received_bytes INTEGER DEFAULT 0, -- Total bytes received
+		status TEXT CHECK(status IN ('connected', 'disconnected', 'stopped')),
+		updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+	);
     `
 	_, err := db.Exec(query)
 	if err != nil {
@@ -134,17 +136,19 @@ func createAggregatedAgentMetricsTable(db *sql.DB) error {
 func createRealtimeAgentMetricsTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS realtime_agent_metrics (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        agent_id INTEGER NOT NULL,
-        logs_rate_sent INTEGER DEFAULT 0,
-        traces_rate_sent INTEGER DEFAULT 0,
-        metrics_rate_sent INTEGER DEFAULT 0,
-        cpu_utilization REAL,
-        memory_utilization REAL,
-        timestamp INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
-        FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
-    );
-    `
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		agent_id INTEGER NOT NULL,
+		logs_rate_sent INTEGER DEFAULT 0,
+		traces_rate_sent INTEGER DEFAULT 0,
+		metrics_rate_sent INTEGER DEFAULT 0,
+		data_sent_bytes INTEGER DEFAULT 0,
+		data_received_bytes INTEGER DEFAULT 0,
+		cpu_utilization REAL DEFAULT 0,
+		memory_utilization REAL DEFAULT 0,
+		timestamp INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+	);    
+	`
 	_, err := db.Exec(query)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error creating realtime_agent_metrics table: %v", err))

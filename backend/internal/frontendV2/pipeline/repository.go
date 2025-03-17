@@ -14,14 +14,51 @@ func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 }
 
 func (f *FrontendPipelineRepository) GetAllPipelines() ([]*Pipeline, error) {
-	return nil, nil
+	var pipelines []*Pipeline
+
+	query := `
+    SELECT 
+        p.pipeline_id AS id,
+        p.name,
+        COUNT(a.id) AS agents,
+        COALESCE(SUM(ag.data_received_bytes), 0) AS incomingBytes,
+        COALESCE(SUM(ag.data_sent_bytes), 0) AS outgoingBytes,
+        p.updated_at
+    FROM pipelines p
+    LEFT JOIN agents a ON p.pipeline_id = a.pipeline_id
+    LEFT JOIN aggregated_agent_metrics ag ON a.id = ag.agent_id
+    GROUP BY p.pipeline_id;
+    `
+
+	rows, err := f.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate through query results and store them in the slice
+	for rows.Next() {
+		pipeline := &Pipeline{}
+		err := rows.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Agents, &pipeline.IncomingBytes, &pipeline.OutgoingBytes, &pipeline.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		pipelines = append(pipelines, pipeline)
+	}
+
+	// Check for any errors from row iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return pipelines, nil
 }
 
 func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineInfo, error) {
 	pipelineInfo := &PipelineInfo{}
 
 	// Query the database for the pipeline info
-	query := `SELECT id, name, created_by, created_at, updated_at FROM pipelines WHERE id = ?`
+	query := `SELECT pipeline_id, name, created_by, created_at, updated_at FROM pipelines WHERE pipeline_id = ?`
 	err := f.db.QueryRow(query, pipelineId).Scan(&pipelineInfo.ID, &pipelineInfo.Name, &pipelineInfo.CreatedBy, &pipelineInfo.CreatedAt, &pipelineInfo.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -40,29 +77,31 @@ func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
 
 func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId int) ([]AgentInfoHome, error) {
 	var agents []AgentInfoHome
-	row, err := f.db.Query("SELECT id, name, version, pipeline_name FROM agents where pipeline_id = ?", PipelineId)
+
+	// Optimized query for SQLite
+	query := `
+		SELECT a.id, a.name, a.version, a.pipeline_name, 
+		       IFNULL(m.log_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
+		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
+		FROM agents a
+		LEFT JOIN aggregated_agent_metrics m ON a.id = m.agent_id
+		WHERE a.pipeline_id = ?
+	`
+	rows, err := f.db.Query(query, PipelineId)
 	if err != nil {
 		return nil, err
 	}
-	defer row.Close()
+	defer rows.Close()
 
-	for row.Next() {
+	for rows.Next() {
 		agent := AgentInfoHome{}
-		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName)
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName,
+			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
 		if err != nil {
 			return nil, err
 		}
 		agents = append(agents, agent)
 	}
 
-	for i := range agents {
-		// Get the status of the agent
-		agentStatus := f.db.QueryRow("SELECT log_rate_sent, traces_rate_sent, metrics_rate_sent, status FROM aggregated_agent_metrics WHERE agent_id = ?", agents[i].ID)
-
-		err := agentStatus.Scan(&agents[i].LogRate, &agents[i].TraceRate, &agents[i].MetricsRate, &agents[i].Status)
-		if err != nil {
-			return nil, err
-		}
-	}
 	return agents, nil
 }

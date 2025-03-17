@@ -1,14 +1,20 @@
 package frontendpipeline
 
 type Pipeline struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	Agents        int    `json:"agents"`
+	IncomingBytes int    `json:"incomingBytes"`
+	OutgoingBytes int    `json:"outgoingBytes"`
+	UpdatedAt     int    `json:"updatedAt"`
 }
 
 type PipelineInfo struct {
-	ID        int
-	Name      string
-	CreatedBy string
-	CreatedAt int
-	UpdatedAt int
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	CreatedBy string `json:"createdBy"`
+	CreatedAt int    `json:"createdAt"`
+	UpdatedAt int    `json:"updatedAt"`
 }
 
 // AgentInfoHome represents an agent with relevant details like type, version, and platform.
