@@ -32,7 +32,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 
 	for i := range agents {
 		// Get the status of the agent
-		agentStatus := f.db.QueryRow("SELECT log_rate_sent, traces_rate_sent, metrics_rate_sent, status FROM aggregated_agent_metrics WHERE agent_id = ?", agents[i].ID)
+		agentStatus := f.db.QueryRow("SELECT logs_rate_sent, traces_rate_sent, metrics_rate_sent, status FROM aggregated_agent_metrics WHERE agent_id = ?", agents[i].ID)
 
 		err := agentStatus.Scan(&agents[i].LogRate, &agents[i].TraceRate, &agents[i].MetricsRate, &agents[i].Status)
 		if err != nil {

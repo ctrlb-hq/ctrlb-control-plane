@@ -10,20 +10,18 @@ import (
 // Global Logger variable
 var Logger *zap.Logger
 
-// InitLogger initializes the global logger with a better configuration
 func InitLogger() {
 	// Define encoder for better readability
 	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:       "timestamp",
-		LevelKey:      "level",
-		NameKey:       "logger",
-		CallerKey:     "caller",
-		MessageKey:    "message",
-		StacktraceKey: "stacktrace",
-		LineEnding:    zapcore.DefaultLineEnding,
-		EncodeLevel:   zapcore.CapitalColorLevelEncoder, // Colors in console logs
-		EncodeTime:    zapcore.ISO8601TimeEncoder,       // Human-readable timestamps
-		EncodeCaller:  zapcore.ShortCallerEncoder,       // Short file:line format
+		TimeKey:      "timestamp",
+		LevelKey:     "level",
+		NameKey:      "logger",
+		CallerKey:    "caller",
+		MessageKey:   "message",
+		LineEnding:   zapcore.DefaultLineEnding,
+		EncodeLevel:  zapcore.CapitalColorLevelEncoder, // Colors in console logs
+		EncodeTime:   zapcore.ISO8601TimeEncoder,       // Human-readable timestamps
+		EncodeCaller: zapcore.ShortCallerEncoder,       // Short file:line format
 	}
 
 	// Set log level (change `DebugLevel` to `InfoLevel` in production)
@@ -45,9 +43,19 @@ func InitLogger() {
 		zapcore.NewCore(fileEncoder, zapcore.Lock(logFile), logLevel),      // File logging
 	)
 
-	// Create logger
-	Logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	// Create logger (without unnecessary stack traces)
+	Logger = zap.New(core, zap.AddCaller())
 
 	// Replace Zap's global logger
 	zap.ReplaceGlobals(Logger)
+
+	// Recover from panics and log stack trace only for panics
+	defer recoverFromPanic()
+}
+
+// recoverFromPanic logs panic stack traces and exits gracefully
+func recoverFromPanic() {
+	if r := recover(); r != nil {
+		Logger.Fatal("Panic occurred!", zap.Any("error", r), zap.Stack("stacktrace"))
+	}
 }

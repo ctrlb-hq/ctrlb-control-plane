@@ -86,13 +86,16 @@ func CreateNewUUID() string {
 
 func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {
 	if request.Name == "" {
-		return errors.New("name cannot be empty")
+		return fmt.Errorf("name cannot be empty")
 	}
 	if request.Email == "" {
-		return errors.New("email cannot be empty")
+		return fmt.Errorf("email cannot be empty")
 	}
 	if request.Password == "" {
-		return errors.New("password cannot be empty")
+		return fmt.Errorf("password cannot be empty")
+	}
+	if request.Role == "" {
+		return fmt.Errorf("role cannot be empty")
 	}
 	return nil
 }

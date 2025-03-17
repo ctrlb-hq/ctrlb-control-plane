@@ -5,4 +5,5 @@ type UserRegisterRequest struct {
 	Name     string `json:"name"`     // User's name
 	Email    string `json:"email"`    // User's email address
 	Password string `json:"password"` // User's password
+	Role     string `json:"role"`
 }

@@ -190,8 +190,8 @@ func createPipelinesTable(db *sql.DB) error {
         pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         created_by TEXT NOT NULL,
-        created_at INTEGER DEFAULT (strftime('%s', 'now')) 
-        updated_at INTEGER DEFAULT (strftime('%s', 'now')) 
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
     );
     `
 	_, err := db.Exec(query)
