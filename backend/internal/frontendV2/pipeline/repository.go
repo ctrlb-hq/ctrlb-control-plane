@@ -2,6 +2,7 @@ package frontendpipeline
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type FrontendPipelineRepository struct {
@@ -104,4 +105,29 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 	}
 
 	return agents, nil
+}
+
+func (f *FrontendPipelineRepository) DetachAgentFromPipeline(pipelineId int, agentId int) error {
+	query := `SELECT pipeline_id FROM agents WHERE id = ?`
+	var verifyId int
+	err := f.db.QueryRow(query, agentId).Scan(&verifyId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no agent found with id %d", agentId)
+		}
+		return err
+	}
+
+	if verifyId != pipelineId {
+		return fmt.Errorf("agent is not attached to given pipeline")
+	}
+
+	setQuery := `UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE id = ?`
+
+	_, err = f.db.Exec(setQuery, agentId)
+	if err != nil {
+		return fmt.Errorf("failed to detach agent: %w", err)
+	}
+
+	return nil
 }

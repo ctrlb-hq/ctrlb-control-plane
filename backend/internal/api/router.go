@@ -80,6 +80,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}", frontendPipelineHandlerV2.DeletePipeline).Methods("DELETE")
 
 	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agents", frontendPipelineHandlerV2.GetAllAgentsAttachedToPipeline).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agent/{agent_id}", frontendPipelineHandlerV2.DetachAgentFromPipeline).Methods("DELETE")
 
 	return router
 }

@@ -90,3 +90,31 @@ func (f *FrontendPipelineHandler) GetAllAgentsAttachedToPipeline(w http.Response
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
+
+func (f *FrontendPipelineHandler) DetachAgentFromPipeline(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	pipelineId := vars["id"]
+	agentId := vars["agent_id"]
+	pipelineIdInt, err := strconv.Atoi(pipelineId)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid pipeline ID format")
+		return
+	}
+
+	agentIdInt, err := strconv.Atoi(agentId)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid agent ID format")
+		return
+	}
+
+	utils.Logger.Info(fmt.Sprintf("Request received to detach agent [ID: %s] from pipeline with ID: %s", agentId, pipelineId))
+
+	err = f.FrontendPipelineService.DetachAgentFromPipeline(pipelineIdInt, agentIdInt)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error detach agent [ID: %s] from pipeline [ID: %s]: %v", agentId, pipelineId, err))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent [ID: " + agentId + "] detached successfully from pipeline [ID: " + pipelineId + "]"})
+}

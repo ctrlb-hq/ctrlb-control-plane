@@ -30,3 +30,7 @@ func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
 func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int) ([]AgentInfoHome, error) {
 	return f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
 }
+
+func (f *FrontendPipelineService) DetachAgentFromPipeline(pipelineId int, agentId int) error {
+	return f.FrontendPipelineRepository.DetachAgentFromPipeline(pipelineId, agentId)
+}
