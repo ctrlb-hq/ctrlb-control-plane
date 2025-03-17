@@ -17,7 +17,9 @@ import (
 	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	frontendagentV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/agent"
+	frontendnodeV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/node"
 	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
+
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -81,6 +83,7 @@ func main() {
 
 	frontendAgentRepositoryV2 := frontendagentV2.NewFrontendAgentRepository(db)
 	frontendPipelineRepositoryV2 := frontendpipelineV2.NewFrontendPipelineRepository(db)
+	frontendNodeRepositoryV2 := frontendnodeV2.NewFrontendNodeRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
@@ -91,8 +94,9 @@ func main() {
 
 	frontendAgentServiceV2 := frontendagentV2.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
 	frontendPipelineServiceV2 := frontendpipelineV2.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
+	frontendNodeServiceV2 := frontendnodeV2.NewFrontendNodeService(frontendNodeRepositoryV2)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendAgentServiceV2, frontendPipelineServiceV2)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 

@@ -8,12 +8,14 @@ import (
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 
 	frontendagentV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/agent"
+	frontendnode "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/node"
+	frontendnodeV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/node"
 	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, frontendAgentServiceV2 *frontendagentV2.FrontendAgentService, frontendPipelineServiceV2 *frontendpipelineV2.FrontendPipelineService) *mux.Router {
+func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, frontendPipelineService *frontendpipeline.FrontendPipelineService, frontendConfigServices *frontendconfig.FrontendConfigService, frontendAgentServiceV2 *frontendagentV2.FrontendAgentService, frontendPipelineServiceV2 *frontendpipelineV2.FrontendPipelineService, frontendNodeServiceV2 *frontendnode.FrontendNodeService) *mux.Router {
 	router := mux.NewRouter()
 
 	agentHandler := agent.NewAgentHandler(agentService)
@@ -25,6 +27,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	frontendAgentHandlerV2 := frontendagentV2.NewFrontendAgentHandler(frontendAgentServiceV2)
 	frontendPipelineHandlerV2 := frontendpipelineV2.NewFrontendPipelineHandler(frontendPipelineServiceV2)
+	frontendNodeHandlerV2 := frontendnodeV2.NewFrontendNodeHandler(frontendNodeServiceV2)
 
 	authAPIsV1 := router.PathPrefix("/api/auth/v1").Subrouter()
 
@@ -81,6 +84,10 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agents", frontendPipelineHandlerV2.GetAllAgentsAttachedToPipeline).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agent/{agent_id}", frontendPipelineHandlerV2.DetachAgentFromPipeline).Methods("DELETE")
+
+	frontendAgentAPIsV2.HandleFunc("/receivers", frontendNodeHandlerV2.GetAllReceivers).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/processors", frontendNodeHandlerV2.GetAllProcessors).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/exporters", frontendNodeHandlerV2.GetAllExporters).Methods("GET")
 
 	return router
 }
