@@ -1,4 +1,4 @@
-package agentcomm
+package client
 
 type AgentRequest struct {
 	Type       string `json:"type"`       // The type of the agent (e.g., worker, collector)

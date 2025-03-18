@@ -12,13 +12,13 @@ import (
 
 type FileWatcher struct {
 	filePath string
-	adapter  adapters.Adapter
+	adapter  *adapters.Adapter
 	watcher  *fsnotify.Watcher
 	done     chan struct{}
 	wg       sync.WaitGroup
 }
 
-func NewFileWatcher(filePath string, adapter adapters.Adapter) (*FileWatcher, error) {
+func NewFileWatcher(filePath string, adapter *adapters.Adapter) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (fw *FileWatcher) watchLoop() {
 	}
 }
 
-func WatchFile(filePath string, adapter adapters.Adapter) error {
+func WatchFile(filePath string, adapter *adapters.Adapter) error {
 	watcher, err := NewFileWatcher(filePath, adapter)
 	if err != nil {
 		return err

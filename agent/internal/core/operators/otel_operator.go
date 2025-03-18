@@ -13,10 +13,10 @@ import (
 
 type OtelOperator struct {
 	BaseURL string
-	Adapter adapters.Adapter
+	Adapter *adapters.Adapter
 }
 
-func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
+func NewOtelOperator(adapter *adapters.Adapter) *OtelOperator {
 	baseURL := "http://0.0.0.0:2020"
 	return &OtelOperator{
 		BaseURL: baseURL,

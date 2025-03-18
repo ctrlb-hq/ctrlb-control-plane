@@ -1,4 +1,4 @@
-package agentcomm
+package client
 
 import (
 	"bytes"

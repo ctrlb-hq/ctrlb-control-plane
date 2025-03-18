@@ -1,4 +1,4 @@
-package otel
+package adapters
 
 import (
 	"context"
@@ -30,8 +30,8 @@ import (
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	shutdownhelper "github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor"
@@ -39,7 +39,7 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-type OTELCollectorAdapter struct {
+type Adapter struct {
 	svc      *otelcol.Collector
 	isActive bool
 	mu       sync.Mutex
@@ -50,9 +50,9 @@ type OTELCollectorAdapter struct {
 	baseUrl  string
 }
 
-func NewOTELCollectorAdapter(wg *sync.WaitGroup) *OTELCollectorAdapter {
+func NewAdapter(wg *sync.WaitGroup) *Adapter {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &OTELCollectorAdapter{
+	return &Adapter{
 		wg:      wg,
 		errChan: make(chan error, 1),
 		ctx:     ctx,
@@ -118,7 +118,7 @@ func getNewOTELCollector() (*otelcol.Collector, error) {
 	return otelcol.NewCollector(settings)
 }
 
-func (o *OTELCollectorAdapter) Initialize() error {
+func (o *Adapter) Initialize() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -143,7 +143,7 @@ func (o *OTELCollectorAdapter) Initialize() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) StartAgent() error {
+func (o *Adapter) StartAgent() error {
 	if o.isActive {
 		return fmt.Errorf("fluent-bit instance already running")
 	}
@@ -168,7 +168,7 @@ func (o *OTELCollectorAdapter) StartAgent() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) StopAgent() error {
+func (o *Adapter) StopAgent() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -187,7 +187,7 @@ func (o *OTELCollectorAdapter) StopAgent() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) UpdateConfig() error {
+func (o *Adapter) UpdateConfig() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -211,7 +211,7 @@ func (o *OTELCollectorAdapter) UpdateConfig() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) GracefulShutdown() error {
+func (o *Adapter) GracefulShutdown() error {
 	log.Println("Initiating Server shutdown...")
 
 	shutdownhelper.ShutdownServer(o.wg)
@@ -238,7 +238,7 @@ func (o *OTELCollectorAdapter) GracefulShutdown() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) CurrentStatus() (*models.AgentMetrics, error) {
+func (o *Adapter) CurrentStatus() (*models.AgentMetrics, error) {
 	url := o.baseUrl + "/metrics"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -265,7 +265,7 @@ func (o *OTELCollectorAdapter) CurrentStatus() (*models.AgentMetrics, error) {
 	return agentMetrics, nil
 }
 
-func (o *OTELCollectorAdapter) GetVersion() (string, error) {
+func (o *Adapter) GetVersion() (string, error) {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "", fmt.Errorf("failed to read build info")

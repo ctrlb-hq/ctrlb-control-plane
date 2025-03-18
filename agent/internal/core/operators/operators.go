@@ -19,19 +19,10 @@ type OperatorService struct {
 	Operator Operator
 }
 
-func NewOperatorService(adapter adapters.Adapter) *OperatorService {
-	var operator Operator
+func NewOperatorService(adapter *adapters.Adapter) *OperatorService {
+	operator := NewOtelOperator(adapter)
 
-	switch constants.AGENT_TYPE {
-	case "fluent-bit":
-		operator = NewFluentBitOperator(adapter)
-	case "otel":
-		operator = NewOtelOperator(adapter)
-	default:
-		return nil
-	}
 	return &OperatorService{Operator: operator}
-
 }
 
 func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (interface{}, error) {
