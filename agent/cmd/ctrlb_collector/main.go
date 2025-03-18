@@ -34,10 +34,13 @@ func main() {
 		log.Fatal("Config file doesn't exist. Exiting....")
 	}
 
-	adapter := adapters.NewAdapter(&wg)
+	adapter, err := adapters.NewAdapter(&wg, constants.AGENT_TYPE)
+	if err != nil {
+		pkg.Logger.Fatal(fmt.Sprintf("Failed to create adapter: %v", err))
+	}
 
 	// 3. Start the agent
-	err := adapter.Initialize()
+	err = adapter.Initialize()
 	if err != nil {
 		pkg.Logger.Fatal(fmt.Sprintf("Failed to start Agent adapter: %v", err))
 	}

@@ -3,20 +3,20 @@ package operators
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 type OtelOperator struct {
 	BaseURL string
-	Adapter *adapters.Adapter
+	Adapter adapters.Adapter
 }
 
-func NewOtelOperator(adapter *adapters.Adapter) *OtelOperator {
+func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
 	baseURL := "http://0.0.0.0:2020"
 	return &OtelOperator{
 		BaseURL: baseURL,
@@ -26,7 +26,7 @@ func NewOtelOperator(adapter *adapters.Adapter) *OtelOperator {
 
 func (otc *OtelOperator) Initialize() (map[string]string, error) {
 	go func() {
-		log.Printf("Started procecss of initializing otel agent context")
+		pkg.Logger.Info("Started procecss of initializing otel agent context")
 		otc.Adapter.Initialize()
 	}()
 	jsonStr := `{"message": "Otel Agent initializing"}`
@@ -43,11 +43,9 @@ func (otc *OtelOperator) Initialize() (map[string]string, error) {
 }
 
 func (otc *OtelOperator) StartAgent() (map[string]string, error) {
-	jsonStr := `{"message": "Otel lAgent starting up"}`
-	log.Printf("Otel collector startup process initiated")
+	jsonStr := `{"message": "Otel Agent starting up"}`
 	err := otc.Adapter.StartAgent()
 	if err != nil {
-		log.Printf("error: %s", err.Error())
 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
 	}
 
@@ -64,10 +62,8 @@ func (otc *OtelOperator) StartAgent() (map[string]string, error) {
 
 func (otc *OtelOperator) StopAgent() (map[string]string, error) {
 	jsonStr := `{"message": "Otel Agent stopping"}`
-	log.Printf("Started process of stopping otel agent")
 	err := otc.Adapter.StopAgent()
 	if err != nil {
-		log.Printf("error: %s", err.Error())
 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
 	}
 
@@ -85,10 +81,9 @@ func (otc *OtelOperator) StopAgent() (map[string]string, error) {
 func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	jsonStr := `{"message": "Otel agent shutting down"}`
 	go func() {
-		log.Printf("Started process of Shutting down otel agent")
 		err := otc.Adapter.GracefulShutdown()
 		if err != nil {
-			log.Printf("error: %s", err)
+			pkg.Logger.Error(fmt.Sprintf("Error occured while shutting down agent: %s", err))
 		}
 	}()
 

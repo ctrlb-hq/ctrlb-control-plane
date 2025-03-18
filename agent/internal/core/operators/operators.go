@@ -19,17 +19,17 @@ type OperatorService struct {
 	Operator Operator
 }
 
-func NewOperatorService(adapter *adapters.Adapter) *OperatorService {
+func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	operator := NewOtelOperator(adapter)
 
 	return &OperatorService{Operator: operator}
 }
 
-func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (interface{}, error) {
+func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (any, error) {
 	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
 }
 
-func (o *OperatorService) GetCurrentConfig() (interface{}, error) {
+func (o *OperatorService) GetCurrentConfig() (any, error) {
 	return utils.LoadYAML(constants.AGENT_CONFIG_PATH)
 }
 
