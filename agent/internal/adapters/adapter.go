@@ -3,8 +3,6 @@ package adapters
 import (
 	"fmt"
 	"sync"
-
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
 )
 
 // Adapter defines the interface for different telemetry collectors
@@ -14,7 +12,6 @@ type Adapter interface {
 	StopAgent() error
 	UpdateConfig() error
 	GracefulShutdown() error
-	CurrentStatus() (*models.AgentMetrics, error)
 	GetVersion() (string, error)
 }
 

@@ -2,17 +2,13 @@ package operators
 
 import (
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 type Operator interface {
+	StartAgent() error
+	StopAgent() error
+	GracefulShutdown() error
 	UpdateCurrentConfig(map[string]any) error
-	StartAgent() (map[string]string, error)
-	StopAgent() (map[string]string, error)
-	GracefulShutdown() (map[string]string, error)
-	CurrentStatus() (*models.AgentMetrics, error)
 }
 
 type OperatorService struct {
@@ -25,26 +21,18 @@ func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	return &OperatorService{Operator: operator}
 }
 
-func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
-	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
-}
-
-func (o *OperatorService) GetCurrentConfig() (any, error) {
-	return utils.LoadYAML(constants.AGENT_CONFIG_PATH)
-}
-
-func (o *OperatorService) StartAgent() (map[string]string, error) {
+func (o *OperatorService) StartAgent() error {
 	return o.Operator.StartAgent()
 }
 
-func (o *OperatorService) StopAgent() (map[string]string, error) {
+func (o *OperatorService) StopAgent() error {
 	return o.Operator.StopAgent()
 }
 
-func (o *OperatorService) GracefulShutdown() (map[string]string, error) {
+func (o *OperatorService) GracefulShutdown() error {
 	return o.Operator.GracefulShutdown()
 }
 
-func (o *OperatorService) CurrentStatus() (*models.AgentMetrics, error) {
-	return o.Operator.CurrentStatus()
+func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
+	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
 }

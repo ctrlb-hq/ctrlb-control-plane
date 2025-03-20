@@ -19,7 +19,7 @@ processors:
     limit_mib: 500
 
 exporters:
-  logging:
+  debug:
     verbosity: detailed
 
 service:
@@ -27,9 +27,9 @@ service:
     metrics:
       receivers: [hostmetrics]
       processors: [memory_limiter, batch]
-      exporters: [logging]
+      exporters: [debug]
 
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [debug]
