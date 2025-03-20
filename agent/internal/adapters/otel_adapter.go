@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/collector/otelcol"
@@ -61,7 +61,7 @@ func (a *OTELAdapter) Initialize() error {
 	go func() {
 		defer a.wg.Done()
 		if err := a.svc.Run(a.ctx); err != nil {
-			log.Printf("OTEL collector stopped with error: %v", err)
+			pkg.Logger.Info(fmt.Sprintf("OTEL collector stopped with error: %v", err))
 		}
 	}()
 	a.isActive = true
@@ -70,7 +70,7 @@ func (a *OTELAdapter) Initialize() error {
 
 func (a *OTELAdapter) StartAgent() error {
 	if a.isActive {
-		return fmt.Errorf("fluent-bit instance already running")
+		return fmt.Errorf("OTEL collector instance already running")
 	}
 
 	a.mu.Lock()
@@ -86,7 +86,7 @@ func (a *OTELAdapter) StartAgent() error {
 	go func() {
 		defer a.wg.Done()
 		if err := a.svc.Run(a.ctx); err != nil {
-			log.Printf("OTEL collector stopped with error: %v", err)
+			pkg.Logger.Error(fmt.Sprintf("OTEL collector stopped with error: %v", err))
 		}
 	}()
 	a.isActive = true
@@ -104,11 +104,11 @@ func (a *OTELAdapter) StopAgent() error {
 	if a.svc != nil {
 		a.svc.Shutdown()
 	} else {
-		log.Println("otel collector is not running")
+		pkg.Logger.Error("otel collector is not running")
 		return fmt.Errorf("otel collector is not running")
 	}
 	a.isActive = false
-	log.Println("OTEL collector stopped")
+	pkg.Logger.Info("OTEL collector stopped")
 	return nil
 }
 
@@ -122,43 +122,38 @@ func (o *OTELAdapter) UpdateConfig() error {
 	go func() {
 		for {
 			sig := <-sigChan
-			fmt.Printf("Received signal for updating config in otel collector: %s\n", sig)
+			pkg.Logger.Info(fmt.Sprintf("Received signal for updating config in otel collector: %s\n", sig))
 		}
 	}()
 
-	fmt.Println("Sending SIGHUP signal to Hot-reload Otel collector for updating config...")
+	pkg.Logger.Info("Sending SIGHUP signal to Hot-reload Otel collector for updating config...")
 	syscall.Kill(os.Getpid(), syscall.SIGHUP)
 
 	time.Sleep(2 * time.Second)
 	o.isActive = true
 
-	log.Println("Config updated. OTEL collector restarted")
+	pkg.Logger.Info("Config updated. OTEL collector restarted")
 	return nil
 }
 
 func (a *OTELAdapter) GracefulShutdown() error {
-	log.Println("Initiating Server shutdown...")
-
 	shutdown.ShutdownServer(a.wg)
-
-	log.Printf("Initiating graceful shutdown of Otel agent...")
-
 	a.StopAgent()
 
-	log.Printf("Waiting for all goroutines to finish...")
+	pkg.Logger.Info("Waiting for all goroutines to finish...")
 	done := make(chan struct{})
 	a.wg.Wait()
 	close(done)
 
 	select {
 	case <-done:
-		log.Printf("All goroutines finished successfully")
+		pkg.Logger.Info("All goroutines finished successfully")
 
 	case <-time.After(20 * time.Second):
 		return fmt.Errorf("timed out waiting for goroutines to finish")
 	}
 
-	log.Printf("Otel collector has been gracefully shutdown")
+	pkg.Logger.Info("Agent shutdown successfully")
 	os.Exit(0)
 	return nil
 }

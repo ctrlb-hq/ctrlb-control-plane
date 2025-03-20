@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
-		log.Fatal("Config file doesn't exist. Exiting....")
+		pkg.Logger.Fatal("Config file doesn't exist. Exiting....")
 	}
 
 	adapter, err := adapters.NewAdapter(&wg, constants.AGENT_TYPE)

@@ -19,11 +19,7 @@ func NewRouter(operatorService *operators.OperatorService) *mux.Router {
 	agentApiV1.HandleFunc("/shutdown", operatorHandler.GracefulShutdown).Methods("POST")
 
 	// Agent configuration (GET and PUT) - Retrieves or updates the current config of the agent
-	agentApiV1.HandleFunc("/config", operatorHandler.GetCurrentConfig).Methods("GET")
-	agentApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("PUT")
-
-	// Agent status (GET) - Fetches the current status of the agent
-	agentApiV1.HandleFunc("/status", operatorHandler.CurrentStatus).Methods("GET")
+	agentApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("POST")
 
 	return router
 }

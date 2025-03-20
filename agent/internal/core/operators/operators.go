@@ -8,7 +8,7 @@ import (
 )
 
 type Operator interface {
-	UpdateCurrentConfig(models.ConfigUpsertRequest) (map[string]string, error)
+	UpdateCurrentConfig(map[string]any) error
 	StartAgent() (map[string]string, error)
 	StopAgent() (map[string]string, error)
 	GracefulShutdown() (map[string]string, error)
@@ -25,7 +25,7 @@ func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	return &OperatorService{Operator: operator}
 }
 
-func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (any, error) {
+func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
 	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
 }
 

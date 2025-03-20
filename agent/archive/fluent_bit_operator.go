@@ -1,120 +1,121 @@
-package operators
+// package operators
+package archive
 
-import (
-	"encoding/json"
-	"fmt"
-	"log"
+// import (
+// 	"encoding/json"
+// 	"fmt"
+// 	"log"
 
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
-)
+// 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
+// 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+// 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/models"
+// 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
+// )
 
-type FluentBitOperator struct {
-	Adapter adapters.Adapter
-}
+// type FluentBitOperator struct {
+// 	Adapter adapters.Adapter
+// }
 
-func NewFluentBitOperator(adapter adapters.Adapter) *FluentBitOperator {
-	return &FluentBitOperator{
-		Adapter: adapter,
-	}
-}
+// func NewFluentBitOperator(adapter adapters.Adapter) *FluentBitOperator {
+// 	return &FluentBitOperator{
+// 		Adapter: adapter,
+// 	}
+// }
 
-func (f *FluentBitOperator) Initialize() (map[string]string, error) {
-	go func() {
-		log.Printf("Started procecss of initializing agent context")
-		f.Adapter.Initialize()
-	}()
-	jsonStr := `{"message": "Agent initializing"}`
+// func (f *FluentBitOperator) Initialize() (map[string]string, error) {
+// 	go func() {
+// 		log.Printf("Started procecss of initializing agent context")
+// 		f.Adapter.Initialize()
+// 	}()
+// 	jsonStr := `{"message": "Agent initializing"}`
 
-	// Create a map to hold the result
-	var result map[string]string
+// 	// Create a map to hold the result
+// 	var result map[string]string
 
-	// Unmarshal the JSON into the map
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
+// 	// Unmarshal the JSON into the map
+// 	err := json.Unmarshal([]byte(jsonStr), &result)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
+// }
 
-func (f *FluentBitOperator) StartAgent() (map[string]string, error) {
-	jsonStr := `{"message": "Agent starting up"}`
-	log.Printf("Startup process initiated")
-	err := f.Adapter.StartAgent()
-	if err != nil {
-		log.Printf("error: %s", err.Error())
-		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
-	}
+// func (f *FluentBitOperator) StartAgent() (map[string]string, error) {
+// 	jsonStr := `{"message": "Agent starting up"}`
+// 	log.Printf("Startup process initiated")
+// 	err := f.Adapter.StartAgent()
+// 	if err != nil {
+// 		log.Printf("error: %s", err.Error())
+// 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
+// 	}
 
-	// Create a map to hold the result
-	var result map[string]string
+// 	// Create a map to hold the result
+// 	var result map[string]string
 
-	// Unmarshal the JSON into the map
-	err = json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
+// 	// Unmarshal the JSON into the map
+// 	err = json.Unmarshal([]byte(jsonStr), &result)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
+// }
 
-func (f *FluentBitOperator) StopAgent() (map[string]string, error) {
-	jsonStr := `{"message": "Agent stopping"}`
-	log.Printf("Started process of stopping agent")
-	err := f.Adapter.StopAgent()
-	if err != nil {
-		log.Printf("error: %s", err.Error())
-		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
-	}
+// func (f *FluentBitOperator) StopAgent() (map[string]string, error) {
+// 	jsonStr := `{"message": "Agent stopping"}`
+// 	log.Printf("Started process of stopping agent")
+// 	err := f.Adapter.StopAgent()
+// 	if err != nil {
+// 		log.Printf("error: %s", err.Error())
+// 		jsonStr = fmt.Sprintf(`{"message": "%s"}`, err.Error())
+// 	}
 
-	// Create a map to hold the result
-	var result map[string]string
+// 	// Create a map to hold the result
+// 	var result map[string]string
 
-	// Unmarshal the JSON into the map
-	err = json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
+// 	// Unmarshal the JSON into the map
+// 	err = json.Unmarshal([]byte(jsonStr), &result)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
+// }
 
-func (f *FluentBitOperator) GracefulShutdown() (map[string]string, error) {
-	jsonStr := `{"message": "Agent shutting down"}`
-	go func() {
-		log.Printf("Started process of Shutting down")
-		err := f.Adapter.GracefulShutdown()
-		if err != nil {
-			log.Printf("error: %s", err)
-		}
-	}()
+// func (f *FluentBitOperator) GracefulShutdown() (map[string]string, error) {
+// 	jsonStr := `{"message": "Agent shutting down"}`
+// 	go func() {
+// 		log.Printf("Started process of Shutting down")
+// 		err := f.Adapter.GracefulShutdown()
+// 		if err != nil {
+// 			log.Printf("error: %s", err)
+// 		}
+// 	}()
 
-	// Create a map to hold the result
-	var result map[string]string
+// 	// Create a map to hold the result
+// 	var result map[string]string
 
-	// Unmarshal the JSON into the map
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
+// 	// Unmarshal the JSON into the map
+// 	err := json.Unmarshal([]byte(jsonStr), &result)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
+// }
 
-func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
+// func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
 
-	configString := updateConfigRequest.Config
+// 	configString := updateConfigRequest.Config
 
-	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
-		return nil, err
-	}
+// 	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
+// 		return nil, err
+// 	}
 
-	jsonStr := `{"message": "Configuration has been updated"}`
-	var result map[string]string
-	_ = json.Unmarshal([]byte(jsonStr), &result)
+// 	jsonStr := `{"message": "Configuration has been updated"}`
+// 	var result map[string]string
+// 	_ = json.Unmarshal([]byte(jsonStr), &result)
 
-	return result, nil
-}
+// 	return result, nil
+// }
 
-func (f *FluentBitOperator) CurrentStatus() (*models.AgentMetrics, error) {
-	return f.Adapter.CurrentStatus()
-}
+// func (f *FluentBitOperator) CurrentStatus() (*models.AgentMetrics, error) {
+// 	return f.Adapter.CurrentStatus()
+// }

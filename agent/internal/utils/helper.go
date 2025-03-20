@@ -3,10 +3,11 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg"
 )
 
 type ErrorResponse struct {
@@ -54,7 +55,7 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	// Marshal the error response struct to JSON
 	jsonData, err := json.Marshal(errResp)
 	if err != nil {
-		log.Printf("Failed to marshal error response to JSON: %s", err.Error())
+		pkg.Logger.Error(fmt.Sprintf("Failed to marshal error response to JSON: %s", err.Error()))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

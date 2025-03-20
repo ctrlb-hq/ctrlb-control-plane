@@ -98,19 +98,13 @@ func (otc *OtelOperator) GracefulShutdown() (map[string]string, error) {
 	return result, nil
 }
 
-func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest models.ConfigUpsertRequest) (map[string]string, error) {
+func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
 
-	configString := updateConfigRequest.Config
-
-	if err := utils.SaveToYAML(configString, constants.AGENT_CONFIG_PATH); err != nil {
-		return nil, err
+	if err := utils.SaveToYAML(updateConfigRequest, constants.AGENT_CONFIG_PATH); err != nil {
+		return err
 	}
 
-	jsonStr := `{"message": "Configuration for otel agent has been updated"}`
-	var result map[string]string
-	_ = json.Unmarshal([]byte(jsonStr), &result)
-
-	return result, nil
+	return nil
 }
 
 func (otc *OtelOperator) CurrentStatus() (*models.AgentMetrics, error) {
