@@ -146,3 +146,48 @@ func (f *FrontendPipelineHandler) AttachAgentToPipeline(w http.ResponseWriter, r
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent [ID: " + agentId + "] attached successfully to pipeline [ID: " + pipelineId + "]"})
 }
+
+func (f *FrontendPipelineHandler) GetPipelineGraph(w http.ResponseWriter, r *http.Request) {
+	pipelineId := mux.Vars(r)["id"]
+	pipelineIdInt, err := strconv.Atoi(pipelineId)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid pipeline ID format")
+		return
+	}
+
+	utils.Logger.Info(fmt.Sprintf("Request received to get graph for pipeline with ID: %s", pipelineId))
+
+	response, err := f.FrontendPipelineService.GetPipelineGraph(pipelineIdInt)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error getting graph for pipeline [ID: %s]: %v", pipelineId, err))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendPipelineHandler) SyncPipelineGraph(w http.ResponseWriter, r *http.Request) {
+	pipelineId := mux.Vars(r)["id"]
+	pipelineIdInt, err := strconv.Atoi(pipelineId)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid pipeline ID format")
+		return
+	}
+
+	utils.Logger.Info(fmt.Sprintf("Request received to sync graph for pipeline with ID: %s", pipelineId))
+
+	var graph PipelineGraph
+	err = utils.UnmarshalJSONRequest(r, &graph)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	err = f.FrontendPipelineService.SyncPipelineGraph(pipelineIdInt, &graph)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error syncing graph for pipeline [ID: %s]: %v", pipelineId, err))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Pipeline graph synced successfully"})
+}

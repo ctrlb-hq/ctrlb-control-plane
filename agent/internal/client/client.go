@@ -82,7 +82,7 @@ func InformBackendServerStart() (map[string]any, error) {
 
 func InformBackendConfigFileChanged() error {
 	// 1. Construct the POST URL
-	url := fmt.Sprintf("%s/api/agent/v1/agents/%s/config-changed",
+	url := fmt.Sprintf("%s/api/agent/v1/agents/%v/config-changed",
 		constants.BACKEND_URL,
 		constants.AGENTID,
 	)

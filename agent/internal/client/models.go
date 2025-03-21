@@ -7,6 +7,6 @@ type AgentRequest struct {
 }
 
 type AgentResponse struct {
-	ID     string         `json:"id"`     // Unique ID for the agent
+	ID     int64          `json:"id"`     // Unique ID for the agent
 	Config map[string]any `json:"config"` // Associated configuration
 }

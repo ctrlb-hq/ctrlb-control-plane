@@ -46,6 +46,9 @@ func DBInit() (*sql.DB, error) {
 	if err := createPipelineComponentsTable(db); err != nil {
 		return nil, err
 	}
+	if err := createPipelineComponentDependenciesTable(db); err != nil {
+		return nil, err
+	}
 
 	utils.Logger.Info("All tables created (or verified) successfully.")
 	return db, nil
@@ -77,11 +80,10 @@ func createAgentsTable(db *sql.DB) error {
         version TEXT,
         hostname TEXT,
         platform TEXT,
-        pipeline_id INTEGER,
-        pipeline_name TEXT,
+        pipeline_id INTEGER DEFAULT NULL,
+        pipeline_name TEXT DEFAULT NULL,
         registered_at INTEGER DEFAULT (strftime('%s', 'now')), -- Stores Unix timestamp
         FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE SET NULL
-        FOREIGN KEY (pipeline_name) REFERENCES pipelines(name) ON DELETE SET NULL
     );
     `
 	_, err := db.Exec(query)
@@ -220,6 +222,27 @@ func createPipelineComponentsTable(db *sql.DB) error {
 	_, err := db.Exec(query)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_components table: %v", err))
+	}
+	return err
+}
+
+func createPipelineComponentDependenciesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS pipeline_component_edges (
+        edge_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pipeline_id INTEGER NOT NULL,
+        child_component_id INTEGER NOT NULL,  -- Component that depends on another (runs later)
+        parent_component_id INTEGER NOT NULL, -- Component that must execute first
+        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE CASCADE,
+        FOREIGN KEY (child_component_id) REFERENCES pipeline_components(component_id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_component_id) REFERENCES pipeline_components(component_id) ON DELETE CASCADE,
+        UNIQUE (pipeline_id, child_component_id, parent_component_id) -- Prevent duplicate dependencies
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_component_edges table: %v", err))
 	}
 	return err
 }

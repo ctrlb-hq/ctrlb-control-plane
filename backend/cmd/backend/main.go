@@ -106,4 +106,5 @@ func main() {
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
 	<-interruptChan
+	utils.Logger.Info("Received interrupt signal, shutting down...")
 }

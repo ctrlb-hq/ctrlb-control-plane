@@ -25,13 +25,18 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	constants.AGENT_CONFIG_PATH = *flag.String("config", "./config.yaml", "Path to the agent configuration file")
-	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
-	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")
+	var configPath = flag.String("config", "./config.yaml", "Path to the agent configuration file")
+	var backendURL = flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
+	var port = flag.String("port", "443", "Agent port for communication with server")
 
 	flag.Parse()
 
+	constants.AGENT_CONFIG_PATH = *configPath
+	constants.BACKEND_URL = *backendURL
+	constants.PORT = *port
+
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
+		logger.Logger.Error(fmt.Sprintf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH))
 		logger.Logger.Fatal("Config file doesn't exist. Exiting....")
 	}
 

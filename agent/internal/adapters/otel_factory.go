@@ -15,8 +15,11 @@ import (
 	"go.opentelemetry.io/collector/processor/memorylimiterprocessor"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/kafkaexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter"
@@ -91,6 +94,11 @@ func getNewOTELCollector() (*otelcol.Collector, error) {
 		BuildInfo:              component.NewDefaultBuildInfo(),
 		Factories:              componentsFactory,
 		ConfigProviderSettings: configProviderSettings,
+		LoggingOptions: []zap.Option{
+			zap.WrapCore(func(_ zapcore.Core) zapcore.Core {
+				return logger.Logger.Core()
+			}),
+		},
 	}
 
 	return otelcol.NewCollector(settings)

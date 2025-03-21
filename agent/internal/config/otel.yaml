@@ -1,35 +1,25 @@
-receivers:
-  hostmetrics:
-    collection_interval: 10s
-    scrapers:
-      cpu: {}
-      memory: {}
-      disk: {}
-      load: {}
-      network: {}
-
-  otlp:
-    protocols:
-      http: {}
-
-processors:
-  batch: {}
-  memory_limiter:
-    check_interval: 5s
-    limit_mib: 500
-
 exporters:
-  debug:
-    verbosity: detailed
-
+    debug: {}
+processors: {}
+receivers:
+    otlp:
+        protocols:
+            grpc: {}
+            http: {}
 service:
-  pipelines:
-    metrics:
-      receivers: [hostmetrics]
-      processors: [memory_limiter, batch]
-      exporters: [debug]
-
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug]
+    pipelines:
+        logs/default:
+            exporters:
+                - debug
+            processors: []
+            receivers:
+                - otlp
+    telemetry:
+        metrics:
+            level: detailed
+            readers:
+                - pull:
+                    exporter:
+                        prometheus:
+                            host: 0.0.0.0
+                            port: 8888

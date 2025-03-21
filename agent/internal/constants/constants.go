@@ -10,4 +10,4 @@ var (
 	IS_PIPELINE       = false
 )
 
-var AGENTID string
+var AGENTID int64
