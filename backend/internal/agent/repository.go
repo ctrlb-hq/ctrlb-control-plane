@@ -18,25 +18,36 @@ func NewAgentRepository(db *sql.DB) *AgentRepository {
 }
 
 // RegisterAgent registers a new agent in the database.
-func (ar *AgentRepository) RegisterAgent(agent *models.AgentWithConfig) error {
+func (ar *AgentRepository) RegisterAgent(req *AgentRegisterRequest) (*AgentRegisterResponse, error) {
 	var existingAgent string
+	var response *AgentRegisterResponse
 
 	// Check if the agent is already registered
-	err := ar.db.QueryRow("SELECT ID FROM agents WHERE Name = ?", agent.Name).Scan(&existingAgent)
+	err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
 	if err == nil {
-		return errors.New("agent " + agent.Name + " already exists")
+		return nil, errors.New("agent for host" + req.Hostname + " already exists")
 	} else if err != sql.ErrNoRows {
-		return errors.New("error checking database: " + err.Error())
+		return nil, errors.New("error checking database: " + err.Error())
 	}
 
 	// Insert the new agent into the database
-	_, err = ar.db.Exec("INSERT INTO agents (ID, Name, Type, Version, Hostname, Platform, ConfigID, IsPipeline, RegisteredAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		agent.ID, agent.Name, agent.Type, agent.Version, agent.Hostname, agent.Platform, agent.Config.ID, agent.IsPipeline, agent.RegisteredAt)
+	result, err := ar.db.Exec("INSERT INTO agents (type, version, hostname, platform, registered_at) VALUES (?, ?, ?, ?, ?)", req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt)
+
 	if err != nil {
-		return errors.New("error adding new agent: " + err.Error())
+		return nil, errors.New("error inserting agent: " + err.Error())
 	}
 
-	return nil
+	// Get the ID of the newly inserted agent
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, errors.New("error getting last insert ID: " + err.Error())
+	}
+	response.ID = id
+
+	// Get the default configuration for the agent
+	// FIXME: This is a placeholder, the actual configuration should be fetched from a configuration service
+
+	return response, nil
 }
 
 func (f *AgentRepository) GetConfig(id string) (*models.Config, error) {

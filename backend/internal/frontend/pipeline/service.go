@@ -34,3 +34,7 @@ func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int)
 func (f *FrontendPipelineService) DetachAgentFromPipeline(pipelineId int, agentId int) error {
 	return f.FrontendPipelineRepository.DetachAgentFromPipeline(pipelineId, agentId)
 }
+
+func (f *FrontendPipelineService) AttachAgentToPipeline(pipelineId int, agentId int) error {
+	return f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
+}

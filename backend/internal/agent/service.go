@@ -1,13 +1,9 @@
 package agent
 
 import (
-	"errors"
-	"time"
+	"fmt"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 // AgentService manages agent operations.
@@ -25,39 +21,15 @@ func NewAgentService(agentRepository *AgentRepository, agentQueue *queue.AgentQu
 }
 
 // RegisterAgent processes the registration of a new agent.
-func (a *AgentService) RegisterAgent(request AgentRegisterRequest) (interface{}, error) {
-	var config *models.Config
-
-	// Set default config ID based on agent type
-	switch request.Type {
-	case "fluent-bit":
-		config, _ = a.AgentRepository.GetConfig(constants.DEFAULT_CONFIG_FB_ID)
-	case "otel":
-		config, _ = a.AgentRepository.GetConfig(constants.DEFAULT_CONFIG_OTEL_ID)
-	default:
-		return nil, errors.New("agent type not supported")
-	}
-
-	// Create a new agent instance
-	agent := models.AgentWithConfig{
-		ID:           utils.CreateNewUUID(),
-		Name:         utils.GenerateAgentName(request.Type, request.Version, request.Hostname),
-		Type:         request.Type,
-		Version:      request.Version,
-		Hostname:     request.Hostname,
-		Platform:     request.Platform,
-		Config:       *config,
-		IsPipeline:   request.IsPipeline,
-		RegisteredAt: time.Now(),
-	}
+func (a *AgentService) RegisterAgent(request *AgentRegisterRequest) (*AgentRegisterResponse, error) {
 
 	// Register the agent in the repository
-	err := a.AgentRepository.RegisterAgent(&agent)
+	response, err := a.AgentRepository.RegisterAgent(request)
 	if err != nil {
 		return nil, err
 	}
 
-	a.AgentQueue.AddAgent(agent.ID, agent.Hostname)
+	a.AgentQueue.AddAgent(fmt.Sprint(response.ID), request.Hostname)
 
-	return agent, nil // Return the registered agent
+	return response, nil // Return the registered agent
 }

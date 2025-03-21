@@ -13,9 +13,9 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
-	frontendagentV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/agent"
-	frontendnodeV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/node"
-	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
+	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
+	frontendnode "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/node"
+	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
@@ -74,16 +74,16 @@ func main() {
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
 
-	frontendAgentRepositoryV2 := frontendagentV2.NewFrontendAgentRepository(db)
-	frontendPipelineRepositoryV2 := frontendpipelineV2.NewFrontendPipelineRepository(db)
-	frontendNodeRepositoryV2 := frontendnodeV2.NewFrontendNodeRepository(db)
+	frontendAgentRepositoryV2 := frontendagent.NewFrontendAgentRepository(db)
+	frontendPipelineRepositoryV2 := frontendpipeline.NewFrontendPipelineRepository(db)
+	frontendNodeRepositoryV2 := frontendnode.NewFrontendNodeRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 
-	frontendAgentServiceV2 := frontendagentV2.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
-	frontendPipelineServiceV2 := frontendpipelineV2.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
-	frontendNodeServiceV2 := frontendnodeV2.NewFrontendNodeService(frontendNodeRepositoryV2)
+	frontendAgentServiceV2 := frontendagent.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
+	frontendPipelineServiceV2 := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
+	frontendNodeServiceV2 := frontendnode.NewFrontendNodeService(frontendNodeRepositoryV2)
 
 	router := api.NewRouter(agentService, authService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)
 

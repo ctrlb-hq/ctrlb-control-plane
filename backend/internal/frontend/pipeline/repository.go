@@ -131,3 +131,14 @@ func (f *FrontendPipelineRepository) DetachAgentFromPipeline(pipelineId int, age
 
 	return nil
 }
+
+func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agentId int) error {
+	setQuery := `UPDATE agents SET pipeline_id = ?, pipeline_name = (SELECT name FROM pipelines WHERE pipeline_id = ?) WHERE id = ?`
+
+	_, err := f.db.Exec(setQuery, pipelineId, pipelineId, agentId)
+	if err != nil {
+		return fmt.Errorf("failed to attach agent: %w", err)
+	}
+
+	return nil
+}
