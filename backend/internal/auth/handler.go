@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -24,7 +23,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var userRegisterRequest models.UserRegisterRequest
 
 	// Step 1: Parse and decode the request body
-	err := json.NewDecoder(r.Body).Decode(&userRegisterRequest)
+	err := utils.UnmarshalJSONRequest(r, &userRegisterRequest)
 	if err != nil {
 		// Log the error for debugging purposes
 		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
@@ -81,14 +80,12 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest LoginRequest
-	err := json.NewDecoder(r.Body).Decode(&loginRequest)
-	if err != nil {
+
+	if err := utils.UnmarshalJSONRequest(r, &loginRequest); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-
-	// Login and get session ID
 
 	response, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
@@ -102,7 +99,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req RefreshTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := utils.UnmarshalJSONRequest(r, &req); err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}

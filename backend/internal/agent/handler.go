@@ -52,6 +52,6 @@ func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
 func (a *AgentHandler) ConfigChangedPing(w http.ResponseWriter, r *http.Request) {
 	agentID := mux.Vars(r)["id"] // Get the agent ID from the URL
 	utils.Logger.Info(fmt.Sprintf("Received config changed ping from agent: %s", agentID))
-
+	//TODO: Implement the logic to handle the config changed ping
 	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }

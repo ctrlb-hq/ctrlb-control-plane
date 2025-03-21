@@ -7,12 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/google/uuid"
 )
-
-func GenerateAgentName(typ string, version string, hostname string) string {
-	return fmt.Sprintf("%s_%s@%s", typ, version, hostname)
-}
 
 var ErrUserAlreadyExists = errors.New("user already exists")
 
@@ -36,14 +31,6 @@ func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) 
 }
 
 func UnmarshalJSONRequest(r *http.Request, v interface{}) error {
-	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-	return nil
-}
-
-func UnmarshalJSONResponse(r *http.Response, v interface{}) error {
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
 		return err
 	}
@@ -78,10 +65,6 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-}
-
-func CreateNewUUID() string {
-	return uuid.New().String()
 }
 
 func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {

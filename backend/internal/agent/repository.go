@@ -3,8 +3,6 @@ package agent
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 // AgentRepository interacts with the agent database.
@@ -45,37 +43,16 @@ func (ar *AgentRepository) RegisterAgent(req *AgentRegisterRequest) (*AgentRegis
 	response.ID = id
 
 	// Get the default configuration for the agent
-	// FIXME: This is a placeholder, the actual configuration should be fetched from a configuration service
+	config, err := ar.GetConfig("default")
+	if err != nil {
+		return nil, errors.New("error getting default config: " + err.Error())
+	}
+	response.Config = *config
 
 	return response, nil
 }
 
-func (f *AgentRepository) GetConfig(id string) (*models.Config, error) {
-	// Initialize the config struct
-	config := &models.Config{}
-
-	// Use parameterized query to prevent SQL injection
-	query := "SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE ID = ?"
-	row := f.db.QueryRow(query, id)
-
-	// Scan the result into the config struct
-	err := row.Scan(
-		&config.ID,
-		&config.Name,
-		&config.Description,
-		&config.Config,
-		&config.TargetAgent,
-		&config.CreatedAt,
-		&config.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// If no rows were returned, return a specific er
-			return nil, errors.New("no config found with ID")
-		}
-		// Log and return other errors
-		return nil, err
-	}
-
-	return config, nil
+func (f *AgentRepository) GetConfig(id string) (*map[string]any, error) {
+	//FIXME: Implement this method
+	return nil, nil
 }
