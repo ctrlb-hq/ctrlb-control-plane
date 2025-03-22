@@ -163,3 +163,23 @@ func (f *FrontendAgentRepository) GetRateMetricsForGraph(id string) (*[]AgentMet
 
 	return &metrics, nil
 }
+
+func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]string) error {
+	tx, err := f.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for key, value := range labels {
+		if _, err := tx.Exec("INSERT INTO agents_labels (agent_id, key, value) VALUES (?, ?, ?)", agentId, key, value); err != nil {
+			return err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -161,3 +161,23 @@ func (f *FrontendAgentHandler) GetRateMetricsForGraph(w http.ResponseWriter, r *
 
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
+
+func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Adding labels to agent with ID: %s", id))
+
+	var labels map[string]string
+	if err := utils.UnmarshalJSONRequest(r, &labels); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to decode request body: %s", err.Error()))
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := f.FrontendAgentService.AddLabels(id, labels); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to add labels to agent [ID: %s]: %s", id, err.Error()))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Labels added to agent [ID: " + id + "]."})
+}

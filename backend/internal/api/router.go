@@ -44,20 +44,20 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.RestartMonitoring).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/healthmetrics", frontendAgentHandler.GetHealthMetricsForGraph).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ratemetrics", frontendAgentHandler.GetRateMetricsForGraph).Methods("GET")
-	//TODO: Add a new endpoint for adding agent labels
+	frontendAgentAPIsV2.HandleFunc("/agents/{id}/labels", frontendAgentHandler.AddLabels).Methods("POST")
 
 	frontendAgentAPIsV2.HandleFunc("/unassigned-agents", frontendAgentHandler.GetUnmanagedAgents).Methods("GET")
 
-	frontendAgentAPIsV2.HandleFunc("/pipeline", frontendPipelineHandler.GetAllPipelines).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}", frontendPipelineHandler.GetPipelineInfo).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}", frontendPipelineHandler.DeletePipeline).Methods("DELETE")
+	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.GetAllPipelines).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.GetPipelineInfo).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.DeletePipeline).Methods("DELETE")
 
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/graph", frontendPipelineHandler.GetPipelineGraph).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/graph", frontendPipelineHandler.SyncPipelineGraph).Methods("POST")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/graph", frontendPipelineHandler.GetPipelineGraph).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/graph", frontendPipelineHandler.SyncPipelineGraph).Methods("POST")
 
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agents", frontendPipelineHandler.GetAllAgentsAttachedToPipeline).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agent/{agent_id}", frontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
-	frontendAgentAPIsV2.HandleFunc("/pipeline/{id}/agent/{agent_id}", frontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents", frontendPipelineHandler.GetAllAgentsAttachedToPipeline).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
 
 	frontendAgentAPIsV2.HandleFunc("/receivers", frontendNodeHandler.GetAllReceivers).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/processors", frontendNodeHandler.GetAllProcessors).Methods("GET")

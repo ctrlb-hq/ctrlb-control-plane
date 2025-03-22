@@ -124,3 +124,7 @@ func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error 
 
 	return nil
 }
+
+func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
+	return f.FrontendAgentRepository.AddLabels(agentId, labels)
+}
