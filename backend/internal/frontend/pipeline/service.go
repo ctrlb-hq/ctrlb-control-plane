@@ -1,6 +1,12 @@
 package frontendpipeline
 
-import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
+import (
+	"fmt"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
+)
 
 type FrontendPipelineService struct {
 	FrontendPipelineRepository *FrontendPipelineRepository
@@ -50,17 +56,23 @@ func (f *FrontendPipelineService) AttachAgentToPipeline(pipelineId int, agentId 
 	return f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
 }
 
-func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*PipelineGraph, error) {
+func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error) {
 	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return nil, err
 	}
 	return f.FrontendPipelineRepository.GetPipelineGraph(pipelineId)
 }
 
-func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGraph *PipelineGraph) error {
+func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGraph *models.PipelineGraph) error {
 	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return err
 	}
 
+	response, err := configcompiler.CompileGraphToJSON(*pipelineGraph)
+	if err != nil {
+		return fmt.Errorf("invalid pipeline")
+	}
+
+	go f.AgentQueue.UpdateAllAgentConfig(pipelineId, response)
 	return f.FrontendPipelineRepository.SyncPipelineGraph(pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
 }

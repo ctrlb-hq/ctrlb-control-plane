@@ -24,6 +24,10 @@ func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 	return q
 }
 
+func (q *AgentQueue) UpdateAllAgentConfig(pipelineId int, config *map[string]any) error {
+	return nil
+}
+
 // AddAgent adds a new agent to the queue.
 func (q *AgentQueue) AddAgent(id, Hostname string) {
 	q.mutex.Lock()

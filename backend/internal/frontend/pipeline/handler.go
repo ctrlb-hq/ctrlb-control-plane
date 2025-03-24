@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
 )
@@ -176,7 +177,7 @@ func (f *FrontendPipelineHandler) SyncPipelineGraph(w http.ResponseWriter, r *ht
 
 	utils.Logger.Info(fmt.Sprintf("Request received to sync graph for pipeline with ID: %s", pipelineId))
 
-	var graph PipelineGraph
+	var graph models.PipelineGraph
 	err = utils.UnmarshalJSONRequest(r, &graph)
 	if err != nil {
 		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")

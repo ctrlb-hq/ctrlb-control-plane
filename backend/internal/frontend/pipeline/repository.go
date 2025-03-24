@@ -3,6 +3,8 @@ package frontendpipeline
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type FrontendPipelineRepository struct {
@@ -141,7 +143,7 @@ func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agent
 	return nil
 }
 
-func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*PipelineGraph, error) {
+func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error) {
 	// Get pipeline components (nodes)
 	nodes, err := f.getPipelineComponents(pipelineId)
 	if err != nil {
@@ -154,13 +156,13 @@ func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*Pipeline
 		return nil, fmt.Errorf("failed to get pipeline dependencies: %w", err)
 	}
 
-	return &PipelineGraph{
+	return &models.PipelineGraph{
 		Nodes: nodes,
 		Edges: edges,
 	}, nil
 }
 
-func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]PipelineComponent, error) {
+func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineComponent, error) {
 	rows, err := f.db.Query(`
 		SELECT component_id, name, component_role, plugin_name 
 		FROM pipeline_components 
@@ -170,9 +172,9 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]Pi
 	}
 	defer rows.Close()
 
-	var nodes []PipelineComponent
+	var nodes []models.PipelineComponent
 	for rows.Next() {
-		var node PipelineComponent
+		var node models.PipelineComponent
 		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.PluginName); err != nil {
 			return nil, err
 		}
@@ -181,7 +183,7 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]Pi
 	return nodes, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]PipelineEdge, error) {
+func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.PipelineEdge, error) {
 	rows, err := f.db.Query(`
 		SELECT parent_component_id, child_component_id 
 		FROM pipeline_component_edges 
@@ -191,9 +193,9 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]Pipelin
 	}
 	defer rows.Close()
 
-	var edges []PipelineEdge
+	var edges []models.PipelineEdge
 	for rows.Next() {
-		var edge PipelineEdge
+		var edge models.PipelineEdge
 		if err := rows.Scan(&edge.FromComponentID, &edge.ToComponentID); err != nil {
 			return nil, err
 		}
@@ -202,7 +204,7 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]Pipelin
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, components []PipelineComponent, edges []PipelineEdge) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, components []models.PipelineComponent, edges []models.PipelineEdge) error {
 
 	tx, err := f.db.Begin()
 	if err != nil {

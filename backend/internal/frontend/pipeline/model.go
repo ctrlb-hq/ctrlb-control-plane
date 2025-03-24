@@ -17,26 +17,6 @@ type PipelineInfo struct {
 	UpdatedAt int    `json:"updatedAt"`
 }
 
-// Struct for pipeline component (Node)
-type PipelineComponent struct {
-	ComponentID   int    `json:"component_id"`
-	Name          string `json:"name"`
-	ComponentRole string `json:"component_role"`
-	PluginName    string `json:"plugin_name"`
-}
-
-// Struct for dependency/edge
-type PipelineEdge struct {
-	FromComponentID int `json:"from_component_id"`
-	ToComponentID   int `json:"to_component_id"`
-}
-
-// Struct for API response
-type PipelineGraph struct {
-	Nodes []PipelineComponent `json:"nodes"`
-	Edges []PipelineEdge      `json:"edges"`
-}
-
 // AgentInfoHome represents an agent with relevant details like type, version, and platform.
 type AgentInfoHome struct {
 	ID           string `json:"id"`           // Unique ID for the agent
