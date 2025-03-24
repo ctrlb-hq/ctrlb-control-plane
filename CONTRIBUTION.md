@@ -35,7 +35,7 @@ Please use the following format for branch names:
 - `feat/agent-label-endpoint`
 - `fix/null-agent-id`
 - `sec/add-auth-validation`
-  
+
 
 ### 3. Follow Commit Message Guidelines
 
