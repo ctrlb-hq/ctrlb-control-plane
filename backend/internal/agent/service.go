@@ -3,7 +3,7 @@ package agent
 import (
 	"fmt"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
 
 // AgentService manages agent operations.

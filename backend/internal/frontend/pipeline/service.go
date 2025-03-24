@@ -1,6 +1,6 @@
 package frontendpipeline
 
-import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 
 type FrontendPipelineService struct {
 	FrontendPipelineRepository *FrontendPipelineRepository
