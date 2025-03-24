@@ -35,7 +35,7 @@ Please use the following format for branch names:
 - `feat/agent-label-endpoint`
 - `fix/null-agent-id`
 - `sec/add-auth-validation`
-```
+  
 
 ### 3. Follow Commit Message Guidelines
 
@@ -68,8 +68,6 @@ Use the following format:
 [SEC]: Add input sanitization to auth flow
 ```
 
----
-
 ### 4. Run tests and lint
 
 Make sure everything passes before pushing.
@@ -78,8 +76,6 @@ Make sure everything passes before pushing.
 go test ./...
 golangci-lint run
 ```
-
----
 
 ### 5. Push and open a PR
 
