@@ -61,5 +61,6 @@ func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGrap
 	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return err
 	}
+
 	return f.FrontendPipelineRepository.SyncPipelineGraph(pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
 }

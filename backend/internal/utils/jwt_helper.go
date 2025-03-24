@@ -40,7 +40,7 @@ func GenerateRefreshToken(email string) (string, error) {
 
 // RefreshToken generates a new access token using a valid refresh token
 func RefreshToken(refreshToken string) (string, error) {
-	email, err := ValidateJWT(refreshToken)
+	email, err := ValidateJWT(refreshToken, "refresh")
 	if err != nil {
 		return "", err // Invalid refresh token
 	}
@@ -48,7 +48,7 @@ func RefreshToken(refreshToken string) (string, error) {
 	return GenerateAccessToken(email)
 }
 
-func ValidateJWT(tokenString string) (string, error) {
+func ValidateJWT(tokenString string, typ string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
@@ -65,7 +65,7 @@ func ValidateJWT(tokenString string) (string, error) {
 	}
 
 	// Ensure it's an access token
-	if claims.TokenUse != "access" {
+	if claims.TokenUse != typ {
 		return "", fmt.Errorf("invalid token type: expected access token")
 	}
 

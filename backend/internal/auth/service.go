@@ -75,7 +75,7 @@ func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
 func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error) {
 
 	// Validate the refresh token
-	email, err := utils.ValidateJWT(req.RefreshToken)
+	email, err := utils.ValidateJWT(req.RefreshToken, "refresh")
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
 	}
@@ -86,7 +86,8 @@ func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error)
 		return nil, errors.New("failed to generate access token")
 	}
 	response := map[string]string{
-		"access_token": accessToken,
+		"access_token":  accessToken,
+		"refresh_token": req.RefreshToken,
 	}
 	return response, nil
 }

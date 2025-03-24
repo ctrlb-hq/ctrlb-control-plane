@@ -20,6 +20,7 @@ func NewAuthHandler(authService *AuthService) *AuthHandler {
 }
 
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	utils.Logger.Info("Starting user registration")
 	var userRegisterRequest models.UserRegisterRequest
 
 	// Step 1: Parse and decode the request body
@@ -54,6 +55,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		userRegisterRequest.Role = "user"
 	}
 
+	utils.Logger.Info(fmt.Sprintf("Registering user with email: %s and role: %s", userRegisterRequest.Email, userRegisterRequest.Role))
 	// Step 2: Register the user
 	err = a.AuthService.RegisterUser(&userRegisterRequest)
 	if err != nil {
@@ -83,33 +85,46 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	utils.Logger.Info("Starting login process")
 	var loginRequest LoginRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &loginRequest); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error decoding request body: %v", err))
+		utils.Logger.Error(fmt.Sprintf("Error decoding login request body: %v", err))
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
+	utils.Logger.Info(fmt.Sprintf("Processing login request for user: %s", loginRequest.Email))
 	response, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error logging in user %s: %v", loginRequest.Email, err))
+		utils.Logger.Error(fmt.Sprintf("Login failed for user %s: %v", loginRequest.Email, err))
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 		return
 	}
 
+	utils.Logger.Info(fmt.Sprintf("Login successful for user: %s", loginRequest.Email))
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
 func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	utils.Logger.Info("Starting token refresh process")
 	var req RefreshTokenRequest
+
 	if err := utils.UnmarshalJSONRequest(r, &req); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error decoding refresh token request: %v", err))
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	if req.RefreshToken == "" {
+		utils.Logger.Error("Empty refresh token provided")
+		utils.SendJSONError(w, http.StatusBadRequest, "Refresh token is required")
 		return
 	}
 
 	response, err := a.AuthService.RefreshToken(req)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Token refresh failed: %v", err))
 		status := http.StatusInternalServerError
 		if err.Error() == "Invalid or expired refresh token" {
 			status = http.StatusUnauthorized
@@ -117,5 +132,7 @@ func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, status, err.Error())
 		return
 	}
+
+	utils.Logger.Info("Token refresh successful")
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
