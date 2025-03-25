@@ -2,6 +2,7 @@ package frontendagent
 
 import (
 	"database/sql"
+	"strconv"
 )
 
 type FrontendAgentRepository struct {
@@ -23,9 +24,16 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 
 	for row.Next() {
 		agent := AgentInfoHome{}
-		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName)
+		var pipelineName sql.NullString
+		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName)
 		if err != nil {
 			return nil, err
+		}
+
+		if pipelineName.Valid {
+			agent.PipelineName = pipelineName.String
+		} else {
+			agent.PipelineName = ""
 		}
 		agents = append(agents, agent)
 	}
@@ -36,6 +44,14 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 
 		err := agentStatus.Scan(&agents[i].LogRate, &agents[i].TraceRate, &agents[i].MetricsRate, &agents[i].Status)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				// Optionally set default values if no metrics found
+				agents[i].LogRate = 0
+				agents[i].TraceRate = 0
+				agents[i].MetricsRate = 0
+				agents[i].Status = "unknown" // or any fallback
+				continue
+			}
 			return nil, err
 		}
 	}
@@ -55,20 +71,37 @@ func (f *FrontendAgentRepository) GetAllUnmanagedAgents() ([]UnmanagedAgents, er
 // GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, error) {
 	agent := &AgentInfoWithLabels{}
+	var pipelineName sql.NullString
+	var pipelineId sql.NullInt64
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineID, &agent.PipelineName, &agent.Hostname, &agent.Platform)
+	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.Platform)
 	if err != nil {
 		return nil, err
 	}
 
+	if pipelineName.Valid {
+		agent.PipelineID = strconv.FormatInt(pipelineId.Int64, 10)
+		agent.PipelineName = pipelineName.String
+	} else {
+		agent.PipelineName = ""
+		agent.PipelineID = ""
+	}
+
 	err = f.db.QueryRow("SELECT status FROM aggregated_agent_metrics WHERE agent_id = ?", id).Scan(&agent.Status)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			agent.Status = "UNKOWN"
+		} else {
+			return nil, err
+		}
 	}
 
 	agent.Labels = make(map[string]string)
 	rows, err := f.db.Query("SELECT key, value FROM agents_labels WHERE agent_id = ?", id)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return agent, nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
