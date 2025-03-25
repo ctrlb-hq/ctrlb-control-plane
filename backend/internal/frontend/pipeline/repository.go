@@ -96,7 +96,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 	// Optimized query for SQLite
 	query := `
 		SELECT a.id, a.name, a.version, a.pipeline_name, 
-		       IFNULL(m.log_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
+		       IFNULL(m.logs_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
 		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
 		FROM agents a
 		LEFT JOIN aggregated_agent_metrics m ON a.id = m.agent_id
