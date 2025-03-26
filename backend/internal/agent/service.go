@@ -40,7 +40,7 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		return nil, err
 	}
 
-	a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname)
+	a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP)
 
 	return response, nil // Return the registered agent
 }

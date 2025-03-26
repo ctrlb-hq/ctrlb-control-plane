@@ -25,7 +25,7 @@ func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 }
 
 // AddAgent adds a new agent to the queue.
-func (q *AgentQueue) AddAgent(id, Hostname string) error {
+func (q *AgentQueue) AddAgent(id, Hostname, IP string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	if _, exists := q.agents[id]; exists {
@@ -35,6 +35,7 @@ func (q *AgentQueue) AddAgent(id, Hostname string) error {
 	q.agents[id] = &AgentStatus{
 		AgentID:        id,
 		Hostname:       Hostname,
+		IP:             IP,
 		CurrentStatus:  "UNKNOWN",
 		RetryRemaining: 3,
 	}

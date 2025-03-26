@@ -24,14 +24,14 @@ func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*Age
 	// Check if the agent is already registered
 	err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
 	if err == nil {
-		return nil, errors.New("agent for host" + req.Hostname + " already exists")
+		return nil, errors.New("agent for host " + req.Hostname + " already exists")
 	} else if err != sql.ErrNoRows {
 		return nil, errors.New("error checking database: " + err.Error())
 	}
 
 	response := &AgentRegisterResponse{}
 	// Insert the new agent into the database
-	result, err := ar.db.Exec("INSERT INTO agents (name, type, version, hostname, platform, registered_at) VALUES (?, ?, ?, ?, ?, ?)", req.Name, req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt)
+	result, err := ar.db.Exec("INSERT INTO agents (name, type, version, hostname, platform, registered_at, ip) VALUES (?, ?, ?, ?, ?, ?, ?)", req.Name, req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt, req.IP)
 
 	if err != nil {
 		return nil, errors.New("error inserting agent: " + err.Error())

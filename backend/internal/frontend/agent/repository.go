@@ -129,15 +129,15 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	return agent, nil
 }
 
-func (f *FrontendAgentRepository) GetAgentHostname(id string) (string, error) {
-	var hostname string
+func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, err error) {
+	query := `SELECT hostname, ip FROM agents WHERE id = ?`
 
-	err := f.db.QueryRow("SELECT hostname FROM agents WHERE id = ?", id).Scan(&hostname)
+	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip)
 	if err != nil {
-		return "", err
+		return "", "", fmt.Errorf("failed to fetch network info for agent ID %s: %w", agentID, err)
 	}
 
-	return hostname, nil
+	return hostname, ip, nil
 }
 
 // DeleteAgent removes an agent by ID

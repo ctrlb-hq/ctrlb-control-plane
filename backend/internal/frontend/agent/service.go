@@ -40,15 +40,15 @@ func (f *FrontendAgentService) GetAgent(id string) (*AgentInfoWithLabels, error)
 
 // DeleteAgent removes an agent by ID and shuts it down
 func (f *FrontendAgentService) DeleteAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
 	f.AgentQueue.RemoveAgent(id)
 
-	if err := f.sendAgentCommand(hostname, "shutdown"); err != nil {
-		f.AgentQueue.AddAgent(id, hostname)
+	if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
+		f.AgentQueue.AddAgent(id, hostname, ip)
 		return fmt.Errorf("unable to shut down the agent — it is still running and currently under active monitoring")
 	}
 
@@ -61,16 +61,16 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 
 // StartAgent sends a start request to the agent
 func (f *FrontendAgentService) StartAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	if f.sendAgentCommand(hostname, "start") != nil {
+	if f.sendAgentCommand(hostname, ip, "start") != nil {
 		return fmt.Errorf("error encountered while starting agent")
 	}
 
-	if err = f.AgentQueue.AddAgent(id, hostname); err != nil {
+	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
 		return fmt.Errorf("error while starting agent monitoring")
 	}
 
@@ -79,7 +79,7 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 
 // StopAgent sends a stop request to the agent
 func (f *FrontendAgentService) StopAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
@@ -88,8 +88,8 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 		return err
 	}
 
-	if err := f.sendAgentCommand(hostname, "stop"); err != nil {
-		f.AgentQueue.AddAgent(id, hostname)
+	if err := f.sendAgentCommand(hostname, ip, "stop"); err != nil {
+		f.AgentQueue.AddAgent(id, hostname, ip)
 		return fmt.Errorf("error encountered while stopping agent")
 	}
 	return nil
@@ -98,12 +98,12 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 
 // RestartMonitoring restarts monitoring for the agent
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	if err = f.AgentQueue.AddAgent(id, hostname); err != nil {
+	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
 		return err
 	}
 
@@ -143,21 +143,35 @@ func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]strin
 	return f.FrontendAgentRepository.AddLabels(agentId, labels)
 }
 
-func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {
-	url := fmt.Sprintf("http://%s:443/agent/v1/%s", hostname, command)
-
+func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) error {
 	client := &http.Client{
-		Timeout: 20 * time.Second, // Adjust timeout as needed
+		Timeout: 10 * time.Second,
 	}
+
+	// First try using hostname
+	err := f.trySendingAgentCommand(client, hostname, command)
+	if err != nil {
+		// Fallback to IP if hostname fails
+		ipErr := f.trySendingAgentCommand(client, ip, command)
+		if ipErr != nil {
+			return fmt.Errorf("hostname attempt failed: %v; IP attempt failed: %v", err, ipErr)
+		}
+	}
+
+	return nil
+}
+
+func (f *FrontendAgentService) trySendingAgentCommand(client *http.Client, target, command string) error {
+	url := fmt.Sprintf("http://%s:443/agent/v1/%s", target, command)
 
 	resp, err := client.Post(url, "application/json", nil)
 	if err != nil {
-		return fmt.Errorf("error encountered while %s agent: %w", command, err)
+		return fmt.Errorf("error sending %s command to agent at %s: %w", command, target, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while %s agent: %s", command, resp.Status)
+		return fmt.Errorf("received non-OK response for %s command at %s: %s", command, target, resp.Status)
 	}
 
 	return nil

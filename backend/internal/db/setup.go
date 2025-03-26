@@ -80,6 +80,7 @@ func createAgentsTable(db *sql.DB) error {
         version TEXT,
         hostname TEXT,
         platform TEXT,
+		ip TEXT,
         pipeline_id INTEGER DEFAULT NULL,
         pipeline_name TEXT DEFAULT NULL,
         registered_at INTEGER DEFAULT (strftime('%s', 'now')), -- Stores Unix timestamp

@@ -32,9 +32,13 @@ func InformBackendServerStart() (map[string]any, error) {
 
 	// Step 2: Gather platform information
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-
+	ip, err := utils.GetLocalIP()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get IP address: %v", err)
+	}
 	// Step 3: Create the agent request
 	agentRequest := AgentRequest{
+		IP:       ip,
 		Version:  constants.AGENT_VERSION,
 		Platform: platform,
 		Hostname: hostname,
