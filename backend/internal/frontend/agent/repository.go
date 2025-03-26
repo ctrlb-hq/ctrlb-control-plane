@@ -60,11 +60,22 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 
 func (f *FrontendAgentRepository) GetAllUnmanagedAgents() ([]UnmanagedAgents, error) {
 	var agents []UnmanagedAgents
-	row, err := f.db.Query("SELECT id, name, type, version, hostname, platform FROM agents WHERE pipeline_id IS NULL AND status = 'connected'")
+	rows, err := f.db.Query("SELECT a.id, a.name, a.type, a.version, a.hostname, a.platform FROM agents AS a LEFT JOIN aggregated_agent_metrics AS aam ON aam.agent_id = a.id WHERE a.pipeline_id IS NULL AND aam.status = 'connected';")
 	if err != nil {
 		return nil, err
 	}
-	defer row.Close()
+	defer rows.Close()
+
+	for rows.Next() {
+		var agent UnmanagedAgents
+		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform); err != nil {
+			return nil, err
+		}
+		agents = append(agents, agent)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return agents, nil
 }
 

@@ -33,7 +33,7 @@ func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Reque
 }
 
 func (f *FrontendAgentHandler) GetUnmanagedAgents(w http.ResponseWriter, r *http.Request) {
-	utils.Logger.Info("Received request to get all agents")
+	utils.Logger.Info("Received request to get all unmanaged agents")
 	response, err := f.FrontendAgentService.GetAllUnmanagedAgents()
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err.Error()))
