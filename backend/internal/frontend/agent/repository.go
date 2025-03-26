@@ -2,6 +2,7 @@ package frontendagent
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 )
 
@@ -60,7 +61,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 
 func (f *FrontendAgentRepository) GetAllUnmanagedAgents() ([]UnmanagedAgents, error) {
 	var agents []UnmanagedAgents
-	rows, err := f.db.Query("SELECT a.id, a.name, a.type, a.version, a.hostname, a.platform FROM agents AS a LEFT JOIN aggregated_agent_metrics AS aam ON aam.agent_id = a.id WHERE a.pipeline_id IS NULL AND aam.status = 'connected';")
+	rows, err := f.db.Query("SELECT a.id, a.name, a.type, a.version, a.hostname, a.platform FROM agents AS a LEFT JOIN aggregated_agent_metrics AS aam ON aam.agent_id = a.id WHERE a.pipeline_id IS NULL AND (aam.status IS NULL OR aam.status != 'disconnected');")
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,10 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 	defer tx.Rollback()
 
 	for key, value := range labels {
-		if _, err := tx.Exec("INSERT INTO agents_labels (agent_id, key, value) VALUES (?, ?, ?)", agentId, key, value); err != nil {
+		if key == "" || value == "" {
+			return fmt.Errorf("key and value cannot be empty")
+		}
+		if _, err := tx.Exec("INSERT INTO agents_labels (agent_id, key, value) VALUES (?, ?, ?) ON CONFLICT(agent_id, key) DO UPDATE SET value = excluded.value", agentId, key, value); err != nil {
 			return err
 		}
 	}
@@ -226,4 +230,13 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 	}
 
 	return nil
+}
+
+func (f *FrontendAgentRepository) AgentExists(id string) (bool, error) {
+	var count int
+	err := f.db.QueryRow("SELECT COUNT(*) FROM agents WHERE id = ?", id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

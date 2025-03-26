@@ -25,25 +25,31 @@ func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 }
 
 // AddAgent adds a new agent to the queue.
-func (q *AgentQueue) AddAgent(id, Hostname string) {
+func (q *AgentQueue) AddAgent(id, Hostname string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	//TODO: Check if agent already exists
+	if _, exists := q.agents[id]; exists {
+		utils.Logger.Error(fmt.Sprintf("Agent with ID: %s already being monitored.", id))
+		return fmt.Errorf("agent with ID: %s already being monitored", id)
+	}
 	q.agents[id] = &AgentStatus{
 		AgentID:        id,
 		Hostname:       Hostname,
 		CurrentStatus:  "UNKNOWN",
 		RetryRemaining: 3,
 	}
+	//TODO: Set agent in UNKOWN status
 	utils.Logger.Info(fmt.Sprintf("Successfully queued agent with ID: %s.", id))
+	return nil
 }
 
 // RemoveAgent removes an agent from the queue by ID.
-func (q *AgentQueue) RemoveAgent(id string) {
+func (q *AgentQueue) RemoveAgent(id string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	delete(q.agents, id)
 	utils.Logger.Info(fmt.Sprintf("Successfully removed agent with ID: %s.", id))
+	return nil
 }
 
 // StartStatusCheck starts a goroutine that checks the status of all agents at regular intervals.

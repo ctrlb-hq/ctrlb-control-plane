@@ -131,8 +131,8 @@ func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r
 
 	response, err := f.FrontendAgentService.GetHealthMetricsForGraph(id)
 	if err != nil {
-		if err.Error() == "agent disconnected" {
-			http.Error(w, err.Error(), http.StatusOK)
+		if err.Error() == "agent disconnected" || err.Error() == "agent not found" {
+			utils.SendJSONError(w, http.StatusOK, err.Error())
 		} else {
 			utils.Logger.Error(fmt.Sprintf("Failed to get health metrics for agent [ID: %s]: %s", id, err.Error()))
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
@@ -150,8 +150,8 @@ func (f *FrontendAgentHandler) GetRateMetricsForGraph(w http.ResponseWriter, r *
 
 	response, err := f.FrontendAgentService.GetRateMetricsForGraph(id)
 	if err != nil {
-		if err.Error() == "agent disconnected" {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if err.Error() == "agent disconnected" || err.Error() == "agent not found" {
+			utils.SendJSONError(w, http.StatusOK, err.Error())
 		} else {
 			utils.Logger.Error(fmt.Sprintf("Failed to get rate metrics for agent [ID: %s]: %s", id, err.Error()))
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
@@ -170,6 +170,11 @@ func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request)
 	if err := utils.UnmarshalJSONRequest(r, &labels); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Failed to decode request body: %s", err.Error()))
 		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(labels) == 0 {
+		utils.SendJSONError(w, http.StatusBadRequest, "No labels provided")
 		return
 	}
 
