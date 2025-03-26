@@ -3,6 +3,8 @@ package frontendpipeline
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type FrontendPipelineRepository struct {
@@ -88,8 +90,8 @@ func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
 	return nil
 }
 
-func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId int) ([]AgentInfoHome, error) {
-	var agents []AgentInfoHome
+func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId int) ([]models.AgentInfoHome, error) {
+	var agents []models.AgentInfoHome
 
 	// Optimized query for SQLite
 	query := `
@@ -107,7 +109,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 	defer rows.Close()
 
 	for rows.Next() {
-		agent := AgentInfoHome{}
+		agent := models.AgentInfoHome{}
 		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName,
 			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
 		if err != nil {

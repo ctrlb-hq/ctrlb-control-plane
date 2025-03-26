@@ -33,6 +33,12 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
+func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.Request) {
+	var req CreatePipelineRequest
+
+	utils.Logger.Info(fmt.Sprintf("Received request to create pipeline: %s", req.Name))
+}
+
 func (f *FrontendPipelineHandler) GetPipelineInfo(w http.ResponseWriter, r *http.Request) {
 
 	pipelineId := mux.Vars(r)["id"]

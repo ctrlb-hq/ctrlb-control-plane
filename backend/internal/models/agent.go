@@ -12,24 +12,24 @@ type AgentRegisterRequest struct {
 	RegisteredAt int64  `json:"registered_at"` // The Unix timestamp when the agent was registered
 }
 
-// AgentWithConfig represents an agent with its configuration details.
-type AgentWithConfig struct {
-	ID           string    `json:"id"`           // Unique ID for the agent
-	Name         string    `json:"name"`         // Descriptive name for the agent
-	Type         string    `json:"type"`         // Type/category of the agent (e.g., collector, forwarder)
-	Version      string    `json:"version"`      // Version of the agent
-	Hostname     string    `json:"hostname"`     // Hostname where the agent is running
-	Platform     string    `json:"platform"`     // Operating system platform (e.g., linux, windows)
-	IsPipeline   bool      `json:"isPipeline"`   // Indicates if the agent is part of a data pipeline
-	RegisteredAt time.Time `json:"registeredAt"` // Timestamp when the agent was registered
-}
-
 // AgentMetrics represents metrics related to an agent's performance.
 type AgentMetrics struct {
-	AgentID            string    `json:"agentId"`            // Unique ID of the agent
-	Status             string    `json:"status"`             // Current status (e.g., running, stopped)
-	ExportedDataVolume int       `json:"exportedDataVolume"` // Volume of data exported (in MB/GB)
-	UptimeSeconds      int       `json:"uptimeSeconds"`      // Uptime in seconds
-	DroppedRecords     int       `json:"droppedRecords"`     // Number of records dropped by the agent
-	UpdatedAt          time.Time `json:"updatedAt"`          // Timestamp of the last metrics update
+	AgentID            string    `json:"agent_id"`             // Unique ID of the agent
+	Status             string    `json:"status"`               // Current status (e.g., running, stopped)
+	ExportedDataVolume int       `json:"exported_data_volume"` // Volume of data exported (in MB/GB)
+	UptimeSeconds      int       `json:"uptime_seconds"`       // Uptime in seconds
+	DroppedRecords     int       `json:"dropped_records"`      // Number of records dropped by the agent
+	UpdatedAt          time.Time `json:"updated_at"`           // Timestamp of the last metrics update
+}
+
+// AgentInfoHome represents an agent with relevant details like type, version, and platform.
+type AgentInfoHome struct {
+	ID           string `json:"id"`            // Unique ID for the agent
+	Name         string `json:"name"`          // Descriptive name for the agent
+	Status       string `json:"status"`        // Current status of the agent (e.g., Disconnected, Connected)
+	PipelineName string `json:"pipeline_name"` // Pipeline the agent is associated with
+	Version      string `json:"version"`       // Version of the agent
+	LogRate      int    `json:"log_rate"`      // Log rate of the agent
+	MetricsRate  int    `json:"metrics_rate"`  // Metrics rate of the agent
+	TraceRate    int    `json:"trace_rate"`    // Trace rate of the agent
 }

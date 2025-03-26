@@ -1,5 +1,7 @@
 package frontendpipeline
 
+import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+
 type FrontendPipelineService struct {
 	FrontendPipelineRepository *FrontendPipelineRepository
 }
@@ -23,7 +25,7 @@ func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
 	return f.FrontendPipelineRepository.DeletePipeline(pipelineId)
 }
 
-func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int) ([]AgentInfoHome, error) {
+func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int) ([]models.AgentInfoHome, error) {
 	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return nil, err
 	}

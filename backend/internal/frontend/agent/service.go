@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
 
@@ -21,7 +22,7 @@ func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, a
 	}
 }
 
-func (f *FrontendAgentService) GetAllAgents() ([]AgentInfoHome, error) {
+func (f *FrontendAgentService) GetAllAgents() ([]models.AgentInfoHome, error) {
 	return f.FrontendAgentRepository.GetAllAgents()
 }
 

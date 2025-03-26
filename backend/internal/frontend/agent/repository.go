@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type FrontendAgentRepository struct {
@@ -15,8 +17,8 @@ func NewFrontendAgentRepository(db *sql.DB) *FrontendAgentRepository {
 	return &FrontendAgentRepository{db: db}
 }
 
-func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
-	var agents []AgentInfoHome
+func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error) {
+	var agents []models.AgentInfoHome
 	row, err := f.db.Query("SELECT id, name, version, pipeline_name FROM agents")
 	if err != nil {
 		return nil, err
@@ -24,7 +26,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]AgentInfoHome, error) {
 	defer row.Close()
 
 	for row.Next() {
-		agent := AgentInfoHome{}
+		agent := models.AgentInfoHome{}
 		var pipelineName sql.NullString
 		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName)
 		if err != nil {
