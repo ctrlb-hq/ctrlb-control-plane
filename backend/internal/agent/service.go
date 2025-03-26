@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
 
 // AgentService manages agent operations.

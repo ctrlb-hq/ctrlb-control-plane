@@ -18,7 +18,7 @@ import (
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/joho/godotenv"
 )
@@ -82,7 +82,7 @@ func main() {
 	authService := auth.NewAuthService(authRepository)
 
 	frontendAgentServiceV2 := frontendagent.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
-	frontendPipelineServiceV2 := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
+	frontendPipelineServiceV2 := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepositoryV2)
 	frontendNodeServiceV2 := frontendnode.NewFrontendNodeService(frontendNodeRepositoryV2)
 
 	router := api.NewRouter(agentService, authService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)

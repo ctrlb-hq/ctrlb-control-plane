@@ -19,7 +19,6 @@ type AgentWithConfig struct {
 	Version      string    `json:"version"`      // Version of the agent
 	Hostname     string    `json:"hostname"`     // Hostname where the agent is running
 	Platform     string    `json:"platform"`     // Operating system platform (e.g., linux, windows)
-	Config       Config    `json:"config"`       // Associated configuration
 	IsPipeline   bool      `json:"isPipeline"`   // Indicates if the agent is part of a data pipeline
 	RegisteredAt time.Time `json:"registeredAt"` // Timestamp when the agent was registered
 }
