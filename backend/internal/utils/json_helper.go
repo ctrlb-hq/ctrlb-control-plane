@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 var ErrUserAlreadyExists = errors.New("user already exists")
@@ -65,17 +63,4 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-}
-
-func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {
-	if request.Name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
-	if request.Email == "" {
-		return fmt.Errorf("email cannot be empty")
-	}
-	if request.Password == "" {
-		return fmt.Errorf("password cannot be empty")
-	}
-	return nil
 }

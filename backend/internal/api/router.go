@@ -31,6 +31,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
 	agentAPIsV1.HandleFunc("/agents", agentHandler.RegisterAgent).Methods("POST")
+	//TODO: Complete this
 	agentAPIsV1.HandleFunc("/agents/{id}/config-changed", agentHandler.ConfigChangedPing).Methods("POST")
 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
@@ -39,8 +40,11 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/agents", frontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", frontendAgentHandler.GetAgent).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", frontendAgentHandler.DeleteAgent).Methods("DELETE")
+
+	//TODO: Test with endtoend test
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/start", frontendAgentHandler.StartAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/stop", frontendAgentHandler.StopAgent).Methods("POST")
+
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.RestartMonitoring).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/healthmetrics", frontendAgentHandler.GetHealthMetricsForGraph).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ratemetrics", frontendAgentHandler.GetRateMetricsForGraph).Methods("GET")
@@ -48,6 +52,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	frontendAgentAPIsV2.HandleFunc("/unassigned-agents", frontendAgentHandler.GetUnmanagedAgents).Methods("GET")
 
+	//TODO: Test after this
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.GetAllPipelines).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.GetPipelineInfo).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.DeletePipeline).Methods("DELETE")

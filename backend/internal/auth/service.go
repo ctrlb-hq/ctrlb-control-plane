@@ -40,7 +40,7 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) error {
 }
 
 // Login handles user login and returns both access and refresh tokens
-func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
+func (a *AuthService) Login(request *models.LoginRequest) (*LoginResponse, error) {
 	user, err := a.AuthRepository.Login(request.Email)
 	if err != nil {
 		return nil, err

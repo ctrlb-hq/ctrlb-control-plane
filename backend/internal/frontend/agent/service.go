@@ -1,9 +1,9 @@
 package frontendagent
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
@@ -48,7 +48,8 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 	f.AgentQueue.RemoveAgent(id)
 
 	if err := f.sendAgentCommand(hostname, "shutdown"); err != nil {
-		return errors.New("error encountered while shutting down agent")
+		f.AgentQueue.AddAgent(id, hostname)
+		return fmt.Errorf("unable to shut down the agent — it is still running and currently under active monitoring")
 	}
 
 	if err := f.FrontendAgentRepository.DeleteAgent(id); err != nil {
@@ -66,10 +67,12 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 	}
 
 	if f.sendAgentCommand(hostname, "start") != nil {
-		return errors.New("error encountered while starting agent")
+		return fmt.Errorf("error encountered while starting agent")
 	}
 
-	f.AgentQueue.AddAgent(id, hostname)
+	if err = f.AgentQueue.AddAgent(id, hostname); err != nil {
+		return fmt.Errorf("error while starting agent monitoring")
+	}
 
 	return nil
 }
@@ -81,10 +84,13 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 		return err
 	}
 
-	f.AgentQueue.RemoveAgent(id)
+	if err = f.AgentQueue.RemoveAgent(id); err != nil {
+		return err
+	}
 
 	if err := f.sendAgentCommand(hostname, "stop"); err != nil {
-		return errors.New("error encountered while stopping agent")
+		f.AgentQueue.AddAgent(id, hostname)
+		return fmt.Errorf("error encountered while stopping agent")
 	}
 	return nil
 
@@ -97,22 +103,54 @@ func (f *FrontendAgentService) RestartMonitoring(id string) error {
 		return err
 	}
 
-	f.AgentQueue.AddAgent(id, hostname)
+	if err = f.AgentQueue.AddAgent(id, hostname); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (f *FrontendAgentService) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	exists, err := f.FrontendAgentRepository.AgentExists(id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("agent not found")
+	}
 	return f.FrontendAgentRepository.GetHealthMetricsForGraph(id)
 }
 
 func (f *FrontendAgentService) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	exists, err := f.FrontendAgentRepository.AgentExists(id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("agent not found")
+	}
 	return f.FrontendAgentRepository.GetRateMetricsForGraph(id)
+}
+
+func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
+	exists, err := f.FrontendAgentRepository.AgentExists(agentId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("agent not found")
+	}
+	return f.FrontendAgentRepository.AddLabels(agentId, labels)
 }
 
 func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {
 	url := fmt.Sprintf("http://%s:443/agent/v1/%s", hostname, command)
-	resp, err := http.Post(url, "application/json", nil)
+
+	client := &http.Client{
+		Timeout: 20 * time.Second, // Adjust timeout as needed
+	}
+
+	resp, err := client.Post(url, "application/json", nil)
 	if err != nil {
 		return fmt.Errorf("error encountered while %s agent: %w", command, err)
 	}
@@ -123,8 +161,4 @@ func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error 
 	}
 
 	return nil
-}
-
-func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
-	return f.FrontendAgentRepository.AddLabels(agentId, labels)
 }

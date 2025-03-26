@@ -86,11 +86,17 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.Logger.Info("Starting login process")
-	var loginRequest LoginRequest
+	var loginRequest models.LoginRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &loginRequest); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error decoding login request body: %v", err))
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := utils.ValidateUserLoginRequest(&loginRequest); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error validating login request: %v", err))
+		utils.WriteJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "invalid request"})
 		return
 	}
 
