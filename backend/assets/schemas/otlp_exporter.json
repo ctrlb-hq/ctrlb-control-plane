@@ -1,0 +1,95 @@
+{
+    "title": "OTLP Exporter Configuration",
+    "type": "object",
+    "properties": {
+      "endpoint": {
+        "type": "string",
+        "title": "OTLP Endpoint",
+        "default": "localhost:4317"
+      },
+      "insecure": {
+        "type": "boolean",
+        "title": "Disable TLS",
+        "default": false
+      },
+      "compression": {
+        "type": "string",
+        "title": "Compression",
+        "enum": ["none", "gzip"],
+        "default": "none"
+      },
+      "timeout": {
+        "type": "string",
+        "title": "Request Timeout",
+        "default": "5s"
+      },
+      "headers": {
+        "type": "object",
+        "title": "Custom Headers",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "protocol": {
+        "type": "string",
+        "title": "Protocol",
+        "enum": ["grpc", "http/protobuf"],
+        "default": "grpc"
+      },
+      "tls": {
+        "type": "object",
+        "title": "TLS Settings",
+        "properties": {
+          "ca_file": { "type": "string" },
+          "cert_file": { "type": "string" },
+          "key_file": { "type": "string" },
+          "insecure_skip_verify": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "retry_on_failure": {
+        "type": "object",
+        "title": "Retry on Failure",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "initial_interval": {
+            "type": "string",
+            "default": "5s"
+          },
+          "max_interval": {
+            "type": "string",
+            "default": "30s"
+          },
+          "max_elapsed_time": {
+            "type": "string",
+            "default": "300s"
+          }
+        }
+      },
+      "sending_queue": {
+        "type": "object",
+        "title": "Sending Queue",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "num_consumers": {
+            "type": "integer",
+            "default": 10
+          },
+          "queue_size": {
+            "type": "integer",
+            "default": 5000
+          }
+        }
+      }
+    },
+    "required": ["endpoint"]
+  }
+  

@@ -104,7 +104,7 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	err = f.db.QueryRow("SELECT status FROM aggregated_agent_metrics WHERE agent_id = ?", id).Scan(&agent.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			agent.Status = "UNKOWN"
+			agent.Status = "unknown"
 		} else {
 			return nil, err
 		}

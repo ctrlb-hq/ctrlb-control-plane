@@ -1,0 +1,80 @@
+{
+    "title": "Attributes Processor Configuration",
+    "type": "object",
+    "properties": {
+      "actions": {
+        "type": "array",
+        "title": "Actions",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "title": "Attribute Key"
+            },
+            "value": {
+              "type": ["string", "number", "boolean"],
+              "title": "Value"
+            },
+            "from_attribute": {
+              "type": "string",
+              "title": "From Attribute"
+            },
+            "action": {
+              "type": "string",
+              "title": "Action",
+              "enum": ["insert", "update", "upsert", "delete", "hash", "extract"],
+              "description": "Type of attribute modification to apply"
+            }
+          },
+          "required": ["key", "action"]
+        }
+      },
+      "include": {
+        "type": "object",
+        "title": "Include Filter",
+        "properties": {
+          "match_type": {
+            "type": "string",
+            "enum": ["strict", "regexp"],
+            "default": "strict"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": ["key"]
+            }
+          }
+        }
+      },
+      "exclude": {
+        "type": "object",
+        "title": "Exclude Filter",
+        "properties": {
+          "match_type": {
+            "type": "string",
+            "enum": ["strict", "regexp"],
+            "default": "strict"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": ["key"]
+            }
+          }
+        }
+      }
+    },
+    "required": ["actions"]
+  }
+  

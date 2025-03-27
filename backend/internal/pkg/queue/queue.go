@@ -11,6 +11,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
+// TODO: Fix this
 // NewQueue creates a new AgentQueue with the specified number of workers.
 func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 	queueRepository := NewQueueRepository(db)
@@ -36,10 +37,9 @@ func (q *AgentQueue) AddAgent(id, Hostname, IP string) error {
 		AgentID:        id,
 		Hostname:       Hostname,
 		IP:             IP,
-		CurrentStatus:  "UNKNOWN",
+		CurrentStatus:  "unknown",
 		RetryRemaining: 3,
 	}
-	//TODO: Set agent in UNKOWN status
 	utils.Logger.Info(fmt.Sprintf("Successfully queued agent with ID: %s.", id))
 	return nil
 }
@@ -108,17 +108,17 @@ func (q *AgentQueue) checkAgentStatus(agentStatus *AgentStatus) {
 	if err != nil {
 		agentStatus.RetryRemaining--
 		if agentStatus.RetryRemaining <= 0 {
-			agentStatus.CurrentStatus = "DOWN"
+			agentStatus.CurrentStatus = "disconnected"
 			q.QueueRepository.UpdateStatusOnly(agentStatus.AgentID, agentStatus.CurrentStatus)
 			q.RemoveAgent(agentStatus.AgentID)
 		} else {
-			agentStatus.CurrentStatus = "UNKNOWN"
+			agentStatus.CurrentStatus = "unknown"
 			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
 		}
 	} else {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
-			agentStatus.CurrentStatus = "UP"
+			agentStatus.CurrentStatus = "connected"
 			agentStatus.RetryRemaining = 3
 
 			var agentMetrics models.AgentMetrics
@@ -131,7 +131,7 @@ func (q *AgentQueue) checkAgentStatus(agentStatus *AgentStatus) {
 			agentMetrics.AgentID = agentStatus.AgentID
 			q.QueueRepository.UpdateMetrics(&agentMetrics)
 		} else {
-			agentStatus.CurrentStatus = "UNKNOWN"
+			agentStatus.CurrentStatus = "unknown"
 			agentStatus.RetryRemaining--
 			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
 		}

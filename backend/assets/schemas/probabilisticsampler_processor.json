@@ -1,0 +1,31 @@
+{
+    "title": "Probabilistic Sampler Processor Configuration",
+    "type": "object",
+    "properties": {
+      "hash_seed": {
+        "type": "integer",
+        "title": "Hash Seed",
+        "description": "Seed value used for hashing trace ID. Use a fixed number for deterministic sampling."
+      },
+      "sampling_percentage": {
+        "type": "number",
+        "title": "Sampling Percentage",
+        "description": "Percentage of spans to sample (0.0 - 100.0).",
+        "minimum": 0.0,
+        "maximum": 100.0
+      },
+      "attribute_source": {
+        "type": "string",
+        "title": "Attribute Source",
+        "enum": ["context", "resource"],
+        "default": "context"
+      },
+      "from_attribute": {
+        "type": "string",
+        "title": "From Attribute",
+        "description": "Name of the attribute used for sampling decision when attribute_source is set."
+      }
+    },
+    "required": ["sampling_percentage"]
+  }
+  

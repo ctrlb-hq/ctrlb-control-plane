@@ -1,0 +1,79 @@
+{
+    "title": "AWS CloudWatch Metrics Receiver Configuration",
+    "type": "object",
+    "properties": {
+      "region": {
+        "type": "string",
+        "title": "AWS Region",
+        "default": "us-west-2"
+      },
+      "profile": {
+        "type": "string",
+        "title": "AWS Profile",
+        "default": ""
+      },
+      "access_key": {
+        "type": "string",
+        "title": "AWS Access Key",
+        "default": ""
+      },
+      "secret_key": {
+        "type": "string",
+        "title": "AWS Secret Key",
+        "default": ""
+      },
+      "role_arn": {
+        "type": "string",
+        "title": "Role ARN to Assume",
+        "default": ""
+      },
+      "collection_interval": {
+        "type": "string",
+        "title": "Collection Interval",
+        "default": "300s"
+      },
+      "metrics_namespace": {
+        "type": "string",
+        "title": "Metrics Namespace",
+        "default": "AWS/EC2"
+      },
+      "metrics": {
+        "type": "array",
+        "title": "Metric Declarations",
+        "items": {
+          "type": "object",
+          "properties": {
+            "metric_name": {
+              "type": "string",
+              "title": "Metric Name"
+            },
+            "statistic": {
+              "type": "string",
+              "title": "Statistic",
+              "enum": ["Average", "Sum", "Minimum", "Maximum", "SampleCount"]
+            },
+            "dimensions": {
+              "type": "array",
+              "title": "Dimensions",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["metric_name"]
+        }
+      },
+      "resource_type": {
+        "type": "string",
+        "title": "AWS Resource Type",
+        "default": "ec2"
+      },
+      "polling_interval": {
+        "type": "string",
+        "title": "Polling Interval",
+        "default": "300s"
+      }
+    },
+    "required": ["region", "metrics_namespace", "collection_interval"]
+  }
+  

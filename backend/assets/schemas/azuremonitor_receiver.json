@@ -1,0 +1,68 @@
+{
+    "title": "Azure Monitor Receiver Configuration",
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "title": "Tenant ID"
+      },
+      "client_id": {
+        "type": "string",
+        "title": "Client ID"
+      },
+      "client_secret": {
+        "type": "string",
+        "title": "Client Secret"
+      },
+      "subscription_id": {
+        "type": "string",
+        "title": "Subscription ID"
+      },
+      "resource_groups": {
+        "type": "array",
+        "title": "Resource Groups",
+        "items": {
+          "type": "string"
+        }
+      },
+      "collection_interval": {
+        "type": "string",
+        "title": "Collection Interval",
+        "default": "300s"
+      },
+      "metrics": {
+        "type": "array",
+        "title": "Metric Declarations",
+        "items": {
+          "type": "object",
+          "properties": {
+            "resource_type": {
+              "type": "string",
+              "title": "Azure Resource Type",
+              "default": "Microsoft.Compute/virtualMachines"
+            },
+            "namespace": {
+              "type": "string",
+              "title": "Metric Namespace"
+            },
+            "metric_names": {
+              "type": "array",
+              "title": "Metric Names",
+              "items": {
+                "type": "string"
+              }
+            },
+            "aggregation": {
+              "type": "string",
+              "title": "Aggregation Type",
+              "default": "Average",
+              "enum": ["Average", "Total", "Minimum", "Maximum", "Count"]
+            }
+          },
+          "required": ["resource_type", "metric_names"]
+        }
+      }
+    },
+    "required": ["tenant_id", "client_id", "client_secret", "subscription_id", "metrics"]
+  }
+  

@@ -2,18 +2,15 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 )
-
-var ErrUserAlreadyExists = errors.New("user already exists")
 
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+func WriteJSONResponse(w http.ResponseWriter, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	jsonData, err := json.Marshal(data)
@@ -28,7 +25,7 @@ func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) 
 	}
 }
 
-func UnmarshalJSONRequest(r *http.Request, v interface{}) error {
+func UnmarshalJSONRequest(r *http.Request, v any) error {
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
 		return err
 	}

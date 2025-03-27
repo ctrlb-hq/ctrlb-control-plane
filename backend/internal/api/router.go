@@ -31,7 +31,6 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
 	agentAPIsV1.HandleFunc("/agents", agentHandler.RegisterAgent).Methods("POST")
-	//TODO: Complete this
 	agentAPIsV1.HandleFunc("/agents/{id}/config-changed", agentHandler.ConfigChangedPing).Methods("POST")
 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
@@ -49,8 +48,8 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 
 	frontendAgentAPIsV2.HandleFunc("/unassigned-agents", frontendAgentHandler.GetUnmanagedAgents).Methods("GET")
 
-	//TODO: Test after this
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.GetAllPipelines).Methods("GET")
+	//TODO: test
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.CreatePipeline).Methods("POST")
 
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.GetPipelineInfo).Methods("GET")
@@ -63,9 +62,9 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
 
-	frontendAgentAPIsV2.HandleFunc("/receivers", frontendNodeHandler.GetAllReceivers).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/processors", frontendNodeHandler.GetAllProcessors).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/exporters", frontendNodeHandler.GetAllExporters).Methods("GET")
+	// Testing done
+	frontendAgentAPIsV2.HandleFunc("/component", frontendNodeHandler.GetComponent).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/component/schema/{name}", frontendNodeHandler.GetComponentSchema).Methods("GET")
 
 	return router
 }

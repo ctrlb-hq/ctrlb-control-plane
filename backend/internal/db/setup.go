@@ -49,6 +49,9 @@ func DBInit() (*sql.DB, error) {
 	if err := createPipelineComponentDependenciesTable(db); err != nil {
 		return nil, err
 	}
+	if err := createComponentSchemasTable(db); err != nil {
+		return nil, err
+	}
 
 	utils.Logger.Info("All tables created (or verified) successfully.")
 	return db, nil
@@ -244,6 +247,24 @@ func createPipelineComponentDependenciesTable(db *sql.DB) error {
 	_, err := db.Exec(query)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_component_edges table: %v", err))
+	}
+	return err
+}
+
+func createComponentSchemasTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS component_schemas (
+        name TEXT PRIMARY KEY,               				-- Internal unique ID (e.g., otlp_grpc)
+        type TEXT NOT NULL,                  				-- receiver, exporter, processor, etc.
+        display_name TEXT NOT NULL,          				-- Friendly name for UI
+        supported_signals TEXT NOT NULL,     				-- Comma-separated: traces,metrics,logs
+        schema_json TEXT NOT NULL,           				-- Full JSON schema
+        created_at INTEGER DEFAULT (strftime('%s', 'now')) 	-- Unix timestamp
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating component_schemas table: %v", err))
 	}
 	return err
 }

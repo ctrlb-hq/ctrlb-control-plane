@@ -1,0 +1,145 @@
+{
+    "title": "OTLP Receiver Configuration",
+    "type": "object",
+    "properties": {
+      "protocols": {
+        "type": "object",
+        "title": "Protocols",
+        "properties": {
+          "grpc": {
+            "type": "object",
+            "title": "gRPC Protocol",
+            "properties": {
+              "endpoint": {
+                "type": "string",
+                "title": "Endpoint",
+                "default": "0.0.0.0:4317"
+              },
+              "transport": {
+                "type": "string",
+                "title": "Transport",
+                "default": "tcp",
+                "enum": ["tcp"]
+              },
+              "tls_settings": {
+                "type": "object",
+                "title": "TLS Settings",
+                "properties": {
+                  "cert_file": {
+                    "type": "string",
+                    "title": "Certificate File"
+                  },
+                  "key_file": {
+                    "type": "string",
+                    "title": "Key File"
+                  },
+                  "ca_file": {
+                    "type": "string",
+                    "title": "CA File"
+                  },
+                  "insecure": {
+                    "type": "boolean",
+                    "title": "Insecure",
+                    "default": false
+                  },
+                  "insecure_skip_verify": {
+                    "type": "boolean",
+                    "title": "Insecure Skip Verify",
+                    "default": false
+                  }
+                }
+              },
+              "max_recv_msg_size_mib": {
+                "type": "integer",
+                "title": "Max Receive Msg Size (MiB)",
+                "default": 0
+              },
+              "compression": {
+                "type": "string",
+                "title": "Compression",
+                "default": ""
+              }
+            },
+            "required": ["endpoint"]
+          },
+          "http": {
+            "type": "object",
+            "title": "HTTP Protocol",
+            "properties": {
+              "endpoint": {
+                "type": "string",
+                "title": "Endpoint",
+                "default": "0.0.0.0:4318"
+              },
+              "cors": {
+                "type": "object",
+                "title": "CORS",
+                "properties": {
+                  "allowed_origins": {
+                    "type": "array",
+                    "title": "Allowed Origins",
+                    "items": { "type": "string" },
+                    "default": []
+                  },
+                  "allowed_headers": {
+                    "type": "array",
+                    "title": "Allowed Headers",
+                    "items": { "type": "string" },
+                    "default": []
+                  },
+                  "allowed_methods": {
+                    "type": "array",
+                    "title": "Allowed Methods",
+                    "items": { "type": "string" },
+                    "default": []
+                  },
+                  "exposed_headers": {
+                    "type": "array",
+                    "title": "Exposed Headers",
+                    "items": { "type": "string" },
+                    "default": []
+                  },
+                  "max_age": {
+                    "type": "string",
+                    "title": "Max Age",
+                    "default": ""
+                  },
+                  "allow_credentials": {
+                    "type": "boolean",
+                    "title": "Allow Credentials",
+                    "default": false
+                  }
+                }
+              },
+              "tls_settings": {
+                "type": "object",
+                "title": "TLS Settings",
+                "properties": {
+                  "cert_file": { "type": "string" },
+                  "key_file": { "type": "string" },
+                  "ca_file": { "type": "string" },
+                  "insecure": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "insecure_skip_verify": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              },
+              "max_request_body_size": {
+                "type": "integer",
+                "title": "Max Request Body Size (bytes)",
+                "default": 0
+              }
+            },
+            "required": ["endpoint"]
+          }
+        },
+        "required": []
+      }
+    },
+    "required": ["protocols"]
+  }
+   

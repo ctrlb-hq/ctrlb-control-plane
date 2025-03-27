@@ -1,10 +1,13 @@
 package frontendnode
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
+	"github.com/gorilla/mux"
 )
 
 type FrontendNodeHandler struct {
@@ -18,42 +21,37 @@ func NewFrontendNodeHandler(frontendNodeServices *FrontendNodeService) *Frontend
 	}
 }
 
-func (f *FrontendNodeHandler) GetAllReceivers(w http.ResponseWriter, r *http.Request) {
-	utils.Logger.Info("Received request to get all receivers")
+func (f *FrontendNodeHandler) GetComponent(w http.ResponseWriter, r *http.Request) {
+	componentType := r.URL.Query().Get("type")
 
-	response, err := f.FrontendNodeService.GetAllReceivers()
+	utils.Logger.Info(fmt.Sprintf("Received request to get all components of type: %s", componentType))
+
+	resp, err := f.FrontendNodeService.GetComponents(componentType)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error occured while getting all receivers: %v", err))
+		utils.Logger.Error(fmt.Sprintf("Error occured while getting components: %v", err))
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, resp)
 }
 
-func (f *FrontendNodeHandler) GetAllProcessors(w http.ResponseWriter, r *http.Request) {
-	utils.Logger.Info("Received request to get all processors")
+func (f *FrontendNodeHandler) GetComponentSchema(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
 
-	response, err := f.FrontendNodeService.GetAllProcessors()
+	utils.Logger.Info(fmt.Sprintf("Received request to get schema for component: %s", name))
+
+	schema, err := f.FrontendNodeService.GetComponentSchemaByName(name)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error occured while getting all processors: %v", err))
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		utils.Logger.Error(fmt.Sprintf("Error occurred while getting schema for %s: %v", name, err))
+
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.SendJSONError(w, http.StatusOK, "Schema not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
-}
-
-func (f *FrontendNodeHandler) GetAllExporters(w http.ResponseWriter, r *http.Request) {
-	utils.Logger.Info("Received request to get all exporters")
-
-	response, err := f.FrontendNodeService.GetAllExporters()
-	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error occured while getting all exporters: %v", err))
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
-
+	utils.WriteJSONResponse(w, http.StatusOK, schema)
 }

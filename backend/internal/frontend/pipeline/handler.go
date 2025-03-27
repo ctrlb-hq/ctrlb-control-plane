@@ -27,6 +27,7 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 
 	response, err := f.FrontendPipelineService.GetAllPipelines()
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error while getting all pipelines: %v", err))
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -36,8 +37,8 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.Request) {
 	var req CreatePipelineRequest
 
-	if err := utils.UnmarshalJSONRequest(r, req); err != nil {
-		utils.SendJSONError(w, http.StatusBadRequest, "Invalid payload")
+	if err := utils.UnmarshalJSONRequest(r, &req); err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid payload: %v", err))
 		return
 	}
 
@@ -45,6 +46,7 @@ func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.
 
 	pipelineId, err := f.FrontendPipelineService.CreatePipeline(req)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating pipeline: %v", err))
 		utils.SendJSONError(w, http.StatusInternalServerError, fmt.Sprintf("Error creating pipeline: %v", err))
 		return
 	}
@@ -65,7 +67,7 @@ func (f *FrontendPipelineHandler) GetPipelineInfo(w http.ResponseWriter, r *http
 	response, err := f.FrontendPipelineService.GetPipelineInfo(pipelineIdInt)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error getting pipeline info [ID: %s]: %v", pipelineId, err))
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		utils.SendJSONError(w, http.StatusOK, "Pipeline not found")
 		return
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)

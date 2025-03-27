@@ -18,6 +18,9 @@ func (f *FrontendPipelineService) GetAllPipelines() ([]*Pipeline, error) {
 }
 
 func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo, error) {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
+		return nil, err
+	}
 	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
 }
 

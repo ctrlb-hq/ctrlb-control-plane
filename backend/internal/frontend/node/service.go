@@ -10,14 +10,10 @@ func NewFrontendNodeService(frontendNodeRepository *FrontendNodeRepository) *Fro
 	}
 }
 
-func (f *FrontendNodeService) GetAllReceivers() (any, error) {
-	return f.FrontendNodeRepository.GetAllReceivers()
+func (f *FrontendNodeService) GetComponents(componentType string) (*[]ComponentInfo, error) {
+	return f.FrontendNodeRepository.GetComponents(componentType)
 }
 
-func (f *FrontendNodeService) GetAllProcessors() (any, error) {
-	return f.FrontendNodeRepository.GetAllProcessors()
-}
-
-func (f *FrontendNodeService) GetAllExporters() (any, error) {
-	return f.FrontendNodeRepository.GetAllExporters()
+func (f *FrontendNodeService) GetComponentSchemaByName(componentName string) (any, error) {
+	return f.FrontendNodeRepository.GetComponentSchemaByName(componentName)
 }

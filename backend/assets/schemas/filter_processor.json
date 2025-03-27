@@ -1,0 +1,138 @@
+{
+    "title": "Filter Processor Configuration",
+    "type": "object",
+    "properties": {
+      "error_mode": {
+        "type": "string",
+        "title": "Error Mode",
+        "enum": ["ignore", "propagate"],
+        "default": "ignore",
+        "description": "How the processor handles filter evaluation errors"
+      },
+      "traces": {
+        "type": "object",
+        "title": "Trace Filtering Rules",
+        "properties": {
+          "include": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp", "expr"],
+                "default": "strict"
+              },
+              "span_names": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": { "type": "string" },
+                    "value": { "type": "string" }
+                  },
+                  "required": ["key"]
+                }
+              }
+            }
+          },
+          "exclude": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp", "expr"],
+                "default": "strict"
+              },
+              "span_names": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": { "type": "string" },
+                    "value": { "type": "string" }
+                  },
+                  "required": ["key"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "metrics": {
+        "type": "object",
+        "title": "Metric Filtering Rules",
+        "properties": {
+          "include": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp"],
+                "default": "strict"
+              },
+              "metric_names": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "exclude": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp"],
+                "default": "strict"
+              },
+              "metric_names": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "logs": {
+        "type": "object",
+        "title": "Log Filtering Rules",
+        "properties": {
+          "include": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp"],
+                "default": "strict"
+              },
+              "body": {
+                "type": "string",
+                "title": "Log Body Pattern"
+              }
+            }
+          },
+          "exclude": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": ["strict", "regexp"],
+                "default": "strict"
+              },
+              "body": {
+                "type": "string",
+                "title": "Log Body Pattern"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  

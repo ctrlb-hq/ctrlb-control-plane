@@ -1,0 +1,61 @@
+{
+    "title": "Google Cloud Monitoring Receiver Configuration",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "title": "GCP Project ID"
+      },
+      "metric_prefix": {
+        "type": "string",
+        "title": "Metric Prefix",
+        "default": "workload.googleapis.com"
+      },
+      "collection_interval": {
+        "type": "string",
+        "title": "Collection Interval",
+        "default": "60s"
+      },
+      "credentials_file": {
+        "type": "string",
+        "title": "Path to GCP Credentials File"
+      },
+      "metric_type_prefix_include": {
+        "type": "array",
+        "title": "Metric Type Prefixes to Include",
+        "items": {
+          "type": "string"
+        }
+      },
+      "metric_type_prefix_exclude": {
+        "type": "array",
+        "title": "Metric Type Prefixes to Exclude",
+        "items": {
+          "type": "string"
+        }
+      },
+      "resource_filters": {
+        "type": "array",
+        "title": "Resource Filters",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "title": "GCP Resource Type"
+            },
+            "labels": {
+              "type": "object",
+              "title": "Label Filters",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["type"]
+        }
+      }
+    },
+    "required": ["project"]
+  }
+  

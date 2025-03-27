@@ -1,0 +1,41 @@
+{
+  "title": "Batch Processor Configuration",
+  "type": "object",
+  "properties": {
+    "timeout": {
+      "type": "string",
+      "title": "Timeout",
+      "default": "5s",
+      "description": "Maximum time to wait before sending a batch."
+    },
+    "send_batch_size": {
+      "type": "integer",
+      "title": "Send Batch Size",
+      "default": 8192,
+      "description": "Number of spans, metrics, or logs to send in a batch."
+    },
+    "send_batch_max_size": {
+      "type": "integer",
+      "title": "Send Batch Max Size",
+      "default": 0,
+      "description": "Maximum number of items in a batch. 0 means unlimited."
+    },
+    "metadata_keys": {
+      "type": "array",
+      "title": "Metadata Keys",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keys used for batch metadata routing, if supported."
+    },
+    "enable_log_batching": {
+      "type": "boolean",
+      "title": "Enable Log Batching",
+      "default": true
+    }
+  },
+  "required": [
+    "timeout",
+    "send_batch_size"
+  ]
+}

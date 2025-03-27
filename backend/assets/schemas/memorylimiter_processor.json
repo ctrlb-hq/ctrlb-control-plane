@@ -1,0 +1,43 @@
+{
+    "title": "Memory Limiter Processor Configuration",
+    "type": "object",
+    "properties": {
+        "check_interval": {
+            "type": "string",
+            "title": "Check Interval",
+            "default": "1s"
+        },
+        "limit_mib": {
+            "type": "integer",
+            "title": "Memory Limit (MiB)"
+        },
+        "spike_limit_mib": {
+            "type": "integer",
+            "title": "Spike Limit (MiB)"
+        },
+        "limit_percentage": {
+            "type": "integer",
+            "title": "Memory Limit (%)"
+        },
+        "spike_limit_percentage": {
+            "type": "integer",
+            "title": "Spike Limit (%)"
+        },
+        "ballast_size_mib": {
+            "type": "integer",
+            "title": "Ballast Size (MiB)"
+        }
+    },
+    "anyOf": [
+        {
+            "required": [
+                "limit_mib"
+            ]
+        },
+        {
+            "required": [
+                "limit_percentage"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,110 @@
+{
+    "title": "Kafka Exporter Configuration",
+    "type": "object",
+    "properties": {
+      "protocol_version": {
+        "type": "string",
+        "title": "Kafka Protocol Version",
+        "default": "2.0.0"
+      },
+      "brokers": {
+        "type": "array",
+        "title": "Broker Addresses",
+        "items": {
+          "type": "string"
+        }
+      },
+      "topic": {
+        "type": "string",
+        "title": "Topic Name",
+        "default": "otlp_spans"
+      },
+      "encoding": {
+        "type": "string",
+        "title": "Encoding Format",
+        "enum": ["otlp_proto", "otlp_json", "raw"],
+        "default": "otlp_proto"
+      },
+      "partition": {
+        "type": "string",
+        "title": "Partition Strategy",
+        "enum": ["hash", "random", "round_robin"],
+        "default": "hash"
+      },
+      "metadata": {
+        "type": "object",
+        "title": "Metadata Settings",
+        "properties": {
+          "full": {
+            "type": "boolean",
+            "title": "Full Metadata Fetch",
+            "default": true
+          },
+          "retry_max": {
+            "type": "integer",
+            "title": "Max Metadata Retries",
+            "default": 3
+          },
+          "retry_backoff": {
+            "type": "string",
+            "title": "Retry Backoff Duration",
+            "default": "250ms"
+          }
+        }
+      },
+      "auth": {
+        "type": "object",
+        "title": "Authentication",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "tls": {
+            "type": "object",
+            "properties": {
+              "ca_file": { "type": "string" },
+              "cert_file": { "type": "string" },
+              "key_file": { "type": "string" },
+              "insecure_skip_verify": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          },
+          "sasl": {
+            "type": "object",
+            "properties": {
+              "mechanism": {
+                "type": "string",
+                "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"],
+                "default": "PLAIN"
+              }
+            }
+          }
+        }
+      },
+      "topic_creation": {
+        "type": "object",
+        "title": "Topic Auto-Creation",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "num_partitions": {
+            "type": "integer",
+            "default": 1
+          },
+          "replication_factor": {
+            "type": "integer",
+            "default": 1
+          }
+        }
+      }
+    },
+    "required": ["brokers", "topic"]
+  }
+  

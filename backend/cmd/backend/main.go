@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 
@@ -64,9 +65,21 @@ func main() {
 
 	db, err := database.DBInit()
 	if err != nil {
-		utils.Logger.Fatal(fmt.Sprintf("Failed to initialize DB: %s", err))
+		utils.Logger.Sugar().Fatal("Failed to initialize DB: %s", err)
 		return
 	}
+
+	schemaDir := filepath.Join("assets", "schemas")
+	err = database.LoadSchemasFromDirectory(
+		db,
+		schemaDir,
+		database.GetComponentTypeMap(),
+		database.GetSignalSupportMap(),
+	)
+	if err != nil {
+		utils.Logger.Sugar().Fatalf("Failed to load component schemas: %v", err)
+	}
+	utils.Logger.Info("Component schemas loaded into database")
 
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT, db)
 	agentQueue.StartStatusCheck()
@@ -98,7 +111,7 @@ func main() {
 		utils.Logger.Info(fmt.Sprintf("Server started on: %s", constants.PORT))
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			utils.Logger.Fatal(fmt.Sprintf("Failed to start Server: %s", err))
+			utils.Logger.Sugar().Fatal("Failed to start Server: %s", err)
 		}
 	}()
 
