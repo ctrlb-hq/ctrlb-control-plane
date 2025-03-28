@@ -27,17 +27,5 @@
             "type": "integer",
             "title": "Ballast Size (MiB)"
         }
-    },
-    "anyOf": [
-        {
-            "required": [
-                "limit_mib"
-            ]
-        },
-        {
-            "required": [
-                "limit_percentage"
-            ]
-        }
-    ]
+    }
 }
