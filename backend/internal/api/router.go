@@ -52,7 +52,6 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	//TODO: Test
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.CreatePipeline).Methods("POST")
 
-	//TODO: Validation if pipeline exist for better error handling
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.GetPipelineInfo).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", frontendPipelineHandler.DeletePipeline).Methods("DELETE")
 

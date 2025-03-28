@@ -18,16 +18,10 @@ func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 	return &FrontendPipelineRepository{db: db}
 }
 
-func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error {
+func (f *FrontendPipelineRepository) PipelineExists(pipelineId int) bool {
 	var verifyId int
-	err := f.db.QueryRow(`SELECT pipeline_id FROM pipelines WHERE pipeline_id = ?`, pipelineId).Scan(&verifyId)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return fmt.Errorf("no pipeline found with id: %d", pipelineId)
-		}
-		return err
-	}
-	return nil
+	err := f.db.QueryRow("SELECT pipeline_id FROM pipelines WHERE pipeline_id = ? LIMIT 1", pipelineId).Scan(&verifyId)
+	return err == nil
 }
 
 func (f *FrontendPipelineRepository) GetAllPipelines() ([]*Pipeline, error) {

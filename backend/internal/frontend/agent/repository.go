@@ -18,8 +18,8 @@ func NewFrontendAgentRepository(db *sql.DB) *FrontendAgentRepository {
 }
 
 func (f *FrontendAgentRepository) AgentExists(id string) bool {
-	var count int
-	err := f.db.QueryRow("SELECT COUNT(*) FROM agents WHERE id = ?", id).Scan(&count)
+	var existingId string
+	err := f.db.QueryRow("SELECT id FROM agents WHERE id = ? LIMIT 1", id).Scan(&existingId)
 	return err == nil
 }
 
