@@ -17,6 +17,12 @@ func NewFrontendAgentRepository(db *sql.DB) *FrontendAgentRepository {
 	return &FrontendAgentRepository{db: db}
 }
 
+func (f *FrontendAgentRepository) AgentExists(id string) bool {
+	var count int
+	err := f.db.QueryRow("SELECT COUNT(*) FROM agents WHERE id = ?", id).Scan(&count)
+	return err == nil
+}
+
 func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error) {
 	var agents []models.AgentInfoHome
 	row, err := f.db.Query("SELECT id, name, version, pipeline_name FROM agents")
@@ -232,13 +238,4 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 	}
 
 	return nil
-}
-
-func (f *FrontendAgentRepository) AgentExists(id string) (bool, error) {
-	var count int
-	err := f.db.QueryRow("SELECT COUNT(*) FROM agents WHERE id = ?", id).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }

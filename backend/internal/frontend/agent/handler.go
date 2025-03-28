@@ -51,7 +51,11 @@ func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) 
 	response, err := f.FrontendAgentService.GetAgent(id)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error getting agent [ID: %s]: %v", id, err.Error()))
-		utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
@@ -64,8 +68,8 @@ func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Reques
 
 	if err := f.FrontendAgentService.DeleteAgent(id); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error deleting agent [ID: %s]: %s", id, err.Error()))
-		if err.Error() == "agent not found" {
-			utils.SendJSONError(w, http.StatusOK, err.Error())
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -81,8 +85,8 @@ func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request
 
 	if err := f.FrontendAgentService.StartAgent(id); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error starting agent [ID: %s]: %s", id, err.Error()))
-		if err.Error() == "no agent found to start" {
-			http.Error(w, err.Error(), http.StatusOK)
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -98,8 +102,8 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 
 	if err := f.FrontendAgentService.StopAgent(id); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error stopping agent [ID: %s]: %s", id, err.Error()))
-		if err.Error() == "no agent found to stop" {
-			http.Error(w, err.Error(), http.StatusOK)
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
@@ -116,7 +120,11 @@ func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.
 	utils.Logger.Info(fmt.Sprintf("Got request to restart monitoring for agent [ID: %s]", id))
 	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error occured while restarting monitoring for agent [ID: %s]: %s", id, err.Error()))
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
@@ -131,8 +139,10 @@ func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r
 
 	response, err := f.FrontendAgentService.GetHealthMetricsForGraph(id)
 	if err != nil {
-		if err.Error() == "agent disconnected" || err.Error() == "agent not found" {
-			utils.SendJSONError(w, http.StatusOK, err.Error())
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else if err.Error() == "agent disconnected" {
+			utils.SendJSONError(w, http.StatusOK, "Agent is in disconnected state")
 		} else {
 			utils.Logger.Error(fmt.Sprintf("Failed to get health metrics for agent [ID: %s]: %s", id, err.Error()))
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
@@ -150,10 +160,12 @@ func (f *FrontendAgentHandler) GetRateMetricsForGraph(w http.ResponseWriter, r *
 
 	response, err := f.FrontendAgentService.GetRateMetricsForGraph(id)
 	if err != nil {
-		if err.Error() == "agent disconnected" || err.Error() == "agent not found" {
-			utils.SendJSONError(w, http.StatusOK, err.Error())
+		utils.Logger.Error(fmt.Sprintf("Failed to get rate metrics for agent [ID: %s]: %s", id, err.Error()))
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else if err.Error() == "agent disconnected" {
+			utils.SendJSONError(w, http.StatusOK, "Agent is in disconnected state")
 		} else {
-			utils.Logger.Error(fmt.Sprintf("Failed to get rate metrics for agent [ID: %s]: %s", id, err.Error()))
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
@@ -180,7 +192,11 @@ func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request)
 
 	if err := f.FrontendAgentService.AddLabels(id, labels); err != nil {
 		utils.Logger.Error(fmt.Sprintf("Failed to add labels to agent [ID: %s]: %s", id, err.Error()))
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 

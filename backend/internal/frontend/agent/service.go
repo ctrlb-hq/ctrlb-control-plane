@@ -7,6 +7,7 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 type FrontendAgentService struct {
@@ -32,15 +33,24 @@ func (f *FrontendAgentService) GetAllUnmanagedAgents() ([]UnmanagedAgents, error
 
 // GetAgent retrieves an agent along with its configuration
 func (f *FrontendAgentService) GetAgent(id string) (*AgentInfoWithLabels, error) {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return nil, utils.ErrAgentDoesNotExists
+	}
+
 	agent, err := f.FrontendAgentRepository.GetAgent(id)
 	if err != nil {
 		return nil, err
 	}
+
 	return agent, nil
 }
 
 // DeleteAgent removes an agent by ID and shuts it down
 func (f *FrontendAgentService) DeleteAgent(id string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
+	}
+
 	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
@@ -62,6 +72,10 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 
 // StartAgent sends a start request to the agent
 func (f *FrontendAgentService) StartAgent(id string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
+	}
+
 	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
@@ -80,6 +94,10 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 
 // StopAgent sends a stop request to the agent
 func (f *FrontendAgentService) StopAgent(id string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
+	}
+
 	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
@@ -99,6 +117,10 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 
 // RestartMonitoring restarts monitoring for the agent
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
+	}
+
 	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
@@ -112,36 +134,27 @@ func (f *FrontendAgentService) RestartMonitoring(id string) error {
 }
 
 func (f *FrontendAgentService) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
-	exists, err := f.FrontendAgentRepository.AgentExists(id)
-	if err != nil {
-		return nil, err
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return nil, utils.ErrAgentDoesNotExists
 	}
-	if !exists {
-		return nil, fmt.Errorf("agent not found")
-	}
+
 	return f.FrontendAgentRepository.GetHealthMetricsForGraph(id)
 }
 
 func (f *FrontendAgentService) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
-	exists, err := f.FrontendAgentRepository.AgentExists(id)
-	if err != nil {
-		return nil, err
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return nil, utils.ErrAgentDoesNotExists
 	}
-	if !exists {
-		return nil, fmt.Errorf("agent not found")
-	}
+
 	return f.FrontendAgentRepository.GetRateMetricsForGraph(id)
 }
 
-func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
-	exists, err := f.FrontendAgentRepository.AgentExists(agentId)
-	if err != nil {
-		return err
+func (f *FrontendAgentService) AddLabels(id string, labels map[string]string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
 	}
-	if !exists {
-		return fmt.Errorf("agent not found")
-	}
-	return f.FrontendAgentRepository.AddLabels(agentId, labels)
+
+	return f.FrontendAgentRepository.AddLabels(id, labels)
 }
 
 func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) error {
