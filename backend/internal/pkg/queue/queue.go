@@ -15,16 +15,18 @@ type AgentQueue struct {
 	mutex           sync.RWMutex
 	checkQueue      chan string
 	workerCount     int
+	IntervalMins    int
 	QueueRepository *QueueRepository
 }
 
 // NewQueue creates a new AgentQueue with the specified number of workers.
-func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
+func NewQueue(workerCount int, intervalMins int, db *sql.DB) *AgentQueue {
 	queueRepository := NewQueueRepository(db)
 	q := &AgentQueue{
 		agents:          make(map[string]*AgentStatus),
 		checkQueue:      make(chan string, workerCount*2),
 		workerCount:     workerCount,
+		IntervalMins:    intervalMins,
 		QueueRepository: queueRepository,
 	}
 	q.startWorkers()

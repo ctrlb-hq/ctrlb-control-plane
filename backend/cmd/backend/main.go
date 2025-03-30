@@ -50,6 +50,18 @@ func main() {
 		constants.WORKER_COUNT = 4
 	}
 
+	checkIntervalMinsEnv := os.Getenv("CHECK_INTERVAL_MINS")
+	if checkIntervalMinsEnv != "" {
+		count, err := strconv.Atoi(checkIntervalMinsEnv)
+		if err != nil {
+			constants.CHECK_INTERVAL_MINS = 10
+		} else {
+			constants.CHECK_INTERVAL_MINS = count
+		}
+	} else {
+		constants.CHECK_INTERVAL_MINS = 10
+	}
+
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
 		constants.PORT = portEnv
 	} else {
@@ -81,7 +93,7 @@ func main() {
 	}
 	utils.Logger.Info("Component schemas loaded into database")
 
-	agentQueue := queue.NewQueue(constants.WORKER_COUNT, db)
+	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_MINS, db)
 	if err = agentQueue.RefreshMonitoring(); err != nil {
 		utils.Logger.Fatal("Unable to update existing agent")
 		return
