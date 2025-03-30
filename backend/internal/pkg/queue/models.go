@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"sync"
 	"time"
 )
 
@@ -15,10 +14,25 @@ type AgentStatus struct {
 	UpdatedAt      time.Time `json:"updatedAt"`      // Timestamp of the last status update
 }
 
-type AgentQueue struct {
-	agents          map[string]*AgentStatus
-	mutex           sync.RWMutex
-	checkQueue      chan string
-	workerCount     int
-	QueueRepository *QueueRepository
+type AggregatedAgentMetrics struct {
+	AgentID           string
+	LogsRateSent      float64
+	TracesRateSent    float64
+	MetricsRateSent   float64
+	DataSentBytes     float64
+	DataReceivedBytes float64
+	Status            string
+	UpdatedAt         time.Time
+}
+
+type RealtimeAgentMetrics struct {
+	AgentID           string
+	LogsRateSent      float64
+	TracesRateSent    float64
+	MetricsRateSent   float64
+	DataSentBytes     float64
+	DataReceivedBytes float64
+	CPUUtilization    float64
+	MemoryUtilization float64
+	Timestamp         time.Time
 }

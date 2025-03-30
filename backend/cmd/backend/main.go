@@ -82,6 +82,10 @@ func main() {
 	utils.Logger.Info("Component schemas loaded into database")
 
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT, db)
+	if err = agentQueue.RefreshMonitoring(); err != nil {
+		utils.Logger.Fatal("Unable to update existing agent")
+		return
+	}
 	agentQueue.StartStatusCheck()
 
 	agentRepository := agent.NewAgentRepository(db)

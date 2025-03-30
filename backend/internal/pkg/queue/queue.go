@@ -2,16 +2,22 @@ package queue
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"sync"
 	"time"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
+	io_prometheus_client "github.com/prometheus/client_model/go"
 )
 
-// TODO: Fix this
+type AgentQueue struct {
+	agents          map[string]*AgentStatus
+	mutex           sync.RWMutex
+	checkQueue      chan string
+	workerCount     int
+	QueueRepository *QueueRepository
+}
+
 // NewQueue creates a new AgentQueue with the specified number of workers.
 func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
 	queueRepository := NewQueueRepository(db)
@@ -53,6 +59,22 @@ func (q *AgentQueue) RemoveAgent(id string) error {
 	return nil
 }
 
+func (q *AgentQueue) RefreshMonitoring() error {
+	agents, err := q.QueueRepository.RefreshMonitoring()
+	if err != nil {
+		utils.Logger.Sugar().Errorf("Failed to get existing agents: %v", err)
+		return err
+	}
+
+	for _, agent := range agents {
+		if err := q.AddAgent(agent.AgentID, agent.Hostname, agent.IP); err != nil {
+			utils.Logger.Sugar().Errorf("Error adding agent [ID: %v] to queue", agent.AgentID)
+		}
+	}
+
+	return nil
+}
+
 // StartStatusCheck starts a goroutine that checks the status of all agents at regular intervals.
 func (q *AgentQueue) StartStatusCheck() {
 	ticker := time.NewTicker(1 * time.Minute)
@@ -63,10 +85,7 @@ func (q *AgentQueue) StartStatusCheck() {
 	}()
 }
 
-//FIXME: See if this shutsdown if receieves closing signal
-
 // Internal methods
-
 func (q *AgentQueue) checkAllAgents() {
 	q.mutex.RLock()
 	agentIDs := make([]string, 0, len(q.agents))
@@ -93,47 +112,72 @@ func (q *AgentQueue) worker() {
 		q.mutex.RUnlock()
 
 		if exists {
-			q.checkAgentStatus(agent)
+			if err := q.checkAgentStatus(agent); err != nil {
+				utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s]: %v", agent.AgentID, err)
+				utils.Logger.Sugar().Infof("Attempts remaining for agent [ID:%s]: %s", agent.AgentID, agent.RetryRemaining)
+
+				q.mutex.Lock()
+				agent.RetryRemaining--
+				if agent.RetryRemaining <= 0 {
+					agent.CurrentStatus = "disconnected"
+				} else {
+					agent.CurrentStatus = "unknown"
+				}
+				_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
+				q.mutex.Unlock()
+
+			} else {
+				q.mutex.Lock()
+				agent.RetryRemaining = 3
+				agent.CurrentStatus = "connected"
+				q.mutex.Unlock()
+			}
 		}
 	}
 }
 
-func (q *AgentQueue) checkAgentStatus(agentStatus *AgentStatus) {
-	client := &http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get(agentStatus.Hostname + ":443" + "/agent/v1/status")
+func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
+	endpoints := []string{
+		fmt.Sprintf("http://%s:8888/metrics", agent.Hostname),
+		fmt.Sprintf("http://%s:8888/metrics", agent.IP),
+	}
 
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+	var metrics map[string]*io_prometheus_client.MetricFamily
+	var err error
 
-	if err != nil {
-		agentStatus.RetryRemaining--
-		if agentStatus.RetryRemaining <= 0 {
-			agentStatus.CurrentStatus = "disconnected"
-			q.QueueRepository.UpdateStatusOnly(agentStatus.AgentID, agentStatus.CurrentStatus)
-			q.RemoveAgent(agentStatus.AgentID)
-		} else {
-			agentStatus.CurrentStatus = "unknown"
-			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
-		}
-	} else {
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			agentStatus.CurrentStatus = "connected"
-			agentStatus.RetryRemaining = 3
-
-			var agentMetrics models.AgentMetrics
-
-			decoder := json.NewDecoder(resp.Body)
-			if err := decoder.Decode(&agentMetrics); err != nil {
-				utils.Logger.Error(fmt.Sprintf("error decoding status response: %v", err))
-				return
-			}
-			agentMetrics.AgentID = agentStatus.AgentID
-			q.QueueRepository.UpdateMetrics(&agentMetrics)
-		} else {
-			agentStatus.CurrentStatus = "unknown"
-			agentStatus.RetryRemaining--
-			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
+	for _, url := range endpoints {
+		metrics, err = fetchMetrics(url)
+		if err == nil {
+			break
 		}
 	}
+
+	if err != nil {
+		return fmt.Errorf("failed to fetch metrics from both hostname and IP: %w", err)
+	}
+
+	agg := AggregatedAgentMetrics{
+		AgentID:           agent.AgentID,
+		LogsRateSent:      extractMetricValue(metrics, "otelcol_exporter_sent_log_records"),
+		TracesRateSent:    extractMetricValue(metrics, "otelcol_exporter_sent_spans"),
+		MetricsRateSent:   extractMetricValue(metrics, "otelcol_exporter_sent_metric_points"),
+		DataSentBytes:     extractMetricValue(metrics, "otelcol_exporter_sent_bytes"),
+		DataReceivedBytes: extractMetricValue(metrics, "otelcol_receiver_accepted_bytes"),
+		Status:            "connected",
+		UpdatedAt:         time.Now(),
+	}
+
+	rt := RealtimeAgentMetrics{
+		AgentID:           agent.AgentID,
+		LogsRateSent:      agg.LogsRateSent,
+		TracesRateSent:    agg.TracesRateSent,
+		MetricsRateSent:   agg.MetricsRateSent,
+		DataSentBytes:     agg.DataSentBytes,
+		DataReceivedBytes: agg.DataReceivedBytes,
+		CPUUtilization:    extractMetricValue(metrics, "otelcol_process_cpu_seconds_total"),
+		MemoryUtilization: extractMetricValue(metrics, "otelcol_process_memory_rss"),
+		Timestamp:         time.Now(),
+	}
+
+	return q.QueueRepository.UpdateAgentMetricsInDB(agg, rt)
 }

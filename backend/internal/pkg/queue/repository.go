@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 type QueueRepository struct {
@@ -18,72 +18,83 @@ func NewQueueRepository(db *sql.DB) *QueueRepository {
 	}
 }
 
-func (qr *QueueRepository) UpdateStatusOnly(agentID, status string) error {
-	query := `UPDATE agent_metrics SET STATUS = ? UpdatedAt = ? WHERE AGENTID = ?`
-	_, err := qr.db.Exec(query, status, time.Now(), agentID)
-
+func (q *QueueRepository) UpdateAgentMetricsInDB(agg AggregatedAgentMetrics, rt RealtimeAgentMetrics) error {
+	// Upsert for aggregated_agent_metrics
+	_, err := q.db.Exec(`
+		INSERT INTO aggregated_agent_metrics 
+		(agent_id, logs_rate_sent, traces_rate_sent, metrics_rate_sent, data_sent_bytes, data_received_bytes, status, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(agent_id) DO UPDATE SET 
+			logs_rate_sent = EXCLUDED.logs_rate_sent,
+			traces_rate_sent = EXCLUDED.traces_rate_sent,
+			metrics_rate_sent = EXCLUDED.metrics_rate_sent,
+			data_sent_bytes = EXCLUDED.data_sent_bytes,
+			data_received_bytes = EXCLUDED.data_received_bytes,
+			status = EXCLUDED.status,
+			updated_at = EXCLUDED.updated_at
+	`, agg.AgentID, agg.LogsRateSent, agg.TracesRateSent, agg.MetricsRateSent, agg.DataSentBytes, agg.DataReceivedBytes, agg.Status, agg.UpdatedAt)
 	if err != nil {
-		return fmt.Errorf("error updating agent status: %v", err)
+		return fmt.Errorf("failed to upsert aggregated metrics: %w", err)
 	}
 
-	query = `UPDATE agent_status SET STATUS = ? UpdatedAt = ? WHERE AGENTID = ?`
-	_, err = qr.db.Exec(query, status, time.Now(), agentID)
-
+	// Insert for realtime_agent_metrics
+	_, err = q.db.Exec(`
+		INSERT INTO realtime_agent_metrics 
+		(agent_id, logs_rate_sent, traces_rate_sent, metrics_rate_sent, data_sent_bytes, data_received_bytes, cpu_utilization, memory_utilization, timestamp)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, rt.AgentID, rt.LogsRateSent, rt.TracesRateSent, rt.MetricsRateSent, rt.DataSentBytes, rt.DataReceivedBytes, rt.CPUUtilization, rt.MemoryUtilization, rt.Timestamp)
 	if err != nil {
-		return fmt.Errorf("error updating agent status: %v", err)
-	}
-
-	return nil
-}
-
-func (qr *QueueRepository) UpdateStatusRetries(agentID string, retryRemaining int, status string) error {
-	query := `UPDATE agent_metrics SET STATUS = ? UpdatedAt = ? WHERE AGENTID = ?`
-	_, err := qr.db.Exec(query, status, time.Now(), agentID)
-
-	if err != nil {
-		return fmt.Errorf("error updating agent status: %v", err)
-	}
-
-	query = `UPDATE agent_status SET STATUS = ? UpdatedAt = ? RetryRemaining = ? WHERE AGENTID = ?`
-	_, err = qr.db.Exec(query, status, time.Now(), retryRemaining, agentID)
-
-	if err != nil {
-		return fmt.Errorf("error updating agent status: %v", err)
+		return fmt.Errorf("failed to insert realtime metrics: %w", err)
 	}
 
 	return nil
 }
 
-func (qr *QueueRepository) UpdateMetrics(metrics *models.AgentMetrics) error {
-	query := `
-		UPDATE agent_status
-		SET
-			CurrentStatus = ?,
-			RetryRemaining = 3,
-			UpdatedAt = ?
-		WHERE AgentID = ?`
-
-	_, err := qr.db.Exec(query, metrics.Status, time.Now(), metrics.AgentID)
-	if err != nil {
-		return fmt.Errorf("error updating agent status: %w", err)
-	}
-
-	query = `
-		UPDATE agent_metrics
-		SET
-			Status = ?,
-			ExportedDataVolume = ?,
-			UptimeSeconds = ?,
-			DroppedRecords = ?,
-			UpdatedAt = ?
-		WHERE AgentID = ?`
-
-	_, err = qr.db.Exec(query, metrics.Status, metrics.ExportedDataVolume, metrics.UptimeSeconds,
-		metrics.DroppedRecords, metrics.UpdatedAt, metrics.AgentID)
+func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) error {
+	_, err := q.db.Exec(`
+		UPDATE agents
+		SET status = ?, updated_at = ?
+		WHERE agent_id = ?
+	`, status, time.Now(), agentID)
 
 	if err != nil {
-		return fmt.Errorf("error updating agent metrics: %w", err)
+		return fmt.Errorf("failed to update status for agent %s: %w", agentID, err)
 	}
 
 	return nil
+}
+
+func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
+	// Query all agents with status "unknown" or "connected"
+	rows, err := q.db.Query(`
+		SELECT agent_id, hostname, ip, status 
+		FROM agents 
+		WHERE status IN ('unknown', 'connected')
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query agents from DB: %w", err)
+	}
+
+	defer rows.Close()
+
+	var agents []AgentStatus
+	for rows.Next() {
+		var agentID, hostname, ip, status string
+		if err := rows.Scan(&agentID, &hostname, &ip, &status); err != nil {
+			utils.Logger.Sugar().Errorf("Error scanning agent row: %v", err)
+			continue
+		}
+
+		agent := &AgentStatus{
+			AgentID:        agentID,
+			Hostname:       hostname,
+			IP:             ip,
+			CurrentStatus:  status,
+			RetryRemaining: 3,
+			UpdatedAt:      time.Now(),
+		}
+
+		agents = append(agents, *agent)
+	}
+	return agents, nil
 }
