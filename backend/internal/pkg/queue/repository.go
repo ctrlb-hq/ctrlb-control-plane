@@ -50,31 +50,32 @@ func (q *QueueRepository) UpdateAgentMetricsInDB(agg AggregatedAgentMetrics, rt 
 	return nil
 }
 
-func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) error {
+func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) {
 	_, err := q.db.Exec(`
-		UPDATE agents
+		UPDATE aggregated_agent_metrics
 		SET status = ?, updated_at = ?
 		WHERE agent_id = ?
 	`, status, time.Now(), agentID)
 
 	if err != nil {
-		return fmt.Errorf("failed to update status for agent %s: %w", agentID, err)
+		utils.Logger.Sugar().Errorf("Failed to update status for agent %s: %w", agentID, err)
+		return
 	}
 
-	return nil
+	return
 }
 
 func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
-	// Query all agents with status "unknown" or "connected"
+	// Join with aggregated_agent_metrics to get agent status
 	rows, err := q.db.Query(`
-		SELECT agent_id, hostname, ip, status 
-		FROM agents 
-		WHERE status IN ('unknown', 'connected')
+		SELECT a.id, a.hostname, a.ip, m.status
+		FROM agents a
+		JOIN aggregated_agent_metrics m ON a.id = m.agent_id
+		WHERE m.status IN ('unknown', 'connected')
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query agents from DB: %w", err)
 	}
-
 	defer rows.Close()
 
 	var agents []AgentStatus
@@ -85,16 +86,15 @@ func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
 			continue
 		}
 
-		agent := &AgentStatus{
+		agents = append(agents, AgentStatus{
 			AgentID:        agentID,
 			Hostname:       hostname,
 			IP:             ip,
 			CurrentStatus:  status,
 			RetryRemaining: 3,
 			UpdatedAt:      time.Now(),
-		}
-
-		agents = append(agents, *agent)
+		})
 	}
+
 	return agents, nil
 }

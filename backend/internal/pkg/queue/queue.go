@@ -77,7 +77,7 @@ func (q *AgentQueue) RefreshMonitoring() error {
 
 // StartStatusCheck starts a goroutine that checks the status of all agents at regular intervals.
 func (q *AgentQueue) StartStatusCheck() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for range ticker.C {
 			q.checkAllAgents()
@@ -113,24 +113,26 @@ func (q *AgentQueue) worker() {
 
 		if exists {
 			if err := q.checkAgentStatus(agent); err != nil {
-				utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s]: %v", agent.AgentID, err)
-				utils.Logger.Sugar().Infof("Attempts remaining for agent [ID:%s]: %s", agent.AgentID, agent.RetryRemaining)
-
 				q.mutex.Lock()
+
 				agent.RetryRemaining--
 				if agent.RetryRemaining <= 0 {
 					agent.CurrentStatus = "disconnected"
 				} else {
 					agent.CurrentStatus = "unknown"
 				}
-				_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
-				q.mutex.Unlock()
 
+				q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
+				utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s], Attempts remaining: %v", agent.AgentID, agent.RetryRemaining)
+				q.mutex.Unlock()
 			} else {
 				q.mutex.Lock()
 				agent.RetryRemaining = 3
 				agent.CurrentStatus = "connected"
 				q.mutex.Unlock()
+			}
+			if agent.RetryRemaining <= 0 {
+				q.RemoveAgent(agentID)
 			}
 		}
 	}

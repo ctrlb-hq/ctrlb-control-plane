@@ -126,7 +126,7 @@ func createAggregatedAgentMetricsTable(db *sql.DB) error {
 		metrics_rate_sent INTEGER DEFAULT 0,
 		data_sent_bytes INTEGER DEFAULT 0, -- Total bytes sent
 		data_received_bytes INTEGER DEFAULT 0, -- Total bytes received
-		status TEXT CHECK(status IN ('connected', 'disconnected', 'stopped')),
+		status TEXT CHECK(status IN ('connected', 'disconnected', 'stopped', 'unknown')),
 		updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
 		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
 	);
