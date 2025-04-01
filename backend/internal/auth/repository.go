@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
-	"github.com/mattn/go-sqlite3"
 )
 
 type AuthRepository struct {
@@ -33,7 +32,7 @@ func (a *AuthRepository) RegisterUser(user User) error {
 	// Attempt to insert user
 	_, err = tx.Exec("INSERT INTO user (email, name, password, role) VALUES (?, ?, ?,?)", user.Email, user.Name, user.Password, user.Role)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if utils.IsUniqueViolation(err) {
 			return utils.ErrUserAlreadyExists
 		}
 		return fmt.Errorf("failed to register user: %w", err)
@@ -50,28 +49,25 @@ func (a *AuthRepository) RegisterUser(user User) error {
 func (a *AuthRepository) Login(email string) (*User, error) {
 	var user User
 
-	// Prepare and execute the SQL statement
-	stmt, err := a.db.Prepare("SELECT email, name, password FROM user WHERE email = ?")
-	if err != nil {
-		return nil, fmt.Errorf("failed to prepare query: %v", err)
-	}
-	defer stmt.Close()
-
-	// Execute the query
-	err = stmt.QueryRow(email).Scan(&user.Email, &user.Name, &user.Password)
+	query := `SELECT email, name, password FROM user WHERE email = ?`
+	err := a.db.QueryRow(query, email).Scan(&user.Email, &user.Name, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("user not found")
 		}
-		return nil, fmt.Errorf("failed to query user: %v", err)
+		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
 
 	return &user, nil
 }
 
-func isUniqueViolation(err error) bool {
-	if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
-		return true
+func (a *AuthRepository) UserExists(email string) bool {
+	var count int
+	query := `SELECT COUNT(*) FROM user WHERE email = ?`
+
+	err := a.db.QueryRow(query, email).Scan(&count)
+	if err != nil {
+		return false
 	}
-	return false
+	return count > 0
 }

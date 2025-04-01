@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/mattn/go-sqlite3"
 )
 
 func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {
@@ -40,4 +41,11 @@ func ValidateAgentRegisterRequest(request *models.AgentRegisterRequest) error {
 		return fmt.Errorf("version cannot be empty")
 	}
 	return nil
+}
+
+func IsUniqueViolation(err error) bool {
+	if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
+		return true
+	}
+	return false
 }

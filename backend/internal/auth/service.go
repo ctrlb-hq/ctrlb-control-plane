@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -78,6 +79,10 @@ func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error)
 	email, err := utils.ValidateJWT(req.RefreshToken, "refresh")
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
+	}
+
+	if !a.AuthRepository.UserExists(email) {
+		return nil, fmt.Errorf("invalid refresh token")
 	}
 
 	// Generate a new access token
