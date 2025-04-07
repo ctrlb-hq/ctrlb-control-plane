@@ -1,98 +1,61 @@
+# 🛰️ CTRLB Agent
 
-# CtrlB Collector
+The **CTRLB Agent** is a lightweight wrapper built on top of the OpenTelemetry Collector. Once installed, it connects to the CTRLB backend, shares its runtime status, and receives its initial configuration. The agent can be managed remotely through a set of defined HTTP endpoints.
 
-System of agents interacting with all-father server for telemetry collection and projection based on the Op-Amp specification.
+---
 
-Currently, it only supports fluent-bit. The project is built on a customized Fluent-bit library from [ctrlb-fluent-bit](https://github.com/ctrlb-hq/ctrlb-fluent-bit). Agent spins off a `fluent-bit` instance through its C-API via the C-Go interface and interacts for all the processes.
+## 🔧 Responsibilities
 
-## Installation
+- Register with the backend upon startup.
+- Expose runtime metrics in Prometheus format, including CPU utilization, memory utilization, and data transfer rates (sent/received) for logs, traces, and metrics.
+- Receive initial and updated configurations.
+- Respond to remote lifecycle commands.
 
-Clone the GitHub repository
+---
 
-```bash
-    git clone https://github.com/ctrlb-hq/ctrlb-collector.git
-    cd ctrlb-collector
-```
+## 🚀 Installation
 
-Build the docker container
-```bash
-    docker build -t ctrlb-collector .
-```
+The backend provides a platform-specific installation script. Once executed, the agent starts and reaches out to the backend for initial configuration.
 
-Run the docker container
-```bash
-    docker run -it --network host ctrlb-collector
-```
+You can customize agent behavior using the following command-line flags:
 
-## API Reference
+- `--config`: Path to the agent configuration file. Default is `./config.yaml`
+- `--backend`: URL of the backend server. Default is `http://pipeline.ctrlb.ai:8096`
+- `--port`: Port on which the agent listens for communication. Default is `443`. This is currently an experimental feature.
 
-#### Start the agent instance
+---
 
-```http
-POST /api/v1/start
-```
+## 🌐 Agent API Endpoints
 
-#### Stop the agent instance
+All endpoints are served under the base path: `/agent/v1`
 
-```http
-POST /api/v1/stop
-```
-#### Retrieve the current config
+### Lifecycle Actions
 
-```http
-GET /api/v1/config
-```
+These endpoints control the agent's operational state:
 
-#### Update the current config
+- `POST /agent/v1/start` – Start the OpenTelemetry Collector instance without restarting the agent process.
+- `POST /agent/v1/stop` – Stop the OpenTelemetry Collector instance while keeping the agent process alive.
+- `POST /agent/v1/shutdown` – Gracefully shut down the agent.
 
-```http
-PUT /api/v1/config
-```
+### Configuration
 
-| Parameter | Type     | Description                       |
-| :-------- | :------- | :-------------------------------- |
-| `body`      | `string` | **Required**. new config json string |
+These endpoints manage the agent’s configuration:
 
+- `POST /agent/v1/config` – Push updated configuration to the agent.
 
-#### Shutdown the agent instance
+> ℹ️ On initial startup, the agent fetches its configuration automatically from the backend.
 
-```http
-POST /api/v1/shutdown
-```
+---
 
+## 🛠️ Tech Stack
 
+- **Go** – Core implementation language.
+- **OpenTelemetry Collector** – Base collector engine.
+- **HTTP + Gorilla Mux** – Communication protocol and routing.
 
-## Example Config
-Following is an example fluent-bit config file in the `.json` format used in API calls, equivalent to the default `.yaml` [config file](https://github.com/ctrlb-hq/ctrlb-collector/blob/main/config.yaml).
+---
 
-```json
-{
-    "pipeline": {
-        "filters": null,
-        "inputs": [
-            {
-                "Interval_sec": 2,
-                "name": "dummy"
-            }
-        ],
-        "outputs": [
-            {
-                "match": "*",
-                "name": "stdout"
-            }
-        ]
-    },
-    "service": {
-        "http_server": "on"
-    }
-}
-```
-**NB**: The HTTP server in a fluent-bit instance is by default always set for metrics logging and runs with the following config:
-```json
-    "service": {
-        "http_listen": "0.0.0.0",
-        "http_port": 2020,
-        "http_server": "on"
-    }
+## 📄 License
 
-```
+AGPL License. See [LICENSE](../LICENSE) for more details.
+

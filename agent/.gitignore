@@ -1,3 +1,5 @@
 .env
 *.db
 *.log
+
+dist/

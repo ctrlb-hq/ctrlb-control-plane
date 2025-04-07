@@ -6,13 +6,13 @@ Welcome! 🚀 We're excited that you're interested in contributing to this proje
 ### 1. Fork the repo and clone it
 
 ```bash
-git clone https://github.com/your-username/project-name.git
+git clone https://github.com/your-username/ctrlb-control-plane.git
 ```
 
 ### 2. Create a new branch
 
 ```bash
-git checkout -b feat/add-agent-labels
+git checkout -b feat/<FEAT_NAME>
 ```
 
 ### Branch Naming Convention
@@ -80,7 +80,7 @@ golangci-lint run
 ### 5. Push and open a PR
 
 ```bash
-git push origin feat/add-agent-labels
+git push origin feat/<FEAT_NAME>
 ```
 
 Then open a Pull Request with a clear explanation of the changes.
