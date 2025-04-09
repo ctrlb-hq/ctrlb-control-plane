@@ -104,6 +104,8 @@ const SourceDetails = () => {
     }
 
     const handleSubmit = () => {
+        const log=[{ type: 'source', name: selectedSource?.display_name, status: "added" }]
+    
         const updatedSources = [
             ...existingSources,
             {
@@ -128,6 +130,8 @@ const SourceDetails = () => {
         setExistingSources(updatedSources);
         localStorage.setItem(`Sources`, JSON.stringify(updatedSources));
         localStorage.setItem(`Nodes`, JSON.stringify(updatedNodes));
+        localStorage.setItem("changesLog", JSON.stringify(log));
+
     };
 
     const handleEdit = () => {

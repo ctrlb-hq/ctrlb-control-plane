@@ -9,6 +9,7 @@ import ReactFlow, {
   Connection,
   ReactFlowInstance,
 } from 'reactflow';
+
 import 'reactflow/dist/style.css';
 import { SourceNode } from './SourceNode';
 import { ProcessorNode } from './ProcessorNode';
@@ -32,7 +33,7 @@ const PipelineBuilder = () => {
 
   const validatedNodeValue = nodeValue.map((node, index) => ({
     ...node,
-    position: node.position || { x: 100, y: 100 + index * 100 }, // Fallback position
+    position: node.position || { x: 100, y: 100 + index * 100 },
   }));
 
   const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));

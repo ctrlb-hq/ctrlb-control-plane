@@ -41,6 +41,7 @@ const LandingView = () => {
         localStorage.removeItem("selectedAgentIds");
         localStorage.removeItem("PipelineEdges");
         localStorage.removeItem("Nodes");
+        localStorage.removeItem("changesLog")
 
         setCurrentStep(0);
         setIsDialogOpen(false);
