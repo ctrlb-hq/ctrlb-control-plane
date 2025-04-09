@@ -35,15 +35,16 @@ const renderers = [
 export const DestinationNode = ({ data: Data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
 
     const DestinationLabel = Data.supported_signals
     const handleSubmit = () => {
-        setChangesLog(prev => [
-            ...prev,
-            { type: 'destination', name: Data.name, status: "added" },
-        ]);
+        const log = { type: 'destination', name: Data.name, status: "edited" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
@@ -69,8 +70,11 @@ export const DestinationNode = ({ data: Data }: any) => {
 
     const handleDeleteNode = () => {
         setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
-        setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
-
+        const log = { type: 'destination', name: Data.name, status: "deleted" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));

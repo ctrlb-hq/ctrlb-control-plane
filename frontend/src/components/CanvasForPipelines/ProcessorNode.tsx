@@ -33,7 +33,7 @@ const renderers = [
 export const ProcessorNode = ({ data: Data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const processorConfig = getSource?.config
     const [data, setData] = useState<object>(processorConfig)
@@ -41,6 +41,12 @@ export const ProcessorNode = ({ data: Data }: any) => {
 
     const ProcessorLabel = Data.supported_signals
     const handleSubmit = () => {
+        const log = { type: 'processor', name: Data.name, status: "edited" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
             node.component_name === Data.component_name ? { ...node, config: data } : node
@@ -60,7 +66,15 @@ export const ProcessorNode = ({ data: Data }: any) => {
 
     const handleDeleteNode = () => {
         setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
-        setChangesLog(prev => [...prev, { type: 'processor', name: Data.label, status: "deleted" }])
+        const log = { type: 'source', name: Data.name, status: "deleted" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
+        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+        const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
+        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false)
     }
     return (
