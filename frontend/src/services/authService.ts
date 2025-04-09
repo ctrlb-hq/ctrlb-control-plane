@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { LoginCredentials, RegisterCredentials, AuthResponse, RefreshTokenResponse, ApiError } from '../types/auth.types';
 
-const apiUrl = "http://localhost:8096"
+const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
 const API_BASE_URL = `${apiUrl}/api/auth/v1`;
 
 const authService = {
@@ -74,5 +74,11 @@ const authService = {
     }
   },
 };
+
+interface ImportMetaWithEnv extends ImportMeta {
+  env: {
+      VITE_API_URL: string;
+  };
+}
 
 export default authService;

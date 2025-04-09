@@ -61,6 +61,8 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const { changesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const [isOpen, setIsOpen] = useState(false)
+    // const [graph, setGraph] = useState<Node[]>([])
+    const [nodes, setNodes] = useState<Node[]>([])
     const { toast } = useToast()
 
     const nodeTypes = useMemo(() => ({
@@ -139,6 +141,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                 y: event.clientY - rect.top,
             });
         }
+
         setSelectedEdge(edge);
     }, [isEditMode]);
 

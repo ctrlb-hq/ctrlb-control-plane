@@ -120,7 +120,7 @@ export function AgentsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {agentValues.map((agent) => (
+          {Array.isArray(agentValues)&& agentValues?.map((agent) => (
             <Sheet key={agent.id}>
               <SheetTrigger asChild>
                 <TableRow className="cursor-pointer" onClick={() => { handleAgentById(agent.id) }}>

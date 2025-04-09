@@ -1,8 +1,9 @@
 import axios, { AxiosError } from 'axios';
-import { Agent, ApiError } from '../types/agent.types';
+import { ApiError } from '../types/agent.types';
 import { Pipeline } from '../types/pipeline.types';
+import { AgentValuesTable } from '@/types/agentValues.type';
 
-const apiUrl = "http://localhost:8096"
+const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
 const AGENTS_BASE_URL = `${apiUrl}/api/frontend/v1/agents`;
 const PIPELINES_BASE_URL = `${apiUrl}/api/frontend/v1/pipelines`;
 
@@ -10,10 +11,10 @@ const queryService = {
 
     // Agents endpoints
 
-    fetchAgents: async (): Promise<Agent[]> => {
+    fetchAgents: async (): Promise<AgentValuesTable[]> => {
         try {
             const token = localStorage.getItem('authToken');
-            const response = await axios.get<Agent[]>(AGENTS_BASE_URL, {
+            const response = await axios.get<AgentValuesTable[]>(AGENTS_BASE_URL, {
                 headers: {
                     Authorization: token,
                 },
@@ -27,10 +28,10 @@ const queryService = {
         }
     },
 
-    fetchAgentById: async (id: string): Promise<Agent> => {
+    fetchAgentById: async (id: string): Promise<AgentValuesTable> => {
         try {
             const token = localStorage.getItem('authToken');
-            const response = await axios.get<Agent>(`${AGENTS_BASE_URL}/${id}`, {
+            const response = await axios.get<AgentValuesTable>(`${AGENTS_BASE_URL}/${id}`, {
                 headers: {
                     Authorization: token,
                 },
@@ -241,5 +242,11 @@ const queryService = {
         }
     },
 };
+
+interface ImportMetaWithEnv extends ImportMeta {
+    env: {
+        VITE_API_URL: string;
+    };
+}
 
 export default queryService;

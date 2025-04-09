@@ -1,9 +1,7 @@
 import axios from "axios";
 
-const apiUrl = "http://localhost:8096";
+const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
 const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
-
-
 
 const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
@@ -94,3 +92,10 @@ axiosInstance.interceptors.response.use(
 
 
 export default axiosInstance;
+
+// Extend ImportMeta interface to include env property
+interface ImportMetaWithEnv extends ImportMeta {
+    env: {
+        VITE_API_URL: string;
+    };
+}

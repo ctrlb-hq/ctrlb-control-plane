@@ -69,7 +69,7 @@ const Pipeline = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {pipelines.map((pipeline) => (
+            {Array.isArray(pipelines)&& pipelines.map((pipeline) => (
               <Sheet key={pipeline.id}>
                 <SheetTrigger asChild>
                   <TableRow className="cursor-pointer" key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
