@@ -31,20 +31,18 @@ const renderers = [
   ...materialRenderers,
 ];
 export const SourceNode = ({ data: Data }: any) => {
-  console.log(Data)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { setNodeValue } = useNodeValue()
-  const { setChangesLog } = usePipelineChangesLog()
+  const {changesLog, setChangesLog } = usePipelineChangesLog()
   const [form, setForm] = useState<object>({})
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
     setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
-    setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
+    setChangesLog(prev => [...prev, { type: 'source', name: Data.name, status: "deleted" }]);
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
     const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
     localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
-
     setIsSidebarOpen(false);
   }
 
@@ -63,10 +61,14 @@ export const SourceNode = ({ data: Data }: any) => {
   }, [])
 
   const handleSubmit = () => {
-    setChangesLog(prev => [
+    setChangesLog(prev => {
+      const updatedLog = [
       ...prev,
       { type: 'source', name: Data.name, status: "added" },
-    ]);
+      ];
+      localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+      return updatedLog;
+    });
 
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
     const updatedNodes = nodes.map((node: any) =>

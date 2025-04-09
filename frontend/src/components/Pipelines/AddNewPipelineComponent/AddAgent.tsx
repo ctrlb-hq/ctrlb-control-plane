@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Code2, Edit, Loader2 } from 'lucide-react';
+import { ChevronUp, Code2, Edit, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -34,6 +34,7 @@ import { AgentValuesTable } from '@/types/agentValues.type';
 import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
 import CreateNewAgent from '@/components/Agents/CreateNewAgent';
 import pipelineServices from '@/services/pipelineServices';
+import usePipelineChangesLog from '@/context/usePipelineChangesLog';
 
 
 interface changes {
@@ -49,7 +50,7 @@ const AddAgent = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<AgentValuesTable[]>([]);
-  const [pipelineChangesLog, setPipelineChangesLog] = useState<changes[]>([])
+  const { changesLog } = usePipelineChangesLog()
   const [rollOut, setRollOut] = useState(false)
   const { toast } = useToast()
   const { agentValues } = useAgentValues()
@@ -114,6 +115,9 @@ const AddAgent = () => {
   const handleSort = () => {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
+  useEffect(() => {
+    console.log("changes log", changesLog)
+  }, [changesLog])
 
   const handleApply = () => {
     const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
@@ -141,14 +145,12 @@ const AddAgent = () => {
   }
 
   const handleGetAgent = async () => {
-    setFilteredAgents(agentValues); 
+    setFilteredAgents(agentValues);
   };
 
   useEffect(() => {
     if (localStorage.getItem('authToken'))
       handleGetAgent();
-    const changesLog: changes[] = JSON.parse(localStorage.getItem("Nodes") || "[]");
-    setPipelineChangesLog(changesLog);
   }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,9 +161,8 @@ const AddAgent = () => {
         agent.status.toLowerCase().includes(searchValue) ||
         agent.version.toLowerCase().includes(searchValue)
     );
-    setFilteredAgents(filtered); // Update filteredAgents with the search results
+    setFilteredAgents(filtered);
   };
-
 
   const handleDeployChanges = () => {
     addPipeline()
@@ -171,6 +172,7 @@ const AddAgent = () => {
     localStorage.removeItem("selectedAgentIds")
     localStorage.removeItem("PipelineEdges")
     localStorage.removeItem("Nodes")
+    localStorage.removeItem("changesLog")
     setTimeout(() => {
       toast({
         title: "Success",
@@ -347,7 +349,7 @@ const AddAgent = () => {
                               <SheetDescription>
                                 <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
                                   {
-                                    pipelineChangesLog.map((change: changes, index: number) => (
+                                    changesLog.map((change, index) => (
                                       <div key={index} className="flex justify-between items-center">
                                         <div className="flex flex-col">
                                           <p className="text-lg capitalize">{change.component_role}</p>
@@ -364,12 +366,10 @@ const AddAgent = () => {
                               </SheetDescription>
                               <SheetClose className="flex justify-end mt-4 w-full">
                                 <div>
-                                  <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
+                                  <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes1</Button>
                                 </div>
                               </SheetClose>
-
                             </SheetContent>
-
                           </Sheet>
                           <div className="mx-4 flex items-center space-x-2">
                             <Switch id="edit-mode" checked={check} onCheckedChange={setCheck} />

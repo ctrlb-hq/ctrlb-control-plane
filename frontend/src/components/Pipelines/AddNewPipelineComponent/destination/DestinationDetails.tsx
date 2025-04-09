@@ -105,6 +105,9 @@ const DestinationDetail = () => {
     }
 
     const handleSubmit = () => {
+        const log={ type: 'destination', name: selectedSource?.display_name, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        const updatedLog = [...existingLog, log];
         const updatedSources = [
             ...existingSources,
             {
@@ -132,6 +135,10 @@ const DestinationDetail = () => {
         localStorage.setItem(`Destination`, JSON.stringify(updatedSources));
         const newNodes = [...existingNodes.filter(node => !updatedNodes.some(updatedNode => updatedNode.component_id === node.component_id)), ...updatedNodes];
         localStorage.setItem(`Nodes`, JSON.stringify(newNodes));
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
+        
+
     };
 
     const handleEdit = () => {

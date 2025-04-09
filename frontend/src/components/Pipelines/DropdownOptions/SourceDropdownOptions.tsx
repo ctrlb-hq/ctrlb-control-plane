@@ -34,7 +34,7 @@ const SourceDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [sourceOptionValue, setSourceOptionValue] = useState('')
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
     const [sources, setSources] = useState<sources[]>([])
     const [data, setData] = useState<object>();
@@ -50,7 +50,6 @@ const SourceDropdownOptions = () => {
 
     const handleSubmit = () => {
         const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
-
         const newNode = {
             id: (existingNodes.length + 1).toString(),
             type: "source",
@@ -79,14 +78,16 @@ const SourceDropdownOptions = () => {
             supported_signals: supported_signals,
         };
 
+        const log={ type: 'source', name: sourceOptionValue, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
 
         localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
         setNodeValue(prev => [...prev, newNode]);
 
-
-        setChangesLog(prev => [...prev, { type: 'source', name: sourceOptionValue, status: "added" }]);
-
-        // Close the sheet
         setIsSheetOpen(false);
     };
 

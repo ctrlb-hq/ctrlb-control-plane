@@ -35,7 +35,7 @@ const DestinationDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [destinationOptionValue, setDestinationOptionValue] = useState('')
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const [destinations, setDestinations] = useState<destination[]>([])
     const [data, setData] = useState<object>();
     const [form, setForm] = useState<object>({})
@@ -80,13 +80,15 @@ const DestinationDropdownOptions = () => {
             component_name: pluginName,
             supported_signals: supported_signals,
         };
-
-        setNodeValue(prev => [...prev, newNode]);
+        
+        const log={ type: 'destination', name: destinationOptionValue, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
         localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-
-        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }]);
-
+        setNodeValue(prev => [...prev, newNode]);
         setIsSheetOpen(false);
     };
 
