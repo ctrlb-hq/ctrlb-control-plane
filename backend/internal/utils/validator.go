@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -44,8 +45,10 @@ func ValidateAgentRegisterRequest(request *models.AgentRegisterRequest) error {
 }
 
 func IsUniqueViolation(err error) bool {
-	if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
-		return true
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) {
+		// Check for constraint violation (UNIQUE, PRIMARY KEY, etc.)
+		return sqliteErr.Code == sqlite3.ErrConstraint && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique
 	}
 	return false
 }

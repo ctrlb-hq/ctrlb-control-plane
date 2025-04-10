@@ -1,0 +1,48 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on tags like v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Upload Binaries
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🧰 Set up Go 1.23
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: 🛠️ Build ctrlb-agent (ctrlb_collector)
+        run: |
+          GOOS=linux GOARCH=${{ matrix.goarch }} go build \
+            -o ctrlb-agent-linux-${{ matrix.goarch }} \
+            ./agent/cmd/ctrlb_collector
+
+      - name: 🛠️ Build ctrlb-control-plane-backend
+        run: |
+          GOOS=linux GOARCH=${{ matrix.goarch }} go build \
+            -o ctrlb-control-plane-backend-linux-${{ matrix.goarch }} \
+            ./backend/cmd/backend
+
+      - name: 📦 Upload binaries to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ctrlb-agent-linux-${{ matrix.goarch }}
+            ctrlb-control-plane-backend-linux-${{ matrix.goarch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,17 @@
+CTRLB Agent
+Copyright (C) 2024 CTRLB-HQ
+
+This software is distributed as a free and open-source project under the terms of the GNU Affero General Public License (AGPL), version 3, as published by the Free Software Foundation. You may redistribute and/or modify the source code in accordance with the stipulations of this license, including the option to adopt any subsequent version published by the Free Software Foundation.
+
+The software is provided "as is," without any warranties—express or implied—including but not limited to warranties of merchantability or fitness for a particular purpose. Users assume full responsibility for the use and outcomes of this software. For comprehensive licensing terms, consult the GNU Affero General Public License.
+
+In addition, any derivative works or modified deployments of this agent system—regardless of whether they are made available publicly or used internally—must include a clear and unambiguous declaration that the deployment is built upon the CTRLB Agent. This notice must be visibly embedded within the user-facing interface (such as an About page, footer, or system information section) or included in official system documentation. This requirement exists to preserve proper attribution and ensure epistemic transparency in the deployment and development of derivative works.
+
+You should have received a copy of the GNU Affero General Public License alongside this software distribution. If not, the license is accessible at <https://www.gnu.org/licenses/>.
+
+This software integrates the OpenTelemetry Collector and associated components, which are licensed under the Apache License, Version 2.0. Usage of these components is governed by their original license and is not subject to the AGPL terms of this wrapper.
+
+For full licensing details of the OpenTelemetry Collector, see: https://github.com/open-telemetry/opentelemetry-collector/blob/main/LICENSE
+
+The AGPL license herein applies only to the orchestration, configuration, and control logic developed by CTRLB-HQ.
+

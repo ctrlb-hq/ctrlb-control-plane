@@ -147,6 +147,7 @@ const AddAgent = () => {
 
   const handleGetAgent = async () => {
     setFilteredAgents(agentValues);
+    setFilteredAgents(agentValues);
   };
 
   useEffect(() => {
@@ -163,6 +164,7 @@ const AddAgent = () => {
         agent.version.toLowerCase().includes(searchValue)
     );
     setFilteredAgents(filtered);
+    setFilteredAgents(filtered);
   };
 
   const handleDeployChanges = () => {
@@ -172,6 +174,7 @@ const AddAgent = () => {
     localStorage.removeItem('pipelinename');
     localStorage.removeItem("selectedAgentIds")
     localStorage.removeItem("Nodes")
+    localStorage.removeItem("changesLog")
     localStorage.removeItem("changesLog")
     setTimeout(() => {
       toast({

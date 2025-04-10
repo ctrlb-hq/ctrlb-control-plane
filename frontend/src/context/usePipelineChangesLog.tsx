@@ -8,6 +8,7 @@ interface PipelineChangesLogProps {
 
 const pipelineLogs = localStorage.getItem("changesLog");
 
+
 const PipelineChangesLogContext = createContext<PipelineChangesLogProps | undefined>(undefined);
 
 export const PipelineChangesLogProvider = ({ children }: { children: React.ReactNode }) => {
