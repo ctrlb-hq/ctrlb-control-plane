@@ -59,7 +59,7 @@ CTRLB is built to support agent orchestration at scale. Key components include:
 - **Configuration Manager**: Handles creation, versioning, and delivery of agent configs.
 - **Storage Backend**: Currently supports SQLite for storing configuration and telemetry metadata. Support for other SQL-based databases is coming soon.
 
-\*More details are available in the \**[docs/architecture.md](docs/architecture.md)*
+*More details are available in the* **[docs/architecture.md](docs/architecture.md)**
 
 ---
 
