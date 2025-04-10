@@ -66,7 +66,7 @@ const DestinationDropdownOptions = () => {
                     </div>
                 ),
                 type: "exporter",
-                id: (existingNodes.length + 1),
+                component_id: (existingNodes.length + 1).toString(),
                 name: destinationOptionValue,
                 supported_signals: supported_signals,
                 component_name: pluginName,

@@ -38,7 +38,7 @@ export const SourceNode = ({ data: Data }: any) => {
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
-    setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
+    setNodeValue(prev => prev.filter(node => node.id !== Data.component_ids));
     const log = { type: 'source', name: Data.name, status: "deleted" }
     const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
     addChange(log)

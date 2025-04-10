@@ -69,7 +69,8 @@ export const DestinationNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
+        console.log(Data)
+        setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
         const log = { type: 'destination', name: Data.name, status: "deleted" }
         const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
         addChange(log)

@@ -63,7 +63,7 @@ const SourceDropdownOptions = () => {
                     </div>
                 ),
                 type: "receiver",
-                id: (existingNodes.length + 1),
+                component_id: (existingNodes.length + 1).toString(),
                 name: sourceOptionValue,
                 supported_signals: supported_signals,
                 component_name: pluginName,
