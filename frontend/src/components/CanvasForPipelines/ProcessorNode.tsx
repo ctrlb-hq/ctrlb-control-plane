@@ -36,7 +36,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
     const { addChange } = usePipelineChangesLog()
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const processorConfig = getSource?.config
-    const [data, setData] = useState<object>(processorConfig)
+    const [data, setData] = useState<object>(Data.config)
     const [form, setForm] = useState<object>({})
 
     const ProcessorLabel = Data.supported_signals
@@ -65,7 +65,9 @@ export const ProcessorNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
+        console.log(Data)
         setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
         const log = { type: 'source', name: Data.name, status: "deleted" }
         const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
         addChange(log)

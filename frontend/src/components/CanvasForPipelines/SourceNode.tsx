@@ -38,7 +38,8 @@ export const SourceNode = ({ data: Data }: any) => {
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
-    setNodeValue(prev => prev.filter(node => node.id !== Data.component_ids));
+    setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
+    setNodeValue(prev => prev.filter(node => node.id !== Data.id));
     const log = { type: 'source', name: Data.name, status: "deleted" }
     const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
     addChange(log)
@@ -57,7 +58,7 @@ export const SourceNode = ({ data: Data }: any) => {
 
   const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
   const sourceConfig = getSource?.config
-  const [data, setData] = useState<object>(sourceConfig)
+  const [data, setData] = useState<object>(Data.config)
 
 
   useEffect(() => {

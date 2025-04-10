@@ -71,6 +71,8 @@ export const DestinationNode = ({ data: Data }: any) => {
     const handleDeleteNode = () => {
         console.log(Data)
         setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
+
         const log = { type: 'destination', name: Data.name, status: "deleted" }
         const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
         addChange(log)
@@ -85,7 +87,7 @@ export const DestinationNode = ({ data: Data }: any) => {
     }
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const sourceConfig = getSource?.config
-    const [data, setData] = useState<object>(sourceConfig)
+    const [data, setData] = useState<object>(Data.config)
 
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
