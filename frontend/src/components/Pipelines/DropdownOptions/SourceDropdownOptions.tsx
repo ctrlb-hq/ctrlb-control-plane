@@ -39,6 +39,8 @@ const SourceDropdownOptions = () => {
     const [sources, setSources] = useState<sources[]>([])
     const [data, setData] = useState<object>();
     const [pluginName, setPluginName] = useState()
+    const [submitDisabled, setSubmitDisabled] = useState(true);
+    
 
     const handleSheetOPen = (e: any) => {
         setPluginName(e)
@@ -168,8 +170,11 @@ const SourceDropdownOptions = () => {
                                                 schema={form}
                                                 renderers={renderers}
                                                 cells={materialCells}
-                                                onChange={({ data }) => setData(data)}
-                                            />
+                                                onChange={({ data, errors }) => {
+                                                    setData(data);
+                                                    const hasErrors = errors && errors.length > 0;
+                                                    setSubmitDisabled(!!hasErrors);
+                                                }}                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +182,7 @@ const SourceDropdownOptions = () => {
                             <SheetFooter >
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply Changes</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>Apply Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

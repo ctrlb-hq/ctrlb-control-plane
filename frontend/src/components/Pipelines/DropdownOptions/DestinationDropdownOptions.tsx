@@ -40,6 +40,8 @@ const DestinationDropdownOptions = () => {
     const [data, setData] = useState<object>();
     const [form, setForm] = useState<object>({})
     const [pluginName, setPluginName] = useState()
+    const [submitDisabled, setSubmitDisabled] = useState(true);
+
 
     const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
@@ -80,8 +82,8 @@ const DestinationDropdownOptions = () => {
             component_name: pluginName,
             supported_signals: supported_signals,
         };
-        
-        const log={ type: 'destination', name: destinationOptionValue, status: "added" }
+
+        const log = { type: 'destination', name: destinationOptionValue, status: "added" }
         const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
         addChange(log)
         const updatedLog = [...existingLog, log];
@@ -170,8 +172,11 @@ const DestinationDropdownOptions = () => {
                                                 schema={form}
                                                 renderers={renderers}
                                                 cells={materialCells}
-                                                onChange={({ data }) => setData(data)}
-                                            />
+                                                onChange={({ data, errors }) => {
+                                                    setData(data);
+                                                    const hasErrors = errors && errors.length > 0;
+                                                    setSubmitDisabled(!!hasErrors);
+                                                }} />
                                         </div>
                                     </div>
                                 </div>
@@ -179,7 +184,7 @@ const DestinationDropdownOptions = () => {
                             <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>Apply</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

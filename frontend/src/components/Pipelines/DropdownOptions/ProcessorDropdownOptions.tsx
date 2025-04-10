@@ -38,6 +38,7 @@ const ProcessorDropdownOptions = () => {
     const [data, setData] = useState<object>();
     const [pluginName, setPluginName] = useState()
     const [processors, setProcessors] = useState<Processor[]>([])
+    const [submitDisabled, setSubmitDisabled] = useState(true);
 
     const handleSheetOPen = (e: any) => {
         setPluginName(e)
@@ -168,8 +169,11 @@ const ProcessorDropdownOptions = () => {
                                                 schema={form}
                                                 renderers={renderers}
                                                 cells={materialCells}
-                                                onChange={({ data }) => setData(data)}
-                                            />
+                                                onChange={({ data, errors }) => {
+                                                    setData(data);
+                                                    const hasErrors = errors && errors.length > 0;
+                                                    setSubmitDisabled(!!hasErrors);
+                                                }} />
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +181,7 @@ const ProcessorDropdownOptions = () => {
                             <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>Apply</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

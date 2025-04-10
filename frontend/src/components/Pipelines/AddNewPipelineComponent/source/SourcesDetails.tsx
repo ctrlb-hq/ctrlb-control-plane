@@ -56,6 +56,7 @@ const SourceDetails = () => {
     const { currentTab } = usePipelineTab()
     const [sources, setSources] = useState<sources[]>([])
     const [form, setForm] = useState<object>({})
+    const [submitDisabled, setSubmitDisabled] = useState(true);
     const [existingSources, setExistingSources] = useState<sources[]>(() => {
         const savedSources = localStorage.getItem(`Sources`); // Use a unique key
         return savedSources ? JSON.parse(savedSources) : [];
@@ -312,15 +313,24 @@ const SourceDetails = () => {
                                                                                 schema={form}
                                                                                 renderers={renderers}
                                                                                 cells={materialCells}
-                                                                                onChange={({ data }) => setData(data)}
+                                                                                onChange={({ data, errors }) => {
+                                                                                    setData(data);
+                                                                                    const hasErrors = errors && errors.length > 0;
+                                                                                    setSubmitDisabled(!!hasErrors);
+                                                                                }}
                                                                             />
                                                                             <SheetClose>
                                                                                 <div className='flex justify-end mb-10'>
-                                                                                    <Button size={"lg"} className='bg-blue-500' onClick={() => {
-                                                                                        handleSubmit();
-                                                                                        setSelectedSource(null);
-                                                                                        setShowSourceSheet(false); // Close the sheet
-                                                                                    }}>
+                                                                                    <Button
+                                                                                        size={"lg"}
+                                                                                        className='bg-blue-500'
+                                                                                        onClick={() => {
+                                                                                            handleSubmit();
+                                                                                            setSelectedSource(null);
+                                                                                            setShowSourceSheet(false); // Close the sheet
+                                                                                        }}
+                                                                                        disabled={submitDisabled} // Disable button if there are errors
+                                                                                    >
                                                                                         Submit
                                                                                     </Button>
                                                                                 </div>

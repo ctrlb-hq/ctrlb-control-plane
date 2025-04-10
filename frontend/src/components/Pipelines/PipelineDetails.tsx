@@ -8,7 +8,6 @@ import ReactFlow, {
     Background,
     useEdgesState,
     addEdge,
-    Node,
     Edge,
     Connection,
     ReactFlowInstance,

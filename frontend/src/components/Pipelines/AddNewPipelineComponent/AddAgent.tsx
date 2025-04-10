@@ -373,7 +373,7 @@ const AddAgent = () => {
                               </SheetDescription>
                               <SheetClose className="flex justify-end mt-4 w-full">
                                 <div>
-                                  <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes1</Button>
+                                  <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
                                 </div>
                               </SheetClose>
                             </SheetContent>
