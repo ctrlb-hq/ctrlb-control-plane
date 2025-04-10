@@ -1,6 +1,6 @@
-# 🛠️ CTRLB – Control Plane for Managing Agents
+# 🛠️ CTRLTOWER – Control Plane for Managing Agents
 
-**CTRLB** is a control plane designed to manage telemetry agents across diverse environments. It currently supports the configuration and lifecycle management of **OpenTelemetry Collector** agents.
+**CTRLTower** is a control plane developed by **CTRLB** to manage telemetry agents across diverse environments. It currently supports the configuration and lifecycle management of **OpenTelemetry Collector** agents.
 
 This monorepo is organized into three primary components:
 
@@ -21,10 +21,11 @@ This monorepo is organized into three primary components:
 ## 📆 Repository Structure
 
 ```
-ctrlb/
+ctrltower/
 ├── frontend/        # React UI
 ├── backend/         # Go-based API server and logic
 ├── agent/           # OTel Collector wrapper with remote config support
+├── scripts/         # Scripts for installing agent and backend
 └── docs/            # Architecture diagrams, usage guides, etc.
 ```
 
@@ -35,25 +36,23 @@ ctrlb/
 > 📘️ Prerequisites:
 >
 > - Go 1.23+
->
 > - Node.js 18+
->
 > - Docker (for local development)
 
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-org/ctrlb.git
-cd ctrlb
+git clone https://github.com/ctrlb-hq/ctrltower.git
+cd ctrltower
 ```
 
 Start the dev environment (local setup guide coming soon).
 
 ---
 
-## 🏗️ Architecture
+## 💧 Architecture
 
-CTRLB is built to support agent orchestration at scale. Key components include:
+**CTRLTower** is built to support agent orchestration at scale. Key components include:
 
 - **Agent Communication Layer**: Simple HTTP communication to and from registered agents. Token-based authentication is a work in progress.
 - **Configuration Manager**: Handles creation, versioning, and delivery of agent configs.
