@@ -13,7 +13,7 @@ import { PipelineTabProvider } from './context/useAddNewPipelineActiveTab.tsx';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PipelineChangesLogProvider>
-      <NodeValueProvider>
+      {/* <NodeValueProvider> */}
         <AgentValuesProvider>
           <PipelineStatusProvider>
             <PipelineOverviewProvider>
@@ -24,8 +24,7 @@ createRoot(document.getElementById('root')!).render(
           </PipelineStatusProvider>
           <Toaster />
         </AgentValuesProvider>
-      </NodeValueProvider>
-    </PipelineChangesLogProvider>
+a    </PipelineChangesLogProvider>
 
   </StrictMode>,
 )

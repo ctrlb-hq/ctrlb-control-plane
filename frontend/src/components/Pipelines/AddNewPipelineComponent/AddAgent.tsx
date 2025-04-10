@@ -35,11 +35,10 @@ import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
 import CreateNewAgent from '@/components/Agents/CreateNewAgent';
 import pipelineServices from '@/services/pipelineServices';
 import usePipelineChangesLog from '@/context/usePipelineChangesLog';
+import { NodeValueProvider } from '@/context/useNodeContext';
+import { pipe } from 'framer-motion';
 
 
-interface changes {
-  component_role: string; name: string; status?: string
-}
 const AddAgent = () => {
   const pipelineStatus = usePipelineStatus();
   if (!pipelineStatus) {
@@ -58,24 +57,31 @@ const AddAgent = () => {
   const { currentTab } = usePipelineTab()
   const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]);
 
+  useEffect
+
   const pipelineName = localStorage.getItem('pipelinename');
   const createdBy = localStorage.getItem('userEmail');
   const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
   const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
+  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]') || [];
 
-  const pipelinePayload = {
-    "name": pipelineName,
-    "created_by": createdBy,
-    "agent_ids": agentIds,
-    "pipeline_graph": {
-      "nodes": PipelineNodes,
-      "edges": PipelineEdges
-    }
-  }
+
 
   const addPipeline = async () => {
-    console.log(pipelinePayload)
+    const pipelinePayload = {
+      "name": pipelineName,
+      "created_by": createdBy,
+      "agent_ids": agentIds,
+      "pipeline_graph": {
+        "nodes": PipelineNodes.map(node => ({
+          ...node.data,
+          component_id: Number(node.data.component_id) // Ensure component_id is a number
+        })),
+        "edges": PipelineEdges
+      }
+    }
+    console.log("edges: ", pipelinePayload.pipeline_graph.edges)
+    console.log("payload", pipelinePayload)
     const res = await pipelineServices.addPipeline(pipelinePayload)
     console.log(res)
   }
@@ -115,9 +121,7 @@ const AddAgent = () => {
   const handleSort = () => {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
-  useEffect(() => {
-    console.log("changes log", changesLog)
-  }, [changesLog])
+
 
   const handleApply = () => {
     const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
@@ -170,7 +174,6 @@ const AddAgent = () => {
     localStorage.removeItem('Destination');
     localStorage.removeItem('pipelinename');
     localStorage.removeItem("selectedAgentIds")
-    localStorage.removeItem("PipelineEdges")
     localStorage.removeItem("Nodes")
     localStorage.removeItem("changesLog")
     setTimeout(() => {
@@ -178,8 +181,11 @@ const AddAgent = () => {
         title: "Success",
         description: "Successfully deployed the pipeline",
         duration: 3000,
+
       });
-      window.location.reload()
+      localStorage.removeItem("PipelineEdges")
+
+      // window.location.reload()
     }, 2000);
   }
 
@@ -379,7 +385,10 @@ const AddAgent = () => {
                       </div>
                     </SheetTitle>
                     <SheetDescription>
-                      <PipelineCanvas />
+                      <NodeValueProvider>
+                        <PipelineCanvas />
+
+                      </NodeValueProvider>
                     </SheetDescription>
                   </SheetHeader>
                 </SheetContent>

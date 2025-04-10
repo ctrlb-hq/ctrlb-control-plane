@@ -87,7 +87,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                         <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
-                            {ProcessorLabel.map((source: any, index: number) => (
+                            {ProcessorLabel&& ProcessorLabel.map((source: any, index: number) => (
                                 <p style={{ fontSize: "8px" }} key={index}>
                                     {source}
                                 </p>

@@ -1,5 +1,5 @@
 import { Changes } from "@/constants/PipelineChangesLog";
-import React, { createContext, useContext, useRef, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 interface PipelineChangesLogProps {
     changesLog: Changes[];
@@ -11,22 +11,16 @@ const pipelineLogs = localStorage.getItem("changesLog");
 const PipelineChangesLogContext = createContext<PipelineChangesLogProps | undefined>(undefined);
 
 export const PipelineChangesLogProvider = ({ children }: { children: React.ReactNode }) => {
-    // Use useRef to store the changesLog for immediate updates
-    const changesLogRef = useRef<Changes[]>(pipelineLogs ? JSON.parse(pipelineLogs) : []);
+    // Initialize state with data from localStorage
+    const [changesLog, setChangesLog] = useState<Changes[]>(pipelineLogs ? JSON.parse(pipelineLogs) : []);
 
-    // Use useState to trigger re-renders when changesLog is updated
-    const [changesLog, setChangesLog] = useState<Changes[]>(changesLogRef.current);
-
-    // Function to add a change to the log
     const addChange = (change: Changes) => {
-        // Update the ref value
-        changesLogRef.current.push(change);
+        // Update the state immediately
+        const updatedChangesLog = [...changesLog, change];
+        setChangesLog(updatedChangesLog);
 
-        // Update the state to trigger a re-render
-        setChangesLog([...changesLogRef.current]);
-
-        // Persist the updated log to localStorage
-        localStorage.setItem("changesLog", JSON.stringify(changesLogRef.current));
+        // Persist the updated changesLog to localStorage
+        localStorage.setItem("changesLog", JSON.stringify(updatedChangesLog));
     };
 
     return (
