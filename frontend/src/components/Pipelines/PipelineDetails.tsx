@@ -206,7 +206,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                             <SheetContent className="w-full sm:max-w-full p-0" side="right">
                                 <div className="flex justify-between items-center p-4 border-b">
                                     <div className="flex items-center space-x-2">
-                                        <div className="text-xl font-medium">ctrlb</div>
+                                        <div className="text-xl font-medium">{pipelineOverview?.name}</div>
                                     </div>
                                     <div className="flex items-center mx-4">
                                         <Sheet>

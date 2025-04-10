@@ -36,7 +36,6 @@ import CreateNewAgent from '@/components/Agents/CreateNewAgent';
 import pipelineServices from '@/services/pipelineServices';
 import usePipelineChangesLog from '@/context/usePipelineChangesLog';
 import { NodeValueProvider } from '@/context/useNodeContext';
-import { pipe } from 'framer-motion';
 
 
 const AddAgent = () => {
@@ -68,16 +67,14 @@ const AddAgent = () => {
 
 
   const addPipeline = async () => {
+    console.log("PipelineNodes", PipelineNodes)
     const pipelinePayload = {
       "name": pipelineName,
       "created_by": createdBy,
       "agent_ids": agentIds,
       "pipeline_graph": {
-        "nodes": PipelineNodes.map(node => ({
-          ...node.data,
-          component_id: Number(node.data.component_id) // Ensure component_id is a number
-        })),
-        "edges": PipelineEdges
+        "nodes": PipelineNodes,
+        "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]')
       }
     }
     console.log("edges: ", pipelinePayload.pipeline_graph.edges)
@@ -185,9 +182,10 @@ const AddAgent = () => {
       });
       localStorage.removeItem("PipelineEdges")
 
-      // window.location.reload()
+      window.location.reload()
     }, 2000);
   }
+
 
 
   return (
