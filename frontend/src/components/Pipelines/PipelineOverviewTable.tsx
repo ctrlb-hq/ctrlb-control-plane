@@ -31,7 +31,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     const [selectedAgent, setSelectedAgent] = useState<Agents | null>(null);
     const [totalAgent, setTotalAgent] = useState<Agents[]>([])
     const [connectedAgent, setConnectedAgent] = useState<Agents[]>([])
-    const {agentValues,setAgentValues}=useAgentValues()
+    const { agentValues, setAgentValues } = useAgentValues()
 
     const handleSelectDevice = (id: string) => {
         setAgentValues(agentValues.map(device =>
@@ -45,7 +45,6 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
             console.error("Unauthorized: No authToken found. Skipping agent fetch.");
             return;
         }
-
         try {
             const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId);
             setConnectedAgent(res);
@@ -58,12 +57,12 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     useEffect(() => {
         if (localStorage.getItem('authToken'))
             getAgentsConnectToPipeline()
-    }, [])
+    }, [connectedAgent,setConnectedAgent])
 
     const handleAgentApply = async (agent: Agents) => {
         console.log("agent is: ", agent)
         await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
-        setAgentValues([...agentValues, {
+        setConnectedAgent([...connectedAgent, {
             id: selectedAgent?.id!,
             name: selectedAgent?.name!,
             status: "unknown",
@@ -74,9 +73,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
             trace_rate: selectedAgent?.trace_rate!,
             selected: false
         }]);
-        if (selectedAgent) {
-            setConnectedAgent([...connectedAgent, selectedAgent]);
-        }
+        getAgentsConnectToPipeline()
     }
 
     const handleDetachAgent = async (ids: string[]) => {
@@ -173,7 +170,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                {connectedAgent && totalAgent&& totalAgent
+                                                {connectedAgent && totalAgent && totalAgent
                                                     .filter(agent => !connectedAgent.some(connected => connected.name === agent.name))
                                                     .map(agent => (
                                                         <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
@@ -200,7 +197,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                                             console.error("No agent selected to apply.");
                                         }
                                         if (selectedAgent) {
-                                            setAgentValues([...agentValues, {
+                                            setConnectedAgent([...connectedAgent, {
                                                 id: selectedAgent.id,
                                                 name: selectedAgent.name,
                                                 status: "unknown",
@@ -211,7 +208,6 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                                                 trace_rate: selectedAgent.trace_rate,
                                                 selected: false
                                             }]);
-                                            setConnectedAgent([...connectedAgent, selectedAgent]);
                                         }
                                     }} className="bg-blue-500" type="submit">Apply</Button>
                                 </DialogClose>
@@ -249,7 +245,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {agentValues && agentValues.map(agent => (
+                        {connectedAgent && connectedAgent.map(agent => (
                             <tr key={agent.id} className="border-b border-gray-200">
                                 <td className="py-4 px-2">
                                     <input

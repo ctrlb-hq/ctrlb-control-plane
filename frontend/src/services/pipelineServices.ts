@@ -106,7 +106,7 @@ const pipelineServices = {
     detachAgentFromPipeline: async (id: string, agent_id: string): Promise<any> => {
         try {
             if (!id || !agent_id) return
-            await axiosInstance.delete(`/pipelines/${id}/agent/${agent_id}`)
+            await axiosInstance.delete(`/pipelines/${id}/agents/${agent_id}`)
 
         } catch (error: any) {
             if (error.response.status === 401) {
@@ -119,7 +119,7 @@ const pipelineServices = {
     attachAgentToPipeline: async (id: string, agent_id: string): Promise<any> => {
         try {
             if (!id || !agent_id) return
-            const response = await axiosInstance.post(`/pipelines/${id}/agent/${agent_id}`)
+            const response = await axiosInstance.post(`/pipelines/${id}/agents/${agent_id}`)
             const data = response.data
 
             return data
