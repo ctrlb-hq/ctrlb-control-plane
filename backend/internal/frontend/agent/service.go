@@ -58,9 +58,12 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 
 	f.AgentQueue.RemoveAgent(id)
 
-	if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
-		f.AgentQueue.AddAgent(id, hostname, ip)
-		return fmt.Errorf("unable to shut down the agent — it is still running and currently under active monitoring")
+	status := f.FrontendAgentRepository.AgentStatus(id)
+	if status != "disconnected" {
+		if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
+			f.AgentQueue.AddAgent(id, hostname, ip)
+			return fmt.Errorf("failed to shut down agent: %v. The agent remains active and under monitoring", err)
+		}
 	}
 
 	if err := f.FrontendAgentRepository.DeleteAgent(id); err != nil {

@@ -157,6 +157,15 @@ func (f *FrontendAgentRepository) DeleteAgent(id string) error {
 	return nil
 }
 
+func (f *FrontendAgentRepository) AgentStatus(id string) string {
+	var status string
+	err := f.db.QueryRow("SELECT status FROM aggregated_agent_metrics WHERE agent_id = ?", id).Scan(&status)
+	if err != nil {
+		status = "unknown"
+	}
+	return status
+}
+
 // GetHealthMetricsForGraph retrieves metrics for a specific agent
 func (f *FrontendAgentRepository) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
 	rows, err := f.db.Query("SELECT cpu_utilization, memory_utilization, timestamp FROM realtime_agent_metrics WHERE agent_id = ?", id)

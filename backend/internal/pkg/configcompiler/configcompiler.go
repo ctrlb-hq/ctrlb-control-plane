@@ -11,7 +11,7 @@ import (
 
 func CompileGraphToJSON(graph models.PipelineGraph) (*map[string]any, error) {
 	utils.Logger.Info("Starting pipeline graph compilation")
-	receivers, processors, exporters, pipelines, err := BuildPipelines(graph)
+	receivers, processors, exporters, pipelines, err := buildPipelines(graph)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Failed to build pipelines: %v", err))
 		return nil, err
@@ -34,7 +34,25 @@ func CompileGraphToJSON(graph models.PipelineGraph) (*map[string]any, error) {
 	return &finalConfig, nil
 }
 
-func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any, map[string]any, Pipelines, error) {
+// intersectSupportedSignals returns the intersection of two string slices.
+func intersectSupportedSignals(firstSignals, secondSignals []string) []string {
+	intersection := []string{}
+	signalSet := make(map[string]bool)
+
+	for _, signal := range firstSignals {
+		signalSet[signal] = true
+	}
+
+	for _, signal := range secondSignals {
+		if signalSet[signal] {
+			intersection = append(intersection, signal)
+		}
+	}
+
+	return intersection
+}
+
+func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any, map[string]any, Pipelines, error) {
 	if len(graph.Nodes) == 0 {
 		return nil, nil, nil, nil, fmt.Errorf("empty pipeline graph")
 	}
@@ -43,105 +61,117 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 		len(graph.Nodes), len(graph.Edges)))
 
 	// Index nodes by ID
-	nodeByID := make(map[string]models.PipelineComponent)
-	aliasByID := make(map[string]string)
-
+	nodesByID := make(map[string]models.PipelineComponent)
 	for _, node := range graph.Nodes {
-		alias := node.ComponentName + "/" + node.Name
-		nodeByID[strconv.Itoa(node.ComponentID)] = node
-		aliasByID[strconv.Itoa(node.ComponentID)] = alias
+		nodesByID[strconv.Itoa(node.ComponentID)] = node
 	}
 
-	// Build adjacency list
-	adjList := make(map[string][]string)
+	// Build the adjacency list for graph traversal
+	adjacencyList := make(map[string][]string)
 	for _, edge := range graph.Edges {
-		if _, exists := nodeByID[edge.Source]; !exists {
+		if _, exists := nodesByID[edge.Source]; !exists {
 			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent source node: %s", edge.Source)
 		}
-		if _, exists := nodeByID[edge.Target]; !exists {
+		if _, exists := nodesByID[edge.Target]; !exists {
 			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent target node: %s", edge.Target)
 		}
-		adjList[edge.Source] = append(adjList[edge.Source], edge.Target)
-		adjList[edge.Target] = append(adjList[edge.Target], edge.Source)
+		adjacencyList[edge.Source] = append(adjacencyList[edge.Source], edge.Target)
+		adjacencyList[edge.Target] = append(adjacencyList[edge.Target], edge.Source)
 	}
 
-	// Track visited nodes
-	visited := make(map[string]bool)
-	components := make([][]models.PipelineComponent, 0)
+	// Find connected components using BFS
+	visitedNodes := make(map[string]bool)
+	var connectedComponents [][]models.PipelineComponent
 
-	// BFS to find connected components
-	for id := range nodeByID {
-		if visited[id] {
+	for nodeID := range nodesByID {
+		if visitedNodes[nodeID] {
 			continue
 		}
 
-		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%s", id))
+		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%s", nodeID))
+		nodeQueue := []string{nodeID}
+		var currentComponent []models.PipelineComponent
+		visitedNodes[nodeID] = true
 
-		queue := []string{id}
-		var component []models.PipelineComponent
-		visited[id] = true
+		for len(nodeQueue) > 0 {
+			currentNodeID := nodeQueue[0]
+			nodeQueue = nodeQueue[1:]
 
-		for len(queue) > 0 {
-			curr := queue[0]
-			queue = queue[1:]
-
-			node, exists := nodeByID[curr]
+			node, exists := nodesByID[currentNodeID]
 			if !exists {
-				return nil, nil, nil, nil, fmt.Errorf("invalid node reference: %s", curr)
+				return nil, nil, nil, nil, fmt.Errorf("invalid node reference: %s", currentNodeID)
 			}
-			component = append(component, node)
+			currentComponent = append(currentComponent, node)
 
-			for _, neighbor := range adjList[curr] {
-				if !visited[neighbor] {
-					visited[neighbor] = true
-					queue = append(queue, neighbor)
+			for _, neighborID := range adjacencyList[currentNodeID] {
+				if !visitedNodes[neighborID] {
+					visitedNodes[neighborID] = true
+					nodeQueue = append(nodeQueue, neighborID)
 				}
 			}
 		}
-
-		components = append(components, component)
+		connectedComponents = append(connectedComponents, currentComponent)
 	}
 
-	// Prepare the output maps
-	receivers := make(map[string]any)
-	processors := make(map[string]any)
-	exporters := make(map[string]any)
+	// Prepare maps for pipeline configurations
+	receiversConfig := make(map[string]any)
+	processorsConfig := make(map[string]any)
+	exportersConfig := make(map[string]any)
 	pipelines := make(Pipelines)
+	pipelineCounter := 1 // Global counter for unique naming across pipelines
 
-	for i, nodes := range components {
-		utils.Logger.Debug(fmt.Sprintf("Building pipeline configuration: pipelineIndex=%d componentCount=%d",
-			i, len(nodes)))
+	// Process each connected component to build pipelines.
+	for _, componentNodes := range connectedComponents {
+		utils.Logger.Debug(fmt.Sprintf("Building pipeline configuration: componentNodeCount=%d", len(componentNodes)))
 
-		var r, p, e []string
-
-		for _, n := range nodes {
-			alias := utils.TrimAfterUnderscore(n.ComponentName) + "/" + utils.ToCamelCase(n.Name)
-
-			switch n.ComponentRole {
-			case "receiver":
-				r = append(r, alias)
-				receivers[alias] = n.Config
-			case "processor":
-				p = append(p, alias)
-				processors[alias] = n.Config
-			case "exporter":
-				e = append(e, alias)
-				exporters[alias] = n.Config
-			default:
-				return nil, nil, nil, nil, fmt.Errorf("unknown component role: %s", n.ComponentRole)
+		// Compute common supported signals for all nodes in this component.
+		var commonSupportedSignals []string
+		if len(componentNodes) > 0 {
+			commonSupportedSignals = componentNodes[0].SupportedSignals
+			for _, node := range componentNodes[1:] {
+				commonSupportedSignals = intersectSupportedSignals(commonSupportedSignals, node.SupportedSignals)
 			}
 		}
 
-		pipelineName := fmt.Sprintf("pipeline_%d", i+1)
-		pipelines[pipelineName] = Pipeline{
-			Receivers:  r,
-			Processors: p,
-			Exporters:  e,
+		// Build role-specific alias lists.
+		var receiverAliases, processorAliases, exporterAliases []string
+		for _, node := range componentNodes {
+			// Use meaningful alias formatting: Trims component name after underscore and converts node name to CamelCase.
+			alias := utils.TrimAfterUnderscore(node.ComponentName) + "/" + utils.ToCamelCase(node.Name)
+			switch node.ComponentRole {
+			case "receiver":
+				receiverAliases = append(receiverAliases, alias)
+				receiversConfig[alias] = node.Config
+			case "processor":
+				processorAliases = append(processorAliases, alias)
+				processorsConfig[alias] = node.Config
+			case "exporter":
+				exporterAliases = append(exporterAliases, alias)
+				exportersConfig[alias] = node.Config
+			default:
+				return nil, nil, nil, nil, fmt.Errorf("unknown component role: %s", node.ComponentRole)
+			}
+		}
+
+		// Create separate pipeline per supported signal if multiple signals exist;
+		// if none exist, fall back to "undefined".
+		if len(commonSupportedSignals) > 0 {
+			for _, signal := range commonSupportedSignals {
+				pipelineName := fmt.Sprintf("%s/pipeline_%d", signal, pipelineCounter)
+				pipelines[pipelineName] = Pipeline{
+					Receivers:  receiverAliases,
+					Processors: processorAliases,
+					Exporters:  exporterAliases,
+				}
+				pipelineCounter++
+			}
+		} else {
+			return nil, nil, nil, nil, fmt.Errorf("no supported signals found for component: %s", componentNodes[0].Name)
 		}
 	}
 
 	utils.Logger.Info(fmt.Sprintf("Successfully built pipeline configurations: receivers=%d processors=%d exporters=%d",
-		len(receivers), len(processors), len(exporters)))
+		len(receiversConfig), len(processorsConfig), len(exportersConfig)))
 
-	return receivers, processors, exporters, pipelines, nil
+	return receiversConfig, processorsConfig, exportersConfig, pipelines, nil
 }
