@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
@@ -59,23 +60,7 @@ func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*Age
 			"debug": map[string]any{}, // Debug exporter for logs
 		},
 		"service": map[string]any{
-			"telemetry": map[string]any{
-				"metrics": map[string]any{
-					"level": "detailed",
-					"readers": []any{
-						map[string]any{
-							"pull": map[string]any{
-								"exporter": map[string]any{
-									"prometheus": map[string]any{
-										"host": "0.0.0.0",
-										"port": 8888,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"telemetry": constants.TelemetryService,
 			"pipelines": map[string]any{
 				"logs/default": map[string]any{
 					"receivers":  []any{"otlp"},
