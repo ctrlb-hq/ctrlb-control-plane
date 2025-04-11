@@ -99,8 +99,8 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
 
   // Helper to return CSS classes based on an agent’s status.
   const getStatusClass = (status: string) => {
-    if (status === "connected") return "bg-green-100 text-green-700";
-    if (status === "disconnected") return "bg-red-100 text-red-700";
+    if (status === "connected") return "text-green-700";
+    if (status === "disconnected") return "text-red-700";
     return "text-black";
   };
 
