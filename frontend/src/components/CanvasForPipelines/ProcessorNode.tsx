@@ -33,14 +33,20 @@ const renderers = [
 export const ProcessorNode = ({ data: Data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const processorConfig = getSource?.config
-    const [data, setData] = useState<object>(processorConfig)
+    const [data, setData] = useState<object>(Data.config)
     const [form, setForm] = useState<object>({})
 
     const ProcessorLabel = Data.supported_signals
     const handleSubmit = () => {
+        const log = { type: 'processor', name: Data.name, status: "edited" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
             node.component_name === Data.component_name ? { ...node, config: data } : node
@@ -59,8 +65,18 @@ export const ProcessorNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
+        console.log(Data)
         setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
-        setChangesLog(prev => [...prev, { type: 'processor', name: Data.label, status: "deleted" }])
+        setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
+        const log = { type: 'source', name: Data.name, status: "deleted" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
+        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+        const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
+        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false)
     }
     return (
@@ -73,7 +89,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                         <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
-                            {ProcessorLabel.map((source: any, index: number) => (
+                            {ProcessorLabel&& ProcessorLabel.map((source: any, index: number) => (
                                 <p style={{ fontSize: "8px" }} key={index}>
                                     {source}
                                 </p>

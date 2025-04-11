@@ -35,11 +35,13 @@ const DestinationDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [destinationOptionValue, setDestinationOptionValue] = useState('')
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const [destinations, setDestinations] = useState<destination[]>([])
     const [data, setData] = useState<object>();
     const [form, setForm] = useState<object>({})
     const [pluginName, setPluginName] = useState()
+    const [submitDisabled, setSubmitDisabled] = useState(true);
+
 
     const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
@@ -64,7 +66,7 @@ const DestinationDropdownOptions = () => {
                     </div>
                 ),
                 type: "exporter",
-                id: (existingNodes.length + 1),
+                component_id: (existingNodes.length + 1).toString(),
                 name: destinationOptionValue,
                 supported_signals: supported_signals,
                 component_name: pluginName,
@@ -81,12 +83,14 @@ const DestinationDropdownOptions = () => {
             supported_signals: supported_signals,
         };
 
-        setNodeValue(prev => [...prev, newNode]);
+        const log = { type: 'destination', name: destinationOptionValue, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
         localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-
-        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }]);
-
+        setNodeValue(prev => [...prev, newNode]);
         setIsSheetOpen(false);
     };
 
@@ -168,8 +172,11 @@ const DestinationDropdownOptions = () => {
                                                 schema={form}
                                                 renderers={renderers}
                                                 cells={materialCells}
-                                                onChange={({ data }) => setData(data)}
-                                            />
+                                                onChange={({ data, errors }) => {
+                                                    setData(data);
+                                                    const hasErrors = errors && errors.length > 0;
+                                                    setSubmitDisabled(!!hasErrors);
+                                                }} />
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +184,7 @@ const DestinationDropdownOptions = () => {
                             <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>Apply</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

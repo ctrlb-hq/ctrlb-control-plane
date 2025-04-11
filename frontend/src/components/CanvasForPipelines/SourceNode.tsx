@@ -31,20 +31,23 @@ const renderers = [
   ...materialRenderers,
 ];
 export const SourceNode = ({ data: Data }: any) => {
-  console.log(Data)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { setNodeValue } = useNodeValue()
-  const { setChangesLog } = usePipelineChangesLog()
+  const { addChange } = usePipelineChangesLog()
   const [form, setForm] = useState<object>({})
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
-    setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
-    setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
+    setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
+    setNodeValue(prev => prev.filter(node => node.id !== Data.id));
+    const log = { type: 'source', name: Data.name, status: "deleted" }
+    const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+    addChange(log)
+    const updatedLog = [...existingLog, log];
+    localStorage.setItem("changesLog", JSON.stringify(updatedLog));
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
     const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
     localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
-
     setIsSidebarOpen(false);
   }
 
@@ -55,7 +58,7 @@ export const SourceNode = ({ data: Data }: any) => {
 
   const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
   const sourceConfig = getSource?.config
-  const [data, setData] = useState<object>(sourceConfig)
+  const [data, setData] = useState<object>(Data.config)
 
 
   useEffect(() => {
@@ -63,10 +66,12 @@ export const SourceNode = ({ data: Data }: any) => {
   }, [])
 
   const handleSubmit = () => {
-    setChangesLog(prev => [
-      ...prev,
-      { type: 'source', name: Data.name, status: "added" },
-    ]);
+
+    const log = { type: 'source', name: Data.name, status: "edited" }
+    const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+    addChange(log)
+    const updatedLog = [...existingLog, log];
+    localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
     const updatedNodes = nodes.map((node: any) =>

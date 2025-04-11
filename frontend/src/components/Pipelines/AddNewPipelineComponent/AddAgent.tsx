@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Code2, Edit, Loader2 } from 'lucide-react';
+import { ChevronUp, Code2, Edit, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -34,11 +34,10 @@ import { AgentValuesTable } from '@/types/agentValues.type';
 import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
 import CreateNewAgent from '@/components/Agents/CreateNewAgent';
 import pipelineServices from '@/services/pipelineServices';
+import usePipelineChangesLog from '@/context/usePipelineChangesLog';
+import { NodeValueProvider } from '@/context/useNodeContext';
 
 
-interface changes {
-  component_role: string; name: string; status?: string
-}
 const AddAgent = () => {
   const pipelineStatus = usePipelineStatus();
   if (!pipelineStatus) {
@@ -49,7 +48,7 @@ const AddAgent = () => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<AgentValuesTable[]>([]);
-  const [pipelineChangesLog, setPipelineChangesLog] = useState<changes[]>([])
+  const { changesLog } = usePipelineChangesLog()
   const [rollOut, setRollOut] = useState(false)
   const { toast } = useToast()
   const { agentValues } = useAgentValues()
@@ -57,24 +56,29 @@ const AddAgent = () => {
   const { currentTab } = usePipelineTab()
   const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]);
 
+  useEffect
+
   const pipelineName = localStorage.getItem('pipelinename');
   const createdBy = localStorage.getItem('userEmail');
   const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
   const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
+  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]') || [];
 
-  const pipelinePayload = {
-    "name": pipelineName,
-    "created_by": createdBy,
-    "agent_ids": agentIds,
-    "pipeline_graph": {
-      "nodes": PipelineNodes,
-      "edges": PipelineEdges
-    }
-  }
+
 
   const addPipeline = async () => {
-    console.log(pipelinePayload)
+    console.log("PipelineNodes", PipelineNodes)
+    const pipelinePayload = {
+      "name": pipelineName,
+      "created_by": createdBy,
+      "agent_ids": agentIds,
+      "pipeline_graph": {
+        "nodes": PipelineNodes,
+        "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]')
+      }
+    }
+    console.log("edges: ", pipelinePayload.pipeline_graph.edges)
+    console.log("payload", pipelinePayload)
     const res = await pipelineServices.addPipeline(pipelinePayload)
     console.log(res)
   }
@@ -115,6 +119,7 @@ const AddAgent = () => {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
+
   const handleApply = () => {
     const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
     setSelectedAgents(selectedAgentsData);
@@ -141,14 +146,13 @@ const AddAgent = () => {
   }
 
   const handleGetAgent = async () => {
-    setFilteredAgents(agentValues); 
+    setFilteredAgents(agentValues);
+    setFilteredAgents(agentValues);
   };
 
   useEffect(() => {
     if (localStorage.getItem('authToken'))
       handleGetAgent();
-    const changesLog: changes[] = JSON.parse(localStorage.getItem("Nodes") || "[]");
-    setPipelineChangesLog(changesLog);
   }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,9 +163,9 @@ const AddAgent = () => {
         agent.status.toLowerCase().includes(searchValue) ||
         agent.version.toLowerCase().includes(searchValue)
     );
-    setFilteredAgents(filtered); // Update filteredAgents with the search results
+    setFilteredAgents(filtered);
+    setFilteredAgents(filtered);
   };
-
 
   const handleDeployChanges = () => {
     addPipeline()
@@ -169,17 +173,22 @@ const AddAgent = () => {
     localStorage.removeItem('Destination');
     localStorage.removeItem('pipelinename');
     localStorage.removeItem("selectedAgentIds")
-    localStorage.removeItem("PipelineEdges")
     localStorage.removeItem("Nodes")
+    localStorage.removeItem("changesLog")
+    localStorage.removeItem("changesLog")
     setTimeout(() => {
       toast({
         title: "Success",
         description: "Successfully deployed the pipeline",
         duration: 3000,
+
       });
+      localStorage.removeItem("PipelineEdges")
+
       window.location.reload()
     }, 2000);
   }
+
 
 
   return (
@@ -347,7 +356,7 @@ const AddAgent = () => {
                               <SheetDescription>
                                 <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
                                   {
-                                    pipelineChangesLog.map((change: changes, index: number) => (
+                                    changesLog.map((change, index) => (
                                       <div key={index} className="flex justify-between items-center">
                                         <div className="flex flex-col">
                                           <p className="text-lg capitalize">{change.component_role}</p>
@@ -367,9 +376,7 @@ const AddAgent = () => {
                                   <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
                                 </div>
                               </SheetClose>
-
                             </SheetContent>
-
                           </Sheet>
                           <div className="mx-4 flex items-center space-x-2">
                             <Switch id="edit-mode" checked={check} onCheckedChange={setCheck} />
@@ -379,7 +386,10 @@ const AddAgent = () => {
                       </div>
                     </SheetTitle>
                     <SheetDescription>
-                      <PipelineCanvas />
+                      <NodeValueProvider>
+                        <PipelineCanvas />
+
+                      </NodeValueProvider>
                     </SheetDescription>
                   </SheetHeader>
                 </SheetContent>

@@ -8,7 +8,6 @@ import ReactFlow, {
     Background,
     useEdgesState,
     addEdge,
-    Node,
     Edge,
     Connection,
     ReactFlowInstance,
@@ -61,9 +60,8 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const { changesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const [isOpen, setIsOpen] = useState(false)
-    // const [graph, setGraph] = useState<Node[]>([])
-    const [nodes, setNodes] = useState<Node[]>([])
     const { toast } = useToast()
+
 
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
@@ -177,7 +175,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         window.location.reload();
     }
 
-
     return (
         <div className="py-4 flex flex-col">
             <div className="flex mb-5 gap-2 items-center">
@@ -208,7 +205,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                             <SheetContent className="w-full sm:max-w-full p-0" side="right">
                                 <div className="flex justify-between items-center p-4 border-b">
                                     <div className="flex items-center space-x-2">
-                                        <div className="text-xl font-medium">ctrlb</div>
+                                        <div className="text-xl font-medium">{pipelineOverview?.name}</div>
                                     </div>
                                     <div className="flex items-center mx-4">
                                         <Sheet>

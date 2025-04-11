@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
@@ -26,7 +27,7 @@ func CompileGraphToJSON(graph models.PipelineGraph) (*map[string]any, error) {
 		"exporters":  exporters,
 		"service": map[string]any{
 			"pipelines": pipelines,
-			"telemetry": TelemetryService, // inject telemetry under service
+			"telemetry": constants.TelemetryService,
 		},
 	}
 

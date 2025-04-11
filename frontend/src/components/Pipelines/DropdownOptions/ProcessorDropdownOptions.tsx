@@ -33,11 +33,12 @@ const ProcessorDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [processorOptionValue, setProcessorOptionValue] = useState('')
     const { setNodeValue } = useNodeValue()
-    const { setChangesLog } = usePipelineChangesLog()
+    const { addChange } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
     const [data, setData] = useState<object>();
     const [pluginName, setPluginName] = useState()
     const [processors, setProcessors] = useState<Processor[]>([])
+    const [submitDisabled, setSubmitDisabled] = useState(true);
 
     const handleSheetOPen = (e: any) => {
         setPluginName(e)
@@ -50,7 +51,6 @@ const ProcessorDropdownOptions = () => {
     const handleSubmit = () => {
         const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals;
 
-        // Define the new node structure for React Flow
         const newNode = {
             id: (existingNodes.length + 1).toString(),
             type: "processor",
@@ -79,12 +79,15 @@ const ProcessorDropdownOptions = () => {
             supported_signals: supported_signals,
         };
 
-        setNodeValue(prev => [...prev, newNode]);
+
+        const log = { type: 'processor', name: processorOptionValue, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        addChange(log)
+        const updatedLog = [...existingLog, log];
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
         localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-
-        setChangesLog(prev => [...prev, { type: 'processor', name: processorOptionValue, status: "added" }]);
-
+        setNodeValue(prev => [...prev, newNode]);
         setIsSheetOpen(false);
     };
 
@@ -166,8 +169,11 @@ const ProcessorDropdownOptions = () => {
                                                 schema={form}
                                                 renderers={renderers}
                                                 cells={materialCells}
-                                                onChange={({ data }) => setData(data)}
-                                            />
+                                                onChange={({ data, errors }) => {
+                                                    setData(data);
+                                                    const hasErrors = errors && errors.length > 0;
+                                                    setSubmitDisabled(!!hasErrors);
+                                                }} />
                                         </div>
                                     </div>
                                 </div>
@@ -175,7 +181,7 @@ const ProcessorDropdownOptions = () => {
                             <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>Apply</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

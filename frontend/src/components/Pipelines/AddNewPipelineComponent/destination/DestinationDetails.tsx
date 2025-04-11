@@ -54,6 +54,8 @@ const DestinationDetail = () => {
     const [editSourceSheet, setEditSourceSheet] = useState(false)
     const { currentTab } = usePipelineTab()
     const [sources, setSources] = useState<sources[]>([])
+    const [submitDisabled, setSubmitDisabled] = useState(true);
+
     const [form, setForm] = useState<object>({})
     const [nodes, setNodes] = useState<object[]>([])
     const [existingSources, setExistingSources] = useState<sources[]>(() => {
@@ -105,6 +107,9 @@ const DestinationDetail = () => {
     }
 
     const handleSubmit = () => {
+        const log={ type: 'destination', name: selectedSource?.display_name, status: "added" }
+        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+        const updatedLog = [...existingLog, log];
         const updatedSources = [
             ...existingSources,
             {
@@ -132,6 +137,10 @@ const DestinationDetail = () => {
         localStorage.setItem(`Destination`, JSON.stringify(updatedSources));
         const newNodes = [...existingNodes.filter(node => !updatedNodes.some(updatedNode => updatedNode.component_id === node.component_id)), ...updatedNodes];
         localStorage.setItem(`Nodes`, JSON.stringify(newNodes));
+        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+
+        
+
     };
 
     const handleEdit = () => {
@@ -317,15 +326,20 @@ const DestinationDetail = () => {
                                                                                 schema={form}
                                                                                 renderers={renderers}
                                                                                 cells={materialCells}
-                                                                                onChange={({ data }) => setData(data)}
-                                                                            />
+                                                                                onChange={({ data, errors }) => {
+                                                                                    setData(data);
+                                                                                    const hasErrors = errors && errors.length > 0;
+                                                                                    setSubmitDisabled(!!hasErrors);
+                                                                                }}                                                                            />
                                                                             <SheetClose>
                                                                                 <div className='flex justify-end mb-10'>
                                                                                     <Button size={"lg"} className='bg-blue-500' onClick={() => {
                                                                                         handleSubmit();
                                                                                         setSelectedSource(null);
                                                                                         setShowSourceSheet(false);
-                                                                                    }}>
+                                                                                        
+                                                                                    }}
+                                                                                    disabled={submitDisabled}>
                                                                                         Submit
                                                                                     </Button>
                                                                                 </div>
