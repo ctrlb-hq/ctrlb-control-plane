@@ -1,9 +1,9 @@
 package configcompiler
 
 type Pipeline struct {
-	Receivers  []string
-	Processors []string
-	Exporters  []string
+	Receivers  []string `json:"receivers"`
+	Processors []string `json:"processors"`
+	Exporters  []string `json:"exporters"`
 }
 
 type Pipelines map[string]Pipeline
