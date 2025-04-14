@@ -45,10 +45,10 @@ import { Agents } from "@/types/agent.types";
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
-    const TABS = [
-        { label: "Overview", value: "overview" },
-        { label: "YAML", value: "yaml" },
-    ];
+    // const TABS = [
+    //     { label: "Overview", value: "overview" },
+    //     { label: "YAML", value: "yaml" },
+    // ];
     const [agentValues, setAgentValues] = useState<Agents[]>([])
     const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -183,7 +183,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             </div>
             <div className="flex items-center w-full md:w-auto">
                 <div className="flex gap-2 justify-between w-full mb-2">
-                    <div className="flex gap-2 justify-start">
+                    {/* <div className="flex gap-2 justify-start">
                         {TABS.map(({ label, value }) => (
                             <button
                                 key={value}
@@ -196,7 +196,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                 {label}
                             </button>
                         ))}
-                    </div>
+                    </div> */}
                     <div className="flex gap-2">
                         <Sheet>
                             <SheetTrigger asChild>
@@ -337,14 +337,14 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     </div>
                 </div>
             </div>
-            {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
+          <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
                     <p className="capitalize">Name: {pipelineOverview?.name}</p>
                     <p>Created By: {createdBy}</p>
                     <p>Created At: {formatTimestamp(pipelineOverview?.created_at)}</p>
                     <p>Updated At: {formatTimestamp(pipelineOverview?.updated_at)}</p>
                 </div>
-            </div> : <EditPipelineYAML />}
+            </div> 
 
         </div>
     )
