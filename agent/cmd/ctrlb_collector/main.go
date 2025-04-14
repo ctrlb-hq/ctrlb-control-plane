@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,23 +16,28 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/filewatcher"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	logger.InitLogger()
 
 	var wg sync.WaitGroup
+	_ = godotenv.Load()
 
-	var configPath = flag.String("config", "./config.yaml", "Path to the agent configuration file")
-	var backendURL = flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
-	var port = flag.String("port", "443", "Agent port for communication with server")
+	// AGENT_CONFIG_PATH: Optional, with default fallback
+	constants.AGENT_CONFIG_PATH = os.Getenv("AGENT_CONFIG_PATH")
+	if constants.AGENT_CONFIG_PATH == "" {
+		constants.AGENT_CONFIG_PATH = "./config.yaml"
+	}
 
-	flag.Parse()
+	// BACKEND_URL: Mandatory, no default
+	constants.BACKEND_URL = os.Getenv("BACKEND_URL")
+	if constants.BACKEND_URL == "" {
+		logger.Logger.Fatal("BACKEND_URL environment variable is not set. Exiting...")
+	}
 
-	constants.AGENT_CONFIG_PATH = *configPath
-	constants.BACKEND_URL = *backendURL
-	constants.PORT = *port
-
+	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
 		logger.Logger.Fatal("Exiting....")
