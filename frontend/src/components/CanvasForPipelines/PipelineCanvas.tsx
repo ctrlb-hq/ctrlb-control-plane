@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -27,7 +27,7 @@ const nodeTypes = {
   destination: DestinationNode
 };
 
-const PipelineBuilder = () => {
+const PipelineCanvas = () => {
 
   const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 
@@ -46,7 +46,7 @@ const PipelineBuilder = () => {
           console.error('Invalid connection: source or target is null');
           return eds;
         }
-      
+
         const updatedEdges = addEdge(
           {
             ...params,
@@ -54,8 +54,8 @@ const PipelineBuilder = () => {
             target: params.target,
             animated: true,
             data: {
-              sourceComponentId: parseInt(params.source,10), 
-              targetComponentId: parseInt(params.target,10), 
+              sourceComponentId: parseInt(params.source, 10),
+              targetComponentId: parseInt(params.target, 10),
             },
           },
           eds
@@ -110,16 +110,18 @@ const PipelineBuilder = () => {
           <Background color="#aaa" gap={16} />
         </ReactFlow>
       </div>
-
-      <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
-        <div className="flex justify-around gap-2">
-          <SourceDropdownOptions/>
-          <ProcessorDropdownOptions/>
-          <DestinationDropdownOptions/>
+      <div className=' p-2 pb-4'>
+        <div className="flex justify-center gap-6 items-center">
+          <div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
+            <SourceDropdownOptions />
+            <ProcessorDropdownOptions />
+            <DestinationDropdownOptions />
+          </div>
         </div>
       </div>
+
     </div>
   );
 };
 
-export default PipelineBuilder;
+export default PipelineCanvas;

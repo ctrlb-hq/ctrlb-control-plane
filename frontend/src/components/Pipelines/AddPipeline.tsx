@@ -18,11 +18,10 @@ import {
 } from "@/components/ui/dialog";
 
 import PipelineDetails from './AddNewPipelineComponent/PipelineDetails';
-import SourcesDetails from './AddNewPipelineComponent/source/SourcesDetails';
-import AddDestination from './AddNewPipelineComponent/destination/DestinationDetails';
-import AddAgent from './AddNewPipelineComponent/AddAgent';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { useState } from 'react';
+import PipelineCanvas from '../CanvasForPipelines/PipelineCanvas';
+import { NodeValueProvider } from '@/context/useNodeContext';
 
 
 const LandingView = () => {
@@ -30,7 +29,7 @@ const LandingView = () => {
     if (!pipelineStatus) {
         return null;
     }
-    const { currentStep,setCurrentStep } = pipelineStatus;
+    const { currentStep, setCurrentStep } = pipelineStatus;
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -41,6 +40,7 @@ const LandingView = () => {
         localStorage.removeItem("selectedAgentIds");
         localStorage.removeItem("PipelineEdges");
         localStorage.removeItem("Nodes");
+        localStorage.removeItem("platform")
 
         setCurrentStep(0);
         setIsDialogOpen(false);
@@ -55,17 +55,17 @@ const LandingView = () => {
     return (
         <div className="flex flex-col gap-7 justify-center items-center">
             <Sheet
-            open={isSheetOpen}
-            onOpenChange={(open) => {
-                if (!open) {
-                    setIsDialogOpen(true);
-                } else {
-                    setIsSheetOpen(true);
-                }
-            }}
+                open={isSheetOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setIsDialogOpen(true);
+                    } else {
+                        setIsSheetOpen(true);
+                    }
+                }}
             >
                 <SheetTrigger asChild>
-                    <Button className="flex items-center gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
+                    <Button className="flex gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
                         <PlusIcon className="h-4 w-4" />
                     </Button>
                 </SheetTrigger>
@@ -74,9 +74,9 @@ const LandingView = () => {
                         <div>
                         </div>
                         <SheetDescription>
-                            <div className='flex flex-col'>
+                            <div className='flex '>
                                 {
-                                    currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails /> : currentStep == 2 ? <AddDestination /> : <AddAgent />
+                                    currentStep == 0 ? <PipelineDetails /> : <NodeValueProvider><PipelineCanvas /></NodeValueProvider>
                                 }
                             </div>
                         </SheetDescription>

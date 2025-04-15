@@ -84,7 +84,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
             <SheetTrigger asChild>
                 <div onClick={() => setIsSheetOpen(true)} className='flex items-center'>
                     <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-                    <div className="bg-gray-200 rounded border-2 border-gray-300 p-4 h-[6rem] shadow-md w-[8rem] relative">
+                    <div className="bg-gray-200 rounded border-2 border-gray-300 p-4 h-[4rem] shadow-md w-[8rem] relative">
                         <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
 
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>

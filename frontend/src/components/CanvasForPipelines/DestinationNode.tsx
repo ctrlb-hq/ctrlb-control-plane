@@ -33,6 +33,7 @@ const renderers = [
 ];
 
 export const DestinationNode = ({ data: Data }: any) => {
+    console.log(Data)
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
     const { addChange } = usePipelineChangesLog()
@@ -94,10 +95,10 @@ export const DestinationNode = ({ data: Data }: any) => {
             <SheetTrigger asChild>
                 <div className="flex items-center">
                     <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-                    <div className="bg-gray-200 flex items-center rounded-md h-24 w-[8rem]">
+                    <div className="bg-gray-200 flex items-center rounded-md h-[4rem] w-[7rem]">
                         <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
-                        <div className="flex ml-5 flex-col items-center justify-center w-full">
-                            <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
+                        <div className="flex ml-5 flex-col w-full">
+                            <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium flex justify-start">{Data.name}</div>
                             <div className="flex justify-between gap-2 mr-4 text-xs mt-2">
                                 {DestinationLabel.map((source: any, index: number) => (
                                     <p style={{ fontSize: "8px" }} key={index}>
@@ -107,7 +108,7 @@ export const DestinationNode = ({ data: Data }: any) => {
                             </div>
                         </div>
                         {Data.label === 'ctrlB' ? (
-                            <div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-green-500 h-[6rem]">
+                            <div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-green-500 h-[4rem]">
                                 <div className="bg-white rounded-md m-1">
                                     <img src='./ctrlb-logo.png' width={"48px"} />
                                 </div>

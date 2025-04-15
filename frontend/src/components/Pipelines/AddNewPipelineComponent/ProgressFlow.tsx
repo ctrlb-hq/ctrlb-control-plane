@@ -12,7 +12,7 @@ const ProgressFlow = () => {
     const { currentStep } = pipelineStatus;
 
     return (
-        <div className="max-w-md h-[40rem] mx-auto p-6 bg-gray-50 shadow-lg rounded-lg">
+        <div className="flex flex-1 h-[45rem] p-6 bg-gray-50 shadow-lg rounded-lg">
             <div className="relative">
                 {steps.map((step, index) => (
                     <div key={index} className="flex items-start space-x-4">

@@ -1,5 +1,6 @@
 import React, { createContext, Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { applyNodeChanges, Node, NodeChange, useNodesState } from "reactflow";
+import { initialEdges, initialNodes } from "../constants/PipelineNodeAndEdges";
 
 interface NodeValueContextType {
   nodeValue: Node<any, string | undefined>[];
@@ -11,6 +12,15 @@ const fetchLocalStorageData = () => {
   try {
     const Nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
+    // If localStorage is empty, initialize it with initialNodes and initialEdges
+    if (Nodes.length === 0) {
+      console.log("LocalStorage is empty. Initializing with initialNodes and initialEdges.");
+      localStorage.setItem("Nodes", JSON.stringify(initialNodes));
+      localStorage.setItem("PipelineEdges", JSON.stringify(initialEdges));
+      return initialNodes;
+    }
+
+    // Detect if the data is already in ReactFlow format
     const isReactFlowFormat = Nodes.length > 0 && "type" in Nodes[0] && "data" in Nodes[0];
     if (isReactFlowFormat) {
       return Nodes;
@@ -39,7 +49,7 @@ const convertToNodes = (data: any[]) => {
       name: source.name || "Unnamed",
       supported_signals: source.supported_signals || [],
       component_name: source.component_name || "",
-      config:source.config || {},
+      config: source.config || {},
     },
   }));
 };

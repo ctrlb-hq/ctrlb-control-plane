@@ -1,22 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import { AgentsTable } from "./Agents/AgentsTable";
 import Pipeline from "./Pipelines/Pipeline";
 import { ROUTES } from "../constants/routes";
 import AddPipeline from "./Pipelines/AddPipeline";
 import { Button } from "./ui/button";
-import { ArrowLeftRight, LucideSquareArrowRight } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 
 const TABS = [
-  { label: "Agents", value: "agents", icon: <LucideSquareArrowRight /> },
   { label: "Pipelines", value: "pipelines", icon: <ArrowLeftRight /> },
 ];
 
 export function ControlPlaneLanding() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("agents");
-
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -37,11 +33,7 @@ export function ControlPlaneLanding() {
                 {TABS.map(({ label, value, icon }) => (
                 <div key={value} className="flex items-center">
                   <button
-                  onClick={() => setActiveTab(value)}
-                  className={`px-4 py-2 rounded-t-md text-gray-600 focus:outline-none ${activeTab === value
-                    ? "border-b-2 border-blue-500 text-blue-500 font-semibold"
-                    : ""
-                    }`}
+                  className={`px-4 py-2 rounded-t-md text-gray-600`}
                   >
                   <span className="flex items-center gap-2">
                     {icon}
@@ -54,9 +46,7 @@ export function ControlPlaneLanding() {
           </div>
 
           <div className="flex items-center gap-2">
-            {activeTab === "pipelines" && (
               <AddPipeline />
-            )}
             <Button className="flex items-center gap-1 px-2 py-1" variant={"destructive"} onClick={handleLogout}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -76,11 +66,7 @@ export function ControlPlaneLanding() {
             </Button>
           </div>
         </div>
-        {activeTab === "agents" ? (
-          <div className="p-4 rounded-md">
-            <AgentsTable />
-          </div>
-        ) : (
+        {(
           <div className="p-4 rounded-md">
             <Pipeline />
           </div>
