@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { HeartPulse, Lock, LucideArrowLeftRight, RefreshCwIcon } from "lucide-react";
+import { ChartNoAxesCombined, HeartPulse, LucideArrowLeftRight, RefreshCwIcon } from "lucide-react";
 import { MetricsReusableChart } from "./charts/MetricsReusableChart";
 import { agentVal } from "@/types/agent.types";
 import { HealthChart } from "./charts/HealthChart";
@@ -47,8 +47,8 @@ export function AgentsTable() {
 
   const TABS = [
     { label: "Health", value: "health", icon: <HeartPulse /> },
-    { label: "Pipeline", value: "pipeline", icon: <LucideArrowLeftRight /> },
-    { label: "Rate Metrics", value: "rate_metrics", icon: <Lock /> }
+    { label: "Rate Metrics", value: "rate_metrics", icon: <ChartNoAxesCombined />},
+    { label: "Pipeline", value: "pipeline", icon: <LucideArrowLeftRight /> }
   ];
 
   const handleAgentById = async (agentId: string) => {

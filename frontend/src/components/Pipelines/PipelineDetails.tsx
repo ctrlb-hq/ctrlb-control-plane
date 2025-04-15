@@ -1,26 +1,4 @@
-import { useEffect } from "react";
-import { Boxes, Edit, Trash2 } from "lucide-react";
-import { useRef, useState, useCallback, useMemo } from "react";
-import EditPipelineYAML from "./EditPipelineYAML";
-import ReactFlow, {
-    MiniMap,
-    Controls,
-    Background,
-    useEdgesState,
-    addEdge,
-    Edge,
-    Connection,
-    ReactFlowInstance,
-    EdgeMouseHandler,
-    Panel,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { SourceNode } from "../CanvasForPipelines/SourceNode";
-import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
-import { DestinationNode } from "../CanvasForPipelines/DestinationNode";
-import { Switch } from "../ui/switch";
 import {
     Dialog,
     DialogClose,
@@ -30,25 +8,42 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { initialEdges } from "@/constants/PipelineNodeAndEdges";
-import { Label } from "../ui/label";
-import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { useNodeValue } from "@/context/useNodeContext";
-import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
-import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
-import { Pipeline } from "@/types/pipeline.types";
 import { Agents } from "@/types/agent.types";
+import { Pipeline } from "@/types/pipeline.types";
+import { Boxes, Edit, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactFlow, {
+    addEdge,
+    Background,
+    Connection,
+    Controls,
+    Edge,
+    EdgeMouseHandler,
+    MiniMap,
+    Panel,
+    ReactFlowInstance,
+    useEdgesState,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { DestinationNode } from "../CanvasForPipelines/DestinationNode";
+import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
+import { SourceNode } from "../CanvasForPipelines/SourceNode";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
+import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
+import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
+import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
-    const TABS = [
-        { label: "Overview", value: "overview" },
-        { label: "YAML", value: "yaml" },
-    ];
+
     const [agentValues, setAgentValues] = useState<Agents[]>([])
     const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -150,7 +145,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         }
     }, [selectedEdge, setEdges]);
 
-    const [activeTab, setActiveTab] = useState("overview");
 
     // Close popover when clicking elsewhere
     const onPaneClick = useCallback(() => {
@@ -183,20 +177,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             </div>
             <div className="flex items-center w-full md:w-auto">
                 <div className="flex gap-2 justify-between w-full mb-2">
-                    <div className="flex gap-2 justify-start">
-                        {TABS.map(({ label, value }) => (
-                            <button
-                                key={value}
-                                onClick={() => setActiveTab(value)}
-                                className={`px-4 py-2 text-lg rounded-t-md text-gray-600 focus:outline-none ${activeTab === value
-                                    ? "border-b-2 border-blue-500 text-blue-500 font-semibold"
-                                    : ""
-                                    }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
                     <div className="flex gap-2">
                         <Sheet>
                             <SheetTrigger asChild>
@@ -337,14 +317,14 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     </div>
                 </div>
             </div>
-            {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
+          <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
                     <p className="capitalize">Name: {pipelineOverview?.name}</p>
                     <p>Created By: {createdBy}</p>
                     <p>Created At: {formatTimestamp(pipelineOverview?.created_at)}</p>
                     <p>Updated At: {formatTimestamp(pipelineOverview?.updated_at)}</p>
                 </div>
-            </div> : <EditPipelineYAML />}
+            </div> 
 
         </div>
     )
