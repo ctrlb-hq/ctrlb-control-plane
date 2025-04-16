@@ -182,7 +182,6 @@ func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agent
 	if err != nil {
 		return fmt.Errorf("failed to attach agent: %w", err)
 	}
-	//TODO: Add logic to push config to agent
 	return nil
 }
 
@@ -218,7 +217,7 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	var nodes []models.PipelineComponent
 	for rows.Next() {
 		var node models.PipelineComponent
-		var configStr string 
+		var configStr string
 		var supportedSignals string
 
 		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.ComponentName, &configStr, &supportedSignals); err != nil {
@@ -413,4 +412,15 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	}
 
 	return agent, nil
+}
+func (f *FrontendPipelineRepository) GetAgentPipelineId(agentId string) (*int, error) {
+	var pipelineId int
+	err := f.db.QueryRow("SELECT pipeline_id FROM agents WHERE id = ?", agentId).Scan(&pipelineId)
+	if err != nil { // Handle error
+		if err == sql.ErrNoRows {
+			return nil, nil // No pipeline attached
+		}
+		return nil, err
+	}
+	return &pipelineId, nil
 }
