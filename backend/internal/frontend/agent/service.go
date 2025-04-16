@@ -193,3 +193,7 @@ func (f *FrontendAgentService) trySendingAgentCommand(client *http.Client, targe
 
 	return nil
 }
+
+func (f *FrontendAgentService) GetLatestAgentSince(since string) (*LatestAgentResponse, error) {
+	return f.FrontendAgentRepository.GetLatestAgentSince(since)
+}

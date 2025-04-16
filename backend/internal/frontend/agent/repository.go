@@ -248,3 +248,26 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 
 	return nil
 }
+
+func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgentResponse, error) {
+	query := `
+	SELECT id, name, registered_at
+	FROM agents
+	WHERE registered_at > ?
+	ORDER BY registered_at DESC
+	LIMIT 1;
+`
+
+	row := f.db.QueryRow(query, since)
+
+	var agent LatestAgentResponse
+	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // no new agent found
+		}
+		return nil, fmt.Errorf("failed to query latest agent: %w", err)
+	}
+
+	return &agent, nil
+}
