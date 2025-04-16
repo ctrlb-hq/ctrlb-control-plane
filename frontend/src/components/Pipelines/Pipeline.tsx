@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import LandingView from "./LandingView";
 import {
   Sheet,
   SheetContent,
@@ -25,7 +24,7 @@ interface pipeline {
   agents: number,
   incoming_bytes: number,
   outgoing_bytes: number,
-  updatedAt: number, 
+  updatedAt: number,
 }
 
 const Pipeline = () => {
@@ -69,7 +68,7 @@ const Pipeline = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.isArray(pipelines)&& pipelines.map((pipeline) => (
+            {Array.isArray(pipelines) && pipelines.map((pipeline) => (
               <Sheet key={pipeline.id}>
                 <SheetTrigger asChild>
                   <TableRow className="cursor-pointer" key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
@@ -88,7 +87,11 @@ const Pipeline = () => {
           </TableBody>
         </Table>
       )}
-      {!pipelines && <LandingView />}
+      {!pipelines && <div className="flex flex-col gap-2 justify-center items-center">
+        <p className='font-bold text-xl mt-[6rem]'>Get started</p>
+        <p className='text-gray-700'>Create Your First Pipeline</p>
+        <p className='text-gray-700'>Pipelines collect data from the sources in the pipeline and route them to desired destination.</p>
+      </div>}
     </>
   )
 }
