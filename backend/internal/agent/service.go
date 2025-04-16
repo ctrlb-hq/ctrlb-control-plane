@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"time"
 
+	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
 
 // AgentService manages agent operations.
 type AgentService struct {
-	AgentRepository *AgentRepository  // Repository for agent data
-	AgentQueue      *queue.AgentQueue // Queue for agent tasks
+	AgentRepository      *AgentRepository  // Repository for agent data
+	AgentQueue           *queue.AgentQueue // Queue for agent tasks
+	FrontendAgentService *frontendpipeline.FrontendPipelineService
 }
 
 // NewAgentService creates a new AgentService instance.
@@ -43,4 +45,12 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 	a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP)
 
 	return response, nil // Return the registered agent
+}
+
+func (a *AgentService) ConfigChangedPing(agentID string) error {
+	err := a.FrontendAgentService.SyncConfig(agentID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

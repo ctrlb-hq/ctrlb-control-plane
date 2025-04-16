@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler"
@@ -144,4 +145,31 @@ func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHo
 	}
 
 	return nil
+}
+
+func (f *FrontendPipelineService) SyncConfig(agentId string) error {
+	pipelineId, err := f.FrontendPipelineRepository.GetAgentPipelineId(agentId)
+	if err != nil {
+		return err
+	}
+
+	graph, err := f.GetPipelineGraph(*pipelineId)
+	if err != nil {
+		return err
+	}
+
+	agentIDInt, err := strconv.Atoi(agentId)
+	if err != nil {
+		return fmt.Errorf("error converting agent ID to int: %v", err)
+	}
+
+	agent, err := f.FrontendPipelineRepository.GetAgentInfo(agentIDInt)
+	if err != nil {
+		return err
+	}
+
+	var agents []models.AgentInfoHome
+	agents = append(agents, *agent)
+
+	return f.sendConfigToAgents(agents, *graph)
 }
