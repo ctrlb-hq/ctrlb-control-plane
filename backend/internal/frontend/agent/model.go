@@ -31,3 +31,9 @@ type DataPoint struct {
 	Timestamp int64   `json:"timestamp"` // Unix timestamp for efficiency
 	Value     float64 `json:"value"`
 }
+
+type LatestAgentResponse struct {
+	ID           string `json:"id"`            // Unique ID for the agent
+	Name         string `json:"name"`          // Descriptive name for the agent
+	RegisteredAt int64  `json:"registered_at"` // Timestamp when the agent was registered
+}

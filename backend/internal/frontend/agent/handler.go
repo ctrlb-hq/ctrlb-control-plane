@@ -202,3 +202,20 @@ func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request)
 
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Labels added to agent [ID: " + id + "]."})
 }
+
+func (f *FrontendAgentHandler) GetLatestAgentSince(w http.ResponseWriter, r *http.Request) {
+	since := r.URL.Query().Get("since")
+	if since == "" {
+		utils.SendJSONError(w, http.StatusBadRequest, "Missing 'since' query parameter")
+		return
+	}
+
+	utils.Logger.Info("Received request to get letest agents since: " + since)
+	response, err := f.FrontendAgentService.GetLatestAgentSince(since)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err.Error()))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
