@@ -18,6 +18,23 @@ const agentServices = {
             throw new Error(axiosError.response?.data.message || "Failed to fetch agent list")
         }
     },
+    getLatestAgents: async ({ since }: { since: number }): Promise<any> => {
+        try {
+            const response = await axiosInstance.get("/latest-agent", {
+                // params: { since }
+            })
+            const data = response.data
+            
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                return await agentServices.getAllAgents()
+            }
+            console.log(error)
+            const axiosError = error as AxiosError<ApiError>;
+            throw new Error(axiosError.response?.data.message || "Failed to fetch agent list")
+        }
+    },
 
     getAgentById: async (id: string): Promise<any> => {
         try {

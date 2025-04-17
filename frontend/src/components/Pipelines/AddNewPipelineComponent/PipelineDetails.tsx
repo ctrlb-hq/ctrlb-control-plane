@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from '@/hooks/use-toast';
 import { Close } from '@radix-ui/react-dialog';
+import agentServices from '@/services/agentServices';
 
 interface formData {
     name: string,
@@ -89,8 +90,10 @@ const PipelineDetails = () => {
 
     };
 
+
     const handleCopy = () => {
         navigator.clipboard.writeText(`${EDI_API_KEY}`)
+        const since = new Date().getTime()
         setTimeout(() => {
             toast({
                 title: 'Copied',
@@ -106,8 +109,38 @@ const PipelineDetails = () => {
         }, 6000)
         setTimeout(() => {
             setShowAgentInfo(true)
-        }, 7000)
+            checkAgentStatus(since)
+        }, 1000)
     }
+
+
+    const checkAgentStatus = async (since: number) => {
+        try {
+            const interval = setInterval(async () => {
+                const agents = await agentServices.getLatestAgents({since});
+                console.log("first",agents)
+                if (agents && agents.length > 0) {
+                    setStatus("success");
+                    setShowStatus(true);
+                    clearInterval(interval);
+                }
+            }, 2*1000); // Check every 2 seconds
+
+            // Clear interval after 30 seconds (timeout)
+            setTimeout(() => {
+                clearInterval(interval);
+                if (status !== "success") {
+                    setStatus("failed");
+                    setShowStatus(true);
+                }
+            }, 30000);
+        } catch (error) {
+            console.error("Error checking agent status:", error);
+            setStatus("failed");
+            setShowStatus(true);
+        }
+    };
+
 
     return (
         <div className='flex flex-col gap-5'>

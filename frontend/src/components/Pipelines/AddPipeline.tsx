@@ -88,7 +88,7 @@ const LandingView = () => {
                     <DialogHeader>
                         <DialogTitle>Discard Changes?</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to discard the current pipeline setup? If you select "Okay", the flow will restart and all data will be cleared.
+                            Are you sure you want to discard the current pipeline setup? 
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -96,7 +96,7 @@ const LandingView = () => {
                             Cancel
                         </Button>
                         <Button className="bg-blue-500" onClick={handleDialogOkay}>
-                            Okay
+                            OK
                         </Button>
                     </DialogFooter>
                 </DialogContent>
