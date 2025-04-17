@@ -80,6 +80,72 @@ func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineI
 	return pipelineInfo, nil
 }
 
+func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error) {
+	const query = `
+		SELECT
+			p.pipeline_id                      AS id,
+			p.name                             AS name,
+			p.created_by                       AS created_by,
+			p.created_at                       AS created_at,
+			p.updated_at                       AS updated_at,
+			a.version                          AS agent_version,
+			CASE
+				WHEN a.id IS NULL THEN 'inactive'
+				ELSE 'active'
+			END                                 AS status,
+			a.hostname                         AS hostname,
+			a.platform                         AS platform,
+			a.ip                               AS ip_address,
+			a.id                               AS agent_id
+		FROM   pipelines  AS p
+		LEFT JOIN agents   AS a
+			ON a.pipeline_id = p.pipeline_id
+			WHERE  p.pipeline_id = ?;`
+
+	pipelineInfo := &PipelineInfoWithAgent{}
+
+	err := f.db.QueryRow(query, pipelineId).Scan(
+		&pipelineInfo.ID,
+		&pipelineInfo.Name,
+		&pipelineInfo.CreatedBy,
+		&pipelineInfo.CreatedAt,
+		&pipelineInfo.UpdatedAt,
+		&pipelineInfo.AgentVersion,
+		&pipelineInfo.Status,
+		&pipelineInfo.Hostname,
+		&pipelineInfo.Platform,
+		&pipelineInfo.IPAddress,
+		&pipelineInfo.AgentID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("pipeline with ID %d not found", pipelineId)
+		}
+		return nil, fmt.Errorf("failed to query pipeline info: %w", err)
+	}
+
+	pipelineInfo.Labels = make(map[string]string)
+
+	rows, err := f.db.Query("SELECT key, value FROM agents_labels WHERE agent_id = ?", pipelineInfo.AgentID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return pipelineInfo, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var key, value string
+		err := rows.Scan(&key, &value)
+		if err != nil {
+			return nil, err
+		}
+		pipelineInfo.Labels[key] = value
+	}
+
+	return pipelineInfo, nil
+}
+
 func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	tx, err := f.db.Begin()
 	if err != nil {

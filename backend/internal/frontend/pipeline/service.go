@@ -35,6 +35,14 @@ func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo
 	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
 }
 
+func (f *FrontendPipelineService) GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error) {
+	if !f.FrontendPipelineRepository.PipelineExists(pipelineId) {
+		return nil, utils.ErrPipelineDoesNotExists
+	}
+
+	return f.FrontendPipelineRepository.GetPipelineOverview(pipelineId)
+}
+
 func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	return f.FrontendPipelineRepository.CreatePipeline(createPipelineRequest)
 }
