@@ -47,7 +47,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/labels", frontendAgentHandler.AddLabels).Methods("POST")
 
 	frontendAgentAPIsV2.HandleFunc("/unassigned-agents", frontendAgentHandler.GetUnmanagedAgents).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/agents/latest", frontendAgentHandler.GetAllAgents).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/agents/latest", frontendAgentHandler.GetLatestAgentSince).Methods("GET")
 
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.GetAllPipelines).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines", frontendPipelineHandler.CreatePipeline).Methods("POST")
