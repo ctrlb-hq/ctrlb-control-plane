@@ -198,6 +198,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                         ))}
                     </div>
                     <div className="flex gap-2">
+                        <Button>Akjhkhl</Button>
                         <Sheet>
                             <SheetTrigger asChild>
                                 <Button className="bg-blue-500">View/Edit Pipeline</Button>

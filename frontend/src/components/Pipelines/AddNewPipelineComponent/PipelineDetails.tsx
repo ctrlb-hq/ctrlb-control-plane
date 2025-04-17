@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { AlertCircle, Badge, CopyIcon, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ProgressFlow from './ProgressFlow';
 
 import {
@@ -38,7 +38,12 @@ const PipelineDetails = () => {
     const [status, setStatus] = useState<"success" | "failed">("failed")
     const [showAgentInfo, setShowAgentInfo] = useState(false)
     const { toast } = useToast()
+    const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
+    const [showConfigureButton, setShowConfigureButton] = useState(false);
     const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9"
+
+    const [isChecking, setIsChecking] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
 
     const [formData, setFormData] = useState<formData>({
@@ -93,6 +98,8 @@ const PipelineDetails = () => {
 
     const handleCopy = () => {
         navigator.clipboard.writeText(`${EDI_API_KEY}`)
+        setIsApiKeyCopied(true); // Set to true when API key is copied
+        setShowConfigureButton(true); // Show the Configure Pipeline button
         const since = new Date().getTime()
         setTimeout(() => {
             toast({
@@ -113,40 +120,97 @@ const PipelineDetails = () => {
         }, 1000)
     }
 
+    const handleTryAgain = () => {
+        setShowStatus(false);
+        setStatus("failed");
+        setShowHeartBeat(false);
 
-    const checkAgentStatus = async (since: number) => {
-        try {
-            const interval = setInterval(async () => {
-                const agents = await agentServices.getLatestAgents({since});
-                console.log("first",agents)
-                if (agents && agents.length > 0) {
-                    setStatus("success");
-                    setShowStatus(true);
-                    clearInterval(interval);
-                }
-            }, 2*1000); // Check every 2 seconds
-
-            // Clear interval after 30 seconds (timeout)
-            setTimeout(() => {
-                clearInterval(interval);
-                if (status !== "success") {
-                    setStatus("failed");
-                    setShowStatus(true);
-                }
-            }, 30000);
-        } catch (error) {
-            console.error("Error checking agent status:", error);
-            setStatus("failed");
-            setShowStatus(true);
-        }
+        setTimeout(() => {
+            setShowHeartBeat(true);
+            // Start checking agent status again
+            const newSince = new Date().getTime();
+            checkAgentStatus(newSince);
+        }, 100);
     };
 
+    const stopChecking = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        setIsChecking(false);
+    }, []);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            stopChecking();
+        };
+    }, [stopChecking]);
+
+
+
+    const checkAgentStatus = async (since: number) => {
+        // Stop any existing check
+        stopChecking();
+
+        // Create new abort controller
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+        setIsChecking(true);
+
+        const THREE_MINUTES = 3 * 60 * 1000;
+        const CHECK_INTERVAL = 3 * 1000;
+        const startTime = Date.now();
+
+        try {
+            while (!abortController.signal.aborted) {
+                try {
+                    const agents = await agentServices.getLatestAgents({ since });
+                    console.log("Checking agents:", agents);
+
+                    if (agents && agents.length > 0) {
+                        setStatus("success");
+                        setShowStatus(true);
+                        stopChecking();
+                        break;
+                    }
+
+                    // Check if we've exceeded the time limit
+                    if (Date.now() - startTime >= THREE_MINUTES) {
+                        setStatus("failed");
+                        setShowStatus(true);
+                        stopChecking();
+                        break;
+                    }
+
+                    // Wait for the next interval
+                    await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
+                } catch (error) {
+                    if (abortController.signal.aborted) {
+                        break;
+                    }
+                    console.error("Error checking agents:", error);
+                }
+            }
+        } catch (error) {
+            console.error("Error in checkAgentStatus:", error);
+            if (!abortController.signal.aborted) {
+                setStatus("failed");
+                setShowStatus(true);
+            }
+        } finally {
+            if (abortController === abortControllerRef.current) {
+                stopChecking();
+            }
+        }
+    };
 
     return (
         <div className='flex flex-col gap-5'>
             <div className=" flex gap-5">
                 <div className='flex w-[30rem]'>
-                <ProgressFlow />
+                    <ProgressFlow />
                 </div>
                 <Card className="w-[39rem] h-[45rem]">
                     <CardHeader>
@@ -238,37 +302,46 @@ const PipelineDetails = () => {
                                     <CopyIcon onClick={handleCopy} className="h-5 w-5 text-orange-400 cursor-pointer" />
                                 </div>
                             </div>}
-                            {showHeartBeat && <div className="mt-3 flex flex-col gap-2">
+                            {showHeartBeat && !showStatus && <div className="mt-3 flex flex-col gap-2">
                                 <p>Once the agent is completely installed it will also appear in the Agent list Table</p>
                                 <div className="flex gap-4 border-2 border-blue-300 p-3 rounded-lg text-blue-400">
                                     <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
                                     <p>CtrlB is checking for heartbeat..</p>
                                 </div>
                             </div>}
-                            {status === "success" ? showStatus && <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
-                                <Badge className="text-green-600" />
-                                <p className="text-green-600">Your agent is successfully deployed</p>
-                            </div> : showStatus && <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
-                                <div className="flex justify-start">
-                                    <Close className="text-red-600" />
-                                    <p className="text-red-600">Heartbeat not detected</p>
+                         
+                            {status === "success" ?
+                                showStatus && <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
+                                    <Badge className="text-green-600" />
+                                    <p className="text-green-600">Your agent is successfully deployed</p>
                                 </div>
-                                <Button variant={"destructive"}>Try again</Button>
-                            </div>}
+                                :
+                                showStatus && <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
+                                    <div className="flex justify-start">
+                                        <Close className="text-red-600" />
+                                        <p className="text-red-600">Heartbeat not detected</p>
+                                    </div>
+                                    <Button variant={"destructive"} onClick={handleTryAgain}>
+                                        Try again
+                                    </Button>
+                                </div>
+                            }
                         </form>
-                        <div className='flex justify-end mt-3'>
-                            <Button
-                                onClick={() => {
-                                    localStorage.setItem('pipelinename', formData.name)
-                                    localStorage.setItem('platform', formData.platform)
-                                    pipelineStatus.setCurrentStep(currentStep + 1);
-                                    handleSubmit
-                                }}
-                                disabled={!formData.name || !formData.platform}
-                                className='bg-blue-500 px-6 hover:bg-blue-600'>
-                                Configure Pipeline
-                            </Button>
-                        </div>
+                        {showConfigureButton && (
+                            <div className='flex justify-end mt-3'>
+                                <Button
+                                    onClick={() => {
+                                        localStorage.setItem('pipelinename', formData.name)
+                                        localStorage.setItem('platform', formData.platform)
+                                        pipelineStatus.setCurrentStep(currentStep + 1);
+                                        handleSubmit
+                                    }}
+                                    disabled={!formData.name || !formData.platform || !EDI_API_KEY}
+                                    className='bg-blue-500 px-6 hover:bg-blue-600'>
+                                    Configure Pipeline
+                                </Button>
+                            </div>
+                        )}
                     </CardContent>
 
                 </Card>
