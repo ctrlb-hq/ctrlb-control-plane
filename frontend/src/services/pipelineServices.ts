@@ -46,6 +46,20 @@ const pipelineServices = {
             throw new Error(axiosError.response?.data.message || "Failed to fetch Pipeline by it's Id.")
         }
     },
+    getPipelineOverviewById: async (id: string): Promise<any> => {
+        try {
+            if (!id) return
+            const response = await axiosInstance.get(`/pipelines-overview/${id}`)
+            const data = response.data
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                return await pipelineServices.getPipelineOverviewById(id)
+            }
+            const axiosError = error as AxiosError<ApiError>;
+            throw new Error(axiosError.response?.data.message || "Failed to fetch Pipeline by it's Id.")
+        }
+    },
     deletePipelineById: async (id: string): Promise<any> => {
         try {
             if (!id) return

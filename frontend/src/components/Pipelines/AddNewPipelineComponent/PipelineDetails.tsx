@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Close } from '@radix-ui/react-dialog';
 import agentServices from '@/services/agentServices';
+import { useNavigate } from 'react-router-dom';
 
 interface formData {
     name: string,
@@ -44,6 +45,7 @@ const PipelineDetails = () => {
 
     const [isChecking, setIsChecking] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const navigate = useNavigate();
 
 
     const [formData, setFormData] = useState<formData>({
@@ -67,7 +69,6 @@ const PipelineDetails = () => {
             ...prev,
             [id]: value
         }));
-
         // Clear error when user types
         if (value.trim()) {
             setErrors(prev => ({
@@ -98,9 +99,9 @@ const PipelineDetails = () => {
 
     const handleCopy = () => {
         navigator.clipboard.writeText(`${EDI_API_KEY}`)
-        setIsApiKeyCopied(true); // Set to true when API key is copied
-        setShowConfigureButton(true); // Show the Configure Pipeline button
-        const since = new Date().getTime()
+        setIsApiKeyCopied(true); 
+        setShowConfigureButton(true); 
+        const since = Math.floor(new Date().getTime() / 1000)
         setTimeout(() => {
             toast({
                 title: 'Copied',
@@ -126,11 +127,9 @@ const PipelineDetails = () => {
         setShowHeartBeat(false);
 
         setTimeout(() => {
-            setShowHeartBeat(true);
-            // Start checking agent status again
-            const newSince = new Date().getTime();
-            checkAgentStatus(newSince);
-        }, 100);
+            const since = Math.floor(new Date().getTime() / 1000)
+            checkAgentStatus(since);
+        }, 1000);
     };
 
     const stopChecking = useCallback(() => {
@@ -153,11 +152,12 @@ const PipelineDetails = () => {
     const checkAgentStatus = async (since: number) => {
         // Stop any existing check
         stopChecking();
-
         // Create new abort controller
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
         setIsChecking(true);
+        setShowHeartBeat(true);
+        setShowStatus(false); 
 
         const THREE_MINUTES = 3 * 60 * 1000;
         const CHECK_INTERVAL = 3 * 1000;
@@ -166,25 +166,27 @@ const PipelineDetails = () => {
         try {
             while (!abortController.signal.aborted) {
                 try {
-                    const agents = await agentServices.getLatestAgents({ since });
-                    console.log("Checking agents:", agents);
-
-                    if (agents && agents.length > 0) {
-                        setStatus("success");
-                        setShowStatus(true);
-                        stopChecking();
-                        break;
-                    }
-
-                    // Check if we've exceeded the time limit
-                    if (Date.now() - startTime >= THREE_MINUTES) {
+                       // Check if we've exceeded the time limit
+                       if (Date.now() - startTime >= THREE_MINUTES) {
                         setStatus("failed");
                         setShowStatus(true);
+                        setShowHeartBeat(false);
                         stopChecking();
                         break;
                     }
 
-                    // Wait for the next interval
+                    const agents = await agentServices.getLatestAgents({ since });
+                    if (agents) {
+                        setStatus(agents ? "success" : "failed");
+                        setShowStatus(true);
+                        setShowHeartBeat(false);
+                        stopChecking();
+                        if (agents) {
+                            navigate('/PipelineCanvas'); 
+                        }
+                        break;
+                    }
+
                     await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
                 } catch (error) {
                     if (abortController.signal.aborted) {
@@ -198,6 +200,7 @@ const PipelineDetails = () => {
             if (!abortController.signal.aborted) {
                 setStatus("failed");
                 setShowStatus(true);
+                setShowHeartBeat(false);
             }
         } finally {
             if (abortController === abortControllerRef.current) {
@@ -205,6 +208,7 @@ const PipelineDetails = () => {
             }
         }
     };
+
 
     return (
         <div className='flex flex-col gap-5'>
@@ -302,21 +306,21 @@ const PipelineDetails = () => {
                                     <CopyIcon onClick={handleCopy} className="h-5 w-5 text-orange-400 cursor-pointer" />
                                 </div>
                             </div>}
-                            {showHeartBeat && !showStatus && <div className="mt-3 flex flex-col gap-2">
+                            {showHeartBeat && <div className="mt-3 flex flex-col gap-2">
                                 <p>Once the agent is completely installed it will also appear in the Agent list Table</p>
                                 <div className="flex gap-4 border-2 border-blue-300 p-3 rounded-lg text-blue-400">
                                     <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
                                     <p>CtrlB is checking for heartbeat..</p>
                                 </div>
                             </div>}
-                         
-                            {status === "success" ?
-                                showStatus && <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
+
+                            {status === "success" && showStatus ? (
+                                <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
                                     <Badge className="text-green-600" />
                                     <p className="text-green-600">Your agent is successfully deployed</p>
                                 </div>
-                                :
-                                showStatus && <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
+                            ) : (showStatus && !showHeartBeat) ? (
+                                <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
                                     <div className="flex justify-start">
                                         <Close className="text-red-600" />
                                         <p className="text-red-600">Heartbeat not detected</p>
@@ -325,7 +329,7 @@ const PipelineDetails = () => {
                                         Try again
                                     </Button>
                                 </div>
-                            }
+                            ) : null}
                         </form>
                         {showConfigureButton && (
                             <div className='flex justify-end mt-3'>

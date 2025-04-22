@@ -65,10 +65,14 @@ export const ProcessorNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        console.log(Data)
+
+        setIsSheetOpen(false)
         setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
         setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
-        const log = { type: 'source', name: Data.name, status: "deleted" }
+    //      setNodeValue(prev => prev.filter(node => 
+    //     node.id !== Data.id && node.id !== Data.component_id
+    // ));
+        const log = { type: 'processor', name: Data.name, status: "deleted" }
         const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
         addChange(log)
         const updatedLog = [...existingLog, log];
@@ -77,8 +81,11 @@ export const ProcessorNode = ({ data: Data }: any) => {
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
-        setIsSheetOpen(false)
     }
+
+    // ... existing code ...
+
+
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>

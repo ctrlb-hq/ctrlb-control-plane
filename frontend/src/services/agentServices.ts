@@ -20,7 +20,7 @@ const agentServices = {
     },
     getLatestAgents: async ({ since }: { since: number }): Promise<any> => {
         try {
-            const response = await axiosInstance.get("/latest‑agent", {
+            const response = await axiosInstance.get("/latest-agent", {
                 params: { since }
             })
             const data = response.data

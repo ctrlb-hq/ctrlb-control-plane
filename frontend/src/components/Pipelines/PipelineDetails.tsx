@@ -45,10 +45,7 @@ import { Agents } from "@/types/agent.types";
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
-    const TABS = [
-        { label: "Overview", value: "overview" },
-        { label: "YAML", value: "yaml" },
-    ];
+
     const [agentValues, setAgentValues] = useState<Agents[]>([])
     const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -60,6 +57,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const { changesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const [isOpen, setIsOpen] = useState(false)
+    const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
     const { toast } = useToast()
 
 
@@ -84,6 +82,24 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         setPipelineOverview(res)
     }
 
+    const handleGetPipelineOverview = async () => {
+        try {
+            const response = await pipelineServices.getPipelineOverviewById(pipelineId);
+            setPipelineOverviewData(response);
+        } catch (error) {
+            // toast({
+            //     title: "Error",
+            //     description: "Failed to fetch pipeline overview",
+            //     variant: "destructive",
+            // });
+        }
+    };
+
+    useEffect(() => {
+        handleGetPipelineOverview();
+    }, [pipelineId]);
+
+
     const handleGetConnectedAgentsToPipeline = async () => {
         const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId)
         setAgentValues(res)
@@ -92,7 +108,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     const handleGetPipelineGraph = async () => {
         const res = await pipelineServices.getPipelineGraph(pipelineId);
-        const edges=res.edges
+        const edges = res.edges
         const updatedNodes = res.nodes.map((node: any) => {
             const nodeType = node.component_role === 'receiver' ? 'source' : node.component_role === 'exporter' ? 'destination' : 'processor';
             return {
@@ -150,7 +166,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         }
     }, [selectedEdge, setEdges]);
 
-    const [activeTab, setActiveTab] = useState("overview");
 
     // Close popover when clicking elsewhere
     const onPaneClick = useCallback(() => {
@@ -183,22 +198,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             </div>
             <div className="flex items-center w-full md:w-auto">
                 <div className="flex gap-2 justify-between w-full mb-2">
-                    <div className="flex gap-2 justify-start">
-                        {TABS.map(({ label, value }) => (
-                            <button
-                                key={value}
-                                onClick={() => setActiveTab(value)}
-                                className={`px-4 py-2 text-lg rounded-t-md text-gray-600 focus:outline-none ${activeTab === value
-                                    ? "border-b-2 border-blue-500 text-blue-500 font-semibold"
-                                    : ""
-                                    }`}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
                     <div className="flex gap-2">
-                        <Button>Akjhkhl</Button>
                         <Sheet>
                             <SheetTrigger asChild>
                                 <Button className="bg-blue-500">View/Edit Pipeline</Button>
@@ -254,7 +254,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                         nodes={nodeValue}
                                         edges={edges.map(edge => ({
                                             ...edge,
-                                            animated:true,
+                                            animated: true,
                                             label: isEditMode ? '' : edge.label
                                         }))}
                                         onNodesChange={onNodesChange}
@@ -338,14 +338,20 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     </div>
                 </div>
             </div>
-            {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
+            <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
-                    <p className="capitalize">Name: {pipelineOverview?.name}</p>
-                    <p>Created By: {createdBy}</p>
-                    <p>Created At: {formatTimestamp(pipelineOverview?.created_at)}</p>
-                    <p>Updated At: {formatTimestamp(pipelineOverview?.updated_at)}</p>
+                    <p className="capitalize"><span className="font-semibold">Name:</span> {pipelineOverviewData?.name}</p>
+                    <p><span className="font-semibold">Created By:</span> {pipelineOverviewData?.created_by}</p>
+                    <p><span className="font-semibold">Created At:</span> {formatTimestamp(pipelineOverviewData?.created_at)}</p>
+                    <p><span className="font-semibold">Updated At:</span> {formatTimestamp(pipelineOverviewData?.updated_at)}</p>
+                    <p><span className="font-semibold">Status:</span> {pipelineOverviewData?.status}</p>
+                    <p><span className="font-semibold">Agent Version:</span> {pipelineOverviewData?.agent_version}</p>
+                    <p><span className="font-semibold">Hostname:</span> {pipelineOverviewData?.hostname}</p>
+                    <p><span className="font-semibold">Platform:</span> {pipelineOverviewData?.platform}</p>
+                    <p><span className="font-semibold">IP Address:</span> {pipelineOverviewData?.ip_address}</p>
+                    {/* <p><span className="font-semibold">Agent ID:</span> {pipelineOverviewData?.agent_id}</p> */}
                 </div>
-            </div> : <EditPipelineYAML />}
+            </div>
 
         </div>
     )
