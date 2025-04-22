@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/config"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
 )
 
 type OtelOperator struct {
@@ -66,7 +66,7 @@ func (otc *OtelOperator) GracefulShutdown() error {
 
 func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
 
-	if err := utils.SaveToYAML(updateConfigRequest, constants.AGENT_CONFIG_PATH); err != nil {
+	if err := config.SaveToYAML(updateConfigRequest, constants.AGENT_CONFIG_PATH); err != nil {
 		return err
 	}
 

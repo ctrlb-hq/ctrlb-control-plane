@@ -59,3 +59,9 @@ func recoverFromPanic() {
 		Logger.Fatal("Panic occurred!", zap.Any("error", r), zap.Stack("stacktrace"))
 	}
 }
+
+func init() {
+	if Logger == nil {
+		Logger = zap.NewNop() // Silent logger for safety in tests/tools
+	}
+}
