@@ -113,7 +113,9 @@ func main() {
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
 	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
+	handler := api.NewHandler(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
+
+	router := api.NewRouter(handler)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
