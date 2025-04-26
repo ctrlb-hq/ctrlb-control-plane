@@ -17,7 +17,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Close } from '@radix-ui/react-dialog';
 import agentServices from '@/services/agentServices';
-import { useNavigate } from 'react-router-dom';
 
 interface formData {
     name: string,
@@ -45,7 +44,6 @@ const PipelineDetails = () => {
 
     const [isChecking, setIsChecking] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
-    const navigate = useNavigate();
 
 
     const [formData, setFormData] = useState<formData>({
@@ -99,8 +97,8 @@ const PipelineDetails = () => {
 
     const handleCopy = () => {
         navigator.clipboard.writeText(`${EDI_API_KEY}`)
-        setIsApiKeyCopied(true); 
-        setShowConfigureButton(true); 
+        setIsApiKeyCopied(true);
+        setShowConfigureButton(true);
         const since = Math.floor(new Date().getTime() / 1000)
         setTimeout(() => {
             toast({
@@ -157,7 +155,7 @@ const PipelineDetails = () => {
         abortControllerRef.current = abortController;
         setIsChecking(true);
         setShowHeartBeat(true);
-        setShowStatus(false); 
+        setShowStatus(false);
 
         const THREE_MINUTES = 3 * 60 * 1000;
         const CHECK_INTERVAL = 3 * 1000;
@@ -166,8 +164,8 @@ const PipelineDetails = () => {
         try {
             while (!abortController.signal.aborted) {
                 try {
-                       // Check if we've exceeded the time limit
-                       if (Date.now() - startTime >= THREE_MINUTES) {
+                    // Check if we've exceeded the time limit
+                    if (Date.now() - startTime >= THREE_MINUTES) {
                         setStatus("failed");
                         setShowStatus(true);
                         setShowHeartBeat(false);
@@ -182,7 +180,9 @@ const PipelineDetails = () => {
                         setShowHeartBeat(false);
                         stopChecking();
                         if (agents) {
-                            navigate('/PipelineCanvas'); 
+                            localStorage.setItem('CurrentPipelineAgentId', agents.id);
+                            localStorage.setItem('CurrentPipelineAgents', JSON.stringify(agents));
+                            pipelineStatus.setCurrentStep(currentStep + 1);
                         }
                         break;
                     }
@@ -211,145 +211,143 @@ const PipelineDetails = () => {
 
 
     return (
-        <div className='flex flex-col gap-5'>
-            <div className=" flex gap-5">
-                <div className='flex w-[30rem]'>
-                    <ProgressFlow />
-                </div>
-                <Card className="w-[39rem] h-[45rem]">
-                    <CardHeader>
-                        <CardTitle className="text-xl font-bold">
-                            Let's get started building your Pipeline.
-                        </CardTitle>
+        <div className='flex flex-row gap-5 mt-4'>
+            <div className='w-1/4 h-full'>
+                <ProgressFlow />
+            </div>
+            <Card className="w-3/4 h-full">
+                <CardHeader>
+                    <CardTitle className="text-xl font-bold">
+                        Let's get started building your Pipeline.
+                    </CardTitle>
 
-                        <p className="text-gray-600 mt-2">
-                            Let's get started building your pipeline configuration.
-                        </p>
-                    </CardHeader>
-                    <CardContent className='h-[27rem]'>
-                        <form className="space-y-6" onSubmit={handleSubmit}>
-                            <div className="space-y-2">
-                                <Label htmlFor="name" className="text-base font-medium flex items-center">
-                                    Name <span className="text-red-500 ml-1">*</span>
-                                </Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    // onBlur is not supported by Select
-                                    className={`h-10 ${errors.name && touched.name ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                    required
-                                />
-                                {errors.name && touched.name && (
-                                    <div className="flex items-center mt-1 text-red-500 text-sm">
-                                        <AlertCircle className="w-4 h-4 mr-1" />
-                                        <span>Name is required</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="platform" className="text-base font-medium flex items-center">
-                                    Platform <span className="text-red-500 ml-1">*</span>
-                                </Label>
-                                <Select
-                                    value={formData.platform}
-                                    onValueChange={(value: string) => {
-                                        setFormData(prev => ({
+                    <p className="text-gray-600 mt-2">
+                        Let's get started building your pipeline configuration.
+                    </p>
+                </CardHeader>
+                <CardContent className='h-[27rem]'>
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        <div className="space-y-2">
+                            <Label htmlFor="name" className="text-base font-medium flex items-center">
+                                Name <span className="text-red-500 ml-1">*</span>
+                            </Label>
+                            <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                // onBlur is not supported by Select
+                                className={`h-10 ${errors.name && touched.name ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
+                                required
+                            />
+                            {errors.name && touched.name && (
+                                <div className="flex items-center mt-1 text-red-500 text-sm">
+                                    <AlertCircle className="w-4 h-4 mr-1" />
+                                    <span>Name is required</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="platform" className="text-base font-medium flex items-center">
+                                Platform <span className="text-red-500 ml-1">*</span>
+                            </Label>
+                            <Select
+                                value={formData.platform}
+                                onValueChange={(value: string) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        platform: value
+                                    }));
+
+                                    // Clear error when user selects
+                                    if (value.length > 0) {
+                                        setErrors(prev => ({
                                             ...prev,
-                                            platform: value
+                                            platform: false
                                         }));
+                                    }
+                                }}
+                                required
+                            >
+                                <SelectTrigger className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}>
+                                    <SelectValue placeholder="Select a platform" />
+                                </SelectTrigger>
 
-                                        // Clear error when user selects
-                                        if (value.length > 0) {
-                                            setErrors(prev => ({
-                                                ...prev,
-                                                platform: false
-                                            }));
-                                        }
-                                    }}
-                                    required
-                                >
-                                    <SelectTrigger className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}>
-                                        <SelectValue placeholder="Select a platform" />
-                                    </SelectTrigger>
-
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem value="linux">Linux</SelectItem>
-                                            <SelectItem value="kubernetes">Kubernetes</SelectItem>
-                                            <SelectItem value="macOS">macOS</SelectItem>
-                                            <SelectItem value="openShift">openShift</SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.platform && touched.platform && (
-                                    <div className="flex items-center mt-1 text-red-500 text-sm">
-                                        <AlertCircle className="w-4 h-4 mr-1" />
-                                        <span>At least one platform must be selected</span>
-                                    </div>
-                                )}
-                                {errors.name && touched.name && (
-                                    <div className="flex items-center mt-1 text-red-500 text-sm">
-                                        <AlertCircle className="w-4 h-4 mr-1" />
-                                        <span>Platform is required</span>
-                                    </div>
-                                )}
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="linux">Linux</SelectItem>
+                                        <SelectItem value="kubernetes">Kubernetes</SelectItem>
+                                        <SelectItem value="macOS">macOS</SelectItem>
+                                        <SelectItem value="openShift">openShift</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            {errors.platform && touched.platform && (
+                                <div className="flex items-center mt-1 text-red-500 text-sm">
+                                    <AlertCircle className="w-4 h-4 mr-1" />
+                                    <span>At least one platform must be selected</span>
+                                </div>
+                            )}
+                            {errors.name && touched.name && (
+                                <div className="flex items-center mt-1 text-red-500 text-sm">
+                                    <AlertCircle className="w-4 h-4 mr-1" />
+                                    <span>Platform is required</span>
+                                </div>
+                            )}
+                        </div>
+                        <Button disabled={!formData.name || !formData.platform} className='bg-blue-500 w-full hover:bg-blue-600'>
+                            Generate Config
+                        </Button>
+                        {showRunCommand && <div className="mt-2 flex flex-col gap-2 mb-4">
+                            <p className="text-lg font-bold text-black">Run Command</p>
+                            <p className="text-gray-500">Running this command in your selected envoirment will deploy the pipeline</p>
+                            <div className="flex justify-between border-2 border-orange-300 p-3 rounded-lg text-orange-400">
+                                <p>EDI_API_KEY={EDI_API_KEY}</p>
+                                <CopyIcon onClick={handleCopy} className="h-5 w-5 text-orange-400 cursor-pointer" />
                             </div>
-                            <Button disabled={!formData.name || !formData.platform} className='bg-blue-500 w-full hover:bg-blue-600'>
-                                Generate Config
-                            </Button>
-                            {showRunCommand && <div className="mt-2 flex flex-col gap-2 mb-4">
-                                <p className="text-lg font-bold text-black">Run Command</p>
-                                <p className="text-gray-500">Running this command in your selected envoirment will deploy the pipeline</p>
-                                <div className="flex justify-between border-2 border-orange-300 p-3 rounded-lg text-orange-400">
-                                    <p>EDI_API_KEY={EDI_API_KEY}</p>
-                                    <CopyIcon onClick={handleCopy} className="h-5 w-5 text-orange-400 cursor-pointer" />
-                                </div>
-                            </div>}
-                            {showHeartBeat && <div className="mt-3 flex flex-col gap-2">
-                                <p>Once the agent is completely installed it will also appear in the Agent list Table</p>
-                                <div className="flex gap-4 border-2 border-blue-300 p-3 rounded-lg text-blue-400">
-                                    <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
-                                    <p>CtrlB is checking for heartbeat..</p>
-                                </div>
-                            </div>}
+                        </div>}
+                        {showHeartBeat && <div className="mt-3 flex flex-col gap-2">
+                            <p>Once the agent is completely installed it will also appear in the Agent list Table</p>
+                            <div className="flex gap-4 border-2 border-blue-300 p-3 rounded-lg text-blue-400">
+                                <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
+                                <p>CtrlB is checking for heartbeat..</p>
+                            </div>
+                        </div>}
 
-                            {status === "success" && showStatus ? (
-                                <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
-                                    <Badge className="text-green-600" />
-                                    <p className="text-green-600">Your agent is successfully deployed</p>
+                        {status === "success" && showStatus ? (
+                            <div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
+                                <Badge className="text-green-600" />
+                                <p className="text-green-600">Your agent is successfully deployed</p>
+                            </div>
+                        ) : (showStatus && !showHeartBeat) ? (
+                            <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
+                                <div className="flex justify-start">
+                                    <Close className="text-red-600" />
+                                    <p className="text-red-600">Heartbeat not detected</p>
                                 </div>
-                            ) : (showStatus && !showHeartBeat) ? (
-                                <div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
-                                    <div className="flex justify-start">
-                                        <Close className="text-red-600" />
-                                        <p className="text-red-600">Heartbeat not detected</p>
-                                    </div>
-                                    <Button variant={"destructive"} onClick={handleTryAgain}>
-                                        Try again
-                                    </Button>
-                                </div>
-                            ) : null}
-                        </form>
-                        {showConfigureButton && (
-                            <div className='flex justify-end mt-3'>
-                                <Button
-                                    onClick={() => {
-                                        localStorage.setItem('pipelinename', formData.name)
-                                        localStorage.setItem('platform', formData.platform)
-                                        pipelineStatus.setCurrentStep(currentStep + 1);
-                                        handleSubmit
-                                    }}
-                                    disabled={!formData.name || !formData.platform || !EDI_API_KEY}
-                                    className='bg-blue-500 px-6 hover:bg-blue-600'>
-                                    Configure Pipeline
+                                <Button variant={"destructive"} onClick={handleTryAgain}>
+                                    Try again
                                 </Button>
                             </div>
-                        )}
-                    </CardContent>
+                        ) : null}
+                    </form>
+                    {showConfigureButton && (
+                        <div className='flex justify-end mt-3'>
+                            <Button
+                                onClick={() => {
+                                    localStorage.setItem('pipelinename', formData.name)
+                                    localStorage.setItem('platform', formData.platform)
+                                    pipelineStatus.setCurrentStep(currentStep + 1);
+                                    handleSubmit
+                                }}
+                                disabled={!formData.name || !formData.platform || !EDI_API_KEY}
+                                className='bg-blue-500 px-6 hover:bg-blue-600'>
+                                Configure Pipeline
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
 
-                </Card>
-            </div>
+            </Card>
         </div>
 
 
