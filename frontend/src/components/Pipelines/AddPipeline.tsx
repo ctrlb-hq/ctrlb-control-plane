@@ -5,6 +5,7 @@ import {
     SheetContent,
     SheetDescription,
     SheetHeader,
+    SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet"
 
@@ -70,17 +71,9 @@ const LandingView = () => {
                     </Button>
                 </SheetTrigger>
                 <SheetContent>
-                    <SheetHeader>
-                        <div>
-                        </div>
-                        <SheetDescription>
-                            <div className='flex '>
-                                {
-                                    currentStep == 0 ? <PipelineDetails /> : <NodeValueProvider><PipelineCanvas /></NodeValueProvider>
-                                }
-                            </div>
-                        </SheetDescription>
-                    </SheetHeader>
+                    {
+                        currentStep == 0 ? <PipelineDetails /> : <NodeValueProvider><PipelineCanvas /></NodeValueProvider>
+                    }
                 </SheetContent>
             </Sheet>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
