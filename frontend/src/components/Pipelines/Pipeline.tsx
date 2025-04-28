@@ -61,7 +61,7 @@ const Pipeline = () => {
           <TableHeader className="bg-gray-100">
             <TableRow>
               <TableHead className="w-[100px]">Name</TableHead>
-              <TableHead className="w-[100px]">Agents</TableHead>
+              {/* <TableHead className="w-[100px]">Agents</TableHead> */}
               <TableHead className="w-[100px]">Incoming bytes</TableHead>
               <TableHead className="w-[100px]">Outgoing bytes</TableHead>
               <TableHead className="w-[100px]">Updated at</TableHead>
@@ -73,7 +73,7 @@ const Pipeline = () => {
                 <SheetTrigger asChild>
                   <TableRow className="cursor-pointer" key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
                     <TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
-                    <TableCell className="text-gray-700">{pipeline.agents}</TableCell>
+                    {/* <TableCell className="text-gray-700">{pipeline.agents}</TableCell> */}
                     <TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.outgoing_bytes}</TableCell>
                     <TableCell className="text-gray-700">{formatTimestamp(pipeline.updatedAt)}</TableCell>

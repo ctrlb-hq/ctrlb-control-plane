@@ -67,6 +67,9 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         destination: DestinationNode
     }), [])
 
+  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
+
+
     const formatTimestamp = (timestamp: number | undefined) => {
         if (!timestamp) return "N/A";
         const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
@@ -174,14 +177,34 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     //validation of YAML files and the output given will be shown in the toast
     //error or success
-    const handleDeployChanges = () => {
-        setTimeout(() => {
+    const handleDeployChanges = async () => {
+        try {
+            const payload = {
+                // "name": pipelineName,
+                // "created_by": createdBy,
+                "agent_ids": agentIds,
+                // "pipeline_graph": {
+                //   "nodes": PipelineNodes,
+                //   "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]')
+                // }
+              }
+            const res = await pipelineServices.addPipeline(payload);
+            const data = res.data
+            console.log("first",data)
+
             toast({
-                title: "Success",
+                title: "Success", 
                 description: "Successfully deployed the pipeline",
                 duration: 3000,
             });
-        }, 2000);
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Failed to deploy pipeline",
+                // status: "error",
+                duration: 3000,
+            });
+        }
     }
 
     const handleDeletePipeline = async () => {
@@ -192,6 +215,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     return (
         <div className="py-4 flex flex-col">
+             <div className="flex mb-5 items-center justify-between">
             <div className="flex mb-5 gap-2 items-center">
                 <Boxes className="text-gray-700" size={36} />
                 <h1 className="text-2xl text-gray-800">{pipelineOverview?.name}</h1>
@@ -338,6 +362,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     </div>
                 </div>
             </div>
+            </div>
             <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
                     <p className="capitalize"><span className="font-semibold">Name:</span> {pipelineOverviewData?.name}</p>
@@ -352,8 +377,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     {/* <p><span className="font-semibold">Agent ID:</span> {pipelineOverviewData?.agent_id}</p> */}
                 </div>
             </div>
-
-        </div>
+            </div>
     )
 }
 

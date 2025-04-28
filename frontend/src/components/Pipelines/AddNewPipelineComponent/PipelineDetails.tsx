@@ -180,9 +180,14 @@ const PipelineDetails = () => {
                         setShowHeartBeat(false);
                         stopChecking();
                         if (agents) {
-                            localStorage.setItem('CurrentPipelineAgentId', agents.id);
-                            localStorage.setItem('CurrentPipelineAgents', JSON.stringify(agents));
+                            // navigate('/PipelineCanvas'); 
+                            console.log("agents", agents)
+                            localStorage.setItem('latest_agents', JSON.stringify(agents))
+                            localStorage.setItem('selectedAgentIds', agents.id)
+                            localStorage.setItem('pipelinename', formData.name)
+                            localStorage.setItem('platform', formData.platform)
                             pipelineStatus.setCurrentStep(currentStep + 1);
+                            handleSubmit
                         }
                         break;
                     }
