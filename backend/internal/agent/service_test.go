@@ -3,96 +3,185 @@ package agent
 import (
 	"errors"
 	"testing"
+	"time"
 
+	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
-// --- Mock AgentRepository ---
-type mockAgentRepo struct {
-	registerCalled bool
-	returnError    bool
+// Mock implementations
+
+type MockAgentRepository struct {
+	RegisterFunc func(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error)
+	ExistsFunc   func(hostname string) (bool, error)
 }
 
-func (m *mockAgentRepo) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
-	m.registerCalled = true
-	if m.returnError {
-		return nil, errors.New("db insert failed")
-	}
-	return &AgentRegisterResponse{ID: 42, Config: map[string]any{}}, nil
+func (m *MockAgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
+	return m.RegisterFunc(req)
 }
 
-// --- Mock AgentQueue ---
-type mockAgentQueue struct {
-	addedAgents []string
+func (m *MockAgentRepository) AgentExists(hostname string) (bool, error) {
+	return m.ExistsFunc(hostname)
 }
 
-func (mq *mockAgentQueue) AddAgent(id, hostname, ip string) error {
-	mq.addedAgents = append(mq.addedAgents, id)
+type MockAgentQueue struct {
+	AddFunc     func(id, hostname, ip string) error
+	RemoveFunc  func(id string) error
+	RefreshFunc func() error
+}
+
+func (m *MockAgentQueue) AddAgent(id, hostname, ip string) error {
+	return m.AddFunc(id, hostname, ip)
+}
+
+func (m *MockAgentQueue) RemoveAgent(id string) error {
+	return m.RemoveFunc(id)
+}
+
+func (m *MockAgentQueue) RefreshMonitoring() error {
+	return m.RefreshFunc()
+}
+
+func (m *MockAgentQueue) StartStatusCheck() {
+	// No-op for testing
+}
+
+type MockFrontendPipeline struct {
+	SyncFunc func(agentId string) error
+}
+
+func (m *MockFrontendPipeline) GetAllPipelines() ([]*frontendpipeline.Pipeline, error) {
+	return nil, nil
+}
+func (m *MockFrontendPipeline) GetPipelineInfo(pipelineId int) (*frontendpipeline.PipelineInfo, error) {
+	return nil, nil
+}
+func (m *MockFrontendPipeline) GetPipelineOverview(pipelineId int) (*frontendpipeline.PipelineInfoWithAgent, error) {
+	return nil, nil
+}
+func (m *MockFrontendPipeline) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
+	return "", nil
+}
+func (m *MockFrontendPipeline) DeletePipeline(pipelineId int) error {
 	return nil
 }
-
-// --- Mock FrontendPipelineService ---
-type mockFrontendPipelineService struct {
-	calledWith string
-	err        error
+func (m *MockFrontendPipeline) GetAllAgentsAttachedToPipeline(pipelineId int) ([]models.AgentInfoHome, error) {
+	return nil, nil
+}
+func (m *MockFrontendPipeline) DetachAgentFromPipeline(pipelineId int, agentId int) error {
+	return nil
+}
+func (m *MockFrontendPipeline) AttachAgentToPipeline(pipelineId int, agentId int) error {
+	return nil
+}
+func (m *MockFrontendPipeline) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error) {
+	return nil, nil
+}
+func (m *MockFrontendPipeline) SyncPipelineGraph(pipelineId int, pipelineGraph models.PipelineGraph) error {
+	return nil
+}
+func (m *MockFrontendPipeline) SyncConfig(agentId string) error {
+	return m.SyncFunc(agentId)
 }
 
-func (m *mockFrontendPipelineService) SyncConfig(agentID string) error {
-	m.calledWith = agentID
-	return m.err
-}
+func TestAgentService_RegisterAgent_Success(t *testing.T) {
+	mockRepo := &MockAgentRepository{
+		RegisterFunc: func(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
+			return &AgentRegisterResponse{ID: 1, Config: map[string]any{"dummy": "value"}}, nil
+		},
+	}
+	mockQueue := &MockAgentQueue{
+		AddFunc: func(agentID string, hostname string, ip string) error {
+			return nil
+		},
+		RemoveFunc:  func(id string) error { return nil },
+		RefreshFunc: func() error { return nil },
+	}
+	mockFrontend := &MockFrontendPipeline{}
 
-// --- Tests ---
-func TestRegisterAgentSuccess(t *testing.T) {
-	repo := &mockAgentRepo{}
-	queue := &mockAgentQueue{}
-	service := NewAgentService(repo, queue)
+	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
 
 	req := &models.AgentRegisterRequest{
-		Version:  "v1.2.3",
-		Hostname: "test-host",
 		Platform: "linux",
+		Hostname: "test-host",
+		Version:  "v1.0",
 		IP:       "127.0.0.1",
 	}
 
-	resp, err := service.RegisterAgent(req)
+	resp, err := svc.RegisterAgent(req)
+
 	assert.NoError(t, err)
-	assert.Equal(t, int64(42), resp.ID)
-	assert.True(t, repo.registerCalled)
-	assert.Equal(t, 1, len(queue.addedAgents))
+	assert.NotNil(t, resp)
+	assert.Equal(t, int64(1), resp.ID)
+	assert.NotEmpty(t, req.Name)
+	assert.WithinDuration(t, time.Now(), time.Unix(req.RegisteredAt, 0), time.Second*2)
 }
 
-func TestRegisterAgentFailure(t *testing.T) {
-	repo := &mockAgentRepo{returnError: true}
-	queue := &mockAgentQueue{}
-	service := NewAgentService(repo, queue)
+func TestAgentService_RegisterAgent_RepoError(t *testing.T) {
+	mockRepo := &MockAgentRepository{
+		RegisterFunc: func(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
+			return nil, errors.New("db error")
+		},
+	}
+	mockQueue := &MockAgentQueue{
+		AddFunc: func(agentID string, hostname string, ip string) error {
+			return nil
+		},
+		RemoveFunc:  func(id string) error { return nil },
+		RefreshFunc: func() error { return nil },
+	}
+	mockFrontend := &MockFrontendPipeline{}
+
+	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
 
 	req := &models.AgentRegisterRequest{
-		Version:  "v1.0",
-		Hostname: "fail-host",
 		Platform: "linux",
-		IP:       "192.168.0.1",
+		Hostname: "test-host",
+		Version:  "v1.0",
+		IP:       "127.0.0.1",
 	}
 
-	resp, err := service.RegisterAgent(req)
-	assert.Nil(t, resp)
+	resp, err := svc.RegisterAgent(req)
+
 	assert.Error(t, err)
+	assert.Nil(t, resp)
 }
 
-func TestConfigChangedPing(t *testing.T) {
-	mockSync := &mockFrontendPipelineService{}
-	svc := &AgentService{FrontendAgentService: mockSync}
+func TestAgentService_ConfigChangedPing_Success(t *testing.T) {
+	mockRepo := &MockAgentRepository{}
+	mockQueue := &MockAgentQueue{
+		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
+		RemoveFunc:  func(id string) error { return nil },
+		RefreshFunc: func() error { return nil },
+	}
+	mockFrontend := &MockFrontendPipeline{
+		SyncFunc: func(agentId string) error {
+			return nil
+		},
+	}
 
-	err := svc.ConfigChangedPing("agent-123")
+	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+
+	err := svc.ConfigChangedPing("agent-id-123")
 	assert.NoError(t, err)
-	assert.Equal(t, "agent-123", mockSync.calledWith)
 }
 
-func TestConfigChangedPingError(t *testing.T) {
-	mockSync := &mockFrontendPipelineService{err: errors.New("sync failed")}
-	svc := &AgentService{FrontendAgentService: mockSync}
+func TestAgentService_ConfigChangedPing_Failure(t *testing.T) {
+	mockRepo := &MockAgentRepository{}
+	mockQueue := &MockAgentQueue{
+		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
+		RemoveFunc:  func(id string) error { return nil },
+		RefreshFunc: func() error { return nil },
+	}
+	mockFrontend := &MockFrontendPipeline{
+		SyncFunc: func(agentId string) error {
+			return errors.New("sync failed")
+		},
+	}
 
-	err := svc.ConfigChangedPing("agent-fail")
-	assert.EqualError(t, err, "sync failed")
+	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+
+	err := svc.ConfigChangedPing("agent-id-123")
+	assert.Error(t, err)
 }

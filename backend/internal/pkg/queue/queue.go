@@ -10,6 +10,14 @@ import (
 	io_prometheus_client "github.com/prometheus/client_model/go"
 )
 
+// AgentQueueInterface defines the operations supported by an AgentQueue.
+type AgentQueueInterface interface {
+	AddAgent(id, hostname, ip string) error
+	RemoveAgent(id string) error
+	RefreshMonitoring() error
+	StartStatusCheck()
+}
+
 type AgentQueue struct {
 	agents          map[string]*AgentStatus
 	mutex           sync.RWMutex

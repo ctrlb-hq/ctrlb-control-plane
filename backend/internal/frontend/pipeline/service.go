@@ -12,6 +12,20 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
+type FrontendPipelineInterface interface {
+	GetAllPipelines() ([]*Pipeline, error)
+	GetPipelineInfo(pipelineId int) (*PipelineInfo, error)
+	GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error)
+	CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error)
+	DeletePipeline(pipelineId int) error
+	GetAllAgentsAttachedToPipeline(pipelineId int) ([]models.AgentInfoHome, error)
+	DetachAgentFromPipeline(pipelineId int, agentId int) error
+	AttachAgentToPipeline(pipelineId int, agentId int) error
+	GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error)
+	SyncPipelineGraph(pipelineId int, pipelineGraph models.PipelineGraph) error
+	SyncConfig(agentId string) error
+}
+
 type FrontendPipelineService struct {
 	FrontendPipelineRepository *FrontendPipelineRepository
 }

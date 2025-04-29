@@ -106,12 +106,12 @@ func main() {
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendNodeRepository := frontendnode.NewFrontendNodeRepository(db)
 
-	agentService := agent.NewAgentService(agentRepository, agentQueue)
-	authService := auth.NewAuthService(authRepository)
-
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
 	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
+
+	agentService := agent.NewAgentService(agentRepository, agentQueue, frontendPipelineService)
+	authService := auth.NewAuthService(authRepository)
 
 	handler := api.NewHandler(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
 
