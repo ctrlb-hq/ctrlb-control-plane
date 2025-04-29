@@ -13,7 +13,7 @@ import (
 // Define a custom type for the context key
 type contextKey string
 
-const emailContextKey contextKey = "email"
+const EmailContextKey contextKey = "email"
 
 // AuthMiddleware verifies JWT token validity on protected routes
 func AuthMiddleware() func(http.Handler) http.Handler {
@@ -40,7 +40,7 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			}
 
 			// Set the email in the request context
-			ctx := context.WithValue(r.Context(), emailContextKey, email)
+			ctx := context.WithValue(r.Context(), EmailContextKey, email)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

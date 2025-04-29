@@ -75,7 +75,9 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 
 func TestAuthMiddleware_ValidToken(t *testing.T) {
 	defer restoreValidateJWT()
+
 	email := "test@example.com"
+
 	utils.ValidateJWTFunc = func(tokenString, typ string) (string, error) {
 		return email, nil
 	}
@@ -88,7 +90,8 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 
 	middleware.AuthMiddleware()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlerCalled = true
-		ctxEmail := r.Context().Value("email")
+
+		ctxEmail := r.Context().Value(middleware.EmailContextKey)
 		if ctxEmail != email {
 			t.Errorf("expected context email %q, got %q", email, ctxEmail)
 		}

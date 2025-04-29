@@ -74,7 +74,7 @@ func main() {
 		constants.ENV = "prod" // Default value
 	}
 
-	db, err := database.DBInit()
+	db, err := database.DBInit("./backend.db")
 	if err != nil {
 		utils.Logger.Sugar().Fatal("Failed to initialize DB: %s", err)
 		return
