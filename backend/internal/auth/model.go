@@ -17,9 +17,6 @@ type User struct {
 	Role     string `json:"role"`
 }
 
-type LoginResponse struct {
-}
-
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
