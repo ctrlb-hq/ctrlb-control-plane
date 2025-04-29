@@ -1,12 +1,22 @@
 package frontendnode
 
-type FrontendNodeService struct {
-	FrontendNodeRepository *FrontendNodeRepository
+type FrontendNodeRepositoryInterface interface {
+	GetComponents(componentType string) (*[]ComponentInfo, error)
+	GetComponentSchemaByName(componentName string) (any, error)
 }
 
-func NewFrontendNodeService(frontendNodeRepository *FrontendNodeRepository) *FrontendNodeService {
+type FrontendNodeService struct {
+	FrontendNodeRepository FrontendNodeRepositoryInterface
+}
+
+type FrontendAgentServiceInterface interface {
+	GetComponents(componentType string) (*[]ComponentInfo, error)
+	GetComponentSchemaByName(componentName string) (any, error)
+}
+
+func NewFrontendNodeService(frontendNodeRepositoryInterface FrontendNodeRepositoryInterface) *FrontendNodeService {
 	return &FrontendNodeService{
-		FrontendNodeRepository: frontendNodeRepository,
+		FrontendNodeRepository: frontendNodeRepositoryInterface,
 	}
 }
 

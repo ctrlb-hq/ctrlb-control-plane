@@ -11,13 +11,13 @@ import (
 )
 
 type FrontendNodeHandler struct {
-	FrontendNodeService *FrontendNodeService
+	FrontendNodeService FrontendAgentServiceInterface
 }
 
 // NewFrontendAgentHandler initializes the handler
-func NewFrontendNodeHandler(frontendNodeServices *FrontendNodeService) *FrontendNodeHandler {
+func NewFrontendNodeHandler(frontendAgentServiceInterface FrontendAgentServiceInterface) *FrontendNodeHandler {
 	return &FrontendNodeHandler{
-		FrontendNodeService: frontendNodeServices,
+		FrontendNodeService: frontendAgentServiceInterface,
 	}
 }
 
