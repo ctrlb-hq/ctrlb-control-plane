@@ -46,12 +46,18 @@ const Pipeline = () => {
     handleGetPipeline()
   }, [])
 
+
   const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp * 1000) // Convert seconds to milliseconds
-    const hours = date.getHours().toString().padStart(2, '0')
-    const minutes = date.getMinutes().toString().padStart(2, '0')
-    return `${hours}:${minutes}`
-  }
+    return new Date(timestamp * 1000).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    }).replace(',', '')
+}
 
   return (
     <>
@@ -61,7 +67,6 @@ const Pipeline = () => {
           <TableHeader className="bg-gray-100">
             <TableRow>
               <TableHead className="w-[100px]">Name</TableHead>
-              {/* <TableHead className="w-[100px]">Agents</TableHead> */}
               <TableHead className="w-[100px]">Incoming bytes</TableHead>
               <TableHead className="w-[100px]">Outgoing bytes</TableHead>
               <TableHead className="w-[100px]">Updated at</TableHead>
@@ -73,7 +78,6 @@ const Pipeline = () => {
                 <SheetTrigger asChild>
                   <TableRow className="cursor-pointer" key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
                     <TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
-                    {/* <TableCell className="text-gray-700">{pipeline.agents}</TableCell> */}
                     <TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.outgoing_bytes}</TableCell>
                     <TableCell className="text-gray-700">{formatTimestamp(pipeline.updatedAt)}</TableCell>

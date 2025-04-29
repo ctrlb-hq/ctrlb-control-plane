@@ -5,16 +5,21 @@ import { useNodeValue } from "@/context/useNodeContext";
 import { Button } from "../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
-
-
 import { JsonForms } from '@jsonforms/react';
-
 import {
     materialCells,
     materialRenderers,
 } from '@jsonforms/material-renderers';
-
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Component } from "lucide-react";
+
+interface FormSchema {
+    title?: string;
+    type?: string;
+    properties?: Record<string, any>;
+    required?: string[];
+    [key: string]: any;  
+}
 
 const theme = createTheme({
     components: {
@@ -33,11 +38,10 @@ const renderers = [
 ];
 
 export const DestinationNode = ({ data: Data }: any) => {
-    console.log(Data)
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
     const { addChange } = usePipelineChangesLog()
-    const [form, setForm] = useState<object>({})
+    const [form, setForm] = useState<FormSchema>({})
 
     const DestinationLabel = Data.supported_signals
     const handleSubmit = () => {
@@ -49,7 +53,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
-            node.component_name === Data.component_name ? { ...node, config: data } : node
+            node.component_name === Data.component_name ? { ...node, config: data, component_id: Data.id, component_role: "exporter" } : node
         );
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
@@ -62,7 +66,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 
     const getForm = async () => {
         const res = await TransporterService.getTransporterForm(Data.component_name)
-        setForm(res)
+        setForm(res as FormSchema)
     }
 
     useEffect(() => {
@@ -70,7 +74,6 @@ export const DestinationNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        console.log(Data)
         setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
         setNodeValue(prev => prev.filter(node => node.id !== Data.id));
 

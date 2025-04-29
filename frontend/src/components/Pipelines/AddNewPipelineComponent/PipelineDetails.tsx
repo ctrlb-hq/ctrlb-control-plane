@@ -39,12 +39,11 @@ const PipelineDetails = () => {
     const [showAgentInfo, setShowAgentInfo] = useState(false)
     const { toast } = useToast()
     const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
-    const [showConfigureButton, setShowConfigureButton] = useState(false);
-    const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9"
-
+    // const [showConfigureButton, setShowConfigureButton] = useState(false);
     const [isChecking, setIsChecking] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
-
+    
+    const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9"
 
     const [formData, setFormData] = useState<formData>({
         name: pipelineName ?? '',
@@ -98,7 +97,7 @@ const PipelineDetails = () => {
     const handleCopy = () => {
         navigator.clipboard.writeText(`${EDI_API_KEY}`)
         setIsApiKeyCopied(true);
-        setShowConfigureButton(true);
+        // setShowConfigureButton(true);
         const since = Math.floor(new Date().getTime() / 1000)
         setTimeout(() => {
             toast({
@@ -138,7 +137,6 @@ const PipelineDetails = () => {
         setIsChecking(false);
     }, []);
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
             stopChecking();
@@ -180,7 +178,6 @@ const PipelineDetails = () => {
                         setShowHeartBeat(false);
                         stopChecking();
                         if (agents) {
-                            // navigate('/PipelineCanvas'); 
                             console.log("agents", agents)
                             localStorage.setItem('latest_agents', JSON.stringify(agents))
                             localStorage.setItem('selectedAgentIds', agents.id)
@@ -335,7 +332,7 @@ const PipelineDetails = () => {
                             </div>
                         ) : null}
                     </form>
-                    {showConfigureButton && (
+                    {/* {showConfigureButton && (
                         <div className='flex justify-end mt-3'>
                             <Button
                                 onClick={() => {
@@ -349,7 +346,7 @@ const PipelineDetails = () => {
                                 Configure Pipeline
                             </Button>
                         </div>
-                    )}
+                    )} */}
                 </CardContent>
 
             </Card>
