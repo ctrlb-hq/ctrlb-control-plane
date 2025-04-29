@@ -8,7 +8,7 @@ type CreatePipelineRequest struct {
 }
 
 // Struct for pipeline component (Node)
-type PipelineComponent struct {
+type PipelineNodes struct {
 	ComponentID      int            `json:"component_id"`
 	Name             string         `json:"name"`
 	ComponentRole    string         `json:"component_role"`
@@ -18,13 +18,13 @@ type PipelineComponent struct {
 }
 
 // Struct for dependency/edge
-type PipelineEdge struct {
+type PipelineEdges struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 }
 
 // Struct for API response
 type PipelineGraph struct {
-	Nodes []PipelineComponent `json:"nodes"`
-	Edges []PipelineEdge      `json:"edges"`
+	Nodes []PipelineNodes `json:"nodes"`
+	Edges []PipelineEdges `json:"edges"`
 }

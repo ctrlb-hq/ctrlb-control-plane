@@ -9,7 +9,7 @@ import (
 
 func TestCompileGraphToJSON_Success(t *testing.T) {
 	graph := models.PipelineGraph{
-		Nodes: []models.PipelineComponent{
+		Nodes: []models.PipelineNodes{
 			{
 				ComponentID:      1,
 				Name:             "receiver_one",
@@ -41,7 +41,7 @@ func TestCompileGraphToJSON_Success(t *testing.T) {
 				},
 			},
 		},
-		Edges: []models.PipelineEdge{
+		Edges: []models.PipelineEdges{
 			{Source: "1", Target: "2"},
 			{Source: "2", Target: "3"},
 		},

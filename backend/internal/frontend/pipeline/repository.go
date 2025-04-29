@@ -268,7 +268,7 @@ func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*models.P
 	}, nil
 }
 
-func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineComponent, error) {
+func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineNodes, error) {
 	rows, err := f.db.Query(`
 		SELECT component_id, name, component_role, component_name, config, supported_signals
 		FROM pipeline_components 
@@ -278,9 +278,9 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	}
 	defer rows.Close()
 
-	var nodes []models.PipelineComponent
+	var nodes []models.PipelineNodes
 	for rows.Next() {
-		var node models.PipelineComponent
+		var node models.PipelineNodes
 		var configStr string
 		var supportedSignals string
 
@@ -304,7 +304,7 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	return nodes, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.PipelineEdge, error) {
+func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.PipelineEdges, error) {
 	rows, err := f.db.Query(`
 		SELECT parent_component_id, child_component_id 
 		FROM pipeline_component_edges 
@@ -314,9 +314,9 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	}
 	defer rows.Close()
 
-	var edges []models.PipelineEdge
+	var edges []models.PipelineEdges
 	for rows.Next() {
-		var edge models.PipelineEdge
+		var edge models.PipelineEdges
 		if err := rows.Scan(&edge.Source, &edge.Target); err != nil {
 			return nil, err
 		}
@@ -325,7 +325,7 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineComponent, edges []models.PipelineEdge) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineNodes, edges []models.PipelineEdges) error {
 	shouldCommit := false
 	var err error
 
