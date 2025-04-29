@@ -21,7 +21,6 @@ type AuthServiceInterface interface {
 	RefreshToken(req RefreshTokenRequest) (any, error)
 }
 
-
 type AuthService struct {
 	AuthRepository AuthRepositoryInterface
 }
@@ -113,7 +112,7 @@ func (a *AuthService) Login(request *models.LoginRequest) (*UserResponse, error)
 func (a *AuthService) RefreshToken(req RefreshTokenRequest) (any, error) {
 
 	// Validate the refresh token
-	email, err := utils.ValidateJWT(req.RefreshToken, "refresh")
+	email, err := utils.ValidateJWTFunc(req.RefreshToken, "refresh")
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
 	}

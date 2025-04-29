@@ -40,13 +40,15 @@ func GenerateRefreshToken(email string) (string, error) {
 
 // RefreshToken generates a new access token using a valid refresh token
 func RefreshToken(refreshToken string) (string, error) {
-	email, err := ValidateJWT(refreshToken, "refresh")
+	email, err := ValidateJWTFunc(refreshToken, "refresh")
 	if err != nil {
 		return "", err // Invalid refresh token
 	}
 	// Generate a new access token
 	return GenerateAccessToken(email)
 }
+
+var ValidateJWTFunc = ValidateJWT
 
 func ValidateJWT(tokenString string, typ string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {

@@ -28,7 +28,7 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 			// Validate the access token
-			email, err := utils.ValidateJWT(tokenString, "access")
+			email, err := utils.ValidateJWTFunc(tokenString, "access")
 			if err != nil {
 				// Check if the error is due to token expiration
 				if errors.Is(err, jwt.ErrTokenExpired) {

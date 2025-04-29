@@ -19,7 +19,7 @@ func TestGenerateAccessTokenAndValidate(t *testing.T) {
 	}
 
 	// Validate the token
-	subject, err := utils.ValidateJWT(token, "access")
+	subject, err := utils.ValidateJWTFunc(token, "access")
 	if err != nil {
 		t.Fatalf("failed to validate access token: %v", err)
 	}
@@ -36,7 +36,7 @@ func TestGenerateRefreshTokenAndValidate(t *testing.T) {
 	}
 
 	// Validate the refresh token
-	subject, err := utils.ValidateJWT(token, "refresh")
+	subject, err := utils.ValidateJWTFunc(token, "refresh")
 	if err != nil {
 		t.Fatalf("failed to validate refresh token: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestRefreshToken_Success(t *testing.T) {
 	}
 
 	// Validate the new access token
-	subject, err := utils.ValidateJWT(newAccessToken, "access")
+	subject, err := utils.ValidateJWTFunc(newAccessToken, "access")
 	if err != nil {
 		t.Fatalf("failed to validate new access token: %v", err)
 	}
@@ -76,7 +76,7 @@ func TestValidateJWT_InvalidSignature(t *testing.T) {
 
 	// Corrupt the token
 	invalidToken := token + "tampered"
-	_, err = utils.ValidateJWT(invalidToken, "access")
+	_, err = utils.ValidateJWTFunc(invalidToken, "access")
 	if err == nil {
 		t.Fatal("expected validation to fail for tampered token, but it succeeded")
 	}
@@ -89,7 +89,7 @@ func TestValidateJWT_WrongTokenType(t *testing.T) {
 		t.Fatalf("failed to generate refresh token: %v", err)
 	}
 
-	_, err = utils.ValidateJWT(refreshToken, "access")
+	_, err = utils.ValidateJWTFunc(refreshToken, "access")
 	if err == nil || !strings.Contains(err.Error(), "invalid token type") {
 		t.Fatalf("expected invalid token type error, got: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestValidateJWT_ExpiredToken(t *testing.T) {
 		t.Fatalf("failed to sign expired token: %v", err)
 	}
 
-	_, err = utils.ValidateJWT(tokenString, "access")
+	_, err = utils.ValidateJWTFunc(tokenString, "access")
 	if err == nil {
 		t.Fatal("expected validation to fail for expired token, but it succeeded")
 	}
