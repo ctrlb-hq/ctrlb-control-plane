@@ -1,102 +1,132 @@
-package queue
+package queue_test
 
 import (
-	"database/sql"
-	"fmt"
-	"net"
-	"net/http"
+	"errors"
+	"sync"
 	"testing"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
+	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 )
 
-const mockMetrics = `
-# HELP otelcol_exporter_sent_log_records Total logs sent
-# TYPE otelcol_exporter_sent_log_records counter
-otelcol_exporter_sent_log_records 50
-
-# HELP otelcol_exporter_sent_spans Total spans sent
-# TYPE otelcol_exporter_sent_spans counter
-otelcol_exporter_sent_spans 100
-
-# HELP otelcol_exporter_sent_bytes Total bytes sent
-# TYPE otelcol_exporter_sent_bytes counter
-otelcol_exporter_sent_bytes 2048
-
-# HELP otelcol_receiver_accepted_bytes Total bytes received
-# TYPE otelcol_receiver_accepted_bytes counter
-otelcol_receiver_accepted_bytes 1024
-
-# HELP otelcol_exporter_sent_metric_points Total metrics sent
-# TYPE otelcol_exporter_sent_metric_points counter
-otelcol_exporter_sent_metric_points 75
-
-# HELP otelcol_process_cpu_seconds_total CPU usage
-# TYPE otelcol_process_cpu_seconds_total counter
-otelcol_process_cpu_seconds_total 1.5
-
-# HELP otelcol_process_memory_rss Memory usage
-# TYPE otelcol_process_memory_rss gauge
-otelcol_process_memory_rss 512000
-`
-
-func startFixedPortServer(t *testing.T) {
-	listener, err := net.Listen("tcp", "127.0.0.1:8888")
-	assert.NoError(t, err)
-
-	go func() {
-		err := http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, mockMetrics)
-		}))
-		if err != nil {
-			t.Logf("Server stopped: %v", err)
-		}
-	}()
+type mockRepo struct {
+	mu         sync.Mutex
+	statusLog  []string
+	metricsSet bool
 }
 
-func TestWorkerProcessFixedPort(t *testing.T) {
-	startFixedPortServer(t)
+func (m *mockRepo) RefreshMonitoring() ([]queue.AgentStatus, error) {
+	return nil, nil
+}
 
-	db, err := sql.Open("sqlite3", ":memory:")
+func (m *mockRepo) UpdateAgentMetricsInDB(agg queue.AggregatedAgentMetrics, rt queue.RealtimeAgentMetrics) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.metricsSet = true
+	return nil
+}
+
+func (m *mockRepo) UpdateAgentStatus(agentID string, status string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.statusLog = append(m.statusLog, status)
+	return nil
+}
+
+type mockMetricsHelper struct {
+	fetchErrCount int
+}
+
+func (m *mockMetricsHelper) Fetch(url string) (map[string]*io_prometheus_client.MetricFamily, error) {
+	if m.fetchErrCount > 0 {
+		m.fetchErrCount--
+		return nil, errors.New("mock fetch error")
+	}
+
+	val := 10.0
+	return map[string]*io_prometheus_client.MetricFamily{
+		"otelcol_exporter_sent_log_records": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_exporter_sent_spans": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_exporter_sent_metric_points": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_exporter_sent_bytes": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_receiver_accepted_bytes": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_process_cpu_seconds_total": {
+			Metric: []*io_prometheus_client.Metric{{Counter: &io_prometheus_client.Counter{Value: &val}}},
+		},
+		"otelcol_process_memory_rss": {
+			Metric: []*io_prometheus_client.Metric{{Gauge: &io_prometheus_client.Gauge{Value: &val}}},
+		},
+	}, nil
+}
+
+func (m *mockMetricsHelper) ExtractValue(metrics map[string]*io_prometheus_client.MetricFamily, name string) float64 {
+	if mf, ok := metrics[name]; ok {
+		for _, metric := range mf.Metric {
+			if metric.GetGauge() != nil {
+				return metric.GetGauge().GetValue()
+			}
+			if metric.GetCounter() != nil {
+				return metric.GetCounter().GetValue()
+			}
+		}
+	}
+	return 0
+}
+
+func TestAgentQueue_CheckAgentStatus_RetriesAndRemoves(t *testing.T) {
+	repo := &mockRepo{}
+	helper := &mockMetricsHelper{fetchErrCount: 3}
+
+	q := queue.NewQueue(1, 1, repo).(*queue.AgentQueue)
+	q.Metrics = helper
+
+	err := q.AddAgent("agent-1", "localhost", "127.0.0.1")
 	assert.NoError(t, err)
 
-	_, err = db.Exec(`
-		CREATE TABLE aggregated_agent_metrics (
-			agent_id TEXT PRIMARY KEY,
-			logs_rate_sent REAL,
-			traces_rate_sent REAL,
-			metrics_rate_sent REAL,
-			data_sent_bytes REAL,
-			data_received_bytes REAL,
-			status TEXT,
-			updated_at INTEGER
-		);
-		CREATE TABLE realtime_agent_metrics (
-			agent_id TEXT,
-			logs_rate_sent REAL,
-			traces_rate_sent REAL,
-			metrics_rate_sent REAL,
-			data_sent_bytes REAL,
-			data_received_bytes REAL,
-			cpu_utilization REAL,
-			memory_utilization REAL,
-			timestamp INTEGER
-		);
-	`)
+	// Simulate 3 failed checks
+	for i := 0; i < 3; i++ {
+		q.CheckAllAgents()
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	_, exists := q.GetAgent("agent-1")
+	assert.False(t, exists, "Agent should be removed after 3 failures")
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, []string{"unknown", "unknown", "disconnected"}, repo.statusLog)
+}
+
+func TestAgentQueue_CheckAgentStatus_Success(t *testing.T) {
+	repo := &mockRepo{}
+	helper := &mockMetricsHelper{}
+
+	q := queue.NewQueue(1, 1, repo).(*queue.AgentQueue)
+	q.Metrics = helper
+
+	err := q.AddAgent("agent-2", "localhost", "127.0.0.1")
 	assert.NoError(t, err)
 
-	q := NewQueue(1, 1, db)
+	q.CheckAllAgents()
+	time.Sleep(50 * time.Millisecond)
 
-	err = q.AddAgent("agent-2", "127.0.0.1", "127.0.0.1")
-	assert.NoError(t, err)
+	agent, exists := q.GetAgent("agent-2")
+	assert.True(t, exists, "Agent should still exist after successful check")
+	assert.Equal(t, "connected", agent.CurrentStatus)
 
-	q.checkAllAgents()
-	time.Sleep(1 * time.Second) // give the worker a chance to run
-
-	var count int
-	err = db.QueryRow(`SELECT COUNT(*) FROM aggregated_agent_metrics WHERE agent_id = ?`, "agent-2").Scan(&count)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, count)
+	repo.mu.Lock()
+	assert.True(t, repo.metricsSet)
+	repo.mu.Unlock()
 }

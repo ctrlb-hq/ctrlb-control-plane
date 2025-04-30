@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"database/sql"
 	"fmt"
 	"sync"
 	"time"
@@ -16,6 +15,13 @@ type AgentQueueInterface interface {
 	RemoveAgent(id string) error
 	RefreshMonitoring() error
 	StartStatusCheck()
+	CheckAllAgents()
+}
+
+type AgentQueueRepositoryInterface interface {
+	RefreshMonitoring() ([]AgentStatus, error)
+	UpdateAgentMetricsInDB(agg AggregatedAgentMetrics, rt RealtimeAgentMetrics) error
+	UpdateAgentStatus(agentID string, status string) error
 }
 
 type AgentQueue struct {
@@ -24,12 +30,12 @@ type AgentQueue struct {
 	checkQueue      chan string
 	workerCount     int
 	IntervalMins    int
-	QueueRepository *QueueRepository
+	QueueRepository AgentQueueRepositoryInterface
+	Metrics         MetricsHelper
 }
 
 // NewQueue creates a new AgentQueue with the specified number of workers.
-func NewQueue(workerCount int, intervalMins int, db *sql.DB) *AgentQueue {
-	queueRepository := NewQueueRepository(db)
+func NewQueue(workerCount int, intervalMins int, queueRepository AgentQueueRepositoryInterface) AgentQueueInterface {
 	q := &AgentQueue{
 		agents:          make(map[string]*AgentStatus),
 		checkQueue:      make(chan string, workerCount*2),
@@ -90,13 +96,13 @@ func (q *AgentQueue) StartStatusCheck() {
 	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for range ticker.C {
-			q.checkAllAgents()
+			q.CheckAllAgents()
 		}
 	}()
 }
 
 // Internal methods
-func (q *AgentQueue) checkAllAgents() {
+func (q *AgentQueue) CheckAllAgents() {
 	q.mutex.RLock()
 	agentIDs := make([]string, 0, len(q.agents))
 	for id := range q.agents {
@@ -131,9 +137,13 @@ func (q *AgentQueue) worker() {
 				} else {
 					agent.CurrentStatus = "unknown"
 				}
-
-				q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
 				utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s], Attempts remaining: %v", agent.AgentID, agent.RetryRemaining)
+
+				err := q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
+				if err != nil {
+					utils.Logger.Sugar().Errorf("Failed to update status for agent [ID:%s]: %v", agent.AgentID, err)
+				}
+
 				q.mutex.Unlock()
 			} else {
 				q.mutex.Lock()
@@ -158,7 +168,7 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 	var err error
 
 	for _, url := range endpoints {
-		metrics, err = fetchMetrics(url)
+		metrics, err = q.Metrics.Fetch(url)
 		if err == nil {
 			break
 		}
@@ -170,11 +180,11 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 
 	agg := AggregatedAgentMetrics{
 		AgentID:           agent.AgentID,
-		LogsRateSent:      extractMetricValue(metrics, "otelcol_exporter_sent_log_records"),
-		TracesRateSent:    extractMetricValue(metrics, "otelcol_exporter_sent_spans"),
-		MetricsRateSent:   extractMetricValue(metrics, "otelcol_exporter_sent_metric_points"),
-		DataSentBytes:     extractMetricValue(metrics, "otelcol_exporter_sent_bytes"),
-		DataReceivedBytes: extractMetricValue(metrics, "otelcol_receiver_accepted_bytes"),
+		LogsRateSent:      q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_log_records"),
+		TracesRateSent:    q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_spans"),
+		MetricsRateSent:   q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_metric_points"),
+		DataSentBytes:     q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_bytes"),
+		DataReceivedBytes: q.Metrics.ExtractValue(metrics, "otelcol_receiver_accepted_bytes"),
 		Status:            "connected",
 		UpdatedAt:         time.Now().Unix(),
 	}
@@ -186,10 +196,18 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		MetricsRateSent:   agg.MetricsRateSent,
 		DataSentBytes:     agg.DataSentBytes,
 		DataReceivedBytes: agg.DataReceivedBytes,
-		CPUUtilization:    extractMetricValue(metrics, "otelcol_process_cpu_seconds_total"),
-		MemoryUtilization: extractMetricValue(metrics, "otelcol_process_memory_rss"),
+		CPUUtilization:    q.Metrics.ExtractValue(metrics, "otelcol_process_cpu_seconds_total"),
+		MemoryUtilization: q.Metrics.ExtractValue(metrics, "otelcol_process_memory_rss"),
 		Timestamp:         time.Now().Unix(),
 	}
 
 	return q.QueueRepository.UpdateAgentMetricsInDB(agg, rt)
+}
+
+// GetAgent returns the agent from the queue by ID. Used for testing.
+func (q *AgentQueue) GetAgent(id string) (*AgentStatus, bool) {
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
+	agent, exists := q.agents[id]
+	return agent, exists
 }

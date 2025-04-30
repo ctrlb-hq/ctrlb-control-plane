@@ -26,9 +26,10 @@ func (m *MockAgentRepository) AgentExists(hostname string) (bool, error) {
 }
 
 type MockAgentQueue struct {
-	AddFunc     func(id, hostname, ip string) error
-	RemoveFunc  func(id string) error
-	RefreshFunc func() error
+	AddFunc            func(id, hostname, ip string) error
+	RemoveFunc         func(id string) error
+	RefreshFunc        func() error
+	CheckAllAgentsFunc func()
 }
 
 func (m *MockAgentQueue) AddAgent(id, hostname, ip string) error {
@@ -44,6 +45,10 @@ func (m *MockAgentQueue) RefreshMonitoring() error {
 }
 
 func (m *MockAgentQueue) StartStatusCheck() {
+	// No-op for testing
+}
+
+func (m *MockAgentQueue) CheckAllAgents() {
 	// No-op for testing
 }
 

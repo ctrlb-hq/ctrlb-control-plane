@@ -26,7 +26,7 @@ type FrontendAgentRepositoryInterface interface {
 
 type FrontendAgentService struct {
 	FrontendAgentRepository FrontendAgentRepositoryInterface
-	AgentQueue              *queue.AgentQueue
+	AgentQueue              queue.AgentQueueInterface
 }
 
 type FrontendAgentServiceInterface interface {
@@ -44,7 +44,7 @@ type FrontendAgentServiceInterface interface {
 }
 
 // NewFrontendAgentService creates a new FrontendAgentService
-func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
+func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface, agentQueue queue.AgentQueueInterface) *FrontendAgentService {
 	return &FrontendAgentService{
 		FrontendAgentRepository: frontendAgentRepository,
 		AgentQueue:              agentQueue,

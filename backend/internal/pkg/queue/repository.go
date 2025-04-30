@@ -50,7 +50,7 @@ func (q *QueueRepository) UpdateAgentMetricsInDB(agg AggregatedAgentMetrics, rt 
 	return nil
 }
 
-func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) {
+func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) error {
 	_, err := q.db.Exec(`
 		UPDATE aggregated_agent_metrics
 		SET status = ?, updated_at = ?
@@ -59,8 +59,9 @@ func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) {
 
 	if err != nil {
 		utils.Logger.Sugar().Errorf("Failed to update status for agent %s: %w", agentID, err)
-		return
+		return err
 	}
+	return nil
 }
 
 func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
