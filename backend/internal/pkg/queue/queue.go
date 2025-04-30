@@ -14,8 +14,6 @@ type AgentQueueInterface interface {
 	AddAgent(id, hostname, ip string) error
 	RemoveAgent(id string) error
 	RefreshMonitoring() error
-	StartStatusCheck()
-	CheckAllAgents()
 }
 
 type AgentQueueRepositoryInterface interface {
@@ -24,31 +22,33 @@ type AgentQueueRepositoryInterface interface {
 	UpdateAgentStatus(agentID string, status string) error
 }
 
+// AgentQueue handles agent monitoring and retry logic
 type AgentQueue struct {
 	agents          map[string]*AgentStatus
 	mutex           sync.RWMutex
 	checkQueue      chan string
 	workerCount     int
-	IntervalMins    int
+	IntervalSecond  int
 	QueueRepository AgentQueueRepositoryInterface
 	Metrics         MetricsHelper
 }
 
-// NewQueue creates a new AgentQueue with the specified number of workers.
-func NewQueue(workerCount int, intervalMins int, queueRepository AgentQueueRepositoryInterface) AgentQueueInterface {
+// NewQueue creates a new AgentQueue
+func NewQueue(workerCount int, intervalSec int, queueRepository AgentQueueRepositoryInterface) AgentQueueInterface {
 	q := &AgentQueue{
 		agents:          make(map[string]*AgentStatus),
 		checkQueue:      make(chan string, workerCount*2),
 		workerCount:     workerCount,
-		IntervalMins:    intervalMins,
+		IntervalSecond:  intervalSec,
 		QueueRepository: queueRepository,
 	}
 	q.startWorkers()
+	q.startRetryScheduler()
 	return q
 }
 
-// AddAgent adds a new agent to the queue.
-func (q *AgentQueue) AddAgent(id, Hostname, IP string) error {
+// AddAgent adds a new agent to the queue
+func (q *AgentQueue) AddAgent(id, hostname, ip string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	if _, exists := q.agents[id]; exists {
@@ -57,16 +57,17 @@ func (q *AgentQueue) AddAgent(id, Hostname, IP string) error {
 	}
 	q.agents[id] = &AgentStatus{
 		AgentID:        id,
-		Hostname:       Hostname,
-		IP:             IP,
+		Hostname:       hostname,
+		IP:             ip,
 		CurrentStatus:  "unknown",
 		RetryRemaining: 3,
+		NextCheck:      time.Now(), // eligible immediately
 	}
 	utils.Logger.Info(fmt.Sprintf("Successfully queued agent with ID: %s.", id))
 	return nil
 }
 
-// RemoveAgent removes an agent from the queue by ID.
+// RemoveAgent removes an agent from the queue
 func (q *AgentQueue) RemoveAgent(id string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -75,6 +76,7 @@ func (q *AgentQueue) RemoveAgent(id string) error {
 	return nil
 }
 
+// RefreshMonitoring re-queues all existing agents (used at boot)
 func (q *AgentQueue) RefreshMonitoring() error {
 	agents, err := q.QueueRepository.RefreshMonitoring()
 	if err != nil {
@@ -91,73 +93,76 @@ func (q *AgentQueue) RefreshMonitoring() error {
 	return nil
 }
 
-// StartStatusCheck starts a goroutine that checks the status of all agents at regular intervals.
-func (q *AgentQueue) StartStatusCheck() {
-	ticker := time.NewTicker(10 * time.Second)
-	go func() {
-		for range ticker.C {
-			q.CheckAllAgents()
-		}
-	}()
-}
-
-// Internal methods
-func (q *AgentQueue) CheckAllAgents() {
-	q.mutex.RLock()
-	agentIDs := make([]string, 0, len(q.agents))
-	for id := range q.agents {
-		agentIDs = append(agentIDs, id)
-	}
-	q.mutex.RUnlock()
-
-	for _, id := range agentIDs {
-		q.checkQueue <- id
-	}
-}
-
+// Internal worker that handles agent check logic
 func (q *AgentQueue) startWorkers() {
 	for i := 0; i < q.workerCount; i++ {
 		go q.worker()
 	}
 }
 
+// Retry scheduler that re-enqueues agents based on NextCheck
+func (q *AgentQueue) startRetryScheduler() {
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			now := time.Now()
+			q.mutex.RLock()
+			for id, agent := range q.agents {
+				if agent.NextCheck.Before(now) || agent.NextCheck.Equal(now) {
+					select {
+					case q.checkQueue <- id:
+						// throttle next check
+						agent.NextCheck = now.Add(time.Duration(q.IntervalSecond) * time.Second)
+					default:
+						utils.Logger.Sugar().Errorf("checkQueue full, skipping agent %s", id)
+					}
+				}
+			}
+			q.mutex.RUnlock()
+		}
+	}()
+}
+
+// Worker loop
 func (q *AgentQueue) worker() {
 	for agentID := range q.checkQueue {
 		q.mutex.RLock()
 		agent, exists := q.agents[agentID]
 		q.mutex.RUnlock()
 
-		if exists {
-			if err := q.checkAgentStatus(agent); err != nil {
-				q.mutex.Lock()
+		if !exists {
+			continue
+		}
 
-				agent.RetryRemaining--
-				if agent.RetryRemaining <= 0 {
-					agent.CurrentStatus = "disconnected"
-				} else {
-					agent.CurrentStatus = "unknown"
-				}
-				utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s], Attempts remaining: %v", agent.AgentID, agent.RetryRemaining)
-
-				err := q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
-				if err != nil {
-					utils.Logger.Sugar().Errorf("Failed to update status for agent [ID:%s]: %v", agent.AgentID, err)
-				}
-
-				q.mutex.Unlock()
-			} else {
-				q.mutex.Lock()
-				agent.RetryRemaining = 3
-				agent.CurrentStatus = "connected"
-				q.mutex.Unlock()
-			}
+		if err := q.checkAgentStatus(agent); err != nil {
+			q.mutex.Lock()
+			agent.RetryRemaining--
 			if agent.RetryRemaining <= 0 {
-				q.RemoveAgent(agentID)
+				agent.CurrentStatus = "disconnected"
+			} else {
+				agent.CurrentStatus = "unknown"
 			}
+			_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
+			q.mutex.Unlock()
+
+			utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s], Attempts remaining: %v", agent.AgentID, agent.RetryRemaining)
+		} else {
+			q.mutex.Lock()
+			agent.RetryRemaining = 3
+			agent.CurrentStatus = "connected"
+			_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, "connected")
+			q.mutex.Unlock()
+		}
+
+		if agent.RetryRemaining <= 0 {
+			_ = q.RemoveAgent(agentID)
 		}
 	}
 }
 
+// checkAgentStatus fetches Prometheus metrics from agent
 func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 	endpoints := []string{
 		fmt.Sprintf("http://%s:8888/metrics", agent.Hostname),
@@ -204,7 +209,7 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 	return q.QueueRepository.UpdateAgentMetricsInDB(agg, rt)
 }
 
-// GetAgent returns the agent from the queue by ID. Used for testing.
+// GetAgent returns agent by ID — test helper
 func (q *AgentQueue) GetAgent(id string) (*AgentStatus, bool) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()

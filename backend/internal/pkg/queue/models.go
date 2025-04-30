@@ -12,6 +12,7 @@ type AgentStatus struct {
 	CurrentStatus  string    `json:"currentStatus"`  // Status of the agent (e.g., online, offline)
 	RetryRemaining int       `json:"retryRemaining"` // Number of retry attempts left
 	UpdatedAt      time.Time `json:"updatedAt"`      // Timestamp of the last status update
+	NextCheck      time.Time `json:"nextCheck"`      // Timestamp for the next check
 }
 
 type AggregatedAgentMetrics struct {

@@ -53,12 +53,12 @@ func main() {
 	if checkIntervalMinsEnv != "" {
 		count, err := strconv.Atoi(checkIntervalMinsEnv)
 		if err != nil {
-			constants.CHECK_INTERVAL_MINS = 10
+			constants.CHECK_INTERVAL_SEC = 10
 		} else {
-			constants.CHECK_INTERVAL_MINS = count
+			constants.CHECK_INTERVAL_SEC = count
 		}
 	} else {
-		constants.CHECK_INTERVAL_MINS = 10
+		constants.CHECK_INTERVAL_SEC = 10
 	}
 
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
@@ -93,14 +93,13 @@ func main() {
 	utils.Logger.Info("Component schemas loaded into database")
 
 	agentQueueRepository := queue.NewQueueRepository(db)
-	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_MINS, agentQueueRepository)
+
+	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_SEC, agentQueueRepository)
 
 	if err = agentQueue.RefreshMonitoring(); err != nil {
 		utils.Logger.Fatal("Unable to update existing agent")
 		return
 	}
-
-	agentQueue.StartStatusCheck()
 
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
