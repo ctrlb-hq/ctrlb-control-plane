@@ -44,7 +44,7 @@ type FrontendAgentServiceInterface interface {
 }
 
 // NewFrontendAgentService creates a new FrontendAgentService
-func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface, agentQueue queue.AgentQueueInterface) *FrontendAgentService {
+func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface, agentQueue queue.AgentQueueInterface) FrontendAgentServiceInterface {
 	return &FrontendAgentService{
 		FrontendAgentRepository: frontendAgentRepository,
 		AgentQueue:              agentQueue,

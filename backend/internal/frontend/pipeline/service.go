@@ -2,6 +2,7 @@ package frontendpipeline
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,23 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-type FrontendPipelineInterface interface {
+type FrontendPipelineRepositoryInterface interface {
+	PipelineExists(pipelineId int) bool
+	GetAllPipelines() ([]*Pipeline, error)
+	GetPipelineInfo(pipelineId int) (*PipelineInfo, error)
+	GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error)
+	CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error)
+	DeletePipeline(pipelineId int) error
+	GetAllAgentsAttachedToPipeline(pipelineId int) ([]models.AgentInfoHome, error)
+	DetachAgentFromPipeline(pipelineId int, agentId int) error
+	AttachAgentToPipeline(pipelineId int, agentId int) error
+	GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error)
+	SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineNodes, edges []models.PipelineEdges) error
+	GetAgentInfo(agentId int) (*models.AgentInfoHome, error)
+	GetAgentPipelineId(agentId string) (*int, error)
+}
+
+type FrontendPipelineServiceInterface interface {
 	GetAllPipelines() ([]*Pipeline, error)
 	GetPipelineInfo(pipelineId int) (*PipelineInfo, error)
 	GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error)
@@ -27,11 +44,11 @@ type FrontendPipelineInterface interface {
 }
 
 type FrontendPipelineService struct {
-	FrontendPipelineRepository *FrontendPipelineRepository
+	FrontendPipelineRepository FrontendPipelineRepositoryInterface
 }
 
 // NewFrontendPipelineService creates a new FrontendPipelineService
-func NewFrontendPipelineService(frontendPipelineRepository *FrontendPipelineRepository) *FrontendPipelineService {
+func NewFrontendPipelineService(frontendPipelineRepository FrontendPipelineRepositoryInterface) FrontendPipelineServiceInterface {
 	return &FrontendPipelineService{
 		FrontendPipelineRepository: frontendPipelineRepository,
 	}

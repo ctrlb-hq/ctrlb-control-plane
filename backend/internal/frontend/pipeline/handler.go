@@ -12,11 +12,11 @@ import (
 
 // FrontendPipelineHandler handles frontend Pipeline operations
 type FrontendPipelineHandler struct {
-	FrontendPipelineService *FrontendPipelineService
+	FrontendPipelineService FrontendPipelineServiceInterface
 }
 
 // NewFrontendPipelineHandler initializes the handler
-func NewFrontendPipelineHandler(frontendPipelineServices *FrontendPipelineService) *FrontendPipelineHandler {
+func NewFrontendPipelineHandler(frontendPipelineServices FrontendPipelineServiceInterface) *FrontendPipelineHandler {
 	return &FrontendPipelineHandler{
 		FrontendPipelineService: frontendPipelineServices,
 	}

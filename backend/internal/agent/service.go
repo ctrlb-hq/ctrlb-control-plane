@@ -25,11 +25,11 @@ type AgentServiceInterface interface {
 type AgentService struct {
 	AgentRepository      AgentRepositoryInterface
 	AgentQueue           queue.AgentQueueInterface
-	FrontendAgentService frontendpipeline.FrontendPipelineInterface
+	FrontendAgentService frontendpipeline.FrontendPipelineServiceInterface
 }
 
 // NewAgentService creates a new AgentService instance.
-func NewAgentService(agentRepository AgentRepositoryInterface, agentQueue queue.AgentQueueInterface, frontendPipelineService frontendpipeline.FrontendPipelineInterface) *AgentService {
+func NewAgentService(agentRepository AgentRepositoryInterface, agentQueue queue.AgentQueueInterface, frontendPipelineService frontendpipeline.FrontendPipelineServiceInterface) *AgentService {
 	return &AgentService{
 		AgentRepository:      agentRepository,
 		AgentQueue:           agentQueue,

@@ -9,7 +9,7 @@ type FrontendNodeService struct {
 	FrontendNodeRepository FrontendNodeRepositoryInterface
 }
 
-type FrontendAgentServiceInterface interface {
+type FrontendNodeServiceInterface interface {
 	GetComponents(componentType string) (*[]ComponentInfo, error)
 	GetComponentSchemaByName(componentName string) (any, error)
 }

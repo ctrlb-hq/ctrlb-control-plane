@@ -19,9 +19,9 @@ type Handler struct {
 func NewHandler(
 	agentService *agent.AgentService,
 	authService *auth.AuthService,
-	frontendAgentServiceV2 *frontendagent.FrontendAgentService,
-	frontendPipelineServiceV2 *frontendpipeline.FrontendPipelineService,
-	frontendNodeServiceV2 *frontendnode.FrontendNodeService,
+	frontendAgentServiceV2 frontendagent.FrontendAgentServiceInterface,
+	frontendPipelineServiceV2 frontendpipeline.FrontendPipelineServiceInterface,
+	frontendNodeServiceV2 frontendnode.FrontendNodeServiceInterface,
 ) *Handler {
 	return &Handler{
 		AgentHandler:            agent.NewAgentHandler(agentService),
