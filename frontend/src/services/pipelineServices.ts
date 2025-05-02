@@ -87,21 +87,6 @@ const pipelineServices = {
             throw new Error(axiosError.response?.data.message || "Failed to get pipeline graph.")
         }
     },
-    syncPipelineGraph: async (id: string): Promise<any> => {
-        try {
-            if (!id) return
-            const response = await axiosInstance.post(`/pipelines/${id}/graph`)
-            const data = response.data
-
-            return data
-        } catch (error: any) {
-            if (error.response.status === 401) {
-                return await pipelineServices.syncPipelineGraph(id)
-            }
-            const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to sync pipeline graph.")
-        }
-    },
     getAllAgentsAttachedToPipeline: async (id: string): Promise<any> => {
         try {
             if (!id) return
@@ -135,7 +120,7 @@ const pipelineServices = {
             if (!id || !agent_id) return
             const response = await axiosInstance.post(`/pipelines/${id}/agents/${agent_id}`)
             const data = response.data
-
+            
             return data
         } catch (error: any) {
             if (error.response.status === 401) {
@@ -144,7 +129,22 @@ const pipelineServices = {
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to attach an agent to the pipeline.")
         }
-    }
+    },
+    syncPipelineGraph: async (id: string): Promise<any> => {
+        try {
+            if (!id) return
+            const response = await axiosInstance.post(`/pipelines/${id}/graph`)
+            const data = response.data
+    
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                return await pipelineServices.syncPipelineGraph(id)
+            }
+            const axiosError = error as AxiosError<ApiError>;
+            throw new Error(axiosError.response?.data.message || "Failed to sync pipeline graph.")
+        }
+    },
 }
 
 

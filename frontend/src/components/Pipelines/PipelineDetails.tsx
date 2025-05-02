@@ -42,6 +42,18 @@ import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
 import { Agents } from "@/types/agent.types";
+import { HealthChart } from "../HealthChart";
+import agentServices from "@/services/agentServices";
+
+interface DataPoint {
+    timestamp: number;
+    value: number;
+}
+
+interface MetricData {
+    metric_name: string;
+    data_points: DataPoint[];
+}
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -58,6 +70,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const [isOpen, setIsOpen] = useState(false)
     const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
+    const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
     const { toast } = useToast()
 
 
@@ -67,9 +80,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         destination: DestinationNode
     }), [])
 
-  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
-
-
     const formatTimestamp = (timestamp: number | undefined) => {
         if (!timestamp) return "N/A";
         const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
@@ -78,23 +88,24 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         return `${hours}:${minutes}`
     }
 
-    const createdBy = localStorage.getItem("userEmail")
+    // const createdBy = localStorage.getItem("userEmail")
 
     const handleGetPipeline = async () => {
         const res = await pipelineServices.getPipelineById(pipelineId)
         setPipelineOverview(res)
     }
 
+
     const handleGetPipelineOverview = async () => {
         try {
             const response = await pipelineServices.getPipelineOverviewById(pipelineId);
             setPipelineOverviewData(response);
         } catch (error) {
-            // toast({
-            //     title: "Error",
-            //     description: "Failed to fetch pipeline overview",
-            //     variant: "destructive",
-            // });
+            toast({
+                title: "Error",
+                description: "Failed to fetch pipeline overview",
+                variant: "destructive",
+            });
         }
     };
 
@@ -108,9 +119,9 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         setAgentValues(res)
     }
 
-
     const handleGetPipelineGraph = async () => {
         const res = await pipelineServices.getPipelineGraph(pipelineId);
+        console.log(res)
         const edges = res.edges
         const updatedNodes = res.nodes.map((node: any) => {
             const nodeType = node.component_role === 'receiver' ? 'source' : node.component_role === 'exporter' ? 'destination' : 'processor';
@@ -135,8 +146,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         handleGetPipelineGraph()
     }, [pipelineId])
 
-
-
     useEffect(() => {
         handleGetPipeline()
         handleGetConnectedAgentsToPipeline()
@@ -146,6 +155,30 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
         [setEdges],
     );
+
+
+    const fetchHealthMetrics = async () => {
+        try {
+            const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
+            console.log("data", metrics)
+            setHealthMetrics(metrics);
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to fetch health metrics",
+                variant: "destructive",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (pipelineId) {
+            fetchHealthMetrics();
+            // Optional: Set up polling to refresh data periodically
+            const interval = setInterval(fetchHealthMetrics, 30000); // every 30 seconds
+            return () => clearInterval(interval);
+        }
+    }, [pipelineId]);
 
 
     const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
@@ -177,34 +210,14 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     //validation of YAML files and the output given will be shown in the toast
     //error or success
-    const handleDeployChanges = async () => {
-        try {
-            const payload = {
-                // "name": pipelineName,
-                // "created_by": createdBy,
-                "agent_ids": agentIds,
-                // "pipeline_graph": {
-                //   "nodes": PipelineNodes,
-                //   "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]')
-                // }
-              }
-            const res = await pipelineServices.addPipeline(payload);
-            const data = res.data
-            console.log("first",data)
-
+    const handleDeployChanges = () => {
+        setTimeout(() => {
             toast({
-                title: "Success", 
+                title: "Success",
                 description: "Successfully deployed the pipeline",
                 duration: 3000,
             });
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to deploy pipeline",
-                // status: "error",
-                duration: 3000,
-            });
-        }
+        }, 2000);
     }
 
     const handleDeletePipeline = async () => {
@@ -215,153 +228,153 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     return (
         <div className="py-4 flex flex-col">
-             <div className="flex mb-5 items-center justify-between">
-            <div className="flex mb-5 gap-2 items-center">
-                <Boxes className="text-gray-700" size={36} />
-                <h1 className="text-2xl text-gray-800">{pipelineOverview?.name}</h1>
-            </div>
-            <div className="flex items-center w-full md:w-auto">
-                <div className="flex gap-2 justify-between w-full mb-2">
-                    <div className="flex gap-2">
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button className="bg-blue-500">View/Edit Pipeline</Button>
-                            </SheetTrigger>
-                            <SheetContent className="w-full sm:max-w-full p-0" side="right">
-                                <div className="flex justify-between items-center p-4 border-b">
-                                    <div className="flex items-center space-x-2">
-                                        <div className="text-xl font-medium">{pipelineOverview?.name}</div>
-                                    </div>
-                                    <div className="flex items-center mx-4">
-                                        <Sheet>
-                                            <SheetTrigger asChild>
-                                                <Button className="rounded-full px-6">Review</Button>
-                                            </SheetTrigger>
-                                            <SheetContent className="w-[30rem]">
-                                                <SheetTitle>Pending Changes</SheetTitle>
-                                                <SheetDescription>
-                                                    <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-                                                        {
-                                                            changesLog.map((change, index) => (
-                                                                <div key={index} className="flex justify-between items-center">
-                                                                    <div className="flex flex-col">
-                                                                        <p className="text-lg">{change.type}</p>
-                                                                        <p className="text-lg text-gray-800">{change.name}</p>
+            <div className="flex mb-5 items-center justify-between">
+                <div className="flex mb-5 gap-2 items-center">
+                    <Boxes className="text-gray-700" size={36} />
+                    <h1 className="text-2xl text-gray-800">{pipelineOverview?.name}</h1>
+                </div>
+                <div className="flex items-center w-full md:w-auto">
+                    <div className="flex gap-2 justify-between w-full mb-2">
+                        <div className="flex gap-2">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button className="bg-blue-500">View/Edit Pipeline</Button>
+                                </SheetTrigger>
+                                <SheetContent className="w-full sm:max-w-full p-0" side="right">
+                                    <div className="flex justify-between items-center p-4 border-b">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="text-xl font-medium">{pipelineOverview?.name}</div>
+                                        </div>
+                                        <div className="flex items-center mx-4">
+                                            <Sheet>
+                                                <SheetTrigger asChild>
+                                                    <Button className="rounded-full px-6">Review</Button>
+                                                </SheetTrigger>
+                                                <SheetContent className="w-[30rem]">
+                                                    <SheetTitle>Pending Changes</SheetTitle>
+                                                    <SheetDescription>
+                                                        <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+                                                            {
+                                                                changesLog.map((change, index) => (
+                                                                    <div key={index} className="flex justify-between items-center">
+                                                                        <div className="flex flex-col">
+                                                                            <p className="text-lg">{change.type}</p>
+                                                                            <p className="text-lg text-gray-800">{change.name}</p>
+                                                                        </div>
+                                                                        <div className="flex justify-end gap-3 items-center">
+                                                                            <p className={`${change.status == 'added' ? "text-green-500" : change.status == 'deleted' ? "text-red-500" : "text-gray-600"} text-lg`}>[{change.status}]</p>
+                                                                            <Edit size={20} />
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="flex justify-end gap-3 items-center">
-                                                                        <p className={`${change.status == 'added' ? "text-green-500" : change.status == 'deleted' ? "text-red-500" : "text-gray-600"} text-lg`}>[{change.status}]</p>
-                                                                        <Edit size={20} />
-                                                                    </div>
-                                                                </div>
-                                                            ))
-                                                        }
-                                                    </div>
-                                                </SheetDescription>
-                                                <SheetClose className="flex justify-end mt-4 w-full">
-                                                    <div>
-                                                        <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
-                                                    </div>
-                                                </SheetClose>
+                                                                ))
+                                                            }
+                                                        </div>
+                                                    </SheetDescription>
+                                                    <SheetClose className="flex justify-end mt-4 w-full">
+                                                        <div>
+                                                            <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
+                                                        </div>
+                                                    </SheetClose>
 
-                                            </SheetContent>
+                                                </SheetContent>
 
-                                        </Sheet>
-                                        <div className="mx-4 flex items-center space-x-2">
-                                            <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-                                            <Label htmlFor="edit-mode">Edit Mode</Label>
+                                            </Sheet>
+                                            <div className="mx-4 flex items-center space-x-2">
+                                                <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+                                                <Label htmlFor="edit-mode">Edit Mode</Label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
-                                    <ReactFlow
+                                    <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
+                                        <ReactFlow
 
-                                        nodes={nodeValue}
-                                        edges={edges.map(edge => ({
-                                            ...edge,
-                                            animated: true,
-                                            label: isEditMode ? '' : edge.label
-                                        }))}
-                                        onNodesChange={onNodesChange}
-                                        onEdgesChange={onEdgesChange}
-                                        onConnect={onConnect}
-                                        nodeTypes={nodeTypes}
-                                        onInit={setReactFlowInstance}
-                                        onEdgeClick={onEdgeClick}
-                                        onPaneClick={onPaneClick}
-                                        fitView
-                                    >
-                                        <Background />
-                                        <Controls />
-                                        <MiniMap />
-                                        {selectedEdge && isEditMode && (
-                                            <Panel
-                                                position="top-left"
-                                                style={{
-                                                    position: 'absolute',
-                                                    left: edgePopoverPosition.x,
-                                                    top: edgePopoverPosition.y,
-                                                    transform: 'translate(-50%, -50%)',
-                                                    background: 'white',
-                                                    padding: '8px',
-                                                    borderRadius: '4px',
-                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                                    zIndex: 10
-                                                }}
-                                            >
-                                                <Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
-                                            </Panel>
-                                        )}
-                                    </ReactFlow>
-                                </div>
+                                            nodes={nodeValue}
+                                            edges={edges.map(edge => ({
+                                                ...edge,
+                                                animated: true,
+                                                label: isEditMode ? '' : edge.label
+                                            }))}
+                                            onNodesChange={onNodesChange}
+                                            onEdgesChange={onEdgesChange}
+                                            onConnect={onConnect}
+                                            nodeTypes={nodeTypes}
+                                            onInit={setReactFlowInstance}
+                                            onEdgeClick={onEdgeClick}
+                                            onPaneClick={onPaneClick}
+                                            fitView
+                                        >
+                                            <Background />
+                                            <Controls />
+                                            <MiniMap />
+                                            {selectedEdge && isEditMode && (
+                                                <Panel
+                                                    position="top-left"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: edgePopoverPosition.x,
+                                                        top: edgePopoverPosition.y,
+                                                        transform: 'translate(-50%, -50%)',
+                                                        background: 'white',
+                                                        padding: '8px',
+                                                        borderRadius: '4px',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                                        zIndex: 10
+                                                    }}
+                                                >
+                                                    <Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
+                                                </Panel>
+                                            )}
+                                        </ReactFlow>
+                                    </div>
 
-                                <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
-                                    <div className="flex justify-around gap-2">
-                                        <div className='flex items-center'>
-                                            <SourceDropdownOptions />
-                                        </div>
-                                        <div className='flex items-center'>
-                                            <ProcessorDropdownOptions />
-                                        </div>
+                                    <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
+                                        <div className="flex justify-around gap-2">
+                                            <div className='flex items-center'>
+                                                <SourceDropdownOptions />
+                                            </div>
+                                            <div className='flex items-center'>
+                                                <ProcessorDropdownOptions />
+                                            </div>
 
-                                        <div className='flex items-center'>
-                                            <DestinationDropdownOptions />
+                                            <div className='flex items-center'>
+                                                <DestinationDropdownOptions />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
-                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="destructive">Delete Pipeline</Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[40rem] h-[25rem]">
-                                <DialogHeader>
-                                    <DialogTitle className="text-red-500 text-xl">Delete Pipeline</DialogTitle>
-                                    <DialogDescription className="text-md text-gray-700">
-                                        Are you sure you want to delete this Pipeline?
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="flex flex-col">
-                                    <p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
-                                    <p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-                                    <p className="text-red-500 mt-2">After Deleting this pipeline the below agents will be orphaned</p>
-                                    {agentValues && agentValues.map((agent, index) => (
-                                        <p className="text-gray-600" key={index}>
-                                            Agent: {agent.name}
-                                        </p>
-                                    ))}
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button>Cancel</Button>
-                                    </DialogClose>
-                                    <Button onClick={handleDeletePipeline} variant={"destructive"} >Delete</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                                </SheetContent>
+                            </Sheet>
+                            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="destructive">Delete Pipeline</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[40rem] h-[25rem]">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-red-500 text-xl">Delete Pipeline</DialogTitle>
+                                        <DialogDescription className="text-md text-gray-700">
+                                            Are you sure you want to delete this Pipeline?
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="flex flex-col">
+                                        <p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
+                                        <p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
+                                        <p className="text-red-500 mt-2">After Deleting this pipeline the below agents will be orphaned</p>
+                                        {agentValues && agentValues.map((agent, index) => (
+                                            <p className="text-gray-600" key={index}>
+                                                Agent: {agent.name}
+                                            </p>
+                                        ))}
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Cancel</Button>
+                                        </DialogClose>
+                                        <Button onClick={handleDeletePipeline} variant={"destructive"} >Delete</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
             <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
@@ -377,7 +390,22 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     {/* <p><span className="font-semibold">Agent ID:</span> {pipelineOverviewData?.agent_id}</p> */}
                 </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {healthMetrics.map((metric) => (
+                    <div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
+                        <HealthChart
+                            name={metric.metric_name === 'cpu_utilization' ? 'CPU Usage' : 'Memory Usage'}
+                            data={metric.data_points.map(point => ({
+                                timestamp: point.timestamp,
+                                value: metric.metric_name === 'memory_utilization'
+                                    ? point.value / (1024 * 1024)
+                                    : point.value
+                            }))}
+                        />
+                    </div>
+                ))}
             </div>
+        </div>
     )
 }
 
