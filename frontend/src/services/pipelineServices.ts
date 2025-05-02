@@ -130,7 +130,7 @@ const pipelineServices = {
             throw new Error(axiosError.response?.data.message || "Failed to attach an agent to the pipeline.")
         }
     },
-    syncPipelineGraph: async (id: string): Promise<any> => {
+    syncPipelineGraph: async (id: string, payload: any): Promise<any> => {
         try {
             if (!id) return
             const response = await axiosInstance.post(`/pipelines/${id}/graph`)
@@ -139,7 +139,7 @@ const pipelineServices = {
             return data
         } catch (error: any) {
             if (error.response.status === 401) {
-                return await pipelineServices.syncPipelineGraph(id)
+                return await pipelineServices.syncPipelineGraph(id, payload)
             }
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to sync pipeline graph.")

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Boxes, Edit, Trash2 } from "lucide-react";
 import { useRef, useState, useCallback, useMemo } from "react";
-import EditPipelineYAML from "./EditPipelineYAML";
+// import EditPipelineYAML from "./EditPipelineYAML";
 import ReactFlow, {
     MiniMap,
     Controls,
@@ -73,6 +73,12 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
     const { toast } = useToast()
 
+
+    const pipelineName = localStorage.getItem('pipelinename');
+  const createdBy = localStorage.getItem('userEmail');
+  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '');
+  const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]') || [];
 
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
@@ -210,14 +216,51 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
     //validation of YAML files and the output given will be shown in the toast
     //error or success
-    const handleDeployChanges = () => {
-        setTimeout(() => {
+    
+    // const handleDeployChanges = () => {
+
+    //     setTimeout(() => {
+    //         toast({
+    //             title: "Success",
+    //             description: "Successfully deployed the pipeline",
+    //             duration: 3000,
+    //         });
+    //     }, 2000);
+    // }
+
+    const handleDeployChanges = async () => {
+        try {
+            const syncPayload = {
+                "nodes": PipelineNodes.map((node: { id: string; data: { name: any; component_name: any; config: any; }; type: string; }) => ({
+                    component_id: parseInt(node.id),
+                    name: node.data.name,
+                    component_role: node.type === 'source' ? 'receiver' : 'exporter',
+                    component_name: node.data.component_name,
+                    config: node.data.config
+                })),
+                "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]').map((edge: { source: any; target: any; }) => ({
+                    source: edge.source,
+                    target: edge.target
+                }))
+            };
+    
+            const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
+            console.log("Sync response:", syncRes);
+            
             toast({
                 title: "Success",
                 description: "Successfully deployed the pipeline",
                 duration: 3000,
             });
-        }, 2000);
+        } catch (error) {
+            console.error("Error deploying pipeline:", error);
+            toast({
+                title: "Error",
+                description: "Failed to deploy the pipeline",
+                // status: "error",
+                duration: 3000,
+            });
+        }
     }
 
     const handleDeletePipeline = async () => {
