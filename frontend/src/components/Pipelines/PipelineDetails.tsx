@@ -73,13 +73,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
     const { toast } = useToast()
 
-
-    const pipelineName = localStorage.getItem('pipelinename');
-  const createdBy = localStorage.getItem('userEmail');
-  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '');
-  const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]') || [];
-
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
         processor: ProcessorNode,
@@ -129,12 +122,28 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         const res = await pipelineServices.getPipelineGraph(pipelineId);
         console.log(res)
         const edges = res.edges
-        const updatedNodes = res.nodes.map((node: any) => {
+        const VERTICAL_SPACING = 100;
+        
+        const updatedNodes = res.nodes.map((node: any, index: number) => {
             const nodeType = node.component_role === 'receiver' ? 'source' : node.component_role === 'exporter' ? 'destination' : 'processor';
+            
+            // Calculate position based on node type
+            let x, y;
+            if (nodeType === 'source') {
+                x = 50; // Fixed left position
+                y = 50 + (index * VERTICAL_SPACING);
+            } else if (nodeType === 'destination') {
+                x = 400; // Fixed right position
+                y = 50 + (index * VERTICAL_SPACING);
+            } else { // processor
+                x = 225; // Center position
+                y = 50 + (index * VERTICAL_SPACING);
+            }
+
             return {
                 id: node.component_id.toString(),
                 type: nodeType,
-                position: { x: Math.random() * 80, y: Math.random() * 60 },
+                position: { x, y },
                 data: {
                     id: node.component_id.toString(),
                     name: node.name,
@@ -231,14 +240,15 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const handleDeployChanges = async () => {
         try {
             const syncPayload = {
-                "nodes": PipelineNodes.map((node: { id: string; data: { name: any; component_name: any; config: any; }; type: string; }) => ({
+                "nodes": nodeValue.map((node) => ({
                     component_id: parseInt(node.id),
                     name: node.data.name,
-                    component_role: node.type === 'source' ? 'receiver' : 'exporter',
+                    component_role: node.type === 'source' ? 'receiver' : node.type === 'destination' ? 'exporter' : 'processor',
                     component_name: node.data.component_name,
-                    config: node.data.config
+                    config: node.data.config,
+                    supported_signals: node.data.supported_signals || []
                 })),
-                "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]').map((edge: { source: any; target: any; }) => ({
+                "edges": edges.map((edge) => ({
                     source: edge.source,
                     target: edge.target
                 }))
@@ -257,7 +267,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             toast({
                 title: "Error",
                 description: "Failed to deploy the pipeline",
-                // status: "error",
                 duration: 3000,
             });
         }
@@ -306,7 +315,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                                                         </div>
                                                                         <div className="flex justify-end gap-3 items-center">
                                                                             <p className={`${change.status == 'added' ? "text-green-500" : change.status == 'deleted' ? "text-red-500" : "text-gray-600"} text-lg`}>[{change.status}]</p>
-                                                                            <Edit size={20} />
                                                                         </div>
                                                                     </div>
                                                                 ))

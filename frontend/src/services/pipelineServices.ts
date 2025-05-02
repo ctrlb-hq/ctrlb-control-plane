@@ -133,7 +133,7 @@ const pipelineServices = {
     syncPipelineGraph: async (id: string, payload: any): Promise<any> => {
         try {
             if (!id) return
-            const response = await axiosInstance.post(`/pipelines/${id}/graph`)
+            const response = await axiosInstance.post(`/pipelines/${id}/graph`, payload)
             const data = response.data
     
             return data

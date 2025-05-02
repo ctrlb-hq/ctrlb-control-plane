@@ -116,7 +116,7 @@ export const DestinationNode = ({ data: Data }: any) => {
                                     <img src='./ctrlb-logo.png' width={"48px"} />
                                 </div>
                             </div>
-                        ) : (<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[6rem]">
+                        ) : (<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
                             <p className="text-xl m-1 text-white">→|</p>
                         </div>)}
                     </div>
