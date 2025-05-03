@@ -1,19 +1,28 @@
 import { Edge, Node } from "reactflow";
+export interface PipelineNodeData {
+    component_id: string;
+    name: string;
+    component_name: string;
+    component_type: string;
+    supported_signals: string[];
+    config: unknown;
+}
 
-export const initialNodes: Node[] = [
+export const initialNodes: Node<PipelineNodeData>[] = [
 
     {
         "id": "1",
-        "type": "source",
+        "type": "destination",
         "position": {
-            "x": 166.56891869734653,
-            "y": 368.60026536267003
+            "x": -1,
+            "y": -1
         },
         "data": {
             "component_id": "1",
             "name": "Debug Exporter Configuration",
             "component_name": "debug_exporter",
-            "supported_signals": [],
+            "component_type": "exporter",
+            "supported_signals": ["traces", "metrics", "logs"],
             "config": {
                 "format": "json"
             }
@@ -23,33 +32,19 @@ export const initialNodes: Node[] = [
         "selected": false,
         "dragging": false,
         "positionAbsolute": {
-            "x": 166.56891869734653,
-            "y": 368.60026536267003
+            "x": -1,
+            "y": -1
         }
     },
 
     {
         "id": "2",
-        "type": "destination",
+        "type": "source",
         "position": {
-            "x": -120.99553206402538,
-            "y": 346.4567463022786
+            "x": -1,
+            "y": -1
         },
         "data": {
-            "label": {
-                "type": "div",
-                "key": null,
-                "ref": null,
-                "props": {
-                    "style": {
-                        "fontSize": "10px",
-                        "textAlign": "center"
-                    },
-                    "children": "OTLP Receiver Configuration-(3)"
-                },
-                "_owner": null,
-                "_store": {}
-            },
             "component_type": "receiver",
             "component_id": "2",
             "name": "OTLP Receiver Configuration",
@@ -69,28 +64,26 @@ export const initialNodes: Node[] = [
         },
         "width": 134,
         "height": 64,
-        "selected": true,
+        "selected": false,
+        "dragging": false,
         "positionAbsolute": {
-            "x": -120.99553206402538,
-            "y": 346.4567463022786
-        },
-        "dragging": false
+            "x": -1,
+            "y": -1
+        }
     }
 ];
 
 export const initialEdges: Edge[] = [
-    // { id: 'e1-2', source: 'system', target: 'mask_ssn', label: '11GB', animated: true },
-    // { id: 'e2-2', source: 'mask_ssn', target: 'ctrlB', label: '1MB', animated: true },
     {
-        "source": "1",
+        "source": "2",
         "sourceHandle": null,
-        "target": "2",
+        "target": "1",
         "targetHandle": null,
         "animated": true,
         "data": {
-            "sourceComponentId": 3,
-            "targetComponentId": 2
+            "sourceComponentId": 2,
+            "targetComponentId": 1
         },
-        "id": "reactflow__edge-1-2"
+        "id": "reactflow__edge-2-1"
     }
 ];

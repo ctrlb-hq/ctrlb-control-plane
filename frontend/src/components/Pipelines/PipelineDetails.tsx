@@ -55,6 +55,12 @@ interface MetricData {
     data_points: DataPoint[];
 }
 
+const getRandomChartColor = (name: string) => {
+    const colors = ["brown","gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
+    const charSum = name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return colors[charSum % colors.length];
+}
+
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
@@ -172,9 +178,9 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const fetchHealthMetrics = async () => {
         try {
             const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
-            console.log("data", metrics)
             setHealthMetrics(metrics);
         } catch (error) {
+            console.error("Error fetching health metrics:", error);
             toast({
                 title: "Error",
                 description: "Failed to fetch health metrics",
@@ -239,6 +245,8 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     
             const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
             console.log("Sync response:", syncRes);
+            localStorage.removeItem("changesLog");
+            setIsEditMode(false);
             
             toast({
                 title: "Success",
@@ -431,10 +439,12 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                             name={metric.metric_name === 'cpu_utilization' ? 'CPU Usage' : 'Memory Usage'}
                             data={metric.data_points.map(point => ({
                                 timestamp: point.timestamp,
-                                value: metric.metric_name === 'memory_utilization'
+                                [metric.metric_name]: metric.metric_name === 'memory_utilization'
                                     ? point.value / (1024 * 1024)
                                     : point.value
                             }))}
+                            y_axis_data_key={metric.metric_name}
+                            chart_color={getRandomChartColor(metric.metric_name)}
                         />
                     </div>
                 ))}

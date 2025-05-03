@@ -19,7 +19,7 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function HealthChart({ data,name }: { data: any,name:string }) {
+export function HealthChart({ data,name,y_axis_data_key, chart_color }: { data: any, name:string, y_axis_data_key?:string, chart_color?:string }) {
     const formatTimestamp = (timestamp: string) => {
         const date = new Date(timestamp)
         const hours = date.getHours().toString().padStart(2, '0')
@@ -50,17 +50,17 @@ export function HealthChart({ data,name }: { data: any,name:string }) {
                             tickMargin={8}
                             tickFormatter={formatTimestamp}
                         />
-                        <YAxis dataKey={"value"} />
+                        <YAxis dataKey={y_axis_data_key || "value"} />
                         <ChartTooltip
                             cursor={false}
                             content={<ChartTooltipContent indicator="line" />}
                         />
                         <Area
-                            dataKey="value"
+                            dataKey={y_axis_data_key || "value"}
                             type="monotone"
-                            fill="orange"
+                            fill={chart_color || "orange"}
                             fillOpacity={0.4}
-                            stroke="orange"
+                            stroke={chart_color || "orange"}
                         />
                     </AreaChart>
                 </ChartContainer>
