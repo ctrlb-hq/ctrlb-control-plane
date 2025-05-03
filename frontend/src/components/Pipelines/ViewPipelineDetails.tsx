@@ -49,7 +49,7 @@ import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
 import { Agents } from "@/types/agent.types";
-import { HealthChart } from "../HealthChart";
+import { HealthChart } from "../charts/HealthChart";
 import agentServices from "@/services/agentServices";
 
 interface DataPoint {
