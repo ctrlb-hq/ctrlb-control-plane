@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Boxes, Edit, Trash2 } from "lucide-react";
+import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
 import { useRef, useState, useCallback, useMemo } from "react";
 // import EditPipelineYAML from "./EditPipelineYAML";
 import ReactFlow, {
@@ -126,7 +126,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         console.log(res)
         const edges = res.edges
         const VERTICAL_SPACING = 100;
-        
+
         const updatedNodes = res.nodes.map((node: any, index: number) => {
             const nodeType = node.component_role === 'receiver' ? 'destination' : node.component_role === 'exporter' ? 'source' : 'processor';
             
@@ -242,7 +242,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     target: edge.target
                 }))
             };
-    
+
             const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
             console.log("Sync response:", syncRes);
             localStorage.removeItem("changesLog");
@@ -424,7 +424,31 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                     <p><span className="font-semibold">Created By:</span> {pipelineOverviewData?.created_by}</p>
                     <p><span className="font-semibold">Created At:</span> {formatTimestamp(pipelineOverviewData?.created_at)}</p>
                     <p><span className="font-semibold">Updated At:</span> {formatTimestamp(pipelineOverviewData?.updated_at)}</p>
-                    <p><span className="font-semibold">Status:</span> {pipelineOverviewData?.status}</p>
+                    <div className="flex items-center gap-2">
+                        <p>
+                            <span className="font-semibold">Status:</span>{' '}
+                            <span className={`${(() => {
+                                switch (pipelineOverviewData?.status?.toLowerCase()) {
+                                    case 'connected':
+                                        return 'text-green-600';
+                                    case 'disconnected':
+                                        return 'text-red-600';
+                                    case 'pending':
+                                        return 'text-yellow-600';
+                                    default:
+                                        return 'text-gray-600';
+                                }
+                            })()
+                                }`}>
+                                {pipelineOverviewData?.status}
+                            </span>
+                        </p>
+                        <RefreshCw
+                            className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
+                            onClick={() => {
+                            }}
+                        />
+                    </div>
                     <p><span className="font-semibold">Agent Version:</span> {pipelineOverviewData?.agent_version}</p>
                     <p><span className="font-semibold">Hostname:</span> {pipelineOverviewData?.hostname}</p>
                     <p><span className="font-semibold">Platform:</span> {pipelineOverviewData?.platform}</p>
