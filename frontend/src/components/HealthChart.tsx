@@ -21,10 +21,11 @@ const chartConfig = {
 
 export function HealthChart({ data,name,y_axis_data_key, chart_color }: { data: any, name:string, y_axis_data_key?:string, chart_color?:string }) {
     const formatTimestamp = (timestamp: string) => {
-        const date = new Date(timestamp)
+        const date = new Date(parseInt(timestamp, 10)*1000)
         const hours = date.getHours().toString().padStart(2, '0')
         const minutes = date.getMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}`
+        const seconds = date.getSeconds().toString().padStart(2, '0')
+        return `${hours}:${minutes}:${seconds}`
     }
 
     return (

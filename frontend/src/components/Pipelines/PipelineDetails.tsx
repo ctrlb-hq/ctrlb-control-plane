@@ -72,7 +72,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
     const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-    const { changesLog } = usePipelineChangesLog()
+    const { changesLog, clearChangesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const [isOpen, setIsOpen] = useState(false)
     const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
@@ -85,12 +85,16 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         destination: DestinationNode
     }), [])
 
-    const formatTimestamp = (timestamp: number | undefined) => {
+    const formatTimestampWithDate = (timestamp: number | undefined) => {
         if (!timestamp) return "N/A";
         const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+        const day = date.getDate().toString().padStart(2, '0')
+        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+        const year = date.getFullYear()
         const hours = date.getHours().toString().padStart(2, '0')
         const minutes = date.getMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}`
+        const seconds = date.getSeconds().toString().padStart(2, '0')
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
     }
 
     const handleGetPipeline = async () => {
@@ -247,7 +251,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             console.log("Sync response:", syncRes);
             localStorage.removeItem("changesLog");
             setIsEditMode(false);
-            
+            clearChangesLog();
             toast({
                 title: "Success",
                 description: "Successfully deployed the pipeline",
@@ -422,8 +426,8 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                 <div className="flex flex-col py-2">
                     <p className="capitalize"><span className="font-semibold">Name:</span> {pipelineOverviewData?.name}</p>
                     <p><span className="font-semibold">Created By:</span> {pipelineOverviewData?.created_by}</p>
-                    <p><span className="font-semibold">Created At:</span> {formatTimestamp(pipelineOverviewData?.created_at)}</p>
-                    <p><span className="font-semibold">Updated At:</span> {formatTimestamp(pipelineOverviewData?.updated_at)}</p>
+                    <p><span className="font-semibold">Created At:</span> {formatTimestampWithDate(pipelineOverviewData?.created_at)}</p>
+                    <p><span className="font-semibold">Updated At:</span> {formatTimestampWithDate(pipelineOverviewData?.updated_at)}</p>
                     <div className="flex items-center gap-2">
                         <p>
                             <span className="font-semibold">Status:</span>{' '}

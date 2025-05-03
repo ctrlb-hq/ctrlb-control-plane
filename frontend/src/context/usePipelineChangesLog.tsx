@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState } from "react";
 interface PipelineChangesLogProps {
     changesLog: Changes[];
     addChange: (change: Changes) => void;
+    clearChangesLog: () => void;
 }
 
 const pipelineLogs = localStorage.getItem("changesLog");
@@ -24,8 +25,13 @@ export const PipelineChangesLogProvider = ({ children }: { children: React.React
         localStorage.setItem("changesLog", JSON.stringify(updatedChangesLog));
     };
 
+    const clearChangesLog = () => {
+        localStorage.removeItem("changesLog");
+        setChangesLog([]);
+    }
+
     return (
-        <PipelineChangesLogContext.Provider value={{ changesLog, addChange }}>
+        <PipelineChangesLogContext.Provider value={{ changesLog, addChange, clearChangesLog }}>
             {children}
         </PipelineChangesLogContext.Provider>
     );

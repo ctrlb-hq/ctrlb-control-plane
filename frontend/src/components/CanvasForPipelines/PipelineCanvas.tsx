@@ -161,11 +161,12 @@ const PipelineCanvas = () => {
       "created_by": createdBy,
       "agent_ids": [parseInt(agentIds)],
       "pipeline_graph": {
-        "nodes": PipelineNodes.map((node: { id: string; data: { name: any; component_name: any; config: any; }; type: string; }) => ({
+        "nodes": PipelineNodes.map((node: { id: string; data: { name: any; component_name: any; config: any; supported_signals: any; }; type: string; }) => ({
           component_id: parseInt(node.id),
           name: node.data.name,
           component_role: node.type === 'source' ? 'exporter' : node.type === 'destination' ? 'receiver' : 'processor',
           component_name: node.data.component_name,
+          supported_signals: node.data.supported_signals,
           config: node.data.config
         })),
         "edges": JSON.parse(localStorage.getItem('PipelineEdges') || '[]').map((edge: { source: any; target: any; }) => ({
@@ -174,7 +175,6 @@ const PipelineCanvas = () => {
         }))
       }
     }
-    console.log("edges: ", pipelinePayload.pipeline_graph.edges)
     console.log("payload", pipelinePayload)
     const res = await pipelineServices.addPipeline(pipelinePayload)
     console.log(res)

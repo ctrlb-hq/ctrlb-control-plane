@@ -6,7 +6,7 @@ const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
 const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
-        Authorization: `${localStorage.getItem('accessToken')}`
+        Authorization: `${localStorage.getItem('authToken')}`
     }
 });
 
@@ -30,7 +30,7 @@ const processQueue = (error: any, token: string | null = null) => {
 // Request interceptor to add the access token to headers
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('authToken');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -68,14 +68,14 @@ axiosInstance.interceptors.response.use(
                     refresh_token: refreshToken,
                 });
 
-                const newAccessToken = response.data.access_token;
-                localStorage.setItem('accessToken', newAccessToken);
+                const newauthToken = response.data.access_token;
+                localStorage.setItem('authToken', newauthToken);
 
                 // Process the queued requests with the new token
-                processQueue(null, newAccessToken);
+                processQueue(null, newauthToken);
 
                 // Retry the original request with the new token
-                originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                originalRequest.headers['Authorization'] = `Bearer ${newauthToken}`;
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 // If refreshing the token fails, reject all queued requests
