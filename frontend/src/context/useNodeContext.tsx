@@ -1,6 +1,6 @@
 import React, { createContext, Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { applyNodeChanges, Node, NodeChange, useNodesState } from "reactflow";
-import { initialEdges, initialNodes } from "../constants/PipelineNodeAndEdges";
+import { initialEdges, initialNodes } from "../constants"
 
 interface NodeValueContextType {
   nodeValue: Node<any, string | undefined>[];

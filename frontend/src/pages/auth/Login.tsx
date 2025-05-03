@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import { LoginCredentials } from '../../types/auth.types';
-import { ROUTES } from '../../constants/routes';
+import { ROUTES } from '../../constants';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();

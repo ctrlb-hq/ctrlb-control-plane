@@ -1,4 +1,11 @@
 import { Edge, Node } from "reactflow";
+
+export interface Changes {
+    type: string,
+    name: string,
+    status: string
+}
+
 export interface PipelineNodeData {
     component_id: string;
     name: string;
@@ -7,6 +14,24 @@ export interface PipelineNodeData {
     supported_signals: string[];
     config: unknown;
 }
+
+export const ROUTES = {
+    LOGIN: '/login',
+    REGISTER: '/register',
+    HOME: '/home',
+    CONFIG: '/config',
+  } as const;
+
+export const steps = [
+    {
+        title: "Install Pipeline",
+        description: "Specify basic settings for pipeline",
+    },
+    {
+        title: "Configure Pipeline",
+        description: "Add sources, processor, destination to your pipeline.",
+    }
+];
 
 export const initialNodes: Node<PipelineNodeData>[] = [
 

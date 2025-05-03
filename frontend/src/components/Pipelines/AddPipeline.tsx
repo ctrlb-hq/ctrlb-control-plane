@@ -21,7 +21,7 @@ import {
 import PipelineDetails from './AddNewPipelineComponent/PipelineDetails';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { useState } from 'react';
-import PipelineCanvas from '../CanvasForPipelines/PipelineCanvas';
+import PipelineCanvas from './AddNewPipelineComponent/PipelineCanvas';
 import { NodeValueProvider } from '@/context/useNodeContext';
 
 

@@ -1,4 +1,4 @@
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/utils/axiosInstance';
 import { ApiError } from '@/types/agent.types';
 import { AxiosError } from 'axios';
 

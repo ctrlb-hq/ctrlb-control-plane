@@ -1,6 +1,6 @@
 import { Handle, Position } from "reactflow"
-import { Sheet, SheetTrigger, SheetClose, SheetContent, SheetFooter } from "../ui/sheet";
-import { Button } from "../ui/button"
+import { Sheet, SheetTrigger, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button"
 import { useNodeValue } from "@/context/useNodeContext"
 import { useEffect, useState } from "react";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";

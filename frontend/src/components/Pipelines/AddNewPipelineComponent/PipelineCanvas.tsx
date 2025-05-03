@@ -21,14 +21,14 @@ import {
 } from "@/components/ui/sheet"
 
 import 'reactflow/dist/style.css';
-import { SourceNode } from './SourceNode';
-import { ProcessorNode } from './ProcessorNode';
-import { DestinationNode } from './DestinationNode';
-import SourceDropdownOptions from '../Pipelines/DropdownOptions/SourceDropdownOptions';
-import ProcessorDropdownOptions from '../Pipelines/DropdownOptions/ProcessorDropdownOptions';
-import DestinationDropdownOptions from '../Pipelines/DropdownOptions/DestinationDropdownOptions';
+import { SourceNode } from '../Nodes/SourceNode';
+import { ProcessorNode } from '../Nodes/ProcessorNode';
+import { DestinationNode } from '../Nodes/DestinationNode';
+import SourceDropdownOptions from '../DropdownOptions/SourceDropdownOptions';
+import ProcessorDropdownOptions from '../DropdownOptions/ProcessorDropdownOptions';
+import DestinationDropdownOptions from '../DropdownOptions/DestinationDropdownOptions';
 import { useNodeValue } from '@/context/useNodeContext';
-import { Button } from '../ui/button';
+import { Button } from '../../ui/button';
 import { Edit } from 'lucide-react';
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"

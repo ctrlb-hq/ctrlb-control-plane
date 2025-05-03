@@ -1,4 +1,4 @@
-import { steps } from '@/constants/ProgressFlowPipelineStep';
+import { steps } from '@/constants';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
 import { motion } from 'framer-motion';
 const ProgressFlow = () => {

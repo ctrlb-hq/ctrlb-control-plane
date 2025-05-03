@@ -2,7 +2,7 @@ import { Handle, Position } from "reactflow"
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from '@jsonforms/react';

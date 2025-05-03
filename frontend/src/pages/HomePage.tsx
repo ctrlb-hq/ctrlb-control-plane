@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import Pipeline from "../components/Pipelines/Pipeline";
-import { ROUTES } from "../constants/routes";
+import { ROUTES } from "../constants";
 import AddPipeline from "../components/Pipelines/AddPipeline";
 import { Button } from "../components/ui/button";
 import { ArrowLeftRight } from "lucide-react";

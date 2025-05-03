@@ -11,7 +11,7 @@ import { HomePage } from './pages/HomePage';
 // import { EditConfig } from './components/EditConfig';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Signup';
-import { ROUTES } from './constants/routes';
+import { ROUTES } from './constants';
 
 interface LocationState {
   from: Location;

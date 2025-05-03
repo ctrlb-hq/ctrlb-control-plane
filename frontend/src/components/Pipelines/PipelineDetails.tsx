@@ -17,9 +17,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { SourceNode } from "../CanvasForPipelines/SourceNode";
-import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
-import { DestinationNode } from "../CanvasForPipelines/DestinationNode";
+import { SourceNode } from "./Nodes/SourceNode";
+import { ProcessorNode } from "./Nodes/ProcessorNode";
+import { DestinationNode } from "./Nodes/DestinationNode";
 import { Switch } from "../ui/switch";
 import {
     Dialog,
@@ -31,7 +31,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { initialEdges } from "@/constants/PipelineNodeAndEdges";
+import { initialEdges } from "@/constants";
 import { Label } from "../ui/label";
 import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { useNodeValue } from "@/context/useNodeContext";

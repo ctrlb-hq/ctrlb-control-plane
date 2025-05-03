@@ -1,4 +1,4 @@
-import { Changes } from "@/constants/PipelineChangesLog";
+import { Changes } from "@/constants"
 import React, { createContext, useContext, useState } from "react";
 
 interface PipelineChangesLogProps {
