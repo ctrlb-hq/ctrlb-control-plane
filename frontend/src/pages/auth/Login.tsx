@@ -29,9 +29,9 @@ const Login: React.FC = () => {
     try {
       const response = await authService.login(formData);
       if (response) {
-        localStorage.setItem('authToken', response.access_token);
+        // localStorage.setItem('authToken', response.access_token);
         if(!localStorage.getItem("userEmail")){
-          localStorage.setItem("userEmail", response.email);
+          localStorage.setItem("userEmail", formData.email);
         }
         const from = ROUTES.HOME;
         navigate(from, { replace: true });
