@@ -48,10 +48,27 @@ const PipelineCanvas = () => {
 
   const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 
-  const validatedNodeValue = nodeValue.map((node, index) => ({
-    ...node,
-    position: node.position || { x: 100, y: 100 + index * 100 },
-  }));
+  const validatedNodeValue = nodeValue.map((node, index) => {
+    const nodeType = node.type;
+    let x, y;
+    if (!node.position || node.position.x == -1 || node.position.y == -1) {
+      if (nodeType === 'source') {
+        x = 50; // Fixed left position
+        y = 50 + (index * 100);
+      } else if (nodeType === 'destination') {
+        x = 400; // Fixed right position
+        y = 50 + (index * 100);
+      } else { // processor
+        x = 225; // Center position
+        y = 50 + (index * 100);
+      }
+      return {
+        ...node,
+        position: { x, y }
+      };
+    }
+    return node;
+  });
 
   const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -69,6 +86,30 @@ const PipelineCanvas = () => {
       setEdges((eds) => {
         if (!params.source || !params.target) {
           console.error('Invalid connection: source or target is null');
+          return eds;
+        }
+        //check the node corresponding to the source and target
+        const sourceNode = nodeValue.find((node) => node.id === params.source);
+        const targetNode = nodeValue.find((node) => node.id === params.target);
+        if (!sourceNode || !targetNode) {
+          console.error('Invalid connection: source or target node not found');
+          return eds;
+        }
+
+        //check if the source and target are of the same type
+        if (sourceNode.type === targetNode.type) {
+          console.error('Invalid connection: source and target are of the same type');
+          return eds;
+        }
+
+        //check if the source and target compatibility, ie the supported signals in source must be a subset of the supported signals in target
+        if (!targetNode.data.supported_signals.some((signal: string) => sourceNode.data.supported_signals.includes(signal))) {
+          console.error('Invalid connection: source and target are not compatible');
+          toast({
+            title: "Error",
+            description: "Source and target are not compatible",
+            variant: "destructive",
+          });
           return eds;
         }
 
@@ -123,7 +164,7 @@ const PipelineCanvas = () => {
         "nodes": PipelineNodes.map((node: { id: string; data: { name: any; component_name: any; config: any; }; type: string; }) => ({
           component_id: parseInt(node.id),
           name: node.data.name,
-          component_role: node.type === 'source' ? 'receiver' : 'exporter',
+          component_role: node.type === 'source' ? 'exporter' : node.type === 'destination' ? 'receiver' : 'processor',
           component_name: node.data.component_name,
           config: node.data.config
         })),
