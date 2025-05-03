@@ -98,11 +98,11 @@ export const DestinationNode = ({ data: Data }: any) => {
             <SheetTrigger asChild>
                 <div className="flex items-center">
                     <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-                    <div className="bg-gray-200 flex items-center rounded-md h-[4rem] w-[7rem]">
+                    <div className="bg-gray-200 flex justify-left items-center rounded-md h-[4rem] w-[7rem]">
                         <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
                         <div className="flex ml-5 flex-col w-full">
                             <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium flex justify-start">{Data.name}</div>
-                            <div className="flex justify-between gap-2 mr-4 text-xs mt-2">
+                            <div className="flex justify-between gap-2 text-xs mt-2">
                                 {DestinationLabel.map((source: any, index: number) => (
                                     <p style={{ fontSize: "8px" }} key={index}>
                                         {source}
@@ -111,12 +111,12 @@ export const DestinationNode = ({ data: Data }: any) => {
                             </div>
                         </div>
                         {Data.label === 'ctrlB' ? (
-                            <div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-green-500 h-[4rem]">
+                            <div className="flex items-center rounded-br-md rounded-tr-md bg-green-500 h-[4rem]">
                                 <div className="bg-white rounded-md m-1">
                                     <img src='./ctrlb-logo.png' width={"48px"} />
                                 </div>
                             </div>
-                        ) : (<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
+                        ) : (<div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
                             <p className="text-xl m-1 text-white">→|</p>
                         </div>)}
                     </div>

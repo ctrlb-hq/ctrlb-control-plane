@@ -88,9 +88,9 @@ export const SourceNode = ({ data: Data }: any) => {
           <div className="flex items-center justify-center rounded-bl-md rounded-tl-md bg-gray-500 h-[4rem]">
             <p className="text-xl m-1 text-white">→|</p>
           </div>
-          <div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-4 h-[4rem] shadow-md w-[6rem] relative">
+          <div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-2 h-[4rem] shadow-md w-[6rem] relative">
             <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
-            <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
+            <div className="flex justify-between gap-2 mr-2 text-xs mt-1">
               {SourceLabel && SourceLabel.map((source: any, index: number) => (
                 <p style={{ fontSize: "8px" }} key={index}>
                   {source}
