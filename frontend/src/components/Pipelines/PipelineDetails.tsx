@@ -87,13 +87,10 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         return `${hours}:${minutes}`
     }
 
-    // const createdBy = localStorage.getItem("userEmail")
-
     const handleGetPipeline = async () => {
         const res = await pipelineServices.getPipelineById(pipelineId)
         setPipelineOverview(res)
     }
-
 
     const handleGetPipelineOverview = async () => {
         try {
@@ -125,7 +122,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         const VERTICAL_SPACING = 100;
         
         const updatedNodes = res.nodes.map((node: any, index: number) => {
-            const nodeType = node.component_role === 'receiver' ? 'source' : node.component_role === 'exporter' ? 'destination' : 'processor';
+            const nodeType = node.component_role === 'receiver' ? 'destination' : node.component_role === 'exporter' ? 'source' : 'processor';
             
             // Calculate position based on node type
             let x, y;
@@ -223,27 +220,13 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         setSelectedEdge(null);
     }, []);
 
-    //validation of YAML files and the output given will be shown in the toast
-    //error or success
-    
-    // const handleDeployChanges = () => {
-
-    //     setTimeout(() => {
-    //         toast({
-    //             title: "Success",
-    //             description: "Successfully deployed the pipeline",
-    //             duration: 3000,
-    //         });
-    //     }, 2000);
-    // }
-
     const handleDeployChanges = async () => {
         try {
             const syncPayload = {
                 "nodes": nodeValue.map((node) => ({
                     component_id: parseInt(node.id),
                     name: node.data.name,
-                    component_role: node.type === 'source' ? 'receiver' : node.type === 'destination' ? 'exporter' : 'processor',
+                    component_role: node.type === 'destination' ? 'receiver' : node.type === 'source' ? 'exporter' : 'processor',
                     component_name: node.data.component_name,
                     config: node.data.config,
                     supported_signals: node.data.supported_signals || []

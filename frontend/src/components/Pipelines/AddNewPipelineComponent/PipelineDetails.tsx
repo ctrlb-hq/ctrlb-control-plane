@@ -184,7 +184,6 @@ const PipelineDetails = () => {
                             localStorage.setItem('pipelinename', formData.name)
                             localStorage.setItem('platform', formData.platform)
                             pipelineStatus.setCurrentStep(currentStep + 1);
-                            handleSubmit
                         }
                         break;
                     }
