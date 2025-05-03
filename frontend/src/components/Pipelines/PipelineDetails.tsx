@@ -174,9 +174,68 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     }, [isEditMode]);
 
     const onConnect = useCallback(
-        (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
-        [setEdges],
-    );
+        (params: Edge | Connection) => {
+            console.log(params);
+          setEdges((eds) => {
+            if (!params.source || !params.target) {
+              console.error('Invalid connection: source or target is null');
+              return eds;
+            }
+            console.log(nodeValue);
+            //check the node corresponding to the source and target
+            const sourceNode = nodeValue.find((node) => node.id === params.source);
+            const targetNode = nodeValue.find((node) => node.id === params.target);
+            if (!sourceNode || !targetNode) {
+              console.error('Invalid connection: source or target node not found');
+              toast({
+                title: "Error",
+                description: "Source or target node not found",
+                variant: "destructive",
+              });
+              return eds;
+            }
+    
+            //check if the source and target are of the same type
+            if (sourceNode.type === targetNode.type) {
+              console.error('Invalid connection: source and target are of the same type');
+              toast({
+                title: "Error",
+                description: "Source and target are of the same type",
+                variant: "destructive",
+              });
+              return eds;
+            }
+    
+            //check if the source and target compatibility, ie the supported signals in source must be a subset of the supported signals in target
+            if (!targetNode.data.supported_signals.some((signal: string) => sourceNode.data.supported_signals.includes(signal))) {
+              console.error('Invalid connection: source and target are not compatible');
+              toast({
+                title: "Error",
+                description: "Source and target are not compatible",
+                variant: "destructive",
+              });
+              return eds;
+            }
+    
+            const updatedEdges = addEdge(
+              {
+                ...params,
+                source: params.source,
+                target: params.target,
+                animated: true,
+                data: {
+                  sourceComponentId: parseInt(params.source, 10),
+                  targetComponentId: parseInt(params.target, 10),
+                },
+              },
+              eds
+            );
+            localStorage.setItem('PipelineEdges', JSON.stringify(updatedEdges));
+            return updatedEdges;
+          });
+        },
+        [setEdges]
+      );
 
 
     const fetchHealthMetrics = async () => {
