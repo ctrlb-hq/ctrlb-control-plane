@@ -8,7 +8,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import PipelineOverview from "./PipelineOverview";
+import ExistingPipelineOverview from "./ExistingPipelineOverview";
 import pipelineServices from "@/services/pipelineServices";
 import { useEffect, useState } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
@@ -22,7 +22,7 @@ interface pipeline {
 	updatedAt: number;
 }
 
-const Pipeline = () => {
+const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
 	const { setPipelineOverview } = usePipelineOverview();
 	const [pipelineId, setPipelineId] = useState<string>("");
@@ -85,7 +85,7 @@ const Pipeline = () => {
 										</TableRow>
 									</SheetTrigger>
 									<SheetContent>
-										<PipelineOverview pipelineId={pipeline.id} />
+										<ExistingPipelineOverview pipelineId={pipeline.id} />
 									</SheetContent>
 								</Sheet>
 							))}
@@ -105,4 +105,4 @@ const Pipeline = () => {
 	);
 };
 
-export default Pipeline;
+export default PipelineTable;

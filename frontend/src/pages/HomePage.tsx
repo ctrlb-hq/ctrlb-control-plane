@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import Pipeline from "../components/Pipelines/Pipeline";
+import PipelineTable from "../components/Pipelines/PipelineTable";
 import { ROUTES } from "../constants";
-import AddPipeline from "../components/Pipelines/AddPipeline";
+import AddPipelineSheet from "../components/Pipelines/AddPipelineComponents/AddPipelineSheet";
 import { Button } from "../components/ui/button";
 import { ArrowLeftRight } from "lucide-react";
 
@@ -41,7 +41,7 @@ export function HomePage() {
 					</div>
 
 					<div className="flex items-center gap-2">
-						<AddPipeline />
+						<AddPipelineSheet />
 						<Button
 							className="flex items-center gap-1 px-2 py-1"
 							variant={"destructive"}
@@ -67,7 +67,7 @@ export function HomePage() {
 				</div>
 				{
 					<div className="p-4 rounded-md">
-						<Pipeline />
+						<PipelineTable />
 					</div>
 				}
 			</div>

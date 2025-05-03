@@ -68,7 +68,7 @@ const getRandomChartColor = (name: string) => {
 	return colors[charSum % colors.length];
 };
 
-const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
+const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [agentValues, setAgentValues] = useState<Agents[]>([]);
 	const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -581,4 +581,4 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	);
 };
 
-export default PipelineDetails;
+export default ViewPipelineDetails;

@@ -43,7 +43,7 @@ const nodeTypes = {
 	destination: DestinationNode,
 };
 
-const PipelineCanvas = () => {
+const AddPipelineCanvas = () => {
 	const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 
 	const validatedNodeValue = nodeValue.map((node, index) => {
@@ -300,4 +300,4 @@ const PipelineCanvas = () => {
 	);
 };
 
-export default PipelineCanvas;
+export default AddPipelineCanvas;

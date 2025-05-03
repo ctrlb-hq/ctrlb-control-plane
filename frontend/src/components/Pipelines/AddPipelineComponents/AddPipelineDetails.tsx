@@ -24,7 +24,7 @@ interface formData {
 	platform: string;
 }
 
-const PipelineDetails = () => {
+const AddPipelineDetails = () => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {
 		return null;
@@ -355,4 +355,4 @@ const PipelineDetails = () => {
 	);
 };
 
-export default PipelineDetails;
+export default AddPipelineDetails;

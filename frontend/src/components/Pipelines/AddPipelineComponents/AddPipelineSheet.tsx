@@ -1,11 +1,11 @@
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { PlusIcon } from "lucide-react";
 import {
 	Sheet,
 	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
+	// SheetDescription,
+	// SheetHeader,
+	// SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
 
@@ -18,13 +18,13 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 
-import PipelineDetails from "./AddNewPipelineComponent/PipelineDetails";
+import AddPipelineDetails from "./AddPipelineDetails";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { useState } from "react";
-import PipelineCanvas from "./AddNewPipelineComponent/PipelineCanvas";
+import AddPipelineCanvas from "./AddPipelineCanvas";
 import { NodeValueProvider } from "@/context/useNodeContext";
 
-const LandingView = () => {
+const AddPipelineSheet = () => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {
 		return null;
@@ -71,10 +71,10 @@ const LandingView = () => {
 				</SheetTrigger>
 				<SheetContent>
 					{currentStep == 0 ? (
-						<PipelineDetails />
+						<AddPipelineDetails />
 					) : (
 						<NodeValueProvider>
-							<PipelineCanvas />
+							<AddPipelineCanvas />
 						</NodeValueProvider>
 					)}
 				</SheetContent>
@@ -101,4 +101,4 @@ const LandingView = () => {
 	);
 };
 
-export default LandingView;
+export default AddPipelineSheet;
