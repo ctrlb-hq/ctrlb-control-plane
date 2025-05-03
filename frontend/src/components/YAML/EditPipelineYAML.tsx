@@ -1,7 +1,7 @@
-import { Editor } from "@monaco-editor/react"
+import { Editor } from "@monaco-editor/react";
 
 const EditPipelineYAML = () => {
-  const samplePipelineYAML = `
+	const samplePipelineYAML = `
 version: '1.0'
 
 stages:
@@ -51,15 +51,11 @@ stages:
             run: npm run deploy
   `;
 
-  return (
-    <div>
-      <Editor
-        height="80vh"
-        defaultLanguage="yaml"
-        defaultValue={samplePipelineYAML}
-      />
-    </div>
-  )
-}
+	return (
+		<div>
+			<Editor height="80vh" defaultLanguage="yaml" defaultValue={samplePipelineYAML} />
+		</div>
+	);
+};
 
-export default EditPipelineYAML
+export default EditPipelineYAML;

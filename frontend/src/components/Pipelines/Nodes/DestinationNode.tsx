@@ -1,175 +1,194 @@
-import { Handle, Position } from "reactflow"
+import { Handle, Position } from "reactflow";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import { Button } from "../../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
-import { JsonForms } from '@jsonforms/react';
-import {
-    materialCells,
-    materialRenderers,
-} from '@jsonforms/material-renderers';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Component } from "lucide-react";
+import { JsonForms } from "@jsonforms/react";
+import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 interface FormSchema {
-    title?: string;
-    type?: string;
-    properties?: Record<string, any>;
-    required?: string[];
-    [key: string]: any;  
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
 }
 
 const theme = createTheme({
-    components: {
-        MuiFormControl: {
-            styleOverrides: {
-                root: {
-                    marginBottom: '0.5rem',
-                },
-            },
-        },
-    },
+	components: {
+		MuiFormControl: {
+			styleOverrides: {
+				root: {
+					marginBottom: "0.5rem",
+				},
+			},
+		},
+	},
 });
 
-const renderers = [
-    ...materialRenderers,
-];
+const renderers = [...materialRenderers];
 
 export const DestinationNode = ({ data: Data }: any) => {
-    const [isSheetOpen, setIsSheetOpen] = useState(false)
-    const { setNodeValue } = useNodeValue()
-    const { addChange } = usePipelineChangesLog()
-    const [form, setForm] = useState<FormSchema>({})
+	const [isSheetOpen, setIsSheetOpen] = useState(false);
+	const { setNodeValue } = useNodeValue();
+	const { addChange } = usePipelineChangesLog();
+	const [form, setForm] = useState<FormSchema>({});
 
-    const DestinationLabel = Data.supported_signals
-    const handleSubmit = () => {
-        const log = { type: 'destination', name: Data.name, status: "edited" }
-        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-        addChange(log)
-        const updatedLog = [...existingLog, log];
-        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+	const DestinationLabel = Data.supported_signals;
+	const handleSubmit = () => {
+		const log = { type: "destination", name: Data.name, status: "edited" };
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-        const updatedNodes = nodes.map((node: any) =>
-            node.component_name === Data.component_name ? { ...node, config: data, component_id: Data.id, component_role: "exporter" } : node
-        );
-        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+		const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+		const updatedNodes = nodes.map((node: any) =>
+			node.component_name === Data.component_name
+				? { ...node, config: data, component_id: Data.id, component_role: "exporter" }
+				: node,
+		);
+		localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
-        const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
-        const updatedSources = sources.filter((source: any) => source.component_name !== Data.component_name);
-        localStorage.setItem("Destination", JSON.stringify(updatedSources));
+		const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
+		const updatedSources = sources.filter(
+			(source: any) => source.component_name !== Data.component_name,
+		);
+		localStorage.setItem("Destination", JSON.stringify(updatedSources));
 
-        setIsSheetOpen(false);
-    }
+		setIsSheetOpen(false);
+	};
 
-    const getForm = async () => {
-        const res = await TransporterService.getTransporterForm(Data.component_name)
-        setForm(res as FormSchema)
-    }
+	const getForm = async () => {
+		const res = await TransporterService.getTransporterForm(Data.component_name);
+		setForm(res as FormSchema);
+	};
 
-    useEffect(() => {
-        getForm()
-    }, [])
+	useEffect(() => {
+		getForm();
+	}, []);
 
-    const handleDeleteNode = () => {
-        // Delete node
-        setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
-        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
+	const handleDeleteNode = () => {
+		// Delete node
+		setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
+		setNodeValue(prev => prev.filter(node => node.id !== Data.id));
 
-        // Delete connected edges
-        const edges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]");
-        const updatedEdges = edges.filter((edge: any) => 
-            edge.source !== Data.id && edge.target !== Data.id
-        );
-        localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
+		// Delete connected edges
+		const edges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]");
+		const updatedEdges = edges.filter(
+			(edge: any) => edge.source !== Data.id && edge.target !== Data.id,
+		);
+		localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
 
-        // Log the change
-        const log = { type: 'destination', name: Data.name, status: "deleted" }
-        const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-        addChange(log)
-        const updatedLog = [...existingLog, log];
-        localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+		// Log the change
+		const log = { type: "destination", name: Data.name, status: "deleted" };
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-        // Update nodes in storage
-        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-        const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
-        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+		// Update nodes in storage
+		const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+		const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
+		localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
-        setIsSheetOpen(false)
-    }
-    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
-    const sourceConfig = getSource?.config
-    const [data, setData] = useState<object>(Data.config)
+		setIsSheetOpen(false);
+	};
+	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
+		(source: any) => source.component_name === Data.component_name,
+	);
+	const sourceConfig = getSource?.config;
+	const [data, setData] = useState<object>(Data.config);
 
-    return (
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-                <div className="flex items-center">
-                    <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-                    <div className="bg-gray-200 flex justify-left items-center rounded-md h-[4rem] w-[7rem]">
-                        <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
-                        <div className="flex ml-5 flex-col w-full">
-                            <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium flex justify-start">{Data.name}</div>
-                            <div className="flex justify-between gap-2 text-xs mt-2">
-                                {DestinationLabel.map((source: any, index: number) => (
-                                    <p style={{ fontSize: "8px" }} key={index}>
-                                        {source}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                        {Data.label === 'ctrlB' ? (
-                            <div className="flex items-center rounded-br-md rounded-tr-md bg-green-500 h-[4rem]">
-                                <div className="bg-white rounded-md m-1">
-                                    <img src='./ctrlb-logo.png' width={"48px"} />
-                                </div>
-                            </div>
-                        ) : (<div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
-                            <p className="text-xl m-1 text-white">→|</p>
-                        </div>)}
-                    </div>
-                </div>
-            </SheetTrigger>
-            <SheetContent className="w-[36rem]">
-                <div className="flex flex-col gap-4 p-4">
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-4">
-                            <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-                            <h2 className="text-xl font-bold">{Data.name}</h2>
-                        </div>
-                        <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
+	return (
+		<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+			<SheetTrigger asChild>
+				<div className="flex items-center">
+					<div className="bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2" />
+					<div className="bg-gray-200 flex justify-left items-center rounded-md h-[4rem] w-[7rem]">
+						<Handle
+							type="target"
+							position={Position.Left}
+							className="bg-green-600 w-0 h-0 rounded-full"
+						/>
+						<div className="flex ml-5 flex-col w-full">
+							<div
+								style={{ fontSize: "9px", lineHeight: "0.8rem" }}
+								className="font-medium flex justify-start"
+							>
+								{Data.name}
+							</div>
+							<div className="flex justify-between gap-2 text-xs mt-2">
+								{DestinationLabel.map((source: any, index: number) => (
+									<p style={{ fontSize: "8px" }} key={index}>
+										{source}
+									</p>
+								))}
+							</div>
+						</div>
+						{Data.label === "ctrlB" ? (
+							<div className="flex items-center rounded-br-md rounded-tr-md bg-green-500 h-[4rem]">
+								<div className="bg-white rounded-md m-1">
+									<img src="./ctrlb-logo.png" width={"48px"} />
+								</div>
+							</div>
+						) : (
+							<div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
+								<p className="text-xl m-1 text-white">→|</p>
+							</div>
+						)}
+					</div>
+				</div>
+			</SheetTrigger>
+			<SheetContent className="w-[36rem]">
+				<div className="flex flex-col gap-4 p-4">
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center gap-4">
+							<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+							<h2 className="text-xl font-bold">{Data.name}</h2>
+						</div>
+						<p className="text-gray-500">
+							Generate the defined log type at the rate desired{" "}
+							<span className="text-blue-500 underline">Documentation</span>
+						</p>
 
-                        <ThemeProvider theme={theme}>
-                            <div className='mt-3'>
-                                <div className='text-2xl p-4 font-semibold bg-gray-100'>{form.title}</div>
-                                <div className='p-3 '>
-                                    <div className='overflow-y-auto h-[29rem]'>
-                                        <JsonForms
-                                            data={data}
-                                            schema={form}
-                                            renderers={renderers}
-                                            cells={materialCells}
-                                            onChange={({ data }) => setData(data)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </ThemeProvider>
-                    </div>
-                    <SheetFooter>
-                        <SheetClose>
-                            <div className="flex gap-3">
-                                <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
-                                <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
-                                <Button variant={"outline"} onClick={handleDeleteNode}>Delete Node</Button>
-                            </div>
-                        </SheetClose>
-                    </SheetFooter>
-                </div>
-            </SheetContent>
-        </Sheet>
-
-    )
+						<ThemeProvider theme={theme}>
+							<div className="mt-3">
+								<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
+								<div className="p-3 ">
+									<div className="overflow-y-auto h-[29rem]">
+										<JsonForms
+											data={data}
+											schema={form}
+											renderers={renderers}
+											cells={materialCells}
+											onChange={({ data }) => setData(data)}
+										/>
+									</div>
+								</div>
+							</div>
+						</ThemeProvider>
+					</div>
+					<SheetFooter>
+						<SheetClose>
+							<div className="flex gap-3">
+								<Button className="bg-blue-500" onClick={handleSubmit}>
+									Apply
+								</Button>
+								<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
+									Discard Changes
+								</Button>
+								<Button variant={"outline"} onClick={handleDeleteNode}>
+									Delete Node
+								</Button>
+							</div>
+						</SheetClose>
+					</SheetFooter>
+				</div>
+			</SheetContent>
+		</Sheet>
+	);
 };

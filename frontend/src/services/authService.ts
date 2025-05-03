@@ -1,85 +1,91 @@
-import axios, { AxiosError } from 'axios';
-import { LoginCredentials, RegisterCredentials, AuthResponse, RefreshTokenResponse, ApiError } from '../types/auth.types';
+import axios, { AxiosError } from "axios";
+import {
+	LoginCredentials,
+	RegisterCredentials,
+	AuthResponse,
+	RefreshTokenResponse,
+	ApiError,
+} from "../types/auth.types";
 
 const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
 const API_BASE_URL = `${apiUrl}/api/auth/v1`;
 
 const authService = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/login`, credentials);
-      const data = response.data;
-      localStorage.clear(); 
+	login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+		try {
+			const response = await axios.post(`${API_BASE_URL}/login`, credentials);
+			const data = response.data;
+			localStorage.clear();
 
-      if (data.access_token && data.refresh_token) {
-        localStorage.setItem('authToken', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-      }
+			if (data.access_token && data.refresh_token) {
+				localStorage.setItem("authToken", data.access_token);
+				localStorage.setItem("refreshToken", data.refresh_token);
+			}
 
-      return data;
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiError>;
-      throw new Error(axiosError.response?.data?.message || 'Login failed');
-    }
-  },
+			return data;
+		} catch (error) {
+			const axiosError = error as AxiosError<ApiError>;
+			throw new Error(axiosError.response?.data?.message || "Login failed");
+		}
+	},
 
-  register: async (userDetails: RegisterCredentials): Promise<AuthResponse> => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/register`, userDetails);
-      const data = response.data;
+	register: async (userDetails: RegisterCredentials): Promise<AuthResponse> => {
+		try {
+			const response = await axios.post(`${API_BASE_URL}/register`, userDetails);
+			const data = response.data;
 
-      if (data.access_token && data.refresh_token) {
-        localStorage.setItem('authToken', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-      }
+			if (data.access_token && data.refresh_token) {
+				localStorage.setItem("authToken", data.access_token);
+				localStorage.setItem("refreshToken", data.refresh_token);
+			}
 
-      return data;
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiError>;
-      throw new Error(axiosError.response?.data?.message || 'Registration failed');
-    }
-  },
+			return data;
+		} catch (error) {
+			const axiosError = error as AxiosError<ApiError>;
+			throw new Error(axiosError.response?.data?.message || "Registration failed");
+		}
+	},
 
-  refreshToken: async (): Promise<RefreshTokenResponse | null> => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        return null;
-      }
+	refreshToken: async (): Promise<RefreshTokenResponse | null> => {
+		try {
+			const refreshToken = localStorage.getItem("refreshToken");
+			if (!refreshToken) {
+				return null;
+			}
 
-      const response = await axios.post(`${API_BASE_URL}/refresh`, { refresh_token: refreshToken });
-      const data = response.data;
+			const response = await axios.post(`${API_BASE_URL}/refresh`, { refresh_token: refreshToken });
+			const data = response.data;
 
-      if (data.access_token) {
-        localStorage.setItem('authToken', data.access_token);
-      }
+			if (data.access_token) {
+				localStorage.setItem("authToken", data.access_token);
+			}
 
-      return data;
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiError>;
-      if (axiosError.response?.status === 401) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-        return null;
-      }
-      throw new Error(axiosError.response?.data?.message || 'Token refresh failed');
-    }
-  },
-  logout: async () => {
-    try {
-      localStorage.clear();
-      return true;
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
-    }
-  },
+			return data;
+		} catch (error) {
+			const axiosError = error as AxiosError<ApiError>;
+			if (axiosError.response?.status === 401) {
+				localStorage.removeItem("authToken");
+				localStorage.removeItem("refreshToken");
+				return null;
+			}
+			throw new Error(axiosError.response?.data?.message || "Token refresh failed");
+		}
+	},
+	logout: async () => {
+		try {
+			localStorage.clear();
+			return true;
+		} catch (error) {
+			console.error("Logout error:", error);
+			throw error;
+		}
+	},
 };
 
 interface ImportMetaWithEnv extends ImportMeta {
-  env: {
-      VITE_API_URL: string;
-  };
+	env: {
+		VITE_API_URL: string;
+	};
 }
 
 export default authService;
