@@ -14,50 +14,74 @@
 
 ### `src/`
 
-Contains the main source code for the application.
+- **`App.tsx`**: Root component that initializes the application.
+- **`main.tsx`**: Entry point that renders the React application.
+- **`index.css`**: Global styles for the application.
+- **`constants.ts`**: Global constants used across the project.
 
 - **`components/`**: Reusable UI components used throughout the application.
 
-  - **`Agents/`**: Components for managing and displaying agents, including:
-    - `AgentsTable`: Displays a list of agents.
-    - `Charts`: Visualizes CPU/Memory usage and metrics for agents.
-    - `AgentLandingPage`: The main landing page for agents.
-  - **`CanvasForPipelines/`**: Components for visualizing pipelines, including:
-    - Source, Processor, and Destination nodes.
-    - Drag-and-drop functionality for pipeline design.
-  - **`Pipelines/`**: Components for managing pipelines, including:
-    - `PipelineOverviewTable`: Displays a list of pipelines and their details.
-    - `PipelineDetails`: Shows detailed information about a specific pipeline.
-  - **`Pipelines/AddNewPipelineComponent/`**: Components for creating pipelines, including:
-    - Adding pipeline information.
-    - Configuring source and destination nodes.
-    - Assigning agents to pipelines.
-  - **`Pipelines/DropdownOptions/`**: Contains dropdown options for selecting types (e.g., source, destination, processor).
+  - **`HealthChart.tsx`**: Component to display health metrics (CPU/Memory) charts.
+  - **`Pipelines/`**:
 
-- **`services/`**: Contains API service functions for interacting with the backend.
+    - **`AddPipelineComponents/`**:
+      - `AddPipelineCanvas.tsx`: Canvas for designing new pipelines.
+      - `AddPipelineDetails.tsx`: Form for entering pipeline details.
+      - `AddPipelineSheet.tsx`: Sheet view for adding pipeline steps.
+      - `ProgressFlow.tsx`: Visual progress indicator of pipeline creation.
+    - **`DropdownOptions/`**:
+      - `SourceDropdownOptions.tsx`: Dropdown options for selecting sources.
+      - `ProcessorDropdownOptions.tsx`: Dropdown options for selecting processors.
+      - `DestinationDropdownOptions.tsx`: Dropdown options for selecting destinations.
+    - `ExistingPipelineOverview.tsx`: Displays a list of existing pipelines.
+    - **`Nodes/`**:
+      - `SourceNode.tsx`: Represents a source node in the pipeline.
+      - `ProcessorNode.tsx`: Represents a processor node in the pipeline.
+      - `DestinationNode.tsx`: Represents a destination node in the pipeline.
+    - `PipelineTable.tsx`: Table view of pipelines.
+    - `ViewPipelineDetails.tsx`: Detailed view of a specific pipeline.
 
-  - `agentServices.ts`: Handles API calls related to agents (e.g., fetching, creating, deleting agents).
-  - `pipelineServices.ts`: Handles API calls related to pipelines (e.g., fetching, creating, updating pipelines).
+  - **`ui/`**: Library of UI primitives.
 
-- **`constants/`**: Holds constant values used across the application to maintain consistency.
+    - `alert.tsx`, `badge.tsx`, `button.tsx`, `card.tsx`, `chart.tsx`, `checkbox.tsx`, `command.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `form.tsx`, `input.tsx`, `label.tsx`, `multi-select.tsx`, `popover.tsx`, `select.tsx`, `sheet.tsx`, `switch.tsx`, `table.tsx`, `toast.tsx`, `toaster.tsx`, `toggle.tsx`.
 
-  - Example: API endpoints, route paths, and reusable strings.
+  - **`YAML/`**:
+    - `EditConfig.tsx`: Component for editing configuration in YAML.
+    - `EditPipelineYAML.tsx`: Component for editing pipeline in YAML format.
 
-- **`types/`**: TypeScript type definitions for ensuring type safety in the application.
+- **`context/`**: Custom React hooks for global state and context.
 
-  - Example: `Agent.types.ts`, `Pipeline.types.ts`.
+  - `useNodeContext.tsx`, `usePipelineChangesLog.tsx`, `usePipelineDetailContext.tsx`, `usePipelineStatus.tsx`.
 
-- **`context/`**: Custom React hooks encapsulating reusable logic.
+- **`hooks/`**: Custom hooks.
 
-  - Example: `useAgentsValues.tsx`, `usePipelineOverview.tsx`.
+  - `use-toast.ts`: Hook for managing toast notifications.
 
-- **`lib/`**: Utility functions and libraries that support the application.
+- **`lib/`**: Utility functions and libraries.
 
-  - Example: Axios instance configuration, helper functions.
+  - `utils.ts`: General helper functions.
 
-- **`pages/`**: Contains standalone pages for the application.
-  - `Login.tsx`: Login page for user authentication.
-  - `Signup.tsx`: Signup page for user registration.
+- **`pages/`**: Top-level page components.
+
+  - `HomePage.tsx`: Main landing page after login.
+  - **`auth/`**:
+    - `Login.tsx`: Login page for user authentication.
+    - `Signup.tsx`: Signup page for user registration.
+
+- **`services/`**: API service functions for interacting with the backend.
+
+  - `agentServices.ts`: Handles agent-related API calls.
+  - `authService.ts`: Handles authentication-related API calls.
+  - `pipelineServices.ts`: Handles pipeline-related API calls.
+  - `queryServices.ts`: Handles generic query-related API calls.
+  - `transporterService.ts`: Handles transporter-related API calls.
+
+- **`types/`**: TypeScript type definitions.
+
+  - `agent.types.ts`, `agentValues.type.ts`, `auth.types.ts`, `destination.type.ts`, `node.type.ts`, `pipeline.types.ts`, `source.types.ts`, `sourceConfig.type.ts`.
+
+- **`utils/`**: Additional utilities.
+  - `axiosInstance.ts`: Axios instance configuration for API calls.
 
 ---
 
