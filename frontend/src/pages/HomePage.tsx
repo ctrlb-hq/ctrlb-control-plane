@@ -1,17 +1,16 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import Pipeline from "./Pipelines/Pipeline";
+import Pipeline from "../components/Pipelines/Pipeline";
 import { ROUTES } from "../constants/routes";
-import AddPipeline from "./Pipelines/AddPipeline";
-import { Button } from "./ui/button";
+import AddPipeline from "../components/Pipelines/AddPipeline";
+import { Button } from "../components/ui/button";
 import { ArrowLeftRight } from "lucide-react";
 
 const TABS = [
   { label: "Pipelines", value: "pipelines", icon: <ArrowLeftRight /> },
 ];
 
-export function ControlPlaneLanding() {
+export function HomePage() {
   const navigate = useNavigate();
   const handleLogout = async () => {
     try {
@@ -77,4 +76,4 @@ export function ControlPlaneLanding() {
 }
 
 
-export default ControlPlaneLanding;
+export default HomePage;

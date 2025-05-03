@@ -7,11 +7,11 @@ import {
   useLocation,
   Location
 } from 'react-router-dom';
-import { ControlPlaneLanding } from '../components/ControlPlaneLanding';
-import { EditConfig } from '../components/EditConfig';
-import Login from '../pages/auth/Login';
-import Register from '../pages/auth/Signup';
-import { ROUTES } from '../constants/routes';
+import { HomePage } from './pages/HomePage';
+// import { EditConfig } from './components/EditConfig';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Signup';
+import { ROUTES } from './constants/routes';
 
 interface LocationState {
   from: Location;
@@ -73,18 +73,18 @@ function App() {
           path={ROUTES.HOME}
           element={
         <ProtectedRoute>
-          <ControlPlaneLanding />
+          <HomePage />
         </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path={`${ROUTES.CONFIG}/:agentId`}
           element={
         <ProtectedRoute>
           <EditConfig />
         </ProtectedRoute>
           }
-        />
+        /> */}
         {/* Redirects */}
         <Route
           path="/home"
