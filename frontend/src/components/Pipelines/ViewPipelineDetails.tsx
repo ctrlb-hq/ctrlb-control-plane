@@ -355,11 +355,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			// Delete selected agents first
 			if (selectedAgentsToDelete.length > 0) {
 				await Promise.all(
-					selectedAgentsToDelete.map(agentId =>
-						agentServices.deleteAgentById(agentId)
-					)
+					selectedAgentsToDelete.map(agentId => agentServices.deleteAgentById(agentId)),
 				);
-				console.log("xyz")
+				console.log("xyz");
 			}
 
 			// Then delete the pipeline
@@ -401,7 +399,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											</div>
 											<Sheet>
 												<SheetTrigger asChild>
-													<Button className="rounded-md px-6" disabled={!isEditMode}>Review</Button>
+													<Button className="rounded-md px-6" disabled={!isEditMode}>
+														Review
+													</Button>
 												</SheetTrigger>
 												<SheetContent className="w-[30rem]">
 													<SheetTitle>Pending Changes</SheetTitle>
@@ -509,7 +509,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="flex flex-col">
 										<p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
 										<p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-										<p className="text-red-500 mt-2">Select agents to delete along with the pipeline(else unselected agents will be orphaned) :</p>
+										<p className="text-red-500 mt-2">
+											Select agents to delete along with the pipeline(else unselected agents will be orphaned)
+											:
+										</p>
 										{/* <p className="text-red-500 mt-2">
 											After Deleting this pipeline the below agents will be orphaned
 										</p> */}
@@ -519,28 +522,27 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 													Agent: {agent.name}
 												</p>
 											))} */}
-										{agentValues && agentValues.map((agent) => (
-											<div key={agent.id} className="flex items-center space-x-2">
-												<input
-													type="checkbox"
-													id={`agent-${agent.id}`}
-													checked={selectedAgentsToDelete.includes(agent.id)}
-													onChange={(e) => {
-														if (e.target.checked) {
-															setSelectedAgentsToDelete([...selectedAgentsToDelete, agent.id]);
-														} else {
-															setSelectedAgentsToDelete(
-																selectedAgentsToDelete.filter(id => id !== agent.id)
-															);
-														}
-													}}
-													className="h-4 w-4 rounded border-gray-300"
-												/>
-												<label htmlFor={`agent-${agent.id}`} className="text-gray-600">
-													{agent.name}
-												</label>
-											</div>
-										))}
+										{agentValues &&
+											agentValues.map(agent => (
+												<div key={agent.id} className="flex items-center space-x-2">
+													<input
+														type="checkbox"
+														id={`agent-${agent.id}`}
+														checked={selectedAgentsToDelete.includes(agent.id)}
+														onChange={e => {
+															if (e.target.checked) {
+																setSelectedAgentsToDelete([...selectedAgentsToDelete, agent.id]);
+															} else {
+																setSelectedAgentsToDelete(selectedAgentsToDelete.filter(id => id !== agent.id));
+															}
+														}}
+														className="h-4 w-4 rounded border-gray-300"
+													/>
+													<label htmlFor={`agent-${agent.id}`} className="text-gray-600">
+														{agent.name}
+													</label>
+												</div>
+											))}
 									</div>
 									<DialogFooter>
 										<DialogClose asChild>
@@ -594,7 +596,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => { }}
+							onClick={() => {}}
 						/>
 					</div>
 					<p>

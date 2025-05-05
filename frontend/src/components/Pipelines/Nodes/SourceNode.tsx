@@ -106,7 +106,9 @@ export const SourceNode = ({ data: Data }: any) => {
 						<ArrowBigRightDash className="text-white w-6 h-6" />
 					</div>
 					<div className="bg-gray-200 rounded-tr-md rounded-br-md  px-2 py-2 h-[4rem]  ">
-						<div className="text-[9px] leading-3 font-medium text-center break-words max-w-[5.5rem]">{Data.name}</div>
+						<div className="text-[9px] leading-3 font-medium text-center break-words max-w-[5.5rem]">
+							{Data.name}
+						</div>
 						<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
 							{SourceLabel &&
 								SourceLabel.map((source: any, index: number) => (

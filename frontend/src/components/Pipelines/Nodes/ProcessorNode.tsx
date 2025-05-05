@@ -109,9 +109,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 							className="bg-green-600 w-0 h-0 rounded-full"
 						/>
 
-						<div className="text-[9px] leading-3 font-medium break-words max-w-full">
-							{Data.name}
-						</div>
+						<div className="text-[9px] leading-3 font-medium break-words max-w-full">{Data.name}</div>
 						<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
 							{ProcessorLabel &&
 								ProcessorLabel.map((source: any, index: number) => (

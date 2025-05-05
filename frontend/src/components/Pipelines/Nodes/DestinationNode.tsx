@@ -143,7 +143,6 @@ export const DestinationNode = ({ data: Data }: any) => {
 							<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem] w-[3rem]">
 								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
-
 						)}
 					</div>
 				</div>
