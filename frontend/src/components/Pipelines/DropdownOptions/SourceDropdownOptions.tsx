@@ -140,7 +140,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				<DropdownMenuTrigger asChild disabled={disabled}>
 					<div className="flex justify-center items-center">
 						<div
-							className="bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"
+							className={disabled ? "bg-gray-300 cursor-not-allowed rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center" : "bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"}
 							draggable
 						>
 							Add Source

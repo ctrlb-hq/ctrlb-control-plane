@@ -140,7 +140,7 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 					<div className="flex justify-center items-center">
 						<div className="bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2" />
 						<div
-							className="bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"
+							className={disabled ? "bg-gray-300 cursor-not-allowed rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center" : "bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"}
 							draggable
 						>
 							Add Processor

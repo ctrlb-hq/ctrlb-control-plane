@@ -394,10 +394,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 										<div className="flex items-center space-x-2">
 											<div className="text-xl font-medium">{pipelineOverview?.name}</div>
 										</div>
-										<div className="flex items-center mx-4">
+										<div className="flex items-center mr-6">
+											<div className="mx-4 flex items-center space-x-2">
+												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+												<Label htmlFor="edit-mode">Edit Mode</Label>
+											</div>
 											<Sheet>
 												<SheetTrigger asChild>
-													<Button className="rounded-full px-6">Review</Button>
+													<Button className="rounded-md px-6" disabled={!isEditMode}>Review</Button>
 												</SheetTrigger>
 												<SheetContent className="w-[30rem]">
 													<SheetTitle>Pending Changes</SheetTitle>
@@ -429,10 +433,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 													</SheetClose>
 												</SheetContent>
 											</Sheet>
-											<div className="mx-4 flex items-center space-x-2">
-												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-												<Label htmlFor="edit-mode">Edit Mode</Label>
-											</div>
 										</div>
 									</div>
 									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
@@ -482,14 +482,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
 										<div className="flex justify-around gap-2">
 											<div className="flex items-center">
-												<SourceDropdownOptions disabled={!isEditMode}/>
+												<SourceDropdownOptions disabled={!isEditMode} />
 											</div>
 											<div className="flex items-center">
-												<ProcessorDropdownOptions disabled={!isEditMode}/>
+												<ProcessorDropdownOptions disabled={!isEditMode} />
 											</div>
 
 											<div className="flex items-center">
-												<DestinationDropdownOptions disabled={!isEditMode}/>
+												<DestinationDropdownOptions disabled={!isEditMode} />
 											</div>
 										</div>
 									</div>
