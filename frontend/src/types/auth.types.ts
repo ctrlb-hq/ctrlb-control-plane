@@ -14,6 +14,7 @@ export interface AuthResponse {
 	refresh_token: string;
 	token: string;
 	message: string;
+	email: string;
 }
 
 export interface RefreshTokenResponse {

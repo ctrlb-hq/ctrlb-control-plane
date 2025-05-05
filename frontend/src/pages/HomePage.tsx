@@ -16,7 +16,7 @@ export function HomePage() {
 			navigate(ROUTES.LOGIN, { replace: true });
 		} catch (error) {
 			console.error("Logout failed:", error);
-			localStorage.removeItem("authToken");
+			localStorage.clear();
 			navigate(ROUTES.LOGIN, { replace: true });
 		}
 	};
