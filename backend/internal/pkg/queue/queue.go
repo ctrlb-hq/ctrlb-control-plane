@@ -41,6 +41,7 @@ func NewQueue(workerCount int, intervalSec int, queueRepository AgentQueueReposi
 		workerCount:     workerCount,
 		IntervalSecond:  intervalSec,
 		QueueRepository: queueRepository,
+		Metrics:         DefaultMetricsHelper{},
 	}
 	q.startWorkers()
 	q.startRetryScheduler()
