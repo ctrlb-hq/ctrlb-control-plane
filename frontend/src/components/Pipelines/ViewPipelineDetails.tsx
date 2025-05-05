@@ -1,33 +1,7 @@
-import { useEffect } from "react";
-import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
-import { useRef, useState, useCallback, useMemo } from "react";
+import { Boxes, RefreshCw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // import EditPipelineYAML from "./EditPipelineYAML";
-import ReactFlow, {
-	MiniMap,
-	Controls,
-	Background,
-	useEdgesState,
-	addEdge,
-	Edge,
-	Connection,
-	ReactFlowInstance,
-	EdgeMouseHandler,
-	Panel,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import {
-	Sheet,
-	SheetContent,
-	SheetTitle,
-	SheetTrigger,
-	SheetDescription,
-	SheetClose,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { SourceNode } from "./Nodes/SourceNode";
-import { ProcessorNode } from "./Nodes/ProcessorNode";
-import { DestinationNode } from "./Nodes/DestinationNode";
-import { Switch } from "../ui/switch";
 import {
 	Dialog,
 	DialogClose,
@@ -38,19 +12,44 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
 import { initialEdges } from "@/constants";
-import { Label } from "../ui/label";
-import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { useNodeValue } from "@/context/useNodeContext";
-import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
-import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
-import pipelineServices from "@/services/pipelineServices";
-import { Pipeline } from "@/types/pipeline.types";
-import { Agents } from "@/types/agent.types";
-import { HealthChart } from "../charts/HealthChart";
 import agentServices from "@/services/agentServices";
+import pipelineServices from "@/services/pipelineServices";
+import { Agents } from "@/types/agent.types";
+import { Pipeline } from "@/types/pipeline.types";
+import ReactFlow, {
+	addEdge,
+	Background,
+	Connection,
+	Controls,
+	Edge,
+	EdgeMouseHandler,
+	MiniMap,
+	Panel,
+	ReactFlowInstance,
+	useEdgesState,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { HealthChart } from "../charts/HealthChart";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
+import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
+import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
+import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
+import { DestinationNode } from "./Nodes/DestinationNode";
+import { ProcessorNode } from "./Nodes/ProcessorNode";
+import { SourceNode } from "./Nodes/SourceNode";
 
 interface DataPoint {
 	timestamp: number;
@@ -451,6 +450,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											onInit={setReactFlowInstance}
 											onEdgeClick={onEdgeClick}
 											onPaneClick={onPaneClick}
+											nodesDraggable={isEditMode}
+											nodesConnectable={isEditMode}
+											elementsSelectable={isEditMode}
 											fitView
 										>
 											<Background />
@@ -480,14 +482,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
 										<div className="flex justify-around gap-2">
 											<div className="flex items-center">
-												<SourceDropdownOptions />
+												<SourceDropdownOptions disabled={!isEditMode}/>
 											</div>
 											<div className="flex items-center">
-												<ProcessorDropdownOptions />
+												<ProcessorDropdownOptions disabled={!isEditMode}/>
 											</div>
 
 											<div className="flex items-center">
-												<DestinationDropdownOptions />
+												<DestinationDropdownOptions disabled={!isEditMode}/>
 											</div>
 										</div>
 									</div>

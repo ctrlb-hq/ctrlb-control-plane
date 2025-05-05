@@ -26,7 +26,7 @@ interface Processor {
 }
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-const ProcessorDropdownOptions = () => {
+const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
 	const { setNodeValue } = useNodeValue();
@@ -136,7 +136,7 @@ const ProcessorDropdownOptions = () => {
 						</DropdownMenuSub>
 					</DropdownMenuGroup>
 				</DropdownMenuContent>
-				<DropdownMenuTrigger asChild>
+				<DropdownMenuTrigger asChild disabled={disabled}>
 					<div className="flex justify-center items-center">
 						<div className="bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2" />
 						<div

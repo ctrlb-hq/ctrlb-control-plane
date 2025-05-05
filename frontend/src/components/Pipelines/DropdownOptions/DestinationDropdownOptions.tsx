@@ -27,7 +27,7 @@ interface destination {
 	type: string;
 	supported_signals: string[];
 }
-const DestinationDropdownOptions = () => {
+const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [destinationOptionValue, setDestinationOptionValue] = useState("");
 	const { setNodeValue } = useNodeValue();
@@ -136,7 +136,7 @@ const DestinationDropdownOptions = () => {
 						))}
 					</DropdownMenuGroup>
 				</DropdownMenuContent>
-				<DropdownMenuTrigger asChild>
+				<DropdownMenuTrigger asChild disabled={disabled}>
 					<div className="flex justify-center items-center">
 						<div className="bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2" />
 						<div
