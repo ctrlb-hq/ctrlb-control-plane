@@ -8,6 +8,7 @@ import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ArrowBigRightDash } from "lucide-react";
 
 interface FormSchema {
 	title?: string;
@@ -108,7 +109,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 			<SheetTrigger asChild>
 				<div className="flex items-center">
 					<div className="bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2" />
-					<div className="bg-gray-200 flex justify-left items-center rounded-md h-[4rem] w-[7rem]">
+					<div className="bg-gray-200 flex justify-between items-center rounded-md h-[4rem] w-[8rem] ">
 						<Handle
 							type="target"
 							position={Position.Left}
@@ -121,7 +122,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 							>
 								{Data.name}
 							</div>
-							<div className="flex justify-between gap-2 text-xs mt-2">
+							<div className="flex flex-wrap gap-1 text-[8px] mt-1 text-gray-700">
 								{DestinationLabel.map((source: any, index: number) => (
 									<p style={{ fontSize: "8px" }} key={index}>
 										{source}
@@ -136,9 +137,13 @@ export const DestinationNode = ({ data: Data }: any) => {
 								</div>
 							</div>
 						) : (
-							<div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
-								<p className="text-xl m-1 text-white">→|</p>
+							// <div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
+							// 	<p className="text-xl m-1 text-white">→|</p>
+							// </div>
+							<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem] w-[3rem]">
+								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
+
 						)}
 					</div>
 				</div>
@@ -147,7 +152,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 				<div className="flex flex-col gap-4 p-4">
 					<div className="flex flex-col gap-3">
 						<div className="flex items-center gap-4">
-							<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+							<ArrowBigRightDash className="w-6 h-6" />
 							<h2 className="text-xl font-bold">{Data.name}</h2>
 						</div>
 						<p className="text-gray-500">

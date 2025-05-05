@@ -1,33 +1,7 @@
-import { useEffect } from "react";
-import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
-import { useRef, useState, useCallback, useMemo } from "react";
+import { Boxes, RefreshCw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // import EditPipelineYAML from "./EditPipelineYAML";
-import ReactFlow, {
-	MiniMap,
-	Controls,
-	Background,
-	useEdgesState,
-	addEdge,
-	Edge,
-	Connection,
-	ReactFlowInstance,
-	EdgeMouseHandler,
-	Panel,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import {
-	Sheet,
-	SheetContent,
-	SheetTitle,
-	SheetTrigger,
-	SheetDescription,
-	SheetClose,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { SourceNode } from "./Nodes/SourceNode";
-import { ProcessorNode } from "./Nodes/ProcessorNode";
-import { DestinationNode } from "./Nodes/DestinationNode";
-import { Switch } from "../ui/switch";
 import {
 	Dialog,
 	DialogClose,
@@ -38,19 +12,44 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	Sheet,
+	SheetClose,
+	SheetContent,
+	SheetDescription,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
 import { initialEdges } from "@/constants";
-import { Label } from "../ui/label";
-import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { useNodeValue } from "@/context/useNodeContext";
-import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
-import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
-import pipelineServices from "@/services/pipelineServices";
-import { Pipeline } from "@/types/pipeline.types";
-import { Agents } from "@/types/agent.types";
-import { HealthChart } from "../charts/HealthChart";
 import agentServices from "@/services/agentServices";
+import pipelineServices from "@/services/pipelineServices";
+import { Agents } from "@/types/agent.types";
+import { Pipeline } from "@/types/pipeline.types";
+import ReactFlow, {
+	addEdge,
+	Background,
+	Connection,
+	Controls,
+	Edge,
+	EdgeMouseHandler,
+	MiniMap,
+	Panel,
+	ReactFlowInstance,
+	useEdgesState,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { HealthChart } from "../charts/HealthChart";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
+import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
+import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
+import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
+import { DestinationNode } from "./Nodes/DestinationNode";
+import { ProcessorNode } from "./Nodes/ProcessorNode";
+import { SourceNode } from "./Nodes/SourceNode";
 
 interface DataPoint {
 	timestamp: number;
@@ -83,6 +82,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
+	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -344,10 +344,35 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+	// const handleDeletePipeline = async () => {
+	// 	await pipelineServices.deletePipelineById(pipelineId);
+	// 	setIsOpen(false);
+	// 	window.location.reload();
+	// };
+
 	const handleDeletePipeline = async () => {
-		await pipelineServices.deletePipelineById(pipelineId);
-		setIsOpen(false);
-		window.location.reload();
+		try {
+			// Delete selected agents first
+			if (selectedAgentsToDelete.length > 0) {
+				await Promise.all(
+					selectedAgentsToDelete.map(agentId =>
+						agentServices.deleteAgentById(agentId)
+					)
+				);
+				console.log("xyz")
+			}
+
+			// Then delete the pipeline
+			await pipelineServices.deletePipelineById(pipelineId);
+			setIsOpen(false);
+			window.location.reload();
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to delete pipeline or agents",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
@@ -369,10 +394,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 										<div className="flex items-center space-x-2">
 											<div className="text-xl font-medium">{pipelineOverview?.name}</div>
 										</div>
-										<div className="flex items-center mx-4">
+										<div className="flex items-center mr-6">
+											<div className="mx-4 flex items-center space-x-2">
+												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+												<Label htmlFor="edit-mode">Edit Mode</Label>
+											</div>
 											<Sheet>
 												<SheetTrigger asChild>
-													<Button className="rounded-full px-6">Review</Button>
+													<Button className="rounded-md px-6" disabled={!isEditMode}>Review</Button>
 												</SheetTrigger>
 												<SheetContent className="w-[30rem]">
 													<SheetTitle>Pending Changes</SheetTitle>
@@ -404,10 +433,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 													</SheetClose>
 												</SheetContent>
 											</Sheet>
-											<div className="mx-4 flex items-center space-x-2">
-												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-												<Label htmlFor="edit-mode">Edit Mode</Label>
-											</div>
 										</div>
 									</div>
 									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
@@ -425,6 +450,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											onInit={setReactFlowInstance}
 											onEdgeClick={onEdgeClick}
 											onPaneClick={onPaneClick}
+											nodesDraggable={isEditMode}
+											nodesConnectable={isEditMode}
+											elementsSelectable={isEditMode}
 											fitView
 										>
 											<Background />
@@ -454,14 +482,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
 										<div className="flex justify-around gap-2">
 											<div className="flex items-center">
-												<SourceDropdownOptions />
+												<SourceDropdownOptions disabled={!isEditMode} />
 											</div>
 											<div className="flex items-center">
-												<ProcessorDropdownOptions />
+												<ProcessorDropdownOptions disabled={!isEditMode} />
 											</div>
 
 											<div className="flex items-center">
-												<DestinationDropdownOptions />
+												<DestinationDropdownOptions disabled={!isEditMode} />
 											</div>
 										</div>
 									</div>
@@ -481,15 +509,38 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="flex flex-col">
 										<p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
 										<p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-										<p className="text-red-500 mt-2">
+										<p className="text-red-500 mt-2">Select agents to delete along with the pipeline(else unselected agents will be orphaned) :</p>
+										{/* <p className="text-red-500 mt-2">
 											After Deleting this pipeline the below agents will be orphaned
-										</p>
-										{agentValues &&
+										</p> */}
+										{/* {agentValues &&
 											agentValues.map((agent, index) => (
 												<p className="text-gray-600" key={index}>
 													Agent: {agent.name}
 												</p>
-											))}
+											))} */}
+										{agentValues && agentValues.map((agent) => (
+											<div key={agent.id} className="flex items-center space-x-2">
+												<input
+													type="checkbox"
+													id={`agent-${agent.id}`}
+													checked={selectedAgentsToDelete.includes(agent.id)}
+													onChange={(e) => {
+														if (e.target.checked) {
+															setSelectedAgentsToDelete([...selectedAgentsToDelete, agent.id]);
+														} else {
+															setSelectedAgentsToDelete(
+																selectedAgentsToDelete.filter(id => id !== agent.id)
+															);
+														}
+													}}
+													className="h-4 w-4 rounded border-gray-300"
+												/>
+												<label htmlFor={`agent-${agent.id}`} className="text-gray-600">
+													{agent.name}
+												</label>
+											</div>
+										))}
 									</div>
 									<DialogFooter>
 										<DialogClose asChild>
@@ -543,7 +594,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => {}}
+							onClick={() => { }}
 						/>
 					</div>
 					<p>

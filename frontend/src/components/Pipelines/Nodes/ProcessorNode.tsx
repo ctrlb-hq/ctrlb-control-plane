@@ -10,6 +10,15 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
+import { ArrowBigRightDash } from "lucide-react";
+
+interface FormSchema {
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
+}
 
 const theme = createTheme({
 	components: {
@@ -34,7 +43,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 	);
 	const processorConfig = getSource?.config;
 	const [data, setData] = useState<object>(Data.config);
-	const [form, setForm] = useState<object>({});
+	const [form, setForm] = useState<FormSchema>({});
 
 	const ProcessorLabel = Data.supported_signals;
 	const handleSubmit = () => {
@@ -88,24 +97,22 @@ export const ProcessorNode = ({ data: Data }: any) => {
 		setIsSheetOpen(false);
 	};
 
-	// ... existing code ...
-
 	return (
 		<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
 			<SheetTrigger asChild>
 				<div onClick={() => setIsSheetOpen(true)} className="flex items-center">
 					<div className="bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2" />
-					<div className="bg-gray-200 rounded border-2 border-gray-300 p-4 h-[4rem] shadow-md w-[8rem] relative">
+					<div className="bg-gray-200 rounded  p-4 h-[4rem]  w-[7.5rem] px-2 py-1 flex flex-col items-center justify-center relative text-center">
 						<Handle
 							type="target"
 							position={Position.Left}
 							className="bg-green-600 w-0 h-0 rounded-full"
 						/>
 
-						<div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">
+						<div className="text-[9px] leading-3 font-medium break-words max-w-full">
 							{Data.name}
 						</div>
-						<div className="flex justify-between gap-2 mr-2 text-xs mt-2">
+						<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
 							{ProcessorLabel &&
 								ProcessorLabel.map((source: any, index: number) => (
 									<p style={{ fontSize: "8px" }} key={index}>
@@ -125,7 +132,8 @@ export const ProcessorNode = ({ data: Data }: any) => {
 			<SheetContent className="w-[36rem]">
 				<div className="flex flex-col gap-4 p-4">
 					<div className="flex gap-3 items-center">
-						<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+						{/* <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p> */}
+						<ArrowBigRightDash className="w-6 h-6" />
 						<h2 className="text-xl font-bold">{Data.name}</h2>
 					</div>
 					<p className="text-gray-500">

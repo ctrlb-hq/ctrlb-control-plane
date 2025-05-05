@@ -27,7 +27,7 @@ interface destination {
 	type: string;
 	supported_signals: string[];
 }
-const DestinationDropdownOptions = () => {
+const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [destinationOptionValue, setDestinationOptionValue] = useState("");
 	const { setNodeValue } = useNodeValue();
@@ -136,11 +136,11 @@ const DestinationDropdownOptions = () => {
 						))}
 					</DropdownMenuGroup>
 				</DropdownMenuContent>
-				<DropdownMenuTrigger asChild>
+				<DropdownMenuTrigger asChild disabled={disabled}>
 					<div className="flex justify-center items-center">
 						<div className="bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2" />
 						<div
-							className="bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"
+							className={disabled ? "bg-gray-300 cursor-not-allowed rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center" : "bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"}
 							draggable
 						>
 							Add Destination

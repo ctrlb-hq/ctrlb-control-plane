@@ -11,6 +11,15 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
+import { ArrowBigRightDash } from "lucide-react";
+
+interface FormSchema {
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
+}
 
 const theme = createTheme({
 	components: {
@@ -29,7 +38,7 @@ export const SourceNode = ({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const { setNodeValue } = useNodeValue();
 	const { addChange } = usePipelineChangesLog();
-	const [form, setForm] = useState<object>({});
+	const [form, setForm] = useState<FormSchema>({});
 	const SourceLabel = Data.supported_signals || "";
 
 	const handleDeleteNode = () => {
@@ -93,21 +102,20 @@ export const SourceNode = ({ data: Data }: any) => {
 		<Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
 			<SheetTrigger asChild>
 				<div onClick={() => setIsSidebarOpen(true)} className="flex items-center">
-					<div className="flex items-center justify-center rounded-bl-md rounded-tl-md bg-gray-500 h-[4rem]">
-						<p className="text-xl m-1 text-white">→|</p>
+					<div className="flex items-center justify-center rounded-bl-md rounded-tl-md bg-gray-500 h-[4rem] w-[2rem]">
+						<ArrowBigRightDash className="text-white w-6 h-6" />
 					</div>
-					<div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-2 h-[4rem] shadow-md w-[6rem] relative">
-						<div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">
-							{Data.name}
-						</div>
-						<div className="flex justify-between gap-2 mr-2 text-xs mt-1">
+					<div className="bg-gray-200 rounded-tr-md rounded-br-md  px-2 py-2 h-[4rem]  ">
+						<div className="text-[9px] leading-3 font-medium text-center break-words max-w-[5.5rem]">{Data.name}</div>
+						<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
 							{SourceLabel &&
 								SourceLabel.map((source: any, index: number) => (
-									<p style={{ fontSize: "8px" }} key={index}>
+									<p className="text-[8px] mt-1" key={index}>
 										{source}
 									</p>
 								))}
 						</div>
+
 						<Handle
 							type="source"
 							position={Position.Right}
@@ -120,7 +128,7 @@ export const SourceNode = ({ data: Data }: any) => {
 			<SheetContent className="w-[36rem]">
 				<div className="flex flex-col gap-4 p-4">
 					<div className="flex gap-3 items-center">
-						<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+						<ArrowBigRightDash className="w-6 h-6" />
 						<h2 className="text-xl font-bold">{Data.name}</h2>
 					</div>
 					<p className="text-gray-500">
