@@ -83,6 +83,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
+	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -344,10 +345,35 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+	// const handleDeletePipeline = async () => {
+	// 	await pipelineServices.deletePipelineById(pipelineId);
+	// 	setIsOpen(false);
+	// 	window.location.reload();
+	// };
+
 	const handleDeletePipeline = async () => {
-		await pipelineServices.deletePipelineById(pipelineId);
-		setIsOpen(false);
-		window.location.reload();
+		try {
+			// Delete selected agents first
+			if (selectedAgentsToDelete.length > 0) {
+				await Promise.all(
+					selectedAgentsToDelete.map(agentId =>
+						agentServices.deleteAgentById(agentId)
+					)
+				);
+				console.log("xyz")
+			}
+
+			// Then delete the pipeline
+			await pipelineServices.deletePipelineById(pipelineId);
+			setIsOpen(false);
+			window.location.reload();
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to delete pipeline or agents",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
@@ -481,15 +507,38 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="flex flex-col">
 										<p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
 										<p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-										<p className="text-red-500 mt-2">
+										<p className="text-red-500 mt-2">Select agents to delete along with the pipeline(else unselected agents will be orphaned) :</p>
+										{/* <p className="text-red-500 mt-2">
 											After Deleting this pipeline the below agents will be orphaned
-										</p>
-										{agentValues &&
+										</p> */}
+										{/* {agentValues &&
 											agentValues.map((agent, index) => (
 												<p className="text-gray-600" key={index}>
 													Agent: {agent.name}
 												</p>
-											))}
+											))} */}
+										{agentValues && agentValues.map((agent) => (
+											<div key={agent.id} className="flex items-center space-x-2">
+												<input
+													type="checkbox"
+													id={`agent-${agent.id}`}
+													checked={selectedAgentsToDelete.includes(agent.id)}
+													onChange={(e) => {
+														if (e.target.checked) {
+															setSelectedAgentsToDelete([...selectedAgentsToDelete, agent.id]);
+														} else {
+															setSelectedAgentsToDelete(
+																selectedAgentsToDelete.filter(id => id !== agent.id)
+															);
+														}
+													}}
+													className="h-4 w-4 rounded border-gray-300"
+												/>
+												<label htmlFor={`agent-${agent.id}`} className="text-gray-600">
+													{agent.name}
+												</label>
+											</div>
+										))}
 									</div>
 									<DialogFooter>
 										<DialogClose asChild>
@@ -543,7 +592,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => {}}
+							onClick={() => { }}
 						/>
 					</div>
 					<p>
