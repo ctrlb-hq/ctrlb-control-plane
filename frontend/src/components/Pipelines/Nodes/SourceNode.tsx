@@ -33,7 +33,7 @@ const theme = createTheme({
 const renderers = [...materialRenderers];
 export const SourceNode = ({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-	const { updateNodes, deleteNode } = useGraphFlow();
+	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
 	const SourceLabel = Data.supported_signals || "";
@@ -48,29 +48,26 @@ export const SourceNode = ({ data: Data }: any) => {
 		setForm(res);
 	};
 
-	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
-		(source: any) => source.component_name === Data.component_name,
-	);
-	const sourceConfig = getSource?.config;
-	const [data, setData] = useState<object>(Data.config);
+
+	const [config, setConfig] = useState<object>(Data.config);
+
+	// const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
+	// 	(source: any) => source.component_name === Data.component_name,
+	// );
+	// const sourceConfig = getSource?.config;
 
 	useEffect(() => {
 		getForm();
 	}, []);
 
 	const handleSubmit = () => {
-		const log = { type: "source", name: Data.name, status: "edited" };
+		const log = { type: "source", id: Data.id, name: Data.name, status: "edited", initialConfig: Data.config, finalConfig: config };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-		const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-		const updatedNodes = nodes.map((node: any) =>
-			node.component_name === Data.component_name ? { ...node, config: data } : node,
-		);
-		localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
-
+		updateNodeConfig(Data.id, config);
 		setIsSidebarOpen(false);
 	};
 	return (
@@ -118,11 +115,11 @@ export const SourceNode = ({ data: Data }: any) => {
 							<div className="p-3 ">
 								<div className="overflow-y-auto h-[29rem]">
 									<JsonForms
-										data={data}
+										data={config}
 										schema={form}
 										renderers={renderers}
 										cells={materialCells}
-										onChange={({ data }) => setData(data)}
+										onChange={({ data }) => setConfig(data)}
 									/>
 								</div>
 							</div>

@@ -41,32 +41,24 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 		setIsSheetOpen(!isSheetOpen);
 		handleGetSourceForm(e);
 	};
-	const existingNodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
 	const handleSubmit = () => {
 		const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
 		const newNode = {
-			id: (existingNodes.length + 1).toString(),
 			type: "source",
-			position: { x: 350, y: 450 },
+			position: { x: 0, y: 0 },
 			data: {
-				label: (
-					<div style={{ fontSize: "10px", textAlign: "center" }}>
-						{`${sourceOptionValue}-(${existingNodes.length + 1})`}
-					</div>
-				),
 				type: "receiver",
-				component_id: (existingNodes.length + 1).toString(),
 				name: sourceOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data as Record<string, unknown>,
+				config: data
 			},
 		};
 
-		addNode(newNode);
+		const newNodeId = addNode(newNode);
 
-		const log = { type: "source", name: sourceOptionValue, status: "added" };
+		const log = { type: "source", id: newNodeId, name: sourceOptionValue, status: "added", initialConfig: undefined, finalConfig: data };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
@@ -176,12 +168,11 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 								<SheetClose>
 									<div className="flex gap-3">
 										<Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>
-											Apply Changes
+											Add Source
 										</Button>
 										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
 											Discard Changes
 										</Button>
-										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
 									</div>
 								</SheetClose>
 							</SheetFooter>

@@ -34,25 +34,19 @@ const renderers = [...materialRenderers];
 
 export const DestinationNode = ({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const { deleteNode } = useGraphFlow();
+	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
 
 	const DestinationLabel = Data.supported_signals;
 	const handleSubmit = () => {
-		const log = { type: "destination", name: Data.name, status: "edited" };
+		const log = { type: "destination", id: Data.id, name: Data.name, status: "edited", initialConfig: Data.config, finalConfig: config };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-		const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-		const updatedNodes = nodes.map((node: any) =>
-			node.component_name === Data.component_name
-				? { ...node, config: data, component_id: Data.id, component_role: "exporter" }
-				: node,
-		);
-		localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+		updateNodeConfig(Data.id, config);
 
 		const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
 		const updatedSources = sources.filter(
@@ -80,7 +74,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 		(source: any) => source.component_name === Data.component_name,
 	);
 	const sourceConfig = getSource?.config;
-	const [data, setData] = useState<object>(Data.config);
+	const [config, setConfig] = useState<object>(Data.config);
 
 	return (
 		<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -143,11 +137,11 @@ export const DestinationNode = ({ data: Data }: any) => {
 								<div className="p-3 ">
 									<div className="overflow-y-auto h-[29rem]">
 										<JsonForms
-											data={data}
+											data={config}
 											schema={form}
 											renderers={renderers}
 											cells={materialCells}
-											onChange={({ data }) => setData(data)}
+											onChange={({ data }) => setConfig(data)}
 										/>
 									</div>
 								</div>

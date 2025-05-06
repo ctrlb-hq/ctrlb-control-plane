@@ -41,33 +41,25 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 		setIsSheetOpen(!isSheetOpen);
 		handleGetProcessorForm(e);
 	};
-	const existingNodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
 	const handleSubmit = () => {
 		const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals;
 
 		const newNode = {
-			id: (existingNodes.length + 1).toString(),
 			type: "processor",
-			position: { x: 350, y: 450 },
+			position: { x: 0, y: 0 },
 			data: {
-				label: (
-					<div style={{ fontSize: "10px", textAlign: "center" }}>
-						{`${processorOptionValue}-(${existingNodes.length + 1})`}
-					</div>
-				),
 				type: "receiver",
-				id: existingNodes.length + 1,
 				name: processorOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data as Record<string, unknown>,
+				config: data
 			},
 		};
 
-		addNode(newNode);
+		const newNodeId = addNode(newNode);
 
-		const log = { type: "processor", name: processorOptionValue, status: "added" };
+		const log = { type: "processor", id: newNodeId, name: processorOptionValue, status: "added", initialConfig: undefined, finalConfig: data };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
@@ -178,13 +170,10 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 								<SheetClose>
 									<div className="flex gap-3">
 										<Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>
-											Apply
+											Add Processor
 										</Button>
 										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
 											Discard Changes
-										</Button>
-										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
-											Delete Node
 										</Button>
 									</div>
 								</SheetClose>
