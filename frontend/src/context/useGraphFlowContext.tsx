@@ -1,21 +1,30 @@
 import React, { createContext, useContext } from "react";
-import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge } from "reactflow";
+import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge, XYPosition } from "reactflow";
 import { initialNodes, initialEdges } from "../constants";
 
-interface NodeData {
-	component_id?: string | number;
+interface BaseNodeData {
 	component_role?: string;
 	name?: string;
 	supported_signals?: string[];
 	component_name?: string;
-	config?: Record<string, unknown>;
-	position?: { x: number; y: number };
+	config?: any;
+}
+
+interface NodeData extends BaseNodeData {
+	component_id?: string | number;
+	position?: XYPosition;
 }
 
 interface EdgeData {
 	id?: string;
 	sourceComponentId?: string | number;
 	targetComponentId?: string | number;
+}
+
+interface NewNode {
+	type: string;
+	position: XYPosition;
+	data: BaseNodeData;
 }
 
 interface GraphFlowContextType {
@@ -26,7 +35,8 @@ interface GraphFlowContextType {
 	connectNodes: (params: { source: string; target: string }) => void;
 	resetGraph: () => void;
 	deleteNode: (nodeId: string) => void;
-	addNode: (newNode: Node<NodeData>) => void;
+	addNode: (newNode: NewNode) => string;
+	updateNodeConfig: (nodeId: string, config: any) => void;
 }
 
 // Validation functions
@@ -267,9 +277,29 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 		});
 	};
 
-	const addNode = (newNode: Node<NodeData>) => {
+	const addNode = (newNode: NewNode): string => {
+		let newNodeId = '';
 		setNodeValue(prevNodes => {
-			const updatedNodes = [...prevNodes, newNode];
+			newNodeId = (prevNodes.length + 1).toString();
+			const newNodeToAdd = {
+				id: newNodeId,
+				type: newNode.type,
+				position: newNode.position,
+				data: {
+					...newNode.data,
+					component_id: newNodeId,
+				}
+			};
+			const updatedNodes = [...prevNodes, newNodeToAdd];
+			localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+			return updatedNodes;
+		});
+		return newNodeId;
+	};
+
+	const updateNodeConfig = (nodeId: string, config: any) => {
+		setNodeValue(prevNodes => {
+			const updatedNodes = prevNodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, config } } : node);
 			localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 			return updatedNodes;
 		});
@@ -284,7 +314,8 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 			connectNodes,
 			resetGraph,
 			deleteNode,
-			addNode
+			addNode,
+			updateNodeConfig
 		}}>
 			{children}
 		</GraphFlowContext.Provider>
