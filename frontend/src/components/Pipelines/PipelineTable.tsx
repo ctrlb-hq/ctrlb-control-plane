@@ -8,7 +8,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import ExistingPipelineOverview from "./ExistingPipelineOverview";
+import ViewPipelineDetails from "./ViewPipelineDetails";
 import pipelineServices from "@/services/pipelineServices";
 import { useEffect, useState } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
@@ -85,7 +85,7 @@ const PipelineTable = () => {
 										</TableRow>
 									</SheetTrigger>
 									<SheetContent>
-										<ExistingPipelineOverview pipelineId={pipeline.id} />
+										<ViewPipelineDetails pipelineId={pipeline.id} />
 									</SheetContent>
 								</Sheet>
 							))}

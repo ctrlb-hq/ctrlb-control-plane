@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from "react";
 import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge, XYPosition } from "reactflow";
 import { initialNodes, initialEdges } from "../constants";
+import { useToast } from "@/hooks/use-toast";
 
 interface BaseNodeData {
 	component_role?: string;
@@ -168,7 +169,7 @@ const GraphFlowContext = createContext<GraphFlowContextType | undefined>(undefin
 export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) => {
 	const [nodeValue, setNodeValue] = useNodesState(fetchLocalStorageNodesData());
 	const [edgeValue, setEdgeValue] = useEdgesState(fetchLocalStorageEdgeData());
-
+	const { toast } = useToast();
 	// useEffect(() => {
 	// 	const handleStorageChange = (event: StorageEvent) => {
 	// 		if (event.key === "Nodes" && event.newValue) {
@@ -229,6 +230,11 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 		const validation = validateNodeConnection(sourceNode!, targetNode!);
 		if (!validation.isValid) {
 			console.error("Invalid connection:", validation.error);
+			toast({
+				title: "Invalid connection",
+				description: validation.error,
+				variant: "destructive",
+			});
 			return;
 		}
 
