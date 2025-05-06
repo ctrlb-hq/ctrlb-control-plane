@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
@@ -28,15 +28,15 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
-	const { setNodeValue } = useNodeValue();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
 	const [data, setData] = useState<object>();
 	const [pluginName, setPluginName] = useState();
 	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
+	const { addNode } = useGraphFlow();
 
-	const handleSheetOPen = (e: any) => {
+	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
 		setIsSheetOpen(!isSheetOpen);
 		handleGetProcessorForm(e);
@@ -61,18 +61,11 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: processorOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data,
+				config: data as Record<string, unknown>,
 			},
 		};
 
-		const nodeToBeAdded = {
-			component_id: existingNodes.length + 1,
-			component_role: "processor",
-			config: data,
-			name: processorOptionValue,
-			component_name: pluginName,
-			supported_signals: supported_signals,
-		};
+		addNode(newNode);
 
 		const log = { type: "processor", name: processorOptionValue, status: "added" };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
@@ -80,8 +73,6 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-		localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-		setNodeValue(prev => [...prev, newNode]);
 		setIsSheetOpen(false);
 	};
 
@@ -125,7 +116,7 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {
-										handleSheetOPen(processor.name);
+										handleSheetOpen(processor.name);
 										setProcessorOptionValue(processor.display_name);
 									}}
 								>

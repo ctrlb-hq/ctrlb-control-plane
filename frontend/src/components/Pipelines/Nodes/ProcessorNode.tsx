@@ -1,7 +1,7 @@
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetTrigger, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { useEffect, useState } from "react";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { JsonForms } from "@jsonforms/react";
@@ -34,7 +34,7 @@ const renderers = [...materialRenderers];
 
 export const ProcessorNode = ({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const { setNodeValue } = useNodeValue();
+	const { updateNodes, deleteNode } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
 		(source: any) => source.component_name === Data.component_name,
@@ -69,29 +69,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 	}, []);
 
 	const handleDeleteNode = () => {
-		// Delete node
-		setNodeValue(prev => prev.filter(node => node.id !== Data.component_id));
-		setNodeValue(prev => prev.filter(node => node.id !== Data.id));
-
-		// Delete connected edges
-		const edges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]");
-		const updatedEdges = edges.filter(
-			(edge: any) => edge.source !== Data.id && edge.target !== Data.id,
-		);
-		localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
-
-		// Log the change
-		const log = { type: "processor", name: Data.name, status: "deleted" };
-		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-		addChange(log);
-		const updatedLog = [...existingLog, log];
-		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
-
-		// Update nodes in storage
-		const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-		const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
-		localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
-
+		deleteNode(Data.id);
 		setIsSheetOpen(false);
 	};
 

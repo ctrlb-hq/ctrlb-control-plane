@@ -21,7 +21,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { initialEdges } from "@/constants";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
@@ -69,8 +69,7 @@ const getRandomChartColor = (name: string) => {
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [agentValues, setAgentValues] = useState<Agents[]>([]);
-	const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	const { nodeValue, updateNodes, edgeValue, updateEdges } = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -173,8 +172,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				},
 			};
 		});
-		setNodeValue(updatedNodes);
-		setEdges(edges);
+		updateNodes(updatedNodes);
+		updateEdges(edges);
 	};
 
 	useEffect(() => {
@@ -189,7 +188,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
 			console.log(params);
-			setEdges(eds => {
+			updateEdges(eds => {
 				if (!params.source || !params.target) {
 					console.error("Invalid connection: source or target is null");
 					return eds;
@@ -251,7 +250,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				return updatedEdges;
 			});
 		},
-		[setEdges],
+		[updateEdges],
 	);
 
 	const fetchHealthMetrics = async () => {
@@ -296,10 +295,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			setEdges(edges => edges.filter(edge => edge.id !== selectedEdge.id));
+			updateEdges(edges => edges.filter(edge => edge.id !== selectedEdge.id));
 			setSelectedEdge(null);
 		}
-	}, [selectedEdge, setEdges]);
+	}, [selectedEdge, updateEdges]);
 
 	// Close popover when clicking elsewhere
 	const onPaneClick = useCallback(() => {
@@ -443,8 +442,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												animated: true,
 												label: isEditMode ? "" : edge.label,
 											}))}
-											onNodesChange={onNodesChange}
-											onEdgesChange={onEdgesChange}
+											onNodesChange={updateNodes}
+											onEdgesChange={updateEdges}
 											onConnect={onConnect}
 											nodeTypes={nodeTypes}
 											onInit={setReactFlowInstance}
