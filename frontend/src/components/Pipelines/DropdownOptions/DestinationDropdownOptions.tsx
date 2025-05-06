@@ -11,7 +11,7 @@ import {
 
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useNodesEdgesValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 
@@ -28,7 +28,7 @@ interface destination {
 const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [destinationOptionValue, setDestinationOptionValue] = useState("");
-	const { setNodeValue } = useNodeValue();
+	const { setNodeValue } = useNodesEdgesValue();
 	const { addChange } = usePipelineChangesLog();
 	const [destinations, setDestinations] = useState<destination[]>([]);
 	const [data, setData] = useState<object>();

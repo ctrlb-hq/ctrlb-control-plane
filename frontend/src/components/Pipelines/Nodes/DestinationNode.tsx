@@ -1,7 +1,7 @@
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useNodesEdgesValue } from "@/context/useNodeContext";
 import { Button } from "../../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -34,7 +34,7 @@ const renderers = [...materialRenderers];
 
 export const DestinationNode = ({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const { setNodeValue } = useNodeValue();
+	const { setNodeValue } = useNodesEdgesValue();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
 

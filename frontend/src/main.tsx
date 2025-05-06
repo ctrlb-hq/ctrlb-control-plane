@@ -7,7 +7,7 @@ import { Toaster } from "./components/ui/toaster.tsx";
 import { PipelineOverviewProvider } from "./context/usePipelineDetailContext.tsx";
 import { PipelineChangesLogProvider } from "./context/usePipelineChangesLog.tsx";
 import { EdgeValueProvider } from "./context/useEdgeContext.tsx";
-import { NodeValueProvider } from "./context/useNodeContext.tsx";
+import { NodesEdgesValueProvider } from "./context/useNodeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
@@ -15,11 +15,11 @@ createRoot(document.getElementById("root")!).render(
 			{/* <NodeValueProvider> */}
 			<PipelineStatusProvider>
 				<PipelineOverviewProvider>
-					<NodeValueProvider>
+					<NodesEdgesValueProvider>
 						<EdgeValueProvider>
 							<App />
 						</EdgeValueProvider>
-					</NodeValueProvider>
+					</NodesEdgesValueProvider>
 				</PipelineOverviewProvider>
 			</PipelineStatusProvider>
 			<Toaster />

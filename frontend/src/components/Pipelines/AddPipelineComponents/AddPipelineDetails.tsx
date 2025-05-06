@@ -29,8 +29,6 @@ const AddPipelineDetails = () => {
 	if (!pipelineStatus) {
 		return null;
 	}
-	const pipelineName = localStorage.getItem("pipelinename") || "";
-	const platform = localStorage.getItem("platform");
 
 	const { currentStep } = pipelineStatus;
 	const [showRunCommand, setShowRunCommand] = useState(false);
@@ -40,15 +38,14 @@ const AddPipelineDetails = () => {
 	const [showAgentInfo, setShowAgentInfo] = useState(false);
 	const { toast } = useToast();
 	const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
-	// const [showConfigureButton, setShowConfigureButton] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
 
-	const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9";
+	const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9"; // TODO: Replace with actual API key
 
 	const [formData, setFormData] = useState<formData>({
-		name: pipelineName ?? "",
-		platform: platform ?? "",
+		name: localStorage.getItem("pipelinename") ?? "",
+		platform: localStorage.getItem("platform") ?? "",
 	});
 
 	const [errors, setErrors] = useState({

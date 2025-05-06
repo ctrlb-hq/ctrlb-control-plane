@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodeValue } from "@/context/useNodeContext";
+import { useNodesEdgesValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
@@ -28,7 +28,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
-	const { setNodeValue } = useNodeValue();
+	const { setNodeValue } = useNodesEdgesValue();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
 	const [data, setData] = useState<object>();
