@@ -68,6 +68,11 @@ export const DestinationNode = ({ data: Data }: any) => {
 
 	const handleDeleteNode = () => {
 		deleteNode(Data.id);
+		const log = { type: "destination", id: Data.id, name: Data.name, status: "deleted", initialConfig: Data.config, finalConfig: undefined };
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		setIsSheetOpen(false);
 	};
 	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(

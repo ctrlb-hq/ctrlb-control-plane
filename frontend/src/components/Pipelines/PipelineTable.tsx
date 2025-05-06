@@ -12,6 +12,7 @@ import ViewPipelineDetails from "./ViewPipelineDetails";
 import pipelineServices from "@/services/pipelineServices";
 import { useEffect, useState } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface pipeline {
 	id: string;
@@ -26,6 +27,7 @@ const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
 	const { setPipelineOverview } = usePipelineOverview();
 	const [pipelineId, setPipelineId] = useState<string>("");
+	const { resetGraph } = useGraphFlow();
 	const handleGetPipelines = async () => {
 		const res = await pipelineServices.getAllPipelines();
 		setPipelines(res);
@@ -71,7 +73,11 @@ const PipelineTable = () => {
 					<TableBody>
 						{Array.isArray(pipelines) &&
 							pipelines.map(pipeline => (
-								<Sheet key={pipeline.id}>
+								<Sheet key={pipeline.id} onOpenChange={(open) => {
+									if (!open) {
+										resetGraph();
+									}
+								}}>
 									<SheetTrigger asChild>
 										<TableRow
 											className="cursor-pointer"

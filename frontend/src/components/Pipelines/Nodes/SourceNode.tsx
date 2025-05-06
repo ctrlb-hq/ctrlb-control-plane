@@ -39,6 +39,11 @@ export const SourceNode = ({ data: Data }: any) => {
 	const SourceLabel = Data.supported_signals || "";
 
 	const handleDeleteNode = () => {
+		const log = { type: "source", id: Data.id, name: Data.name, status: "deleted", initialConfig: Data.config, finalConfig: undefined };
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		deleteNode(Data.id);
 		setIsSidebarOpen(false);
 	};
