@@ -11,7 +11,6 @@ import { GraphFlowProvider } from "./context/useGraphFlowContext.tsx";
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<PipelineChangesLogProvider>
-			{/* <NodeValueProvider> */}
 			<PipelineStatusProvider>
 				<PipelineOverviewProvider>
 					<GraphFlowProvider>
