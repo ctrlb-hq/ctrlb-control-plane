@@ -11,7 +11,7 @@ import {
 
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 
@@ -28,17 +28,17 @@ interface destination {
 const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [destinationOptionValue, setDestinationOptionValue] = useState("");
-	const { setNodeValue } = useNodesEdgesValue();
 	const { addChange } = usePipelineChangesLog();
 	const [destinations, setDestinations] = useState<destination[]>([]);
 	const [data, setData] = useState<object>();
 	const [form, setForm] = useState<object>({});
 	const [pluginName, setPluginName] = useState();
 	const [submitDisabled, setSubmitDisabled] = useState(true);
+	const { addNode} = useGraphFlow();
 
 	const existingNodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
-	const handleSheetOPen = (e: any) => {
+	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
 		setIsSheetOpen(!isSheetOpen);
 		handleGetDestinationForm(e);
@@ -62,27 +62,17 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: destinationOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data,
+				config: data as Record<string, unknown>,
 			},
 		};
 
-		const nodeToBeAdded = {
-			component_id: existingNodes.length + 1,
-			component_role: "exporter",
-			config: data,
-			name: destinationOptionValue,
-			component_name: pluginName,
-			supported_signals: supported_signals,
-		};
+		addNode(newNode);
 
 		const log = { type: "destination", name: destinationOptionValue, status: "added" };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
-
-		localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-		setNodeValue(prev => [...prev, newNode]);
 		setIsSheetOpen(false);
 	};
 
@@ -125,7 +115,7 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 							<DropdownMenuItem
 								key={index}
 								onClick={() => {
-									handleSheetOPen(destination.name);
+									handleSheetOpen(destination.name);
 									setDestinationOptionValue(destination.display_name);
 								}}
 							>

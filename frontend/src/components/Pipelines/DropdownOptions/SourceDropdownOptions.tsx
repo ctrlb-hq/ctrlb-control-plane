@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface sources {
 	name: string;
@@ -28,15 +28,15 @@ interface sources {
 const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [sourceOptionValue, setSourceOptionValue] = useState("");
-	const { setNodeValue } = useNodesEdgesValue();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
 	const [sources, setSources] = useState<sources[]>([]);
 	const [data, setData] = useState<object>();
 	const [pluginName, setPluginName] = useState();
 	const [submitDisabled, setSubmitDisabled] = useState(true);
+	const { addNode } = useGraphFlow();
 
-	const handleSheetOPen = (e: any) => {
+	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
 		setIsSheetOpen(!isSheetOpen);
 		handleGetSourceForm(e);
@@ -60,27 +60,17 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: sourceOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data,
+				config: data as Record<string, unknown>,
 			},
 		};
 
-		const nodeToBeAdded = {
-			component_id: existingNodes.length + 1,
-			component_role: "receiver",
-			config: data,
-			name: sourceOptionValue,
-			component_name: pluginName,
-			supported_signals: supported_signals,
-		};
+		addNode(newNode);
 
 		const log = { type: "source", name: sourceOptionValue, status: "added" };
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
-
-		localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
-		setNodeValue(prev => [...prev, newNode]);
 
 		setIsSheetOpen(false);
 	};
@@ -125,7 +115,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {
-										handleSheetOPen(source.name);
+										handleSheetOpen(source.name);
 										setSourceOptionValue(source.display_name);
 									}}
 								>
@@ -191,9 +181,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
 											Discard Changes
 										</Button>
-										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
-											Delete Node
-										</Button>
+										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
 									</div>
 								</SheetClose>
 							</SheetFooter>

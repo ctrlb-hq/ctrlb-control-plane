@@ -21,7 +21,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { initialEdges } from "@/constants";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
@@ -50,7 +50,6 @@ import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { DestinationNode } from "./Nodes/DestinationNode";
 import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
-import { useEdgeValue } from "@/context/useEdgeContext";
 
 interface DataPoint {
 	timestamp: number;
@@ -70,9 +69,7 @@ const getRandomChartColor = (name: string) => {
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [agentValues, setAgentValues] = useState<Agents[]>([]);
-	const { nodeValue, setNodeValue, onNodesChange } = useNodesEdgesValue();
-	const { edgeValue, setEdgeValue, onEdgesChange } = useEdgeValue();
-
+	const { nodeValue, updateNodes, edgeValue, updateEdges } = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -175,8 +172,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				},
 			};
 		});
-		setNodeValue(updatedNodes);
-		setEdgeValue(edges);
+		updateNodes(updatedNodes);
+		updateEdges(edges);
 	};
 
 	useEffect(() => {
@@ -191,7 +188,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
 			console.log(params);
-			setEdgeValue(eds => {
+			updateEdges(eds => {
 				if (!params.source || !params.target) {
 					console.error("Invalid connection: source or target is null");
 					return eds;
@@ -253,7 +250,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				return updatedEdges;
 			});
 		},
-		[setEdgeValue],
+		[updateEdges],
 	);
 
 	const fetchHealthMetrics = async () => {
@@ -298,10 +295,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			setEdgeValue(edges => edges.filter(edge => edge.id !== selectedEdge.id));
+			updateEdges(edges => edges.filter(edge => edge.id !== selectedEdge.id));
 			setSelectedEdge(null);
 		}
-	}, [selectedEdge, setEdgeValue]);
+	}, [selectedEdge, updateEdges]);
 
 	// Close popover when clicking elsewhere
 	const onPaneClick = useCallback(() => {
@@ -440,8 +437,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												animated: true,
 												label: isEditMode ? "" : edge.label,
 											}))}
-											onNodesChange={onNodesChange}
-											onEdgesChange={onEdgesChange}
+											onNodesChange={updateNodes}
+											onEdgesChange={updateEdges}
 											onConnect={onConnect}
 											nodeTypes={nodeTypes}
 											onInit={setReactFlowInstance}

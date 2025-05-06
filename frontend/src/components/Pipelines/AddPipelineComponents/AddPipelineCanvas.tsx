@@ -27,7 +27,7 @@ import { DestinationNode } from "../Nodes/DestinationNode";
 import SourceDropdownOptions from "../DropdownOptions/SourceDropdownOptions";
 import ProcessorDropdownOptions from "../DropdownOptions/ProcessorDropdownOptions";
 import DestinationDropdownOptions from "../DropdownOptions/DestinationDropdownOptions";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { Button } from "../../ui/button";
 import { Edit } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -35,7 +35,6 @@ import { Switch } from "@/components/ui/switch";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import pipelineServices from "@/services/pipelineServices";
 import { useToast } from "@/hooks/use-toast";
-import { useEdgeValue } from "@/context/useEdgeContext";
 
 // Node types mapping
 const nodeTypes = {
@@ -45,32 +44,7 @@ const nodeTypes = {
 };
 
 const AddPipelineCanvas = () => {
-	const { nodeValue, setNodeValue, onNodesChange } = useNodesEdgesValue();
-
-	const validatedNodeValue = nodeValue.map((node, index) => {
-		const nodeType = node.type;
-		let x, y;
-		if (!node.position || node.position.x == -1 || node.position.y == -1) {
-			if (nodeType === "source") {
-				x = 50; // Fixed left position
-				y = 50 + index * 100;
-			} else if (nodeType === "destination") {
-				x = 400; // Fixed right position
-				y = 50 + index * 100;
-			} else {
-				// processor
-				x = 225; // Center position
-				y = 50 + index * 100;
-			}
-			return {
-				...node,
-				position: { x, y },
-			};
-		}
-		return node;
-	});
-
-	const { edgeValue, setEdgeValue, onEdgesChange } = useEdgeValue();
+	const { nodeValue, updateNodes, edgeValue, updateEdges } = useGraphFlow();
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const { changesLog } = usePipelineChangesLog();
 	const {toast} = useToast();
@@ -85,7 +59,7 @@ const AddPipelineCanvas = () => {
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
 			if (!isEditMode) return;
-			setEdgeValue(eds => {
+			updateEdges(eds => {
 				if (!params.source || !params.target) {
 					console.error("Invalid connection: source or target is null");
 					return eds;
@@ -148,7 +122,7 @@ const AddPipelineCanvas = () => {
 				return updatedEdges;
 			});
 		},
-		[setEdgeValue],
+		[updateEdges],
 	);
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -165,10 +139,9 @@ const AddPipelineCanvas = () => {
 			let nodeData;
 			const id = `node_${Date.now()}`;
 
-			const newNode = { id, type, position, data: nodeData };
-			setNodeValue(nds => nds.concat(newNode));
+			updateNodes([{ item: { id, type, data: nodeData, position }, type: 'add' }]);
 		},
-		[reactFlowInstance, nodeValue, setNodeValue],
+		[reactFlowInstance, nodeValue, updateNodes],
 	);
 
 	const addPipeline = async () => {
@@ -281,10 +254,10 @@ const AddPipelineCanvas = () => {
 				<div className="w-full flex flex-col gap-2 h-screen p-4">
 					<div className="h-4/5 border-2 border-gray-200 rounded-lg">
 						<ReactFlow
-							nodes={validatedNodeValue}
+							nodes={nodeValue}
 							edges={edgeValue}
-							onNodesChange={onNodesChange}
-							onEdgesChange={onEdgesChange}
+							onNodesChange={updateNodes}
+							onEdgesChange={updateEdges}
 							onConnect={onConnect}
 							onInit={setReactFlowInstance}
 							nodesDraggable={isEditMode}
