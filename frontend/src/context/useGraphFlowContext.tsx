@@ -1,5 +1,5 @@
-import React, { createContext, useContext } from "react";
-import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge, XYPosition } from "reactflow";
+import React, { createContext, useContext, useEffect } from "react";
+import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge, XYPosition, Connection } from "reactflow";
 import { initialNodes, initialEdges } from "../constants";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,11 +31,14 @@ interface NewNode {
 interface GraphFlowContextType {
 	nodeValue: Node<NodeData>[];
 	edgeValue: Edge<EdgeData>[];
+	setNodeValueDirect: (nodes: Node<NodeData>[]) => void;
+	setEdgeValueDirect: (edges: Edge<EdgeData>[]) => void;
 	updateNodes: (changes: NodeChange[]) => void;
 	updateEdges: (changes: EdgeChange[]) => void;
-	connectNodes: (params: { source: string; target: string }) => void;
+	connectNodes: (params: Edge | Connection) => void;
 	resetGraph: () => void;
 	deleteNode: (nodeId: string) => void;
+	deleteEdge: (params: Edge | Connection) => void;
 	addNode: (newNode: NewNode) => string;
 	updateNodeConfig: (nodeId: string, config: any) => void;
 }
@@ -51,7 +54,7 @@ const validateNodeConnection = (sourceNode: Node<NodeData>, targetNode: Node<Nod
 	}
 
 	// Validate flow direction
-	const validFlow = 
+	const validFlow =
 		(sourceNode.type === "source" && (targetNode.type === "processor" || targetNode.type === "destination")) ||
 		(sourceNode.type === "processor" && targetNode.type === "destination");
 
@@ -75,7 +78,7 @@ const validateAllEdges = (edges: Edge<EdgeData>[], nodes: Node<NodeData>[]): { i
 	for (const edge of edges) {
 		const sourceNode = nodes.find(node => node.id === edge.source);
 		const targetNode = nodes.find(node => node.id === edge.target);
-		
+
 		const validation = validateNodeConnection(sourceNode!, targetNode!);
 		if (!validation.isValid) {
 			return validation;
@@ -84,11 +87,11 @@ const validateAllEdges = (edges: Edge<EdgeData>[], nodes: Node<NodeData>[]): { i
 	return { isValid: true };
 };
 
-const fetchLocalStorageNodesData = () => {
+const fetchLocalStorageNodesData = (firstTime: boolean) => {
 	try {
 		const Nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
-		if (Nodes.length === 0) {
+		if (Nodes.length === 0 && firstTime) {
 			console.log("LocalStorage is empty. Initializing with initialNodes.");
 			localStorage.setItem("Nodes", JSON.stringify(initialNodes));
 			return initialNodes;
@@ -106,11 +109,11 @@ const fetchLocalStorageNodesData = () => {
 	}
 };
 
-const fetchLocalStorageEdgeData = () => {
+const fetchLocalStorageEdgeData = (firstTime: boolean) => {
 	try {
 		const Edges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]");
 
-		if (Edges.length === 0) {
+		if (Edges.length === 0 && firstTime) {
 			console.log("LocalStorage is empty. Initializing with initialEdges.");
 			localStorage.setItem("PipelineEdges", JSON.stringify(initialEdges));
 			return initialEdges;
@@ -167,9 +170,15 @@ const convertToReactFlowEdgeFormatEdges = (data: EdgeData[]) => {
 const GraphFlowContext = createContext<GraphFlowContextType | undefined>(undefined);
 
 export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) => {
-	const [nodeValue, setNodeValue] = useNodesState(fetchLocalStorageNodesData());
-	const [edgeValue, setEdgeValue] = useEdgesState(fetchLocalStorageEdgeData());
+	const [nodeValue, setNodeValue] = useNodesState(fetchLocalStorageNodesData(false));
+	const [edgeValue, setEdgeValue] = useEdgesState(fetchLocalStorageEdgeData(false));
 	const { toast } = useToast();
+
+	useEffect(() => {
+		setNodeValue(fetchLocalStorageNodesData(true));
+		setEdgeValue(fetchLocalStorageEdgeData(true));
+	}, []);
+
 	// useEffect(() => {
 	// 	const handleStorageChange = (event: StorageEvent) => {
 	// 		if (event.key === "Nodes" && event.newValue) {
@@ -200,6 +209,16 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	// 	};
 	// }, [setNodeValue, setEdgeValue]);
 
+	const setNodeValueDirect = (nodes: Node<NodeData>[]) => {
+		setNodeValue(nodes);
+		localStorage.setItem("Nodes", JSON.stringify(nodes));
+	};
+
+	const setEdgeValueDirect = (edges: Edge<EdgeData>[]) => {
+		setEdgeValue(edges);
+		localStorage.setItem("PipelineEdges", JSON.stringify(edges));
+	};
+
 	const updateNodes = (changes: NodeChange[]) => {
 		setNodeValue(prevNodes => {
 			const updatedNodes = applyNodeChanges(changes, prevNodes);
@@ -209,21 +228,24 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	};
 
 	const updateEdges = (changes: EdgeChange[]) => {
+		console.log("changes", changes);
 		setEdgeValue(prevEdges => {
+			console.log("changes", changes);
+			console.log("prevEdges", prevEdges);
 			const updatedEdges = applyEdgeChanges(changes, prevEdges);
 			const validation = validateAllEdges(updatedEdges, nodeValue);
-			
+
 			if (!validation.isValid) {
 				console.error("Invalid edge configuration:", validation.error);
 				return prevEdges;
 			}
-
+			console.log("updatedEdges", updatedEdges);
 			localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
 			return updatedEdges;
 		});
 	};
 
-	const connectNodes = (params: { source: string; target: string }) => {
+	const connectNodes = (params: Edge | Connection) => {
 		const sourceNode = nodeValue.find(node => node.id === params.source);
 		const targetNode = nodeValue.find(node => node.id === params.target);
 
@@ -238,22 +260,45 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 			return;
 		}
 
+		if (!params.source || !params.target) {
+			console.error("Source or target is null");
+			return;
+		}
+
 		setEdgeValue(prevEdges => {
 			const edgeId = `edge-${params.source}-${params.target}`;
 			const updatedEdges = addEdge(
 				{
 					id: edgeId,
-					source: params.source,
-					target: params.target,
-					type: "smoothstep",
+					source: params.source || "",
+					target: params.target || "",
 					animated: true,
 					data: {
-						sourceComponentId: parseInt(params.source, 10),
-						targetComponentId: parseInt(params.target, 10),
+						sourceComponentId: params.source || "",
+						targetComponentId: params.target || "",
 					},
 				},
 				prevEdges
 			);
+			localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
+			return updatedEdges;
+		});
+	};
+
+	const deleteEdge = (params: Edge | Connection) => {
+		// make sure the edge exists in the edgeValue array
+		if (!edgeValue.find(edge => edge.source === params.source && edge.target === params.target)) {
+			console.error("Edge does not exist");
+			toast({
+				title: "Edge does not exist",
+				description: "Please select an edge to delete",
+				variant: "destructive",
+			});
+			return;
+		}
+
+		setEdgeValue(prevEdges => {
+			const updatedEdges = prevEdges.filter(edge => edge.source !== params.source && edge.target !== params.target);
 			localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
 			return updatedEdges;
 		});
@@ -285,8 +330,11 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 
 	const addNode = (newNode: NewNode): string => {
 		let newNodeId = '';
+		const allNodeIds = nodeValue.map(node => node.id);
+		const smallestUnusedNaturalNumberId = Array.from({length: allNodeIds.length + 2}, (_, i) => (i + 1).toString())
+			.find(id => !allNodeIds.includes(id));
 		setNodeValue(prevNodes => {
-			newNodeId = (prevNodes.length + 1).toString();
+			newNodeId = smallestUnusedNaturalNumberId || (prevNodes.length + 1).toString(); // second or case wont happen
 			const newNodeToAdd = {
 				id: newNodeId,
 				type: newNode.type,
@@ -312,14 +360,17 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	};
 
 	return (
-		<GraphFlowContext.Provider value={{ 
-			nodeValue, 
-			edgeValue, 
-			updateNodes, 
-			updateEdges, 
+		<GraphFlowContext.Provider value={{
+			nodeValue,
+			edgeValue,
+			setNodeValueDirect,
+			setEdgeValueDirect,
+			updateNodes,
+			updateEdges,
 			connectNodes,
 			resetGraph,
 			deleteNode,
+			deleteEdge,
 			addNode,
 			updateNodeConfig
 		}}>
