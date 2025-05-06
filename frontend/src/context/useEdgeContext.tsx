@@ -10,11 +10,12 @@ interface EdgeValueContextType {
 
 interface EdgeData {
     id?: string;
-    sourceComponentId?: string | number;
-    targetComponentId?: string | number;
+    source_id?: string | number;
+    target_id?: string | number;
+    label?: string;
 }
 
-const fetchLocalStorageEdgeData = () => {
+const fetchLocalStorageData = () => {
     try {
         const Edges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]");
 
@@ -31,23 +32,24 @@ const fetchLocalStorageEdgeData = () => {
             return Edges;
         }
 
-        return convertToReactFlowEdgeFormatEdges(Edges);
+        return convertToEdges(Edges);
     } catch (error) {
         console.error("Failed to parse Edges from localStorage:", error);
         return [];
     }
 };
 
-const convertToReactFlowEdgeFormatEdges = (data: EdgeData[]) => {
+const convertToEdges = (data: EdgeData[]) => {
     return data.map((edge: EdgeData, index: number) => ({
         id: edge.id || `edge-${index}`,
-        source: edge.sourceComponentId?.toString() || "",
-        target: edge.targetComponentId?.toString() || "",
+        source: edge.source_id?.toString() || "",
+        target: edge.target_id?.toString() || "",
         type: "smoothstep",
         animated: true,
         data: {
-            sourceComponentId: edge.sourceComponentId?.toString() || "",
-            targetComponentId: edge.targetComponentId?.toString() || "",
+            label: edge.label || "",
+            source_id: edge.source_id?.toString() || "",
+            target_id: edge.target_id?.toString() || "",
         },
     }));
 };
@@ -55,7 +57,7 @@ const convertToReactFlowEdgeFormatEdges = (data: EdgeData[]) => {
 const EdgeValueContext = createContext<EdgeValueContextType | undefined>(undefined);
 
 export const EdgeValueProvider = ({ children }: { children: React.ReactNode }) => {
-    const [edgeValue, setEdgeValue] = useEdgesState(fetchLocalStorageEdgeData());
+    const [edgeValue, setEdgeValue] = useEdgesState(fetchLocalStorageData());
 
     useEffect(() => {
         const handleStorageChange = (event: StorageEvent) => {
@@ -66,7 +68,7 @@ export const EdgeValueProvider = ({ children }: { children: React.ReactNode }) =
                     // Detect if the data is already in ReactFlow format
                     const isReactFlowFormat =
                         updatedEdges.length > 0 && "source" in updatedEdges[0] && "target" in updatedEdges[0];
-                    const formattedEdges = isReactFlowFormat ? updatedEdges : convertToReactFlowEdgeFormatEdges(updatedEdges);
+                    const formattedEdges = isReactFlowFormat ? updatedEdges : convertToEdges(updatedEdges);
 
                     setEdgeValue(formattedEdges);
                 } catch (error) {
@@ -80,7 +82,7 @@ export const EdgeValueProvider = ({ children }: { children: React.ReactNode }) =
         return () => {
             window.removeEventListener("storage", handleStorageChange);
         };
-    }, []);
+    }, [setEdgeValue]);
 
     const onEdgesChange = (changes: EdgeChange[]) => {
         setEdgeValue(prevEdges => {

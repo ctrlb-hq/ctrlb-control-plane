@@ -27,15 +27,14 @@ import { DestinationNode } from "../Nodes/DestinationNode";
 import SourceDropdownOptions from "../DropdownOptions/SourceDropdownOptions";
 import ProcessorDropdownOptions from "../DropdownOptions/ProcessorDropdownOptions";
 import DestinationDropdownOptions from "../DropdownOptions/DestinationDropdownOptions";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useNodeValue } from "@/context/useNodeContext";
 import { Button } from "../../ui/button";
 import { Edit } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import pipelineServices from "@/services/pipelineServices";
-import { useToast } from "@/hooks/use-toast";
-import { useEdgeValue } from "@/context/useEdgeContext";
+import { toast } from "@/hooks/use-toast";
 
 // Node types mapping
 const nodeTypes = {
@@ -45,7 +44,7 @@ const nodeTypes = {
 };
 
 const AddPipelineCanvas = () => {
-	const { nodeValue, setNodeValue, onNodesChange } = useNodesEdgesValue();
+	const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 
 	const validatedNodeValue = nodeValue.map((node, index) => {
 		const nodeType = node.type;
@@ -70,49 +69,37 @@ const AddPipelineCanvas = () => {
 		return node;
 	});
 
-	const { edgeValue, setEdgeValue, onEdgesChange } = useEdgeValue();
+	const [edges, setEdges, onEdgesChange] = useEdgesState(
+		JSON.parse(localStorage.getItem("PipelineEdges") || "[]"),
+	);
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+	const [check, setCheck] = useState(true);
 	const { changesLog } = usePipelineChangesLog();
-	const {toast} = useToast();
-
-	const [isEditMode, setIsEditMode] = useState(true);
 
 	const pipelineName = localStorage.getItem("pipelinename");
 	const createdBy = localStorage.getItem("userEmail");
 	const agentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "");
 	const PipelineNodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+	const PipelineEdges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]") || [];
 
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
-			if (!isEditMode) return;
-			setEdgeValue(eds => {
+			setEdges(eds => {
 				if (!params.source || !params.target) {
 					console.error("Invalid connection: source or target is null");
 					return eds;
 				}
-				console.log("params", params);
-				console.log("nodeValue", nodeValue);
 				//check the node corresponding to the source and target
 				const sourceNode = nodeValue.find(node => node.id === params.source);
 				const targetNode = nodeValue.find(node => node.id === params.target);
 				if (!sourceNode || !targetNode) {
 					console.error("Invalid connection: source or target node not found");
-					toast({
-						title: "Error",
-						description: "Source or target node not found",
-						variant: "destructive",
-					});
 					return eds;
 				}
 
 				//check if the source and target are of the same type
 				if (sourceNode.type === targetNode.type) {
-					console.error("Invalid connection: source and target are of the same type"); 
-					toast({
-						title: "Error",
-						description: "Source and target are of the same type",
-						variant: "destructive",
-					});
+					console.error("Invalid connection: source and target are of the same type");
 					return eds;
 				}
 
@@ -148,7 +135,7 @@ const AddPipelineCanvas = () => {
 				return updatedEdges;
 			});
 		},
-		[setEdgeValue],
+		[setEdges],
 	);
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -172,6 +159,7 @@ const AddPipelineCanvas = () => {
 	);
 
 	const addPipeline = async () => {
+		console.log("PipelineNodes", PipelineNodes);
 		const pipelinePayload = {
 			name: pipelineName,
 			created_by: createdBy,
@@ -272,7 +260,7 @@ const AddPipelineCanvas = () => {
 								</SheetContent>
 							</Sheet>
 							<div className="mx-4 flex items-center space-x-2">
-								<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+								<Switch id="edit-mode" checked={check} onCheckedChange={setCheck} />
 								<Label htmlFor="edit-mode">Edit Mode</Label>
 							</div>
 						</div>
@@ -282,14 +270,11 @@ const AddPipelineCanvas = () => {
 					<div className="h-4/5 border-2 border-gray-200 rounded-lg">
 						<ReactFlow
 							nodes={validatedNodeValue}
-							edges={edgeValue}
+							edges={edges}
 							onNodesChange={onNodesChange}
 							onEdgesChange={onEdgesChange}
 							onConnect={onConnect}
 							onInit={setReactFlowInstance}
-							nodesDraggable={isEditMode}
-							nodesConnectable={isEditMode}
-							elementsSelectable={isEditMode}
 							onDrop={onDrop}
 							onDragOver={onDragOver}
 							nodeTypes={nodeTypes}
@@ -303,9 +288,9 @@ const AddPipelineCanvas = () => {
 					<div className=" p-2 pb-4">
 						<div className="flex justify-center gap-6 items-center">
 							<div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
-								<SourceDropdownOptions disabled={!isEditMode} />
-								<ProcessorDropdownOptions disabled={!isEditMode} />
-								<DestinationDropdownOptions disabled={!isEditMode} />
+								<SourceDropdownOptions />
+								<ProcessorDropdownOptions />
+								<DestinationDropdownOptions />
 							</div>
 						</div>
 					</div>

@@ -1,6 +1,6 @@
 import React, { createContext, Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { applyNodeChanges, Node, NodeChange, useNodesState } from "reactflow";
-import { initialNodes } from "../constants";
+import { initialEdges, initialNodes } from "../constants";
 
 interface NodeValueContextType {
 	nodeValue: Node<any, string | undefined>[];
@@ -8,7 +8,7 @@ interface NodeValueContextType {
 	onNodesChange: (changes: NodeChange[]) => void;
 }
 
-const fetchLocalStorageNodesData = () => {
+const fetchLocalStorageData = () => {
 	try {
 		const Nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
 
@@ -16,23 +16,24 @@ const fetchLocalStorageNodesData = () => {
 		if (Nodes.length === 0) {
 			console.log("LocalStorage is empty. Initializing with initialNodes and initialEdges.");
 			localStorage.setItem("Nodes", JSON.stringify(initialNodes));
+			localStorage.setItem("PipelineEdges", JSON.stringify(initialEdges));
 			return initialNodes;
 		}
 
-		// Check if the data is already in ReactFlow format
+		// Detect if the data is already in ReactFlow format
 		const isReactFlowFormat = Nodes.length > 0 && "type" in Nodes[0] && "data" in Nodes[0];
 		if (isReactFlowFormat) {
 			return Nodes;
 		}
 
-		return convertToReactFlowNodesFormat(Nodes);
+		return convertToNodes(Nodes);
 	} catch (error) {
 		console.error("Failed to parse Nodes from localStorage:", error);
 		return [];
 	}
 };
 
-const convertToReactFlowNodesFormat = (data: any[]) => {
+const convertToNodes = (data: any[]) => {
 	return data.map((source: any, index: number) => ({
 		id: source.component_id?.toString() || `${index}`,
 		type:
@@ -56,8 +57,8 @@ const convertToReactFlowNodesFormat = (data: any[]) => {
 
 const NodeValueContext = createContext<NodeValueContextType | undefined>(undefined);
 
-export const NodesEdgesValueProvider = ({ children }: { children: React.ReactNode }) => {
-	const [nodeValue, setNodeValue] = useNodesState(fetchLocalStorageNodesData());
+export const NodeValueProvider = ({ children }: { children: React.ReactNode }) => {
+	const [nodeValue, setNodeValue] = useNodesState(fetchLocalStorageData());
 
 	useEffect(() => {
 		const handleStorageChange = (event: StorageEvent) => {
@@ -68,7 +69,7 @@ export const NodesEdgesValueProvider = ({ children }: { children: React.ReactNod
 					// Detect if the data is already in ReactFlow format
 					const isReactFlowFormat =
 						updatedNodes.length > 0 && "type" in updatedNodes[0] && "data" in updatedNodes[0];
-					const formattedNodes = isReactFlowFormat ? updatedNodes : convertToReactFlowNodesFormat(updatedNodes);
+					const formattedNodes = isReactFlowFormat ? updatedNodes : convertToNodes(updatedNodes);
 
 					setNodeValue(formattedNodes);
 				} catch (error) {
@@ -82,7 +83,7 @@ export const NodesEdgesValueProvider = ({ children }: { children: React.ReactNod
 		return () => {
 			window.removeEventListener("storage", handleStorageChange);
 		};
-	},[setNodeValue]);
+	}, [setNodeValue]);
 
 	const onNodesChange = (changes: NodeChange[]) => {
 		setNodeValue(prevNodes => {
@@ -101,7 +102,7 @@ export const NodesEdgesValueProvider = ({ children }: { children: React.ReactNod
 	);
 };
 
-export const useNodesEdgesValue = () => {
+export const useNodeValue = () => {
 	const context = useContext(NodeValueContext);
 	if (!context) {
 		throw new Error("useNodeValue must be used within a NodeValueProvider");

@@ -1,7 +1,7 @@
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetTrigger, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useNodeValue } from "@/context/useNodeContext";
 import { useEffect, useState } from "react";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { JsonForms } from "@jsonforms/react";
@@ -34,7 +34,7 @@ const renderers = [...materialRenderers];
 
 export const ProcessorNode = ({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const { setNodeValue } = useNodesEdgesValue();
+	const { setNodeValue } = useNodeValue();
 	const { addChange } = usePipelineChangesLog();
 	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
 		(source: any) => source.component_name === Data.component_name,

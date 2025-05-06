@@ -21,7 +21,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { initialEdges } from "@/constants";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
@@ -50,7 +50,6 @@ import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { DestinationNode } from "./Nodes/DestinationNode";
 import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
-import { useEdgeValue } from "@/context/useEdgeContext";
 
 interface DataPoint {
 	timestamp: number;
@@ -70,9 +69,8 @@ const getRandomChartColor = (name: string) => {
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [agentValues, setAgentValues] = useState<Agents[]>([]);
-	const { nodeValue, setNodeValue, onNodesChange } = useNodesEdgesValue();
-	const { edgeValue, setEdgeValue, onEdgesChange } = useEdgeValue();
-
+	const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
+	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -176,7 +174,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			};
 		});
 		setNodeValue(updatedNodes);
-		setEdgeValue(edges);
+		setEdges(edges);
 	};
 
 	useEffect(() => {
@@ -191,7 +189,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
 			console.log(params);
-			setEdgeValue(eds => {
+			setEdges(eds => {
 				if (!params.source || !params.target) {
 					console.error("Invalid connection: source or target is null");
 					return eds;
@@ -253,7 +251,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				return updatedEdges;
 			});
 		},
-		[setEdgeValue],
+		[setEdges],
 	);
 
 	const fetchHealthMetrics = async () => {
@@ -298,10 +296,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			setEdgeValue(edges => edges.filter(edge => edge.id !== selectedEdge.id));
+			setEdges(edges => edges.filter(edge => edge.id !== selectedEdge.id));
 			setSelectedEdge(null);
 		}
-	}, [selectedEdge, setEdgeValue]);
+	}, [selectedEdge, setEdges]);
 
 	// Close popover when clicking elsewhere
 	const onPaneClick = useCallback(() => {
@@ -320,7 +318,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					config: node.data.config,
 					supported_signals: node.data.supported_signals || [],
 				})),
-				edges: edgeValue.map(edge => ({
+				edges: edges.map(edge => ({
 					source: edge.source,
 					target: edge.target,
 				})),
@@ -346,6 +344,12 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+	// const handleDeletePipeline = async () => {
+	// 	await pipelineServices.deletePipelineById(pipelineId);
+	// 	setIsOpen(false);
+	// 	window.location.reload();
+	// };
+
 	const handleDeletePipeline = async () => {
 		try {
 			// Delete selected agents first
@@ -361,7 +365,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			setIsOpen(false);
 			window.location.reload();
 		} catch (error) {
-			console.log("error when deleting pipeline", error);
 			toast({
 				title: "Error",
 				description: "Failed to delete pipeline or agents",
@@ -435,7 +438,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
 										<ReactFlow
 											nodes={nodeValue}
-											edges={edgeValue.map(edge => ({
+											edges={edges.map(edge => ({
 												...edge,
 												animated: true,
 												label: isEditMode ? "" : edge.label,

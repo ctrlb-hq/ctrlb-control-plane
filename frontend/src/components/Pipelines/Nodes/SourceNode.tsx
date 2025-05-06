@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useNodesEdgesValue } from "@/context/useNodeContext";
+import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
@@ -33,7 +33,7 @@ const theme = createTheme({
 const renderers = [...materialRenderers];
 export const SourceNode = ({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-	const { setNodeValue } = useNodesEdgesValue();
+	const { setNodeValue } = useNodeValue();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
 	const SourceLabel = Data.supported_signals || "";
