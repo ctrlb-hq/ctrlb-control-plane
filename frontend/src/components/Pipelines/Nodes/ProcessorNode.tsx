@@ -5,9 +5,7 @@ import { useNodeValue } from "@/context/useNodeContext";
 import { useEffect, useState } from "react";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { JsonForms } from "@jsonforms/react";
-
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
 import { ArrowBigRightDash } from "lucide-react";

@@ -4,11 +4,8 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-
 import { JsonForms } from "@jsonforms/react";
-
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
 import { ArrowBigRightDash } from "lucide-react";

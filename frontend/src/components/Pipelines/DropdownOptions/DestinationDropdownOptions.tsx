@@ -16,9 +16,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 
 import { JsonForms } from "@jsonforms/react";
-
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 interface destination {

@@ -22,7 +22,6 @@ import AddPipelineDetails from "./AddPipelineDetails";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { useState } from "react";
 import AddPipelineCanvas from "./AddPipelineCanvas";
-import { NodeValueProvider } from "@/context/useNodeContext";
 
 const AddPipelineSheet = () => {
 	const pipelineStatus = usePipelineStatus();
@@ -73,9 +72,7 @@ const AddPipelineSheet = () => {
 					{currentStep == 0 ? (
 						<AddPipelineDetails />
 					) : (
-						<NodeValueProvider>
-							<AddPipelineCanvas />
-						</NodeValueProvider>
+						<AddPipelineCanvas />
 					)}
 				</SheetContent>
 			</Sheet>

@@ -15,7 +15,6 @@ import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
-
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 
 interface Processor {
