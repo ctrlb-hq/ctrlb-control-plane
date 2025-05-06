@@ -104,6 +104,6 @@ export const initialEdges: Edge[] = [
 			sourceComponentId: 2,
 			targetComponentId: 1,
 		},
-		id: "reactflow__edge-2-1",
+		id: "edge-2-1",
 	},
 ];

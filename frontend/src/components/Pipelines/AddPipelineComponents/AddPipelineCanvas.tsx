@@ -1,13 +1,17 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import ReactFlow, {
 	MiniMap,
 	Controls,
 	Background,
-	addEdge,
-	useEdgesState,
-	Edge,
-	Connection,
+	// addEdge,
+	// useEdgesState,
+	// Edge,
+	// Connection,
 	ReactFlowInstance,
+	Connection,
+	EdgeMouseHandler,
+	Panel,
+	Edge,
 } from "reactflow";
 
 import {
@@ -29,7 +33,7 @@ import ProcessorDropdownOptions from "../DropdownOptions/ProcessorDropdownOption
 import DestinationDropdownOptions from "../DropdownOptions/DestinationDropdownOptions";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { Button } from "../../ui/button";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
@@ -44,121 +48,100 @@ const nodeTypes = {
 };
 
 const AddPipelineCanvas = () => {
-	const { nodeValue, updateNodes, edgeValue, updateEdges } = useGraphFlow();
-	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-	const [check, setCheck] = useState(true);
+	const {
+		nodeValue,
+		edgeValue,
+		updateNodes,
+		updateEdges,
+		connectNodes,
+		deleteEdge,
+	} = useGraphFlow();
+	const reactFlowWrapper = useRef<HTMLDivElement>(null);
+	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+	const [isEditMode, setIsEditMode] = useState(true);
+	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
 	const { changesLog } = usePipelineChangesLog();
+	const { toast } = useToast();
+	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
 	const pipelineName = localStorage.getItem("pipelinename");
 	const createdBy = localStorage.getItem("userEmail");
 	const agentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "");
-	const PipelineNodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-	const PipelineEdges = JSON.parse(localStorage.getItem("PipelineEdges") || "[]") || [];
 
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
-			if (!isEditMode) return;
-			updateEdges(eds => {
-				if (!params.source || !params.target) {
-					console.error("Invalid connection: source or target is null");
-					return eds;
-				}
-				//check the node corresponding to the source and target
-				const sourceNode = nodeValue.find(node => node.id === params.source);
-				const targetNode = nodeValue.find(node => node.id === params.target);
-				if (!sourceNode || !targetNode) {
-					console.error("Invalid connection: source or target node not found");
-					return eds;
-				}
-
-				//check if the source and target are of the same type
-				if (sourceNode.type === targetNode.type) {
-					console.error("Invalid connection: source and target are of the same type");
-					return eds;
-				}
-
-				//check if the source and target compatibility, ie the supported signals in source must be a subset of the supported signals in target
-				if (
-					!targetNode.data.supported_signals.some((signal: string) =>
-						sourceNode.data.supported_signals.includes(signal),
-					)
-				) {
-					console.error("Invalid connection: source and target are not compatible");
-					toast({
-						title: "Error",
-						description: "Source and target are not compatible",
-						variant: "destructive",
-					});
-					return eds;
-				}
-
-				const updatedEdges = addEdge(
-					{
-						...params,
-						source: params.source,
-						target: params.target,
-						animated: true,
-						data: {
-							sourceComponentId: parseInt(params.source, 10),
-							targetComponentId: parseInt(params.target, 10),
-						},
-					},
-					eds,
-				);
-				localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
-				return updatedEdges;
-			});
+			connectNodes(params);
 		},
-		[updateEdges],
+		[connectNodes],
 	);
+
+	const handleDeleteEdge = useCallback(() => {
+		if (selectedEdge) {
+			deleteEdge(selectedEdge);
+			setSelectedEdge(null);
+		}
+	}, [selectedEdge, deleteEdge]);
+
+	const onEdgeClick: EdgeMouseHandler = useCallback(
+		(event, edge) => {
+			if (!isEditMode) return;
+			// Calculate the position for the popover
+			const rect = reactFlowWrapper.current?.getBoundingClientRect();
+			if (rect) {
+				setEdgePopoverPosition({
+					x: event.clientX - rect.left,
+					y: event.clientY - rect.top,
+				});
+			}
+
+			setSelectedEdge(edge);
+		},
+		[isEditMode],
+	);
+
+	// Close popover when clicking elsewhere
+	const onPaneClick = useCallback(() => {
+		setSelectedEdge(null);
+	}, []);
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = "move";
 	}, []);
 
-	const onDrop = useCallback(
-		(event: React.DragEvent) => {
-			event.preventDefault();
-			const type = event.dataTransfer.getData("application/nodeType");
-			if (!type || !reactFlowInstance) return;
-			const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY });
-			let nodeData;
-			const id = `node_${Date.now()}`;
+	// const onDrop = useCallback(
+	// 	(event: React.DragEvent) => {
+	// 		event.preventDefault();
+	// 		const type = event.dataTransfer.getData("application/nodeType");
+	// 		if (!type || !reactFlowInstance) return;
+	// 		const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY });
+	// 		let nodeData;
+	// 		const id = `node_${Date.now()}`;
 
-			updateNodes([{ item: { id, type, data: nodeData, position }, type: 'add' }]);
-		},
-		[reactFlowInstance, nodeValue, updateNodes],
-	);
+	// 		updateNodes([{ item: { id, type, data: nodeData, position }, type: 'add' }]);
+	// 	},
+	// 	[reactFlowInstance, nodeValue, updateNodes],
+	// );
 
 	const addPipeline = async () => {
-		console.log("PipelineNodes", PipelineNodes);
 		const pipelinePayload = {
 			name: pipelineName,
 			created_by: createdBy,
 			agent_ids: [parseInt(agentIds)],
 			pipeline_graph: {
-				nodes: PipelineNodes.map(
-					(node: {
-						id: string;
-						data: { name: any; component_name: any; config: any; supported_signals: any };
-						type: string;
-					}) => ({
-						component_id: parseInt(node.id),
-						name: node.data.name,
-						component_role:
-							node.type === "source" ? "exporter" : node.type === "destination" ? "receiver" : "processor",
-						component_name: node.data.component_name,
-						supported_signals: node.data.supported_signals,
-						config: node.data.config,
-					}),
-				),
-				edges: JSON.parse(localStorage.getItem("PipelineEdges") || "[]").map(
-					(edge: { source: any; target: any }) => ({
-						source: edge.source,
-						target: edge.target,
-					}),
-				),
+				nodes: nodeValue.map(node => ({
+					component_id: parseInt(node.id),
+					name: node.data.name,
+					component_role:
+						node.type === "source" ? "exporter" : node.type === "destination" ? "receiver" : "processor",
+					component_name: node.data.component_name,
+					supported_signals: node.data.supported_signals,
+					config: node.data.config,
+				})),
+				edges: edgeValue.map(edge => ({
+					source: edge.source,
+					target: edge.target,
+				})),
 			},
 		};
 		console.log("payload", pipelinePayload);
@@ -167,22 +150,32 @@ const AddPipelineCanvas = () => {
 	};
 
 	const handleDeployChanges = () => {
-		addPipeline();
-		localStorage.removeItem("Sources");
-		localStorage.removeItem("Destination");
-		localStorage.removeItem("pipelinename");
-		localStorage.removeItem("selectedAgentIds");
-		localStorage.removeItem("Nodes");
-		localStorage.removeItem("changesLog");
-		localStorage.removeItem("PipelineEdges");
-		setTimeout(() => {
+		try {
+			addPipeline();
+			localStorage.removeItem("Sources");
+			localStorage.removeItem("Destination");
+			localStorage.removeItem("pipelinename");
+			localStorage.removeItem("selectedAgentIds");
+			localStorage.removeItem("Nodes");
+			localStorage.removeItem("changesLog");
+			localStorage.removeItem("PipelineEdges");
+			setTimeout(() => {
+				toast({
+					title: "Success",
+					description: "Successfully deployed the pipeline",
+					duration: 3000,
+				});
+				window.location.reload();
+			}, 2000);
+		} catch (error) {
+			console.error("Error deploying pipeline:", error);
 			toast({
-				title: "Success",
-				description: "Successfully deployed the pipeline",
+				title: "Error",
+				description: "Failed to add and deploy the pipeline",
 				duration: 3000,
+				variant: "destructive",
 			});
-			window.location.reload();
-		}, 2000);
+		}
 	};
 
 	return (
@@ -233,7 +226,7 @@ const AddPipelineCanvas = () => {
 								</SheetContent>
 							</Sheet>
 							<div className="mx-4 flex items-center space-x-2">
-								<Switch id="edit-mode" checked={check} onCheckedChange={setCheck} />
+								<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 								<Label htmlFor="edit-mode">Edit Mode</Label>
 							</div>
 						</div>
@@ -246,9 +239,14 @@ const AddPipelineCanvas = () => {
 							edges={edgeValue}
 							onNodesChange={updateNodes}
 							onEdgesChange={updateEdges}
+							nodesConnectable={isEditMode}
+							nodesDraggable={isEditMode}
+							elementsSelectable={isEditMode}
 							onConnect={onConnect}
 							onInit={setReactFlowInstance}
-							onDrop={onDrop}
+							onEdgeClick={onEdgeClick}
+							onPaneClick={onPaneClick}
+							// onDrop={onDrop}
 							onDragOver={onDragOver}
 							nodeTypes={nodeTypes}
 							fitView
@@ -256,14 +254,32 @@ const AddPipelineCanvas = () => {
 							<MiniMap />
 							<Controls />
 							<Background color="#aaa" gap={16} />
+							{selectedEdge && isEditMode && (
+								<Panel
+									position="top-left"
+									style={{
+										position: "absolute",
+										left: edgePopoverPosition.x,
+										top: edgePopoverPosition.y,
+										transform: "translate(-50%, -50%)",
+										background: "white",
+										padding: "8px",
+										borderRadius: "4px",
+										boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+										zIndex: 10,
+									}}
+								>
+									<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
+								</Panel>
+							)}
 						</ReactFlow>
 					</div>
 					<div className=" p-2 pb-4">
 						<div className="flex justify-center gap-6 items-center">
 							<div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
-								<SourceDropdownOptions />
-								<ProcessorDropdownOptions />
-								<DestinationDropdownOptions />
+								<SourceDropdownOptions disabled={!isEditMode} />
+								<ProcessorDropdownOptions disabled={!isEditMode} />
+								<DestinationDropdownOptions disabled={!isEditMode} />
 							</div>
 						</div>
 					</div>

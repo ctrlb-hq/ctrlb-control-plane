@@ -20,7 +20,6 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
-import { initialEdges } from "@/constants";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +28,6 @@ import pipelineServices from "@/services/pipelineServices";
 import { Agents } from "@/types/agent.types";
 import { Pipeline } from "@/types/pipeline.types";
 import ReactFlow, {
-	addEdge,
 	Background,
 	Connection,
 	Controls,
@@ -38,7 +36,6 @@ import ReactFlow, {
 	MiniMap,
 	Panel,
 	ReactFlowInstance,
-	useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { HealthChart } from "../charts/HealthChart";
@@ -67,11 +64,33 @@ const getRandomChartColor = (name: string) => {
 	return colors[charSum % colors.length];
 };
 
+const formatTimestampWithDate = (timestamp: number | undefined) => {
+	if (!timestamp) return "N/A";
+	const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+	const day = date.getDate().toString().padStart(2, "0");
+	const month = (date.getMonth() + 1).toString().padStart(2, "0");
+	const year = date.getFullYear();
+	const hours = date.getHours().toString().padStart(2, "0");
+	const minutes = date.getMinutes().toString().padStart(2, "0");
+	const seconds = date.getSeconds().toString().padStart(2, "0");
+	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+};
+
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [agentValues, setAgentValues] = useState<Agents[]>([]);
-	const { nodeValue, updateNodes, edgeValue, updateEdges } = useGraphFlow();
+	const {
+		nodeValue,
+		setNodeValueDirect,
+		edgeValue,
+		setEdgeValueDirect,
+		updateNodes,
+		updateEdges,
+		connectNodes,
+		resetGraph,
+		deleteEdge,
+	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
-	const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
@@ -92,18 +111,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		[],
 	);
 
-	const formatTimestampWithDate = (timestamp: number | undefined) => {
-		if (!timestamp) return "N/A";
-		const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
-		const day = date.getDate().toString().padStart(2, "0");
-		const month = (date.getMonth() + 1).toString().padStart(2, "0");
-		const year = date.getFullYear();
-		const hours = date.getHours().toString().padStart(2, "0");
-		const minutes = date.getMinutes().toString().padStart(2, "0");
-		const seconds = date.getSeconds().toString().padStart(2, "0");
-		return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-	};
-
 	const handleGetPipeline = async () => {
 		const res = await pipelineServices.getPipelineById(pipelineId);
 		setPipelineOverview(res);
@@ -114,6 +121,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			const response = await pipelineServices.getPipelineOverviewById(pipelineId);
 			setPipelineOverviewData(response);
 		} catch (error) {
+			console.error("Error fetching pipeline overview:", error);
 			toast({
 				title: "Error",
 				description: "Failed to fetch pipeline overview",
@@ -164,7 +172,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				type: nodeType,
 				position: { x, y },
 				data: {
-					id: node.component_id.toString(),
+					component_id: node.component_id.toString(),
 					name: node.name,
 					component_name: node.component_name,
 					supported_signals: node.supported_signals,
@@ -172,8 +180,19 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				},
 			};
 		});
-		updateNodes(updatedNodes);
-		updateEdges(edges);
+		setNodeValueDirect(updatedNodes);
+
+		const updatedEdges = edges.map((edge: any) => ({
+			id: `edge-${edge.source}-${edge.target}`,
+			animated: true,
+			source: edge.source,
+			target: edge.target,
+			data: {
+				sourceComponentId: edge.source,
+				targetComponentId: edge.target,
+			},
+		}));
+		setEdgeValueDirect(updatedEdges);
 	};
 
 	useEffect(() => {
@@ -187,76 +206,19 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
-			console.log(params);
-			updateEdges(eds => {
-				if (!params.source || !params.target) {
-					console.error("Invalid connection: source or target is null");
-					return eds;
-				}
-				console.log(nodeValue);
-				//check the node corresponding to the source and target
-				const sourceNode = nodeValue.find(node => node.id === params.source);
-				const targetNode = nodeValue.find(node => node.id === params.target);
-				if (!sourceNode || !targetNode) {
-					console.error("Invalid connection: source or target node not found");
-					toast({
-						title: "Error",
-						description: "Source or target node not found",
-						variant: "destructive",
-					});
-					return eds;
-				}
-
-				//check if the source and target are of the same type
-				if (sourceNode.type === targetNode.type) {
-					console.error("Invalid connection: source and target are of the same type");
-					toast({
-						title: "Error",
-						description: "Source and target are of the same type",
-						variant: "destructive",
-					});
-					return eds;
-				}
-
-				//check if the source and target compatibility, ie the supported signals in source must be a subset of the supported signals in target
-				if (
-					!targetNode.data.supported_signals.some((signal: string) =>
-						sourceNode.data.supported_signals.includes(signal),
-					)
-				) {
-					console.error("Invalid connection: source and target are not compatible");
-					toast({
-						title: "Error",
-						description: "Source and target are not compatible",
-						variant: "destructive",
-					});
-					return eds;
-				}
-
-				const updatedEdges = addEdge(
-					{
-						...params,
-						source: params.source,
-						target: params.target,
-						animated: true,
-						data: {
-							sourceComponentId: parseInt(params.source, 10),
-							targetComponentId: parseInt(params.target, 10),
-						},
-					},
-					eds,
-				);
-				localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
-				return updatedEdges;
-			});
+			connectNodes(params);
 		},
-		[updateEdges],
+		[connectNodes],
 	);
 
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
-			setHealthMetrics(metrics);
+			if (metrics && metrics.error === null) {
+				setHealthMetrics(metrics);
+			} else if (metrics && metrics.error !== null) {
+				throw new Error(metrics.error);
+			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
 			toast({
@@ -295,10 +257,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			updateEdges(edges => edges.filter(edge => edge.id !== selectedEdge.id));
+			deleteEdge(selectedEdge);
 			setSelectedEdge(null);
 		}
-	}, [selectedEdge, updateEdges]);
+	}, [selectedEdge, deleteEdge]);
 
 	// Close popover when clicking elsewhere
 	const onPaneClick = useCallback(() => {
@@ -317,7 +279,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					config: node.data.config,
 					supported_signals: node.data.supported_signals || [],
 				})),
-				edges: edges.map(edge => ({
+				edges: edgeValue.map(edge => ({
 					source: edge.source,
 					target: edge.target,
 				})),
@@ -333,12 +295,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				description: "Successfully deployed the pipeline",
 				duration: 3000,
 			});
+			handleGetPipelineGraph();
 		} catch (error) {
 			console.error("Error deploying pipeline:", error);
 			toast({
 				title: "Error",
 				description: "Failed to deploy the pipeline",
 				duration: 3000,
+				variant: "destructive",
 			});
 		}
 	};
@@ -362,8 +326,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			// Then delete the pipeline
 			await pipelineServices.deletePipelineById(pipelineId);
 			setIsOpen(false);
+			resetGraph();
 			window.location.reload();
 		} catch (error) {
+			console.error("Error deleting pipeline or agents:", error);
 			toast({
 				title: "Error",
 				description: "Failed to delete pipeline or agents",
@@ -371,6 +337,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
+
+	console.log("healthMetrics", healthMetrics);
 
 	return (
 		<div className="py-4 flex flex-col">
@@ -437,14 +405,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
 										<ReactFlow
 											nodes={nodeValue}
-											edges={edges.map(edge => ({
-												...edge,
-												animated: true,
-												label: isEditMode ? "" : edge.label,
-											}))}
+											edges={edgeValue}
 											onNodesChange={updateNodes}
 											onEdgesChange={updateEdges}
-											onConnect={onConnect}
+											onConnect={isEditMode ? onConnect : undefined}
 											nodeTypes={nodeTypes}
 											onInit={setReactFlowInstance}
 											onEdgeClick={onEdgeClick}
@@ -595,7 +559,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => {}}
+							onClick={() => { }}
 						/>
 					</div>
 					<p>
