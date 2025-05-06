@@ -338,8 +338,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
-	console.log("healthMetrics", healthMetrics);
-
 	return (
 		<div className="py-4 flex flex-col">
 			<div className="flex mb-5 items-center justify-between">

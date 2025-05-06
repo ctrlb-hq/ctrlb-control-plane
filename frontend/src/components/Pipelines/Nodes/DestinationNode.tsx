@@ -42,7 +42,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 	const handleSubmit = () => {
 		const log = {
 			type: "destination",
-			id: Data.id,
+			id: Data.component_id,
 			name: Data.name,
 			status: "edited",
 			initialConfig: Data.config,
@@ -53,7 +53,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-		updateNodeConfig(Data.id, config);
+		updateNodeConfig(Data.component_id, config);
 
 		const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
 		const updatedSources = sources.filter(
@@ -74,10 +74,10 @@ export const DestinationNode = ({ data: Data }: any) => {
 	}, []);
 
 	const handleDeleteNode = () => {
-		deleteNode(Data.id);
+		deleteNode(Data.component_id);
 		const log = {
 			type: "destination",
-			id: Data.id,
+			id: Data.component_id,
 			name: Data.name,
 			status: "deleted",
 			initialConfig: Data.config,

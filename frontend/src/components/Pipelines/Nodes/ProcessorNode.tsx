@@ -47,7 +47,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 	const handleSubmit = () => {
 		const log = {
 			type: "processor",
-			id: Data.id,
+			id: Data.component_id,
 			name: Data.name,
 			status: "edited",
 			initialConfig: Data.config,
@@ -58,7 +58,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 
-		updateNodeConfig(Data.id, config);
+		updateNodeConfig(Data.component_id, config);
 		setIsSheetOpen(false);
 	};
 
@@ -74,7 +74,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 	const handleDeleteNode = () => {
 		const log = {
 			type: "processor",
-			id: Data.id,
+			id: Data.component_id,
 			name: Data.name,
 			status: "deleted",
 			initialConfig: Data.config,
@@ -84,7 +84,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
 		addChange(log);
 		const updatedLog = [...existingLog, log];
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
-		deleteNode(Data.id);
+		deleteNode(Data.component_id);
 		setIsSheetOpen(false);
 	};
 
