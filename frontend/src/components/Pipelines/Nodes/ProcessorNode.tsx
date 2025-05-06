@@ -45,7 +45,14 @@ export const ProcessorNode = ({ data: Data }: any) => {
 
 	const ProcessorLabel = Data.supported_signals;
 	const handleSubmit = () => {
-		const log = { type: "processor", id: Data.id, name: Data.name, status: "edited", initialConfig: Data.config, finalConfig: config };
+		const log = {
+			type: "processor",
+			id: Data.id,
+			name: Data.name,
+			status: "edited",
+			initialConfig: Data.config,
+			finalConfig: config,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
@@ -65,7 +72,14 @@ export const ProcessorNode = ({ data: Data }: any) => {
 	}, []);
 
 	const handleDeleteNode = () => {
-		const log = { type: "processor", id: Data.id, name: Data.name, status: "deleted", initialConfig: Data.config, finalConfig: undefined };
+		const log = {
+			type: "processor",
+			id: Data.id,
+			name: Data.name,
+			status: "deleted",
+			initialConfig: Data.config,
+			finalConfig: undefined,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];

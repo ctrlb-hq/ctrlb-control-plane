@@ -39,7 +39,14 @@ export const SourceNode = ({ data: Data }: any) => {
 	const SourceLabel = Data.supported_signals || "";
 
 	const handleDeleteNode = () => {
-		const log = { type: "source", id: Data.id, name: Data.name, status: "deleted", initialConfig: Data.config, finalConfig: undefined };
+		const log = {
+			type: "source",
+			id: Data.id,
+			name: Data.name,
+			status: "deleted",
+			initialConfig: Data.config,
+			finalConfig: undefined,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
@@ -53,7 +60,6 @@ export const SourceNode = ({ data: Data }: any) => {
 		setForm(res);
 	};
 
-
 	const [config, setConfig] = useState<object>(Data.config);
 
 	// const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
@@ -66,7 +72,14 @@ export const SourceNode = ({ data: Data }: any) => {
 	}, []);
 
 	const handleSubmit = () => {
-		const log = { type: "source", id: Data.id, name: Data.name, status: "edited", initialConfig: Data.config, finalConfig: config };
+		const log = {
+			type: "source",
+			id: Data.id,
+			name: Data.name,
+			status: "edited",
+			initialConfig: Data.config,
+			finalConfig: config,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];

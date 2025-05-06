@@ -52,13 +52,20 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: sourceOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data
+				config: data,
 			},
 		};
 
 		const newNodeId = addNode(newNode);
 
-		const log = { type: "source", id: newNodeId, name: sourceOptionValue, status: "added", initialConfig: undefined, finalConfig: data };
+		const log = {
+			type: "source",
+			id: newNodeId,
+			name: sourceOptionValue,
+			status: "added",
+			initialConfig: undefined,
+			finalConfig: data,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];

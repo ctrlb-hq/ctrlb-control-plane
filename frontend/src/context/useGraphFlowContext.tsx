@@ -1,5 +1,17 @@
 import React, { createContext, useContext, useEffect } from "react";
-import { applyNodeChanges, Node, NodeChange, useNodesState, applyEdgeChanges, Edge, EdgeChange, useEdgesState, addEdge, XYPosition, Connection } from "reactflow";
+import {
+	applyNodeChanges,
+	Node,
+	NodeChange,
+	useNodesState,
+	applyEdgeChanges,
+	Edge,
+	EdgeChange,
+	useEdgesState,
+	addEdge,
+	XYPosition,
+	Connection,
+} from "reactflow";
 import { initialNodes, initialEdges } from "../constants";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,7 +56,10 @@ interface GraphFlowContextType {
 }
 
 // Validation functions
-const validateNodeConnection = (sourceNode: Node<NodeData>, targetNode: Node<NodeData>): { isValid: boolean; error?: string } => {
+const validateNodeConnection = (
+	sourceNode: Node<NodeData>,
+	targetNode: Node<NodeData>,
+): { isValid: boolean; error?: string } => {
 	if (!sourceNode || !targetNode) {
 		return { isValid: false, error: "Source or target node not found" };
 	}
@@ -55,7 +70,8 @@ const validateNodeConnection = (sourceNode: Node<NodeData>, targetNode: Node<Nod
 
 	// Validate flow direction
 	const validFlow =
-		(sourceNode.type === "source" && (targetNode.type === "processor" || targetNode.type === "destination")) ||
+		(sourceNode.type === "source" &&
+			(targetNode.type === "processor" || targetNode.type === "destination")) ||
 		(sourceNode.type === "processor" && targetNode.type === "destination");
 
 	if (!validFlow) {
@@ -64,7 +80,7 @@ const validateNodeConnection = (sourceNode: Node<NodeData>, targetNode: Node<Nod
 
 	// Check signal compatibility
 	const hasCommonSignals = targetNode.data.supported_signals?.some(signal =>
-		sourceNode.data.supported_signals?.includes(signal)
+		sourceNode.data.supported_signals?.includes(signal),
 	);
 
 	if (!hasCommonSignals) {
@@ -74,7 +90,10 @@ const validateNodeConnection = (sourceNode: Node<NodeData>, targetNode: Node<Nod
 	return { isValid: true };
 };
 
-const validateAllEdges = (edges: Edge<EdgeData>[], nodes: Node<NodeData>[]): { isValid: boolean; error?: string } => {
+const validateAllEdges = (
+	edges: Edge<EdgeData>[],
+	nodes: Node<NodeData>[],
+): { isValid: boolean; error?: string } => {
 	for (const edge of edges) {
 		const sourceNode = nodes.find(node => node.id === edge.source);
 		const targetNode = nodes.find(node => node.id === edge.target);
@@ -278,7 +297,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 						targetComponentId: params.target || "",
 					},
 				},
-				prevEdges
+				prevEdges,
 			);
 			localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
 			return updatedEdges;
@@ -298,7 +317,9 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 		}
 
 		setEdgeValue(prevEdges => {
-			const updatedEdges = prevEdges.filter(edge => edge.source !== params.source && edge.target !== params.target);
+			const updatedEdges = prevEdges.filter(
+				edge => edge.source !== params.source && edge.target !== params.target,
+			);
 			localStorage.setItem("PipelineEdges", JSON.stringify(updatedEdges));
 			return updatedEdges;
 		});
@@ -329,10 +350,11 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	};
 
 	const addNode = (newNode: NewNode): string => {
-		let newNodeId = '';
+		let newNodeId = "";
 		const allNodeIds = nodeValue.map(node => node.id);
-		const smallestUnusedNaturalNumberId = Array.from({length: allNodeIds.length + 2}, (_, i) => (i + 1).toString())
-			.find(id => !allNodeIds.includes(id));
+		const smallestUnusedNaturalNumberId = Array.from({ length: allNodeIds.length + 2 }, (_, i) =>
+			(i + 1).toString(),
+		).find(id => !allNodeIds.includes(id));
 		setNodeValue(prevNodes => {
 			newNodeId = smallestUnusedNaturalNumberId || (prevNodes.length + 1).toString(); // second or case wont happen
 			const newNodeToAdd = {
@@ -342,7 +364,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 				data: {
 					...newNode.data,
 					component_id: newNodeId,
-				}
+				},
 			};
 			const updatedNodes = [...prevNodes, newNodeToAdd];
 			localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
@@ -353,27 +375,31 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 
 	const updateNodeConfig = (nodeId: string, config: any) => {
 		setNodeValue(prevNodes => {
-			const updatedNodes = prevNodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, config } } : node);
+			const updatedNodes = prevNodes.map(node =>
+				node.id === nodeId ? { ...node, data: { ...node.data, config } } : node,
+			);
 			localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 			return updatedNodes;
 		});
 	};
 
 	return (
-		<GraphFlowContext.Provider value={{
-			nodeValue,
-			edgeValue,
-			setNodeValueDirect,
-			setEdgeValueDirect,
-			updateNodes,
-			updateEdges,
-			connectNodes,
-			resetGraph,
-			deleteNode,
-			deleteEdge,
-			addNode,
-			updateNodeConfig
-		}}>
+		<GraphFlowContext.Provider
+			value={{
+				nodeValue,
+				edgeValue,
+				setNodeValueDirect,
+				setEdgeValueDirect,
+				updateNodes,
+				updateEdges,
+				connectNodes,
+				resetGraph,
+				deleteNode,
+				deleteEdge,
+				addNode,
+				updateNodeConfig,
+			}}
+		>
 			{children}
 		</GraphFlowContext.Provider>
 	);

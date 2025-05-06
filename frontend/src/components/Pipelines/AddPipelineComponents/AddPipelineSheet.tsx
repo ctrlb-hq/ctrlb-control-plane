@@ -32,7 +32,7 @@ const AddPipelineSheet = () => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const { resetGraph } = useGraphFlow();
-	
+
 	const handleDialogOkay = () => {
 		localStorage.removeItem("Sources");
 		localStorage.removeItem("Destination");
@@ -70,13 +70,7 @@ const AddPipelineSheet = () => {
 						<PlusIcon className="h-4 w-4" />
 					</Button>
 				</SheetTrigger>
-				<SheetContent>
-					{currentStep == 0 ? (
-						<AddPipelineDetails />
-					) : (
-						<AddPipelineCanvas />
-					)}
-				</SheetContent>
+				<SheetContent>{currentStep == 0 ? <AddPipelineDetails /> : <AddPipelineCanvas />}</SheetContent>
 			</Sheet>
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 				<DialogContent className="w-[50rem]">

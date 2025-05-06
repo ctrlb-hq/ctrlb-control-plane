@@ -34,7 +34,7 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 	const [form, setForm] = useState<object>({});
 	const [pluginName, setPluginName] = useState();
 	const [submitDisabled, setSubmitDisabled] = useState(true);
-	const { addNode} = useGraphFlow();
+	const { addNode } = useGraphFlow();
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
@@ -53,13 +53,20 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: destinationOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data
+				config: data,
 			},
 		};
 
 		const newNodeId = addNode(newNode);
 
-		const log = { type: "destination", id: newNodeId, name: destinationOptionValue, status: "added", initialConfig: undefined, finalConfig: data };
+		const log = {
+			type: "destination",
+			id: newNodeId,
+			name: destinationOptionValue,
+			status: "added",
+			initialConfig: undefined,
+			finalConfig: data,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];

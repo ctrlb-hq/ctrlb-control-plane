@@ -73,11 +73,14 @@ const PipelineTable = () => {
 					<TableBody>
 						{Array.isArray(pipelines) &&
 							pipelines.map(pipeline => (
-								<Sheet key={pipeline.id} onOpenChange={(open) => {
-									if (!open) {
-										resetGraph();
-									}
-								}}>
+								<Sheet
+									key={pipeline.id}
+									onOpenChange={open => {
+										if (!open) {
+											resetGraph();
+										}
+									}}
+								>
 									<SheetTrigger asChild>
 										<TableRow
 											className="cursor-pointer"

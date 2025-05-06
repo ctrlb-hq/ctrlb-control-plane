@@ -53,13 +53,20 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: processorOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data
+				config: data,
 			},
 		};
 
 		const newNodeId = addNode(newNode);
 
-		const log = { type: "processor", id: newNodeId, name: processorOptionValue, status: "added", initialConfig: undefined, finalConfig: data };
+		const log = {
+			type: "processor",
+			id: newNodeId,
+			name: processorOptionValue,
+			status: "added",
+			initialConfig: undefined,
+			finalConfig: data,
+		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
 		const updatedLog = [...existingLog, log];
