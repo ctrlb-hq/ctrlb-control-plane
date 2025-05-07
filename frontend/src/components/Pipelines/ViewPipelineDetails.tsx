@@ -214,20 +214,25 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
-			if (metrics && metrics.error === null) {
+			if (Array.isArray(metrics)) {
 				setHealthMetrics(metrics);
-			} else if (metrics && metrics.error !== null) {
+			} else if (metrics?.error) {
 				throw new Error(metrics.error);
+			} else {
+				throw new Error('Invalid metrics data format');
 			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
 			toast({
 				title: "Error",
-				description: "Failed to fetch health metrics",
+				description: error instanceof Error ? error.message : "Failed to fetch health metrics",
 				variant: "destructive",
 			});
+			// Set empty array instead of leaving previous state
+			setHealthMetrics([]);
 		}
 	};
+
 
 	useEffect(() => {
 		if (pipelineId) {
@@ -576,20 +581,26 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				</div>
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{healthMetrics.map(metric => (
-					<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
-						<HealthChart
-							name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
-							data={metric.data_points.map(point => ({
-								timestamp: point.timestamp,
-								[metric.metric_name]:
-									metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
-							}))}
-							y_axis_data_key={metric.metric_name}
-							chart_color={getRandomChartColor(metric.metric_name)}
-						/>
+				{healthMetrics.length > 0 ? (
+					healthMetrics.map(metric => (
+						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
+							<HealthChart
+								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
+								data={metric.data_points.map(point => ({
+									timestamp: point.timestamp,
+									[metric.metric_name]:
+										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+								}))}
+								y_axis_data_key={metric.metric_name}
+								chart_color={getRandomChartColor(metric.metric_name)}
+							/>
+						</div>
+					))
+				) : (
+					<div className="col-span-2 text-center py-4 text-gray-500">
+						No health metrics available
 					</div>
-				))}
+				)}
 			</div>
 		</div>
 	);

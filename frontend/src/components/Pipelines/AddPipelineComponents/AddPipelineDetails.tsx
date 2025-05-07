@@ -218,7 +218,7 @@ const AddPipelineDetails = () => {
 
 					<p className="text-gray-600 mt-2">Let's get started building your pipeline configuration.</p>
 				</CardHeader>
-				<CardContent className="h-[27rem]">
+				<CardContent className="h-auto min-h-[37rem]">
 					<form className="space-y-6" onSubmit={handleSubmit}>
 						<div className="space-y-2">
 							<Label htmlFor="name" className="text-base font-medium flex items-center">
