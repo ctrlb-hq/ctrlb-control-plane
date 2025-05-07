@@ -101,6 +101,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
 	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
+	const [hasDeployError, setHasDeployError] = useState(false);
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -292,6 +293,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 			const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
 			console.log("Sync response:", syncRes);
+			setHasDeployError(false); 
 			localStorage.removeItem("changesLog");
 			setIsEditMode(false);
 			clearChangesLog();
@@ -302,6 +304,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 			handleGetPipelineGraph();
 		} catch (error) {
+			setHasDeployError(true); 
 			console.error("Error deploying pipeline:", error);
 			toast({
 				title: "Error",
@@ -311,12 +314,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
-
-	// const handleDeletePipeline = async () => {
-	// 	await pipelineServices.deletePipelineById(pipelineId);
-	// 	setIsOpen(false);
-	// 	window.location.reload();
-	// };
 
 	const handleDeletePipeline = async () => {
 		try {
@@ -343,6 +340,27 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+	const handleRefreshStatus = async () => {
+		try {
+			if (!pipelineOverviewData?.agent_id) return;
+			await agentServices.restartAgentMonitoring(pipelineOverviewData.agent_id);
+			// Refresh the pipeline data using the existing function
+			await handleGetPipelineOverview();
+			toast({
+				title: "Success",
+				description: "Pipeline status refreshed successfully",
+			});
+		} catch (error) {
+			console.error('Failed to refresh pipeline status:', error);
+			toast({
+				title: "Error",
+				description: "Failed to refresh pipeline status",
+				variant: "destructive",
+			});
+		}
+	};
+
+
 	return (
 		<div className="py-4 flex flex-col">
 			<div className="flex mb-5 items-center justify-between">
@@ -367,7 +385,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet>
+											<Sheet onOpenChange={(open) => {
+												if (!open && !hasDeployError) {
+													clearChangesLog();
+												}
+											}}>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
@@ -479,15 +501,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											Select agents to delete along with the pipeline(else unselected agents will be orphaned)
 											:
 										</p>
-										{/* <p className="text-red-500 mt-2">
-											After Deleting this pipeline the below agents will be orphaned
-										</p> */}
-										{/* {agentValues &&
-											agentValues.map((agent, index) => (
-												<p className="text-gray-600" key={index}>
-													Agent: {agent.name}
-												</p>
-											))} */}
+
 										{agentValues &&
 											agentValues.map(agent => (
 												<div key={agent.id} className="flex items-center space-x-2">
@@ -562,7 +576,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => { }}
+							onClick={handleRefreshStatus}
 						/>
 					</div>
 					<p>
