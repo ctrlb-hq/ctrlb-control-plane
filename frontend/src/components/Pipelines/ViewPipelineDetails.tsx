@@ -261,14 +261,25 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		[isEditMode],
 	);
 
+	// const handleDeleteEdge = useCallback(() => {
+	// 	if (selectedEdge) {
+	// 		deleteEdge(selectedEdge);
+	// 		setSelectedEdge(null);
+	// 	}
+	// }, [selectedEdge, deleteEdge]);
+
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			deleteEdge(selectedEdge);
-			setSelectedEdge(null);
+		  // Filter out only the specific edge that matches both source and target
+		  const newEdges = edgeValue.filter(edge => 
+			!(edge.source === selectedEdge.source && edge.target === selectedEdge.target)
+		  );
+		  setEdgeValueDirect(newEdges);
+		  setSelectedEdge(null);
 		}
-	}, [selectedEdge, deleteEdge]);
+	  }, [selectedEdge, edgeValue, setEdgeValueDirect]);
 
-	// Close popover when clicking elsewhere
+
 	const onPaneClick = useCallback(() => {
 		setSelectedEdge(null);
 	}, []);
