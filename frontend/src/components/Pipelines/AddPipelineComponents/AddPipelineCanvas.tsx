@@ -51,6 +51,7 @@ const AddPipelineCanvas = () => {
 	const {
 		nodeValue,
 		edgeValue,
+		setEdgeValueDirect,
 		updateNodes,
 		updateEdges,
 		connectNodes,
@@ -75,12 +76,23 @@ const AddPipelineCanvas = () => {
 		[connectNodes],
 	);
 
+	// const handleDeleteEdge = useCallback(() => {
+	// 	if (selectedEdge) {
+	// 		deleteEdge(selectedEdge);
+	// 		setSelectedEdge(null);
+	// 	}
+	// }, [selectedEdge, deleteEdge]);
+
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-			deleteEdge(selectedEdge);
-			setSelectedEdge(null);
+		  // Filter out only the specific edge that matches both source and target
+		  const newEdges = edgeValue.filter(edge => 
+			!(edge.source === selectedEdge.source && edge.target === selectedEdge.target)
+		  );
+		  setEdgeValueDirect(newEdges);
+		  setSelectedEdge(null);
 		}
-	}, [selectedEdge, deleteEdge]);
+	  }, [selectedEdge, edgeValue, setEdgeValueDirect]);
 
 	const onEdgeClick: EdgeMouseHandler = useCallback(
 		(event, edge) => {
@@ -233,7 +245,7 @@ const AddPipelineCanvas = () => {
 					</div>
 				</SheetHeader>
 				<div className="w-full flex flex-col gap-2 h-screen p-4">
-					<div className="h-4/5 border-2 border-gray-200 rounded-lg">
+					<div className="h-4/5 border-2 border-gray-200 rounded-lg" ref={reactFlowWrapper}>
 						<ReactFlow
 							nodes={nodeValue}
 							edges={edgeValue}
