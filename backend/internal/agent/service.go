@@ -68,11 +68,3 @@ func (a *AgentService) ConfigChangedPing(agentID string) error {
 	}
 	return nil
 }
-
-func (a *AgentService) ConfigChangedPing(agentID string) error {
-	err := a.FrontendAgentService.SyncConfig(agentID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
