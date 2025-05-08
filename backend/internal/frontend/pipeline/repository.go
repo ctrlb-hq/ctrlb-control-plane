@@ -80,6 +80,70 @@ func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineI
 	return pipelineInfo, nil
 }
 
+func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error) {
+	const query = `
+		SELECT
+			p.pipeline_id                       AS id,
+			p.name                              AS name,
+			p.created_by                        AS created_by,
+			p.created_at                        AS created_at,
+			p.updated_at                        AS updated_at,
+			a.version                           AS agent_version,
+			COALESCE(am.status, 'inactive')     AS status,              
+			a.hostname                          AS hostname,
+			a.platform                          AS platform,
+			a.ip                                AS ip_address,
+			a.id                                AS agent_id
+		FROM   pipelines                AS p
+		LEFT  JOIN agents               AS a  ON a.pipeline_id = p.pipeline_id
+		LEFT  JOIN aggregated_agent_metrics AS am ON am.agent_id   = a.id
+		WHERE  p.pipeline_id = ?
+		LIMIT  1;`
+
+	pipelineInfo := &PipelineInfoWithAgent{}
+
+	err := f.db.QueryRow(query, pipelineId).Scan(
+		&pipelineInfo.ID,
+		&pipelineInfo.Name,
+		&pipelineInfo.CreatedBy,
+		&pipelineInfo.CreatedAt,
+		&pipelineInfo.UpdatedAt,
+		&pipelineInfo.AgentVersion,
+		&pipelineInfo.Status,
+		&pipelineInfo.Hostname,
+		&pipelineInfo.Platform,
+		&pipelineInfo.IPAddress,
+		&pipelineInfo.AgentID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("pipeline with ID %d not found", pipelineId)
+		}
+		return nil, fmt.Errorf("failed to query pipeline info: %w", err)
+	}
+
+	pipelineInfo.Labels = make(map[string]string)
+
+	rows, err := f.db.Query("SELECT key, value FROM agents_labels WHERE agent_id = ?", pipelineInfo.AgentID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return pipelineInfo, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var key, value string
+		err := rows.Scan(&key, &value)
+		if err != nil {
+			return nil, err
+		}
+		pipelineInfo.Labels[key] = value
+	}
+
+	return pipelineInfo, nil
+}
+
 func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	tx, err := f.db.Begin()
 	if err != nil {
@@ -204,7 +268,7 @@ func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*models.P
 	}, nil
 }
 
-func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineComponent, error) {
+func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineNodes, error) {
 	rows, err := f.db.Query(`
 		SELECT component_id, name, component_role, component_name, config, supported_signals
 		FROM pipeline_components 
@@ -214,9 +278,9 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	}
 	defer rows.Close()
 
-	var nodes []models.PipelineComponent
+	var nodes []models.PipelineNodes
 	for rows.Next() {
-		var node models.PipelineComponent
+		var node models.PipelineNodes
 		var configStr string
 		var supportedSignals string
 
@@ -240,7 +304,7 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	return nodes, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.PipelineEdge, error) {
+func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.PipelineEdges, error) {
 	rows, err := f.db.Query(`
 		SELECT parent_component_id, child_component_id 
 		FROM pipeline_component_edges 
@@ -250,9 +314,9 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	}
 	defer rows.Close()
 
-	var edges []models.PipelineEdge
+	var edges []models.PipelineEdges
 	for rows.Next() {
-		var edge models.PipelineEdge
+		var edge models.PipelineEdges
 		if err := rows.Scan(&edge.Source, &edge.Target); err != nil {
 			return nil, err
 		}
@@ -261,7 +325,7 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineComponent, edges []models.PipelineEdge) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineNodes, edges []models.PipelineEdges) error {
 	shouldCommit := false
 	var err error
 

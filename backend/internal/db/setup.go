@@ -9,8 +9,8 @@ import (
 )
 
 // DBInit initializes the DB and creates all tables.
-func DBInit() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./backend.db")
+func DBInit(dbPath string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
 	}

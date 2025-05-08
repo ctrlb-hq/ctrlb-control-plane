@@ -10,12 +10,12 @@ import (
 )
 
 type AuthHandler struct {
-	AuthService *AuthService
+	AuthServiceInterface AuthServiceInterface
 }
 
-func NewAuthHandler(authService *AuthService) *AuthHandler {
+func NewAuthHandler(authServiceInterface AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{
-		AuthService: authService,
+		AuthServiceInterface: authServiceInterface,
 	}
 }
 
@@ -57,7 +57,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	utils.Logger.Info(fmt.Sprintf("Registering user with email: %s and role: %s", userRegisterRequest.Email, userRegisterRequest.Role))
 	// Step 2: Register the user
-	resp, err := a.AuthService.RegisterUser(&userRegisterRequest)
+	resp, err := a.AuthServiceInterface.RegisterUser(&userRegisterRequest)
 	if err != nil {
 		// Log the actual error
 		utils.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
@@ -97,7 +97,7 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Logger.Info(fmt.Sprintf("Processing login request for user: %s", loginRequest.Email))
-	response, err := a.AuthService.Login(&loginRequest)
+	response, err := a.AuthServiceInterface.Login(&loginRequest)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Login failed for user %s: %v", loginRequest.Email, err))
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
@@ -124,7 +124,7 @@ func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := a.AuthService.RefreshToken(req)
+	response, err := a.AuthServiceInterface.RefreshToken(req)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Token refresh failed: %v", err))
 		status := http.StatusInternalServerError

@@ -59,3 +59,9 @@ func recoverFromPanic() {
 		Logger.Fatal("Panic occurred!", zap.Any("error", r), zap.Stack("stacktrace"))
 	}
 }
+
+// For testing purposes, we can use a development logger
+func init() {
+	logger, _ := zap.NewDevelopment()
+	Logger = logger
+}

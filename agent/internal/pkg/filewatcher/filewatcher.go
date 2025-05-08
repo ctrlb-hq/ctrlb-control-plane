@@ -81,7 +81,7 @@ func (fw *FileWatcher) watchLoop() {
 				return
 			}
 
-			client.InformBackendConfigFileChanged()
+			client.InformBackendConfigFileChanged(nil)
 
 			switch {
 			case event.Op&fsnotify.Write == fsnotify.Write && fileExists:

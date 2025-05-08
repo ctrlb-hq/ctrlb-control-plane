@@ -9,8 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// GenerateJWT generates a JWT token for a given email and expiration time
-func GenerateJWT(typ string, email string, expiration time.Duration) (string, error) {
+// generateJWT generates a JWT token for a given email and expiration time
+func generateJWT(typ string, email string, expiration time.Duration) (string, error) {
 	expirationTime := time.Now().Add(expiration)
 
 	// Set email as the subject claim
@@ -30,23 +30,25 @@ func GenerateJWT(typ string, email string, expiration time.Duration) (string, er
 
 // GenerateAccessToken generates a short-lived access token
 func GenerateAccessToken(email string) (string, error) {
-	return GenerateJWT("access", email, 15*time.Minute) // 15 minutes
+	return generateJWT("access", email, 15*time.Minute) // 15 minutes
 }
 
 // GenerateRefreshToken generates a long-lived refresh token
 func GenerateRefreshToken(email string) (string, error) {
-	return GenerateJWT("refresh", email, 30*24*time.Hour) // 30 days
+	return generateJWT("refresh", email, 30*24*time.Hour) // 30 days
 }
 
 // RefreshToken generates a new access token using a valid refresh token
 func RefreshToken(refreshToken string) (string, error) {
-	email, err := ValidateJWT(refreshToken, "refresh")
+	email, err := ValidateJWTFunc(refreshToken, "refresh")
 	if err != nil {
 		return "", err // Invalid refresh token
 	}
 	// Generate a new access token
 	return GenerateAccessToken(email)
 }
+
+var ValidateJWTFunc = ValidateJWT
 
 func ValidateJWT(tokenString string, typ string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {

@@ -6,16 +6,18 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/api"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/client"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/config"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/operators"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/filewatcher"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
-	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/utils"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/systeminfo"
 	"github.com/joho/godotenv"
 )
 
@@ -68,11 +70,15 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		config, err := client.InformBackendServerStart()
+		sys := systeminfo.NewSystemInfo()
+		httpClient := &http.Client{
+			Timeout: 20 * time.Second,
+		}
+		serverStartConfig, err := client.InformBackendServerStart(sys, httpClient)
 		if err != nil {
 			logger.Logger.Sugar().Fatalf("Failed to register with backend server: %v", err)
 		} else {
-			err = utils.SaveToYAML(config, constants.AGENT_CONFIG_PATH)
+			err = config.SaveToYAML(serverStartConfig, constants.AGENT_CONFIG_PATH)
 			if err != nil {
 				logger.Logger.Sugar().Fatalf("Error writing config to file: %v", err)
 			}

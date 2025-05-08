@@ -10,13 +10,41 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
+type FrontendAgentRepositoryInterface interface {
+	GetAllAgents() ([]models.AgentInfoHome, error)
+	GetAllUnmanagedAgents() ([]UnmanagedAgents, error)
+	GetAgent(id string) (*AgentInfoWithLabels, error)
+	AgentExists(id string) bool
+	AgentStatus(id string) string
+	GetAgentNetworkInfoByID(id string) (string, string, error)
+	DeleteAgent(id string) error
+	GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error)
+	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
+	AddLabels(id string, labels map[string]string) error
+	GetLatestAgentSince(since string) (*LatestAgentResponse, error)
+}
+
 type FrontendAgentService struct {
-	FrontendAgentRepository *FrontendAgentRepository
-	AgentQueue              *queue.AgentQueue
+	FrontendAgentRepository FrontendAgentRepositoryInterface
+	AgentQueue              queue.AgentQueueInterface
+}
+
+type FrontendAgentServiceInterface interface {
+	GetAllAgents() ([]models.AgentInfoHome, error)
+	GetAllUnmanagedAgents() ([]UnmanagedAgents, error)
+	GetAgent(id string) (*AgentInfoWithLabels, error)
+	DeleteAgent(id string) error
+	StartAgent(id string) error
+	StopAgent(id string) error
+	RestartMonitoring(id string) error
+	GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error)
+	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
+	AddLabels(id string, labels map[string]string) error
+	GetLatestAgentSince(since string) (*LatestAgentResponse, error)
 }
 
 // NewFrontendAgentService creates a new FrontendAgentService
-func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
+func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface, agentQueue queue.AgentQueueInterface) FrontendAgentServiceInterface {
 	return &FrontendAgentService{
 		FrontendAgentRepository: frontendAgentRepository,
 		AgentQueue:              agentQueue,

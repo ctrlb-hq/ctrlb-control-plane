@@ -61,7 +61,7 @@ func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 		len(graph.Nodes), len(graph.Edges)))
 
 	// Index nodes by ID
-	nodesByID := make(map[string]models.PipelineComponent)
+	nodesByID := make(map[string]models.PipelineNodes)
 	for _, node := range graph.Nodes {
 		nodesByID[strconv.Itoa(node.ComponentID)] = node
 	}
@@ -81,7 +81,7 @@ func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 
 	// Find connected components using BFS
 	visitedNodes := make(map[string]bool)
-	var connectedComponents [][]models.PipelineComponent
+	var connectedComponents [][]models.PipelineNodes
 
 	for nodeID := range nodesByID {
 		if visitedNodes[nodeID] {
@@ -90,7 +90,7 @@ func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 
 		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%s", nodeID))
 		nodeQueue := []string{nodeID}
-		var currentComponent []models.PipelineComponent
+		var currentComponent []models.PipelineNodes
 		visitedNodes[nodeID] = true
 
 		for len(nodeQueue) > 0 {

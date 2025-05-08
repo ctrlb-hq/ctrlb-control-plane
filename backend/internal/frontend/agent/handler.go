@@ -10,11 +10,11 @@ import (
 
 // FrontendAgentHandler handles frontend agent operations
 type FrontendAgentHandler struct {
-	FrontendAgentService *FrontendAgentService
+	FrontendAgentService FrontendAgentServiceInterface
 }
 
 // NewFrontendAgentHandler initializes the handler
-func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService) *FrontendAgentHandler {
+func NewFrontendAgentHandler(frontendAgentServices FrontendAgentServiceInterface) *FrontendAgentHandler {
 	return &FrontendAgentHandler{
 		FrontendAgentService: frontendAgentServices,
 	}

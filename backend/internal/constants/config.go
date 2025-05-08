@@ -17,3 +17,28 @@ var TelemetryService = map[string]any{
 		},
 	},
 }
+
+var DefaultConfig = map[string]any{
+	"receivers": map[string]any{
+		"otlp": map[string]any{
+			"protocols": map[string]any{
+				"http": map[string]any{},
+				"grpc": map[string]any{},
+			},
+		},
+	},
+	"processors": map[string]any{},
+	"exporters": map[string]any{
+		"debug": map[string]any{},
+	},
+	"service": map[string]any{
+		"telemetry": TelemetryService,
+		"pipelines": map[string]any{
+			"logs/default": map[string]any{
+				"receivers":  []any{"otlp"},
+				"processors": []any{},
+				"exporters":  []any{"debug"},
+			},
+		},
+	},
+}

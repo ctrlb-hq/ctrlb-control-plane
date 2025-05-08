@@ -53,12 +53,12 @@ func main() {
 	if checkIntervalMinsEnv != "" {
 		count, err := strconv.Atoi(checkIntervalMinsEnv)
 		if err != nil {
-			constants.CHECK_INTERVAL_MINS = 10
+			constants.CHECK_INTERVAL_SEC = 10
 		} else {
-			constants.CHECK_INTERVAL_MINS = count
+			constants.CHECK_INTERVAL_SEC = count
 		}
 	} else {
-		constants.CHECK_INTERVAL_MINS = 10
+		constants.CHECK_INTERVAL_SEC = 10
 	}
 
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
@@ -74,7 +74,7 @@ func main() {
 		constants.ENV = "prod" // Default value
 	}
 
-	db, err := database.DBInit()
+	db, err := database.DBInit("./backend.db")
 	if err != nil {
 		utils.Logger.Sugar().Fatal("Failed to initialize DB: %s", err)
 		return
@@ -92,12 +92,14 @@ func main() {
 
 	utils.Logger.Info("Component schemas loaded into database")
 
-	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_MINS, db)
+	agentQueueRepository := queue.NewQueueRepository(db)
+
+	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_SEC, agentQueueRepository)
+
 	if err = agentQueue.RefreshMonitoring(); err != nil {
 		utils.Logger.Fatal("Unable to update existing agent")
 		return
 	}
-	agentQueue.StartStatusCheck()
 
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
@@ -106,14 +108,16 @@ func main() {
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendNodeRepository := frontendnode.NewFrontendNodeRepository(db)
 
-	agentService := agent.NewAgentService(agentRepository, agentQueue)
-	authService := auth.NewAuthService(authRepository)
-
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
 	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
+	agentService := agent.NewAgentService(agentRepository, agentQueue, frontendPipelineService)
+	authService := auth.NewAuthService(authRepository)
+
+	handler := api.NewHandler(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
+
+	router := api.NewRouter(handler)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
