@@ -220,7 +220,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			} else if (metrics?.error) {
 				throw new Error(metrics.error);
 			} else {
-				throw new Error('Invalid metrics data format');
+				throw new Error("Invalid metrics data format");
 			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
@@ -233,7 +233,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			setHealthMetrics([]);
 		}
 	};
-
 
 	useEffect(() => {
 		if (pipelineId) {
@@ -270,15 +269,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-		  // Filter out only the specific edge that matches both source and target
-		  const newEdges = edgeValue.filter(edge => 
-			!(edge.source === selectedEdge.source && edge.target === selectedEdge.target)
-		  );
-		  setEdgeValueDirect(newEdges);
-		  setSelectedEdge(null);
+			// Filter out only the specific edge that matches both source and target
+			const newEdges = edgeValue.filter(
+				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),
+			);
+			setEdgeValueDirect(newEdges);
+			setSelectedEdge(null);
 		}
-	  }, [selectedEdge, edgeValue, setEdgeValueDirect]);
-
+	}, [selectedEdge, edgeValue, setEdgeValueDirect]);
 
 	const onPaneClick = useCallback(() => {
 		setSelectedEdge(null);
@@ -304,7 +302,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 			const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
 			console.log("Sync response:", syncRes);
-			setHasDeployError(false); 
+			setHasDeployError(false);
 			localStorage.removeItem("changesLog");
 			setIsEditMode(false);
 			clearChangesLog();
@@ -315,7 +313,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 			handleGetPipelineGraph();
 		} catch (error) {
-			setHasDeployError(true); 
+			setHasDeployError(true);
 			console.error("Error deploying pipeline:", error);
 			toast({
 				title: "Error",
@@ -362,7 +360,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				description: "Pipeline status refreshed successfully",
 			});
 		} catch (error) {
-			console.error('Failed to refresh pipeline status:', error);
+			console.error("Failed to refresh pipeline status:", error);
 			toast({
 				title: "Error",
 				description: "Failed to refresh pipeline status",
@@ -370,7 +368,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
-
 
 	return (
 		<div className="py-4 flex flex-col">
@@ -396,11 +393,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet onOpenChange={(open) => {
-												if (!open && !hasDeployError) {
-													clearChangesLog();
-												}
-											}}>
+											<Sheet
+												onOpenChange={open => {
+													if (!open && !hasDeployError) {
+														clearChangesLog();
+													}
+												}}
+											>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
@@ -622,9 +621,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</div>
 					))
 				) : (
-					<div className="col-span-2 text-center py-4 text-gray-500">
-						No health metrics available
-					</div>
+					<div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
 				)}
 			</div>
 		</div>

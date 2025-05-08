@@ -85,14 +85,14 @@ const AddPipelineCanvas = () => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-		  // Filter out only the specific edge that matches both source and target
-		  const newEdges = edgeValue.filter(edge => 
-			!(edge.source === selectedEdge.source && edge.target === selectedEdge.target)
-		  );
-		  setEdgeValueDirect(newEdges);
-		  setSelectedEdge(null);
+			// Filter out only the specific edge that matches both source and target
+			const newEdges = edgeValue.filter(
+				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),
+			);
+			setEdgeValueDirect(newEdges);
+			setSelectedEdge(null);
 		}
-	  }, [selectedEdge, edgeValue, setEdgeValueDirect]);
+	}, [selectedEdge, edgeValue, setEdgeValueDirect]);
 
 	const onEdgeClick: EdgeMouseHandler = useCallback(
 		(event, edge) => {
