@@ -101,6 +101,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
 	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
+	const [hasDeployError, setHasDeployError] = useState(false);
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -214,20 +215,25 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
-			if (metrics && metrics.error === null) {
+			if (Array.isArray(metrics)) {
 				setHealthMetrics(metrics);
-			} else if (metrics && metrics.error !== null) {
+			} else if (metrics?.error) {
 				throw new Error(metrics.error);
+			} else {
+				throw new Error('Invalid metrics data format');
 			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
 			toast({
 				title: "Error",
-				description: "Failed to fetch health metrics",
+				description: error instanceof Error ? error.message : "Failed to fetch health metrics",
 				variant: "destructive",
 			});
+			// Set empty array instead of leaving previous state
+			setHealthMetrics([]);
 		}
 	};
+
 
 	useEffect(() => {
 		if (pipelineId) {
@@ -287,6 +293,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 			const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
 			console.log("Sync response:", syncRes);
+			setHasDeployError(false); 
 			localStorage.removeItem("changesLog");
 			setIsEditMode(false);
 			clearChangesLog();
@@ -297,6 +304,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 			handleGetPipelineGraph();
 		} catch (error) {
+			setHasDeployError(true); 
 			console.error("Error deploying pipeline:", error);
 			toast({
 				title: "Error",
@@ -306,12 +314,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
-
-	// const handleDeletePipeline = async () => {
-	// 	await pipelineServices.deletePipelineById(pipelineId);
-	// 	setIsOpen(false);
-	// 	window.location.reload();
-	// };
 
 	const handleDeletePipeline = async () => {
 		try {
@@ -338,6 +340,27 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+	const handleRefreshStatus = async () => {
+		try {
+			if (!pipelineOverviewData?.agent_id) return;
+			await agentServices.restartAgentMonitoring(pipelineOverviewData.agent_id);
+			// Refresh the pipeline data using the existing function
+			await handleGetPipelineOverview();
+			toast({
+				title: "Success",
+				description: "Pipeline status refreshed successfully",
+			});
+		} catch (error) {
+			console.error('Failed to refresh pipeline status:', error);
+			toast({
+				title: "Error",
+				description: "Failed to refresh pipeline status",
+				variant: "destructive",
+			});
+		}
+	};
+
+
 	return (
 		<div className="py-4 flex flex-col">
 			<div className="flex mb-5 items-center justify-between">
@@ -362,7 +385,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet>
+											<Sheet onOpenChange={(open) => {
+												if (!open && !hasDeployError) {
+													clearChangesLog();
+												}
+											}}>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
@@ -474,15 +501,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											Select agents to delete along with the pipeline(else unselected agents will be orphaned)
 											:
 										</p>
-										{/* <p className="text-red-500 mt-2">
-											After Deleting this pipeline the below agents will be orphaned
-										</p> */}
-										{/* {agentValues &&
-											agentValues.map((agent, index) => (
-												<p className="text-gray-600" key={index}>
-													Agent: {agent.name}
-												</p>
-											))} */}
+
 										{agentValues &&
 											agentValues.map(agent => (
 												<div key={agent.id} className="flex items-center space-x-2">
@@ -557,7 +576,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 						<RefreshCw
 							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={() => { }}
+							onClick={handleRefreshStatus}
 						/>
 					</div>
 					<p>
@@ -576,20 +595,26 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				</div>
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{healthMetrics.map(metric => (
-					<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
-						<HealthChart
-							name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
-							data={metric.data_points.map(point => ({
-								timestamp: point.timestamp,
-								[metric.metric_name]:
-									metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
-							}))}
-							y_axis_data_key={metric.metric_name}
-							chart_color={getRandomChartColor(metric.metric_name)}
-						/>
+				{healthMetrics.length > 0 ? (
+					healthMetrics.map(metric => (
+						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
+							<HealthChart
+								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
+								data={metric.data_points.map(point => ({
+									timestamp: point.timestamp,
+									[metric.metric_name]:
+										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+								}))}
+								y_axis_data_key={metric.metric_name}
+								chart_color={getRandomChartColor(metric.metric_name)}
+							/>
+						</div>
+					))
+				) : (
+					<div className="col-span-2 text-center py-4 text-gray-500">
+						No health metrics available
 					</div>
-				))}
+				)}
 			</div>
 		</div>
 	);

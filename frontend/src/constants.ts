@@ -38,8 +38,8 @@ export const initialNodes: Node<PipelineNodeData>[] = [
 		id: "1",
 		type: "destination",
 		position: {
-			x: -1,
-			y: -1,
+			x: 400,
+			y: 100,
 		},
 		data: {
 			component_id: "1",
@@ -56,8 +56,8 @@ export const initialNodes: Node<PipelineNodeData>[] = [
 		selected: false,
 		dragging: false,
 		positionAbsolute: {
-			x: -1,
-			y: -1,
+			x: 400,
+			y: 100,
 		},
 	},
 
@@ -65,8 +65,8 @@ export const initialNodes: Node<PipelineNodeData>[] = [
 		id: "2",
 		type: "source",
 		position: {
-			x: -1,
-			y: -1,
+			x: 100,
+			y: 100,
 		},
 		data: {
 			component_type: "receiver",
@@ -87,8 +87,8 @@ export const initialNodes: Node<PipelineNodeData>[] = [
 		selected: false,
 		dragging: false,
 		positionAbsolute: {
-			x: -1,
-			y: -1,
+			x: 100,
+			y: 100,
 		},
 	},
 ];
