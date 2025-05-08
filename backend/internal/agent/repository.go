@@ -47,6 +47,7 @@ func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*Age
 	}
 	response.ID = id
 
+
 	// Setting default config
 	response.Config = constants.DefaultConfig
 

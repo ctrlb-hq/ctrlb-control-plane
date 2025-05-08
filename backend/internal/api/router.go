@@ -37,7 +37,6 @@ func NewRouter(handler *Handler) *mux.Router {
 
 	frontendAgentAPIsV2.HandleFunc("/pipelines", handler.FrontendPipelineHandler.GetAllPipelines).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines", handler.FrontendPipelineHandler.CreatePipeline).Methods("POST")
-
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", handler.FrontendPipelineHandler.GetPipelineInfo).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}", handler.FrontendPipelineHandler.DeletePipeline).Methods("DELETE")
 	frontendAgentAPIsV2.HandleFunc("/pipelines-overview/{id}", handler.FrontendPipelineHandler.GetPipelineOverview).Methods("GET")
@@ -49,6 +48,8 @@ func NewRouter(handler *Handler) *mux.Router {
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents/{agent_id}", handler.FrontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents/{agent_id}", handler.FrontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
 
+	frontendAgentAPIsV2.HandleFunc("/component", frontendNodeHandler.GetComponent).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/component/schema/{name}", frontendNodeHandler.GetComponentSchema).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/component", handler.FrontendNodeHandler.GetComponent).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/component/schema/{name}", handler.FrontendNodeHandler.GetComponentSchema).Methods("GET")
 
