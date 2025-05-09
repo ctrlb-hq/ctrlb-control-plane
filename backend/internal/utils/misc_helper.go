@@ -2,6 +2,7 @@ package utils
 
 import (
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -30,4 +31,8 @@ func TrimAfterUnderscore(s string) string {
 		return s[:idx]
 	}
 	return s
+}
+
+func GetCurrentTime() int64 {
+	return time.Now().Unix()
 }

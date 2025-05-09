@@ -441,6 +441,20 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		}
 	}
 
+	updatedAt := utils.GetCurrentTime()
+
+	_, err = tx.Exec(`
+		UPDATE pipelines
+		SET updated_at = ?
+		WHERE pipeline_id = ?
+	`, updatedAt, pipelineID)
+	if err != nil {
+		if shouldCommit {
+			_ = tx.Rollback()
+		}
+		return fmt.Errorf("failed to update pipeline updated_at: %w", err)
+	}
+
 	// Commit the transaction if we started it
 	if shouldCommit {
 		if err := tx.Commit(); err != nil {
