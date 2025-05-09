@@ -309,7 +309,7 @@ const AddPipelineDetails = () => {
 						)}
 						{showHeartBeat && (
 							<div className="mt-3 flex flex-col gap-2">
-								<p>Once the agent is completely installed it will also appear in the Agent list Table</p>
+								{/* <p>Once the agent is completely installed it will also appear in the Agent list Table</p> */}
 								<div className="flex gap-4 border-2 border-blue-300 p-3 rounded-lg text-blue-400">
 									<Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
 									<p>CtrlB is checking for heartbeat..</p>
