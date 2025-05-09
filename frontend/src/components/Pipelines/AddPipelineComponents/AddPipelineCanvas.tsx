@@ -40,6 +40,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import pipelineServices from "@/services/pipelineServices";
 import { useToast } from "@/hooks/use-toast";
 
+
 // Node types mapping
 const nodeTypes = {
 	source: SourceNode,
@@ -61,9 +62,10 @@ const AddPipelineCanvas = () => {
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(true);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-	const { changesLog } = usePipelineChangesLog();
+	const { changesLog, clearChangesLog } = usePipelineChangesLog();
 	const { toast } = useToast();
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+
 
 	const pipelineName = localStorage.getItem("pipelinename");
 	const createdBy = localStorage.getItem("userEmail");
@@ -192,111 +194,117 @@ const AddPipelineCanvas = () => {
 
 	return (
 		<>
-			<SheetContent>
-				<SheetHeader>
-					<div className="flex justify-between items-center p-2 border-b">
-						<SheetTitle>
-							<div className="flex items-center space-x-2">
-								<div className="text-xl font-medium">{pipelineName}</div>
-							</div>
-						</SheetTitle>
+			<Sheet onOpenChange={open => {
+				if (!open) {
+					clearChangesLog();
+				}
+			}}>
+				<SheetContent>
+					<SheetHeader>
+						<div className="flex justify-between items-center p-2 border-b">
+							<SheetTitle>
+								<div className="flex items-center space-x-2">
+									<div className="text-xl font-medium">{pipelineName}</div>
+								</div>
+							</SheetTitle>
 
-						<div className="flex items-center mx-4">
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button className="rounded-full px-6">Review</Button>
-								</SheetTrigger>
-								<SheetContent className="w-[30rem]">
-									<SheetTitle>Pending Changes</SheetTitle>
-									<SheetDescription>
-										<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-											{changesLog.map((change, index) => (
-												<div key={index} className="flex justify-between items-center">
-													<div className="flex flex-col">
-														{/* <p className="text-lg capitalize">{change.component_role}</p> */}
-														<p className="text-lg text-gray-800 capitalize">{change.name}</p>
+							<div className="flex items-center mx-4">
+								<Sheet>
+									<SheetTrigger asChild>
+										<Button className="rounded-full px-6">Review</Button>
+									</SheetTrigger>
+									<SheetContent className="w-[30rem]">
+										<SheetTitle>Pending Changes</SheetTitle>
+										<SheetDescription>
+											<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+												{changesLog.map((change, index) => (
+													<div key={index} className="flex justify-between items-center">
+														<div className="flex flex-col">
+															{/* <p className="text-lg capitalize">{change.component_role}</p> */}
+															<p className="text-lg text-gray-800 capitalize">{change.name}</p>
+														</div>
+														<div className="flex justify-end gap-3 items-center">
+															<p
+																className={`${change.status == "edited" ? "text-gray-500" : change.status == "deleted" ? "text-red-500" : "text-green-600"} text-lg`}
+															>
+																[{change.status ? change.status : "Added"}]
+															</p>
+															<Edit size={20} />
+														</div>
 													</div>
-													<div className="flex justify-end gap-3 items-center">
-														<p
-															className={`${change.status == "edited" ? "text-gray-500" : change.status == "deleted" ? "text-red-500" : "text-green-600"} text-lg`}
-														>
-															[{change.status ? change.status : "Added"}]
-														</p>
-														<Edit size={20} />
-													</div>
-												</div>
-											))}
-										</div>
-									</SheetDescription>
-									<SheetClose className="flex justify-end mt-4 w-full">
-										<div>
-											<Button onClick={handleDeployChanges} className="bg-blue-500">
-												Deploy Changes
-											</Button>
-										</div>
-									</SheetClose>
-								</SheetContent>
-							</Sheet>
-							<div className="mx-4 flex items-center space-x-2">
-								<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-								<Label htmlFor="edit-mode">Edit Mode</Label>
+												))}
+											</div>
+										</SheetDescription>
+										<SheetClose className="flex justify-end mt-4 w-full">
+											<div>
+												<Button onClick={handleDeployChanges} className="bg-blue-500">
+													Deploy Changes
+												</Button>
+											</div>
+										</SheetClose>
+									</SheetContent>
+								</Sheet>
+								<div className="mx-4 flex items-center space-x-2">
+									<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+									<Label htmlFor="edit-mode">Edit Mode</Label>
+								</div>
+							</div>
+						</div>
+					</SheetHeader>
+					<div className="w-full flex flex-col gap-2 h-screen p-4">
+						<div className="h-4/5 border-2 border-gray-200 rounded-lg" ref={reactFlowWrapper}>
+							<ReactFlow
+								nodes={nodeValue}
+								edges={edgeValue}
+								onNodesChange={updateNodes}
+								onEdgesChange={updateEdges}
+								nodesConnectable={isEditMode}
+								nodesDraggable={isEditMode}
+								elementsSelectable={isEditMode}
+								onConnect={onConnect}
+								onInit={setReactFlowInstance}
+								onEdgeClick={onEdgeClick}
+								onPaneClick={onPaneClick}
+								// onDrop={onDrop}
+								onDragOver={onDragOver}
+								nodeTypes={nodeTypes}
+								fitView
+							>
+								<MiniMap />
+								<Controls />
+								<Background color="#aaa" gap={16} />
+								{selectedEdge && isEditMode && (
+									<Panel
+										position="top-left"
+										style={{
+											position: "absolute",
+											left: edgePopoverPosition.x,
+											top: edgePopoverPosition.y,
+											transform: "translate(-50%, -50%)",
+											background: "white",
+											padding: "8px",
+											borderRadius: "4px",
+											boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+											zIndex: 10,
+										}}
+									>
+										<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
+									</Panel>
+								)}
+							</ReactFlow>
+						</div>
+						<div className=" p-2 pb-4">
+							<div className="flex justify-center gap-6 items-center">
+								<div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
+									<SourceDropdownOptions disabled={!isEditMode} />
+									<ProcessorDropdownOptions disabled={!isEditMode} />
+									<DestinationDropdownOptions disabled={!isEditMode} />
+								</div>
 							</div>
 						</div>
 					</div>
-				</SheetHeader>
-				<div className="w-full flex flex-col gap-2 h-screen p-4">
-					<div className="h-4/5 border-2 border-gray-200 rounded-lg" ref={reactFlowWrapper}>
-						<ReactFlow
-							nodes={nodeValue}
-							edges={edgeValue}
-							onNodesChange={updateNodes}
-							onEdgesChange={updateEdges}
-							nodesConnectable={isEditMode}
-							nodesDraggable={isEditMode}
-							elementsSelectable={isEditMode}
-							onConnect={onConnect}
-							onInit={setReactFlowInstance}
-							onEdgeClick={onEdgeClick}
-							onPaneClick={onPaneClick}
-							// onDrop={onDrop}
-							onDragOver={onDragOver}
-							nodeTypes={nodeTypes}
-							fitView
-						>
-							<MiniMap />
-							<Controls />
-							<Background color="#aaa" gap={16} />
-							{selectedEdge && isEditMode && (
-								<Panel
-									position="top-left"
-									style={{
-										position: "absolute",
-										left: edgePopoverPosition.x,
-										top: edgePopoverPosition.y,
-										transform: "translate(-50%, -50%)",
-										background: "white",
-										padding: "8px",
-										borderRadius: "4px",
-										boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-										zIndex: 10,
-									}}
-								>
-									<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
-								</Panel>
-							)}
-						</ReactFlow>
-					</div>
-					<div className=" p-2 pb-4">
-						<div className="flex justify-center gap-6 items-center">
-							<div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
-								<SourceDropdownOptions disabled={!isEditMode} />
-								<ProcessorDropdownOptions disabled={!isEditMode} />
-								<DestinationDropdownOptions disabled={!isEditMode} />
-							</div>
-						</div>
-					</div>
-				</div>
-			</SheetContent>
+				</SheetContent>
+			</Sheet>
 		</>
 	);
 };

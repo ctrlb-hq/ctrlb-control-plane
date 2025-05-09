@@ -126,39 +126,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		setPipelineOverview(res);
 	};
 
-	// const handleGetPipelineOverview = async () => {
-	// 	try {
-	// 		const response = await pipelineServices.getPipelineOverviewById(pipelineId);
-	// 		setPipelineOverviewData(response);
-	// 	} catch (error) {
-	// 		console.error("Error fetching pipeline overview:", error);
-	// 		toast({
-	// 			title: "Error",
-	// 			description: "Failed to fetch pipeline overview",
-	// 			variant: "destructive",
-	// 		});
-	// 	}
-	// };
-
 	const handleGetPipelineOverview = async () => {
 		try {
 			const response = await pipelineServices.getPipelineOverviewById(pipelineId);
-			const data = Array.isArray(response) ? response[0] : response;
-
-			setPipelineOverviewData({
-				name: data.pipeline_name || data.name || 'N/A',
-				created_by: data.created_by || 'N/A',
-				created_at: data.created_at,
-				updated_at: data.updated_at,
-				agent_version: data.version || data.agent_version || 'N/A',
-				status: data.status || 'inactive',
-				hostname: data.hostname || 'N/A',
-				platform: data.platform || 'N/A',
-				ip_address: data._ || data.ip_address || 'N/A',
-				agent_id: data.id || data.agent_id,
-				labels: data.labels || {}
-			});
-			// setPipelineOverviewData(data);
+			setPipelineOverviewData(response);
 		} catch (error) {
 			console.error("Error fetching pipeline overview:", error);
 			toast({
@@ -166,7 +137,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				description: "Failed to fetch pipeline overview",
 				variant: "destructive",
 			});
-			setPipelineOverviewData(null);
 		}
 	};
 
@@ -254,13 +224,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
-			if (Array.isArray(metrics)) {
+			
+			if (Array.isArray(metrics) && metrics.length > 0 && metrics.every(metric => 
+				metric?.data_points && Array.isArray(metric.data_points) && metric.metric_name)) {
 				setHealthMetrics(metrics);
-			} else if (metrics?.error) {
-				throw new Error(metrics.error);
 			} else {
-				throw new Error("Invalid metrics data format");
-			}
+				setHealthMetrics([]); // Set empty array for invalid/null data
+			} 
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
 			toast({
@@ -418,7 +388,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full mb-2">
 						<div className="flex gap-2">
-							<Sheet>
+							<Sheet onOpenChange={open => {
+								if (!open && !hasDeployError) {
+									clearChangesLog();
+								}
+							}}>
 								<SheetTrigger asChild>
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>
@@ -432,11 +406,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet onOpenChange={open => {
-												if (!open && !hasDeployError) {
-													clearChangesLog();
-												}
-											}}>
+											<Sheet >
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
