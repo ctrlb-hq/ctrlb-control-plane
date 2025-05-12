@@ -224,7 +224,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
-			
+
 			if (Array.isArray(metrics) && metrics.length > 0 && metrics.every(metric => 
 				metric?.data_points && Array.isArray(metric.data_points) && metric.metric_name)) {
 				setHealthMetrics(metrics);
@@ -278,6 +278,17 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
+
+			const sourceNode = nodeValue.find(node => node.id === selectedEdge.source);
+			const targetNode = nodeValue.find(node => node.id === selectedEdge.target);
+		
+			// Add to changes log
+			const changeLogEntry = {
+			  type: "Connection",
+			  name: `${sourceNode?.data.name || 'Unknown'} → ${targetNode?.data.name || 'Unknown'}`,
+			  status: "deleted"
+			};
+			changesLog.push(changeLogEntry);
 			// Filter out only the specific edge that matches both source and target
 			const newEdges = edgeValue.filter(
 				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),

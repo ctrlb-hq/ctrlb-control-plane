@@ -62,7 +62,7 @@ const AddPipelineCanvas = () => {
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [isEditMode, setIsEditMode] = useState(true);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-	const { changesLog, clearChangesLog } = usePipelineChangesLog();
+	const { changesLog } = usePipelineChangesLog();
 	const { toast } = useToast();
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
@@ -194,11 +194,6 @@ const AddPipelineCanvas = () => {
 
 	return (
 		<>
-			<Sheet onOpenChange={open => {
-				if (!open) {
-					clearChangesLog();
-				}
-			}}>
 				<SheetContent>
 					<SheetHeader>
 						<div className="flex justify-between items-center p-2 border-b">
@@ -304,7 +299,6 @@ const AddPipelineCanvas = () => {
 						</div>
 					</div>
 				</SheetContent>
-			</Sheet>
 		</>
 	);
 };
