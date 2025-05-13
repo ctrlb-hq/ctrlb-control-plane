@@ -95,7 +95,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		updateEdges,
 		connectNodes,
 		resetGraph,
-		deleteEdge,
 	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -201,6 +200,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				targetComponentId: edge.target,
 			},
 		}));
+		//filter out edges that have source and target not in updatedNodes id
+		// const filteredEdges = updatedEdges.filter(edge =>
+		// 	updatedNodes.some(node => node.id === edge.source && updatedNodes.some(node => node.id === edge.target)),
+		// );
 		setEdgeValueDirect(updatedEdges);
 	};
 
@@ -322,7 +325,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					target: edge.target,
 				})),
 			};
-
 			const syncRes = await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
 			console.log("Sync response:", syncRes);
 			setHasDeployError(false);
