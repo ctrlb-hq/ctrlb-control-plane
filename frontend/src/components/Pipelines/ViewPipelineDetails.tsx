@@ -63,9 +63,8 @@ const statusColors: Record<string, string> = {
 	disconnected: "text-red-600",
 	pending: "text-yellow-600",
 	inactive: "text-blue-600",
-	default: "text-gray-600"
+	default: "text-gray-600",
 };
-
 
 const getRandomChartColor = (name: string) => {
 	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
@@ -225,12 +224,17 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
 
-			if (Array.isArray(metrics) && metrics.length > 0 && metrics.every(metric => 
-				metric?.data_points && Array.isArray(metric.data_points) && metric.metric_name)) {
+			if (
+				Array.isArray(metrics) &&
+				metrics.length > 0 &&
+				metrics.every(
+					metric => metric?.data_points && Array.isArray(metric.data_points) && metric.metric_name,
+				)
+			) {
 				setHealthMetrics(metrics);
 			} else {
 				setHealthMetrics([]); // Set empty array for invalid/null data
-			} 
+			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
 			toast({
@@ -278,15 +282,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
-
 			const sourceNode = nodeValue.find(node => node.id === selectedEdge.source);
 			const targetNode = nodeValue.find(node => node.id === selectedEdge.target);
-		
+
 			// Add to changes log
 			const changeLogEntry = {
-			  type: "Connection",
-			  name: `${sourceNode?.data.name || 'Unknown'} → ${targetNode?.data.name || 'Unknown'}`,
-			  status: "deleted"
+				type: "Connection",
+				name: `${sourceNode?.data.name || "Unknown"} → ${targetNode?.data.name || "Unknown"}`,
+				status: "deleted",
 			};
 			changesLog.push(changeLogEntry);
 			// Filter out only the specific edge that matches both source and target
@@ -399,11 +402,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full mb-2">
 						<div className="flex gap-2">
-							<Sheet onOpenChange={open => {
-								if (!open && !hasDeployError) {
-									clearChangesLog();
-								}
-							}}>
+							<Sheet
+								onOpenChange={open => {
+									if (!open && !hasDeployError) {
+										clearChangesLog();
+									}
+								}}
+							>
 								<SheetTrigger asChild>
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>
@@ -417,7 +422,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet >
+											<Sheet>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
@@ -586,11 +591,17 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					<div className="flex items-center gap-2">
 						<p>
 							<span className="font-semibold">Status:</span>{" "}
-							<span className={statusColors[pipelineOverviewData?.status?.toLowerCase()] || statusColors.default}>
+							<span
+								className={
+									statusColors[pipelineOverviewData?.status?.toLowerCase()] || statusColors.default
+								}
+							>
 								{pipelineOverviewData?.status}
 							</span>
 						</p>
-						{["disconnected", "pending", "inactive"].includes(pipelineOverviewData?.status?.toLowerCase()) && (
+						{["disconnected", "pending", "inactive"].includes(
+							pipelineOverviewData?.status?.toLowerCase(),
+						) && (
 							<RefreshCw
 								className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
 								onClick={handleRefreshStatus}
@@ -632,12 +643,25 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					// <div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
 					<div className="col-span-2 bg-white rounded-lg shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
 						<div className="text-gray-400 mb-2">
-							<svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="h-12 w-12"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+								/>
 							</svg>
 						</div>
 						<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
-						<p className="text-gray-400 text-sm mt-1">Health metrics will appear here once data is available</p>
+						<p className="text-gray-400 text-sm mt-1">
+							Health metrics will appear here once data is available
+						</p>
 					</div>
 				)}
 			</div>
