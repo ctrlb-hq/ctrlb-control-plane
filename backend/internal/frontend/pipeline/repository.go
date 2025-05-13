@@ -347,6 +347,14 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		return fmt.Errorf("failed to delete existing components: %w", err)
 	}
 
+	_, err = tx.Exec(`DELETE FROM pipeline_component_edges WHERE pipeline_id = ?`, pipelineID)
+	if err != nil {
+		if shouldCommit {
+			_ = tx.Rollback()
+		}
+		return fmt.Errorf("failed to delete existing edges: %w", err)
+	}
+
 	// Map to store the relationship between incoming component IDs and database IDs
 	componentIDMap := make(map[string]int)
 
