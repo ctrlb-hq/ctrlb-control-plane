@@ -58,6 +58,14 @@ interface MetricData {
 	data_points: DataPoint[];
 }
 
+const statusColors: Record<string, string> = {
+	connected: "text-green-600",
+	disconnected: "text-red-600",
+	pending: "text-yellow-600",
+	inactive: "text-blue-600",
+	default: "text-gray-600",
+};
+
 const getRandomChartColor = (name: string) => {
 	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
 	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -214,13 +222,18 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const fetchHealthMetrics = async () => {
 		try {
-			const metrics = await agentServices.getAgentHealthMetrics(pipelineId);
-			if (Array.isArray(metrics)) {
+			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
+
+			if (
+				Array.isArray(metrics) &&
+				metrics.length > 0 &&
+				metrics.every(
+					metric => metric?.data_points && Array.isArray(metric.data_points) && metric.metric_name,
+				)
+			) {
 				setHealthMetrics(metrics);
-			} else if (metrics?.error) {
-				throw new Error(metrics.error);
 			} else {
-				throw new Error("Invalid metrics data format");
+				setHealthMetrics([]); // Set empty array for invalid/null data
 			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
@@ -235,13 +248,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	};
 
 	useEffect(() => {
-		if (pipelineId) {
+		if (pipelineOverviewData) {
 			fetchHealthMetrics();
 			// Optional: Set up polling to refresh data periodically
 			const interval = setInterval(fetchHealthMetrics, 30000); // every 30 seconds
 			return () => clearInterval(interval);
 		}
-	}, [pipelineId]);
+	}, [pipelineOverviewData]);
 
 	const onEdgeClick: EdgeMouseHandler = useCallback(
 		(event, edge) => {
@@ -269,6 +282,16 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
+			const sourceNode = nodeValue.find(node => node.id === selectedEdge.source);
+			const targetNode = nodeValue.find(node => node.id === selectedEdge.target);
+
+			// Add to changes log
+			const changeLogEntry = {
+				type: "Connection",
+				name: `${sourceNode?.data.name || "Unknown"} → ${targetNode?.data.name || "Unknown"}`,
+				status: "deleted",
+			};
+			changesLog.push(changeLogEntry);
 			// Filter out only the specific edge that matches both source and target
 			const newEdges = edgeValue.filter(
 				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),
@@ -379,7 +402,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full mb-2">
 						<div className="flex gap-2">
-							<Sheet>
+							<Sheet
+								onOpenChange={open => {
+									if (!open && !hasDeployError) {
+										clearChangesLog();
+									}
+								}}
+							>
 								<SheetTrigger asChild>
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>
@@ -393,13 +422,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet
-												onOpenChange={open => {
-													if (!open && !hasDeployError) {
-														clearChangesLog();
-													}
-												}}
-											>
+											<Sheet>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
@@ -548,6 +571,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					</div>
 				</div>
 			</div>
+
 			<div className="flex flex-col w-[30rem] md:w-full">
 				<div className="flex flex-col py-2">
 					<p className="capitalize">
@@ -568,26 +592,21 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<p>
 							<span className="font-semibold">Status:</span>{" "}
 							<span
-								className={`${(() => {
-									switch (pipelineOverviewData?.status?.toLowerCase()) {
-										case "connected":
-											return "text-green-600";
-										case "disconnected":
-											return "text-red-600";
-										case "pending":
-											return "text-yellow-600";
-										default:
-											return "text-gray-600";
-									}
-								})()}`}
+								className={
+									statusColors[pipelineOverviewData?.status?.toLowerCase()] || statusColors.default
+								}
 							>
 								{pipelineOverviewData?.status}
 							</span>
 						</p>
-						<RefreshCw
-							className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-							onClick={handleRefreshStatus}
-						/>
+						{["disconnected", "pending", "inactive"].includes(
+							pipelineOverviewData?.status?.toLowerCase(),
+						) && (
+							<RefreshCw
+								className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
+								onClick={handleRefreshStatus}
+							/>
+						)}
 					</div>
 					<p>
 						<span className="font-semibold">Agent Version:</span> {pipelineOverviewData?.agent_version}
@@ -601,9 +620,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					<p>
 						<span className="font-semibold">IP Address:</span> {pipelineOverviewData?.ip_address}
 					</p>
-					{/* <p><span className="font-semibold">Agent ID:</span> {pipelineOverviewData?.agent_id}</p> */}
 				</div>
 			</div>
+
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
 				{healthMetrics.length > 0 ? (
 					healthMetrics.map(metric => (
@@ -621,7 +640,29 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</div>
 					))
 				) : (
-					<div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
+					// <div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
+					<div className="col-span-2 bg-white rounded-lg shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
+						<div className="text-gray-400 mb-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="h-12 w-12"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+								/>
+							</svg>
+						</div>
+						<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
+						<p className="text-gray-400 text-sm mt-1">
+							Health metrics will appear here once data is available
+						</p>
+					</div>
 				)}
 			</div>
 		</div>
