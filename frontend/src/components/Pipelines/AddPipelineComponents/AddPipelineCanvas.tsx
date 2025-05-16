@@ -55,7 +55,7 @@ const AddPipelineCanvas = () => {
 		updateNodes,
 		updateEdges,
 		connectNodes,
-		deleteEdge,
+		// deleteEdge,
 	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);

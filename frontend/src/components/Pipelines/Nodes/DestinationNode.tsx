@@ -89,10 +89,12 @@ export const DestinationNode = ({ data: Data }: any) => {
 		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		setIsSheetOpen(false);
 	};
-	const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
-		(source: any) => source.component_name === Data.component_name,
-	);
-	const sourceConfig = getSource?.config;
+
+	// const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
+	// 	(source: any) => source.component_name === Data.component_name,
+	// );
+	// const sourceConfig = getSource?.config;
+
 	const [config, setConfig] = useState<object>(Data.config);
 
 	return (
@@ -128,9 +130,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 								</div>
 							</div>
 						) : (
-							// <div className="flex justify-left items-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem]">
-							// 	<p className="text-xl m-1 text-white">→|</p>
-							// </div>
+							
 							<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem] w-[3rem]">
 								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>

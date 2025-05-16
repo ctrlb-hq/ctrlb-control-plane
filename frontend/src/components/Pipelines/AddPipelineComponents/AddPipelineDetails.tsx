@@ -37,11 +37,11 @@ const AddPipelineDetails = () => {
 	const [showHeartBeat, setShowHeartBeat] = useState(false);
 	const [showStatus, setShowStatus] = useState(false);
 	const [status, setStatus] = useState<"success" | "failed">("failed");
-	const [showAgentInfo, setShowAgentInfo] = useState(false);
+	const [_showAgentInfo, setShowAgentInfo] = useState(false);
 	const { toast } = useToast();
-	const [isApiKeyCopied, setIsApiKeyCopied] = useState(false);
+	const [_isApiKeyCopied, setIsApiKeyCopied] = useState(false);
 	// const [showConfigureButton, setShowConfigureButton] = useState(false);
-	const [isChecking, setIsChecking] = useState(false);
+	const [_isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9";
