@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
@@ -50,6 +51,18 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 	response, err := a.AgentRepository.RegisterAgent(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.PipelineName != "" {
+		var createDefaultPipelineReq models.CreatePipelineRequest
+		createDefaultPipelineReq.Name = req.PipelineName
+		createDefaultPipelineReq.AgentIDs = []int{int(response.ID)}
+		createDefaultPipelineReq.CreatedBy = req.StartedBy
+		createDefaultPipelineReq.PipelineGraph = constants.DefaultPipelineGraph
+		_, err := a.FrontendAgentService.CreatePipeline(createDefaultPipelineReq)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP)

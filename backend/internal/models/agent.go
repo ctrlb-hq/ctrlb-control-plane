@@ -9,6 +9,8 @@ type AgentRegisterRequest struct {
 	IP           string `json:"ip"`            // IP address of machine running the agent
 	Platform     string `json:"platform"`      // The platform (e.g., OS) the agent is running on
 	Type         string `json:"type"`          // The type of agent
+	PipelineName string `json:"pipeline_name"` // The name of the pipeline the agent is associated with
+	StartedBy    string `json:"started_by"`    // The user who started the agent
 	RegisteredAt int64  `json:"registered_at"` // The Unix timestamp when the agent was registered
 }
 
