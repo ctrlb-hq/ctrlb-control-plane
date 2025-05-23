@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -19,13 +19,14 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
+
 interface destination {
 	name: string;
 	display_name: string;
 	type: string;
 	supported_signals: string[];
 }
-const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
+const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [destinationOptionValue, setDestinationOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
@@ -86,7 +87,7 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 
 	useEffect(() => {
 		handleGetDestination();
-	}, []);
+	}, [isSheetOpen]);
 
 	const theme = createTheme({
 		components: {
@@ -153,8 +154,8 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 							<ThemeProvider theme={theme}>
 								<div className="mt-3">
 									<div className="p-3 ">
-										<div className="overflow-y-auto h-[32rem]">
-											<JsonForms
+										<div className="overflow-y-auto h-[32rem] pt-3">
+											{isSheetOpen && form && <JsonForms
 												data={data}
 												schema={form}
 												renderers={renderers}
@@ -164,7 +165,7 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 													const hasErrors = errors && errors.length > 0;
 													setSubmitDisabled(!!hasErrors);
 												}}
-											/>
+											/>}
 										</div>
 									</div>
 								</div>
@@ -187,6 +188,6 @@ const DestinationDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 			)}
 		</>
 	);
-};
+});
 
 export default DestinationDropdownOptions;

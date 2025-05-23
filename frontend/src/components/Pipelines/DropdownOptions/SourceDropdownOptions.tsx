@@ -10,13 +10,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
+
 
 interface sources {
 	name: string;
@@ -25,7 +26,7 @@ interface sources {
 	supported_signals: string[];
 }
 
-const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
+const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [sourceOptionValue, setSourceOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
@@ -60,6 +61,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 
 		const log = {
 			type: "source",
+			component_type: pluginName,
 			id: newNodeId,
 			name: sourceOptionValue,
 			status: "added",
@@ -86,7 +88,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 
 	useEffect(() => {
 		handleGetSources();
-	}, []);
+	}, [isSheetOpen]);
 
 	const theme = createTheme({
 		components: {
@@ -110,7 +112,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
 						<DropdownMenuSub>
-							{sources!.map((source, index) => (
+							{sources && sources.map((source, index) => (
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {
@@ -153,10 +155,10 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 								<span className="text-blue-500 underline">Documentation</span>
 							</p>
 							<ThemeProvider theme={theme}>
-								<div className="mt-3">
-									<div className="p-3 ">
-										<div className="overflow-y-auto h-[32rem]">
-											<JsonForms
+								<div className="">
+									<div className="p-3  ">
+										<div className="overflow-y-auto h-[32rem] pt-3">
+											{isSheetOpen && form && <JsonForms
 												data={data}
 												schema={form}
 												renderers={renderers}
@@ -166,7 +168,7 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 													const hasErrors = errors && errors.length > 0;
 													setSubmitDisabled(!!hasErrors);
 												}}
-											/>
+											/>}
 										</div>
 									</div>
 								</div>
@@ -189,6 +191,6 @@ const SourceDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 			)}
 		</>
 	);
-};
+});
 
 export default SourceDropdownOptions;

@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -24,13 +24,14 @@ interface Processor {
 	supported_signals: string[];
 }
 
+
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
+const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
-	const [data, setData] = useState<object>();
+	const [config, setConfig] = useState<object>({});
 	const [pluginName, setPluginName] = useState();
 	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
@@ -38,7 +39,9 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
-		setIsSheetOpen(!isSheetOpen);
+		setConfig({});
+		setForm({});
+		setIsSheetOpen(true);
 		handleGetProcessorForm(e);
 	};
 
@@ -53,7 +56,7 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 				name: processorOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data,
+				config: config,
 			},
 		};
 
@@ -65,7 +68,7 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 			name: processorOptionValue,
 			status: "added",
 			initialConfig: undefined,
-			finalConfig: data,
+			finalConfig: config,
 		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
@@ -82,6 +85,7 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 
 	const handleGetProcessorForm = async (processorOptionValue: string) => {
 		const res = await TransporterService.getTransporterForm(processorOptionValue);
+		console.log(res);
 		setForm(res);
 	};
 
@@ -89,19 +93,40 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 		handleGetProcessor();
 	}, []);
 
+	// ...existing code...
 	const theme = createTheme({
 		components: {
-			MuiFormControl: {
-				styleOverrides: {
-					root: {
-						marginBottom: "0.5rem",
+			MuiSelect: {
+				defaultProps: {
+					MenuProps: {
+						container: document.body,
+						disablePortal: false, // ensure menu is rendered in a portal
+						PaperProps: {
+							style: {
+								zIndex: 99999, // very high z-index
+							},
+						},
 					},
+				},
+			},
+			MuiPopover: {
+				defaultProps: {
+					container: document.body,
+					disablePortal: false,
+					style: { zIndex: 99999 },
+				},
+			},
+			MuiPopper: {
+				defaultProps: {
+					container: document.body,
+					disablePortal: false,
+					style: { zIndex: 99999 },
 				},
 			},
 		},
 	});
+	// ...existing code...
 
-	const renderers = [...materialRenderers];
 
 	return (
 		<>
@@ -157,18 +182,17 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 							<ThemeProvider theme={theme}>
 								<div className="mt-3">
 									<div className="p-3 ">
-										<div className="overflow-y-auto h-[32rem]">
-											<JsonForms
-												data={data}
+										<div className="overflow-y-auto h-[32rem] pt-3">
+											{isSheetOpen && form && <JsonForms
+												data={config}
 												schema={form}
-												renderers={renderers}
+												renderers={materialRenderers}
 												cells={materialCells}
-												onChange={({ data, errors }) => {
-													setData(data);
-													const hasErrors = errors && errors.length > 0;
-													setSubmitDisabled(!!hasErrors);
+												onChange={({ data }) => {
+													setConfig(data);
+
 												}}
-											/>
+											/>}
 										</div>
 									</div>
 								</div>
@@ -191,6 +215,6 @@ const ProcessorDropdownOptions = ({ disabled }: { disabled: boolean }) => {
 			)}
 		</>
 	);
-};
+});
 
 export default ProcessorDropdownOptions;

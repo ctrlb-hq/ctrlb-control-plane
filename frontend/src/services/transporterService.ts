@@ -26,6 +26,7 @@ export const TransporterService = {
 		try {
 			const res = await axiosInstance.get(`/component/schema/${name}`);
 			const data = res.data;
+			console.log("formData",data)
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {

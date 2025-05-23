@@ -1,5 +1,5 @@
-import { Boxes, RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // import EditPipelineYAML from "./EditPipelineYAML";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import {
 	SheetClose,
 	SheetContent,
 	SheetDescription,
+	SheetFooter,
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
@@ -25,8 +26,10 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
 import pipelineServices from "@/services/pipelineServices";
-import { Agents } from "@/types/agent.types";
 import { Pipeline } from "@/types/pipeline.types";
+import { JsonForms } from "@jsonforms/react";
+import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import ReactFlow, {
 	Background,
 	Connection,
@@ -47,6 +50,23 @@ import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { DestinationNode } from "./Nodes/DestinationNode";
 import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
+import { TransporterService } from "@/services/transporterService";
+import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
+
+
+
+const theme = createTheme({
+	components: {
+		MuiFormControl: {
+			styleOverrides: {
+				root: {
+					marginBottom: "0.5rem",
+				},
+			},
+		},
+	},
+});
+const renderers = [...materialRenderers];
 
 interface DataPoint {
 	timestamp: number;
@@ -58,6 +78,14 @@ interface MetricData {
 	data_points: DataPoint[];
 }
 
+interface FormSchema {
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
+}
+
 const statusColors: Record<string, string> = {
 	connected: "text-green-600",
 	disconnected: "text-red-600",
@@ -66,26 +94,9 @@ const statusColors: Record<string, string> = {
 	default: "text-gray-600",
 };
 
-const getRandomChartColor = (name: string) => {
-	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
-	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-	return colors[charSum % colors.length];
-};
 
-const formatTimestampWithDate = (timestamp: number | undefined) => {
-	if (!timestamp) return "N/A";
-	const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
-	const day = date.getDate().toString().padStart(2, "0");
-	const month = (date.getMonth() + 1).toString().padStart(2, "0");
-	const year = date.getFullYear();
-	const hours = date.getHours().toString().padStart(2, "0");
-	const minutes = date.getMinutes().toString().padStart(2, "0");
-	const seconds = date.getSeconds().toString().padStart(2, "0");
-	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-};
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
-	const [agentValues, setAgentValues] = useState<Agents[]>([]);
 	const {
 		nodeValue,
 		setNodeValueDirect,
@@ -101,14 +112,19 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-	const { changesLog, clearChangesLog } = usePipelineChangesLog();
+	const { changesLog, clearChangesLog, addChange } = usePipelineChangesLog();
 	const [pipelineOverview, setPipelineOverview] = useState<Pipeline>();
 	const [isOpen, setIsOpen] = useState(false);
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
-	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
 	const [hasDeployError, setHasDeployError] = useState(false);
+	const [tabs, setTabs] = useState<string>("overview");
+	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
+	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+	const [form, setForm] = useState<FormSchema>({});
+	const [config, setConfig] = useState<object>({});
+	const [selectedChange, setSelectedChange] = useState<any>(null)
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -138,18 +154,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
-	useEffect(() => {
-		handleGetPipelineOverview();
-	}, [pipelineId]);
-
-	const handleGetConnectedAgentsToPipeline = async () => {
-		const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId);
-		setAgentValues(res);
-	};
 
 	const handleGetPipelineGraph = async () => {
 		const res = await pipelineServices.getPipelineGraph(pipelineId);
-		console.log(res);
 		const edges = res.edges;
 		const VERTICAL_SPACING = 100;
 
@@ -165,14 +172,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			let x, y;
 			if (nodeType === "source") {
 				x = 50; // Fixed left position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			} else if (nodeType === "destination") {
 				x = 400; // Fixed right position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			} else {
 				// processor
 				x = 225; // Center position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			}
 
 			return {
@@ -209,11 +216,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	useEffect(() => {
 		handleGetPipelineGraph();
+		handleGetPipelineOverview();
 	}, [pipelineId]);
 
 	useEffect(() => {
 		handleGetPipeline();
-		handleGetConnectedAgentsToPipeline();
 	}, [isEditMode]);
 
 	const onConnect = useCallback(
@@ -223,10 +230,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		[connectNodes],
 	);
 
+
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
-
 			if (
 				Array.isArray(metrics) &&
 				metrics.length > 0 &&
@@ -251,13 +258,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	};
 
 	useEffect(() => {
-		if (pipelineOverviewData) {
+		if (pipelineOverviewData && !isEditMode) {
 			fetchHealthMetrics();
 			// Optional: Set up polling to refresh data periodically
-			const interval = setInterval(fetchHealthMetrics, 30000); // every 30 seconds
-			return () => clearInterval(interval);
+			// const interval = setInterval(fetchHealthMetrics, 300000); // every 30 seconds
+			// return () => clearInterval(interval);
 		}
-	}, [pipelineOverviewData]);
+	}, [pipelineOverviewData, isEditMode]);
 
 	const onEdgeClick: EdgeMouseHandler = useCallback(
 		(event, edge) => {
@@ -288,14 +295,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			const sourceNode = nodeValue.find(node => node.id === selectedEdge.source);
 			const targetNode = nodeValue.find(node => node.id === selectedEdge.target);
 
-			// Add to changes log
+			//Add to changes log
 			const changeLogEntry = {
 				type: "Connection",
 				name: `${sourceNode?.data.name || "Unknown"} → ${targetNode?.data.name || "Unknown"}`,
 				status: "deleted",
 			};
 			changesLog.push(changeLogEntry);
-			// Filter out only the specific edge that matches both source and target
+			//Filter out only the specific edge that matches both source and target
 			const newEdges = edgeValue.filter(
 				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),
 			);
@@ -333,8 +340,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			clearChangesLog();
 			toast({
 				title: "Success",
-				description: "Successfully deployed the pipeline",
+				description: "Pipeline successfully deployed",
 				duration: 3000,
+				variant: "default",
 			});
 			handleGetPipelineGraph();
 		} catch (error) {
@@ -351,15 +359,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeletePipeline = async () => {
 		try {
-			// Delete selected agents first
-			if (selectedAgentsToDelete.length > 0) {
-				await Promise.all(
-					selectedAgentsToDelete.map(agentId => agentServices.deleteAgentById(agentId)),
-				);
-				console.log("xyz");
-			}
 
-			// Then delete the pipeline
 			await pipelineServices.deletePipelineById(pipelineId);
 			setIsOpen(false);
 			resetGraph();
@@ -394,6 +394,33 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+
+	const EditForm = async (change: any) => {
+		setIsReviewSheetOpen(false)
+		setIsEditFormOpen(true)
+		setSelectedChange(change)
+		const res = await TransporterService.getTransporterForm(change.component_type);
+		setForm(res as FormSchema);
+		setConfig(change.finalConfig)
+	}
+
+	const handleSubmit = () => {
+		const log = {
+			type: selectedChange.type,
+			component_type: selectedChange.component_type,
+			id: selectedChange.id,
+			name: selectedChange.name,
+			status: "edited",
+			initialConfig: undefined,
+			finalConfig: config,
+		};
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+		setIsEditFormOpen(false);
+	};
+
 	return (
 		<div className="py-4 flex flex-col">
 			<div className="flex mb-5 items-center justify-between">
@@ -406,6 +433,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<div className="flex gap-2">
 							<Sheet
 								onOpenChange={open => {
+									if(!open){
+										setIsEditMode(false);
+									}
 									if (!open && !hasDeployError) {
 										clearChangesLog();
 									}
@@ -424,45 +454,100 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 												<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
 												<Label htmlFor="edit-mode">Edit Mode</Label>
 											</div>
-											<Sheet>
+											<Sheet open={isReviewSheetOpen || isEditFormOpen} onOpenChange={open => {
+												setIsReviewSheetOpen(open && !isEditFormOpen);
+												setIsEditFormOpen(open && isEditFormOpen);
+											}}>
 												<SheetTrigger asChild>
 													<Button className="rounded-md px-6" disabled={!isEditMode}>
 														Review
 													</Button>
 												</SheetTrigger>
 												<SheetContent className="w-[30rem]">
-													<SheetTitle>Pending Changes</SheetTitle>
-													<SheetDescription>
-														<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-															{changesLog.map((change, index) => (
-																<div key={index} className="flex justify-between items-center">
-																	<div className="flex flex-col">
-																		<p className="text-lg">{change.type}</p>
-																		<p className="text-lg text-gray-800">{change.name}</p>
-																	</div>
-																	<div className="flex justify-end gap-3 items-center">
-																		<p
-																			className={`${change.status == "added" ? "text-green-500" : change.status == "deleted" ? "text-red-500" : "text-gray-600"} text-lg`}
-																		>
-																			[{change.status}]
-																		</p>
+													{isReviewSheetOpen && (
+														<div>
+															<SheetTitle>Pending Changes</SheetTitle>
+															<SheetDescription>
+																<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+																	{changesLog.map((change, index) => (
+																		<div key={index} className="flex justify-between items-center">
+																			<div className="flex flex-col">
+																				<p className="text-lg">{change.type}</p>
+																				<p className="text-lg text-gray-800">{change.name}</p>
+																			</div>
+																			<div className="flex justify-end gap-3 items-center">
+																				<p
+																					className={`${change.status == "added"
+																						? "text-green-500"
+																						: change.status == "deleted"
+																							? "text-red-500"
+																							: "text-gray-600"
+																						} text-lg`}
+																				>
+																					[{change.status}]
+																				</p>
+																				<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
+																			</div>
+																		</div>
+																	))}
+																</div>
+															</SheetDescription>
+															<SheetClose className="flex justify-end mt-4 w-full">
+																<div>
+
+																	<Button onClick={handleDeployChanges} className="bg-blue-500">
+																		Deploy Changes
+																	</Button>
+																</div>
+															</SheetClose>
+														</div>
+													)}
+													{isEditFormOpen && selectedChange && (
+														<div className="flex flex-col gap-4 p-4">
+															<div className="flex gap-3 items-center">
+																<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+																<h2 className="text-xl font-bold">{selectedChange.name}</h2>
+															</div>
+															<p className="text-gray-500">
+																Generate the defined log type at the rate desired{" "}
+																<span className="text-blue-500 underline">Documentation</span>
+															</p>
+															<ThemeProvider theme={theme}>
+																<div className="">
+																	<div className="p-3  ">
+																		<div className="overflow-y-auto h-[32rem] pt-3">
+																			{isEditFormOpen && form && <JsonForms
+																				data={config}
+																				schema={form}
+																				renderers={renderers}
+																				cells={materialCells}
+																				onChange={({ data }) => {
+																					setConfig(data);
+																				}}
+																			/>}
+																		</div>
 																	</div>
 																</div>
-															))}
+															</ThemeProvider>
+															<SheetFooter>
+																<SheetClose>
+																	<div className="flex gap-3">
+																		<Button className="bg-blue-500" onClick={handleSubmit}>
+																			Add Source
+																		</Button>
+																		<Button variant={"outline"} onClick={() => setIsEditFormOpen(false)}>
+																			Discard Changes
+																		</Button>
+																	</div>
+																</SheetClose>
+															</SheetFooter>
 														</div>
-													</SheetDescription>
-													<SheetClose className="flex justify-end mt-4 w-full">
-														<div>
-															<Button onClick={handleDeployChanges} className="bg-blue-500">
-																Deploy Changes
-															</Button>
-														</div>
-													</SheetClose>
+													)}
 												</SheetContent>
 											</Sheet>
 										</div>
 									</div>
-									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
+									<div style={{ height: "77vh", backgroundColor: "#f9f9f9" }}>
 										<ReactFlow
 											nodes={nodeValue}
 											edges={edgeValue}
@@ -476,6 +561,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											nodesDraggable={isEditMode}
 											nodesConnectable={isEditMode}
 											elementsSelectable={isEditMode}
+											onlyRenderVisibleElements
+											proOptions={{ hideAttribution: true }}
 											fitView
 										>
 											<Background />
@@ -501,7 +588,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											)}
 										</ReactFlow>
 									</div>
-
 									<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
 										<div className="flex justify-around gap-2">
 											<div className="flex items-center">
@@ -522,7 +608,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 								<DialogTrigger asChild>
 									<Button variant="destructive">Delete Pipeline</Button>
 								</DialogTrigger>
-								<DialogContent className="sm:max-w-[40rem] h-[25rem]">
+								<DialogContent className="sm:max-w-[28rem] h-[14rem]">
 									<DialogHeader>
 										<DialogTitle className="text-red-500 text-xl">Delete Pipeline</DialogTitle>
 										<DialogDescription className="text-md text-gray-700">
@@ -532,32 +618,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="flex flex-col">
 										<p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
 										<p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-										<p className="text-red-500 mt-2">
-											Select agents to delete along with the pipeline(else unselected agents will be orphaned)
-											:
-										</p>
-
-										{agentValues &&
-											agentValues.map(agent => (
-												<div key={agent.id} className="flex items-center space-x-2">
-													<input
-														type="checkbox"
-														id={`agent-${agent.id}`}
-														checked={selectedAgentsToDelete.includes(agent.id)}
-														onChange={e => {
-															if (e.target.checked) {
-																setSelectedAgentsToDelete([...selectedAgentsToDelete, agent.id]);
-															} else {
-																setSelectedAgentsToDelete(selectedAgentsToDelete.filter(id => id !== agent.id));
-															}
-														}}
-														className="h-4 w-4 rounded border-gray-300"
-													/>
-													<label htmlFor={`agent-${agent.id}`} className="text-gray-600">
-														{agent.name}
-													</label>
-												</div>
-											))}
 									</div>
 									<DialogFooter>
 										<DialogClose asChild>
@@ -571,10 +631,26 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 							</Dialog>
 						</div>
 					</div>
+
 				</div>
 			</div>
-
-			<div className="flex flex-col w-[30rem] md:w-full">
+			<div>
+				<ul className="flex border-b">
+					<li
+						className={`mr-6 cursor-pointer ${tabs === "overview" ? "border-b-2 border-blue-500" : ""}`}
+						onClick={() => setTabs("overview")}
+					>
+						Overview
+					</li>
+					<li
+						className={`mr-6 cursor-pointer ${tabs === "health" ? "border-b-2 border-blue-500" : ""}`}
+						onClick={() => setTabs("health")}
+					>
+						YAML
+					</li>
+				</ul>
+			</div>
+			{tabs == "overview" && <div className="flex flex-col w-[30rem] md:w-full">
 				<div className="flex flex-col py-2">
 					<p className="capitalize">
 						<span className="font-semibold">Name:</span> {pipelineOverviewData?.name}
@@ -604,11 +680,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						{["disconnected", "pending", "inactive"].includes(
 							pipelineOverviewData?.status?.toLowerCase(),
 						) && (
-							<RefreshCw
-								className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-								onClick={handleRefreshStatus}
-							/>
-						)}
+								<RefreshCw
+									className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
+									onClick={handleRefreshStatus}
+								/>
+							)}
 					</div>
 					<p>
 						<span className="font-semibold">Agent Version:</span> {pipelineOverviewData?.agent_version}
@@ -623,11 +699,12 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<span className="font-semibold">IP Address:</span> {pipelineOverviewData?.ip_address}
 					</p>
 				</div>
-			</div>
+			</div>}
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{healthMetrics.length > 0 ? (
+			{tabs == "overview" && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+				{!isEditMode && healthMetrics.length > 0 ? (
 					healthMetrics.map(metric => (
+
 						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
 							<HealthChart
 								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
@@ -666,7 +743,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 					</div>
 				)}
-			</div>
+			</div>}
 		</div>
 	);
 };

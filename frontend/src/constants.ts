@@ -4,6 +4,7 @@ export interface Changes {
 	type: string;
 	name: string;
 	status: string;
+	
 }
 
 export interface PipelineNodeData {
@@ -107,3 +108,22 @@ export const initialEdges: Edge[] = [
 		id: "edge-2-1",
 	},
 ];
+
+export const getRandomChartColor = (name: string) => {
+	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
+	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+	return colors[charSum % colors.length];
+};
+
+export const formatTimestampWithDate = (timestamp: number | undefined) => {
+	if (!timestamp) return "N/A";
+	const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+	const day = date.getDate().toString().padStart(2, "0");
+	const month = (date.getMonth() + 1).toString().padStart(2, "0");
+	const year = date.getFullYear();
+	const hours = date.getHours().toString().padStart(2, "0");
+	const minutes = date.getMinutes().toString().padStart(2, "0");
+	const seconds = date.getSeconds().toString().padStart(2, "0");
+	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+};
+
