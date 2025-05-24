@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
-import { AlertCircle, Badge, CopyIcon, Loader2 } from "lucide-react";
+import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "./ProgressFlow";
 
@@ -40,7 +40,7 @@ const AddPipelineDetails = () => {
 	const [_showAgentInfo, setShowAgentInfo] = useState(false);
 	const { toast } = useToast();
 	const [_isApiKeyCopied, setIsApiKeyCopied] = useState(false);
-	// const [showConfigureButton, setShowConfigureButton] = useState(false);
+	const [showConfigureButton, setShowConfigureButton] = useState(false);
 	const [_isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -93,29 +93,61 @@ const AddPipelineDetails = () => {
 		setShowRunCommand(true);
 	};
 
-	const handleCopy = () => {
-		navigator.clipboard.writeText(`${EDI_API_KEY}`);
-		setIsApiKeyCopied(true);
-		// setShowConfigureButton(true);
-		const since = Math.floor(new Date().getTime() / 1000);
-		setTimeout(() => {
+	// const handleCopy = () => {
+	// 	navigator.clipboard.writeText(`${EDI_API_KEY}`);
+	// 	setIsApiKeyCopied(true);
+	// 	// setShowConfigureButton(true);
+	// 	const since = Math.floor(new Date().getTime() / 1000);
+	// 	setTimeout(() => {
+	// 		toast({
+	// 			title: "Copied",
+	// 			description: "API Key copied to clipboard",
+	// 			duration: 2000,
+	// 		});
+	// 	}, 1000);
+	// 	setTimeout(() => {
+	// 		setShowHeartBeat(true);
+	// 	}, 2000);
+	// 	setTimeout(() => {
+	// 		setShowStatus(true);
+	// 	}, 6000);
+	// 	setTimeout(() => {
+	// 		setShowAgentInfo(true);
+	// 		checkAgentStatus(since);
+	// 	}, 1000);
+	// };
+
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(`${EDI_API_KEY}`);
+			setIsApiKeyCopied(true);
+			const since = Math.floor(new Date().getTime() / 1000);
+			setShowConfigureButton(true);
+			setTimeout(() => {
+				toast({
+					title: "Copied",
+					description: "API Key copied to clipboard",
+					duration: 2000,
+				});
+			}, 1000);
+	
+			setTimeout(() => setShowHeartBeat(true), 2000);
+			setTimeout(() => setShowStatus(true), 6000);
+			setTimeout(() => {
+				setShowAgentInfo(true);
+				checkAgentStatus(since);
+			}, 1000);
+		} catch (error) {
+			console.error("Clipboard copy failed:", error);
 			toast({
-				title: "Copied",
-				description: "API Key copied to clipboard",
-				duration: 2000,
+				title: "Error",
+				description: "Unable to copy API Key to clipboard.",
+				// status: "error",
+				duration: 3000,
 			});
-		}, 1000);
-		setTimeout(() => {
-			setShowHeartBeat(true);
-		}, 2000);
-		setTimeout(() => {
-			setShowStatus(true);
-		}, 6000);
-		setTimeout(() => {
-			setShowAgentInfo(true);
-			checkAgentStatus(since);
-		}, 1000);
+		}
 	};
+	
 
 	const handleTryAgain = () => {
 		setShowStatus(false);
@@ -174,15 +206,15 @@ const AddPipelineDetails = () => {
 						setShowStatus(true);
 						setShowHeartBeat(false);
 						stopChecking();
-						if (agents) {
-							console.log("agents", agents);
-							localStorage.setItem("latest_agents", JSON.stringify(agents));
-							localStorage.setItem("selectedAgentIds", agents.id);
-							localStorage.setItem("pipelinename", formData.name);
-							localStorage.setItem("platform", formData.platform);
-							pipelineStatus.setCurrentStep(currentStep + 1);
-						}
-						break;
+						// if (agents) {
+						// 	console.log("agents", agents);
+						// 	localStorage.setItem("latest_agents", JSON.stringify(agents));
+						// 	localStorage.setItem("selectedAgentIds", agents.id);
+						// 	localStorage.setItem("pipelinename", formData.name);
+						// 	localStorage.setItem("platform", formData.platform);
+						// 	pipelineStatus.setCurrentStep(currentStep + 1);
+						// }
+						// break;
 					}
 
 					await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
@@ -319,7 +351,7 @@ const AddPipelineDetails = () => {
 
 						{status === "success" && showStatus ? (
 							<div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
-								<Badge className="text-green-600" />
+								<BadgeCheck  className="text-green-600" />
 								<p className="text-green-600">Your agent is successfully deployed</p>
 							</div>
 						) : showStatus && !showHeartBeat ? (
@@ -334,21 +366,73 @@ const AddPipelineDetails = () => {
 							</div>
 						) : null}
 					</form>
-					{/* {showConfigureButton && (
+					{showConfigureButton && (
                         <div className='flex justify-end mt-3'>
                             <Button
-                                onClick={() => {
-                                    localStorage.setItem('pipelinename', formData.name)
-                                    localStorage.setItem('platform', formData.platform)
-                                    pipelineStatus.setCurrentStep(currentStep + 1);
-                                    handleSubmit
-                                }}
+                                // onClick={() => {
+									
+                                //     localStorage.setItem('pipelinename', formData.name)
+                                //     localStorage.setItem('platform', formData.platform)
+                                //     pipelineStatus.setCurrentStep(currentStep + 1);
+                                //     handleSubmit
+                                // }}
+
+								onClick={() => {
+									try {
+										// First, clear any potentially corrupted data
+										const keysToRemove = [
+											'pipelineData',
+											'latest_agents',
+											'selectedAgentIds',
+											'pipelineNodes',
+											'pipelineEdges'
+										];
+										keysToRemove.forEach(key => localStorage.removeItem(key));
+					
+										// Initialize fresh pipeline data
+										const initialPipelineData = {
+											id: Date.now().toString(),
+											name: formData.name,
+											platform: formData.platform,
+											nodes: [],
+											edges: [],
+											created_at: new Date().toISOString()
+										};
+					
+										// Store all required data with proper JSON formatting
+										localStorage.setItem('pipelinename', formData.name);
+										localStorage.setItem('platform', formData.platform);
+										localStorage.setItem('pipelineData', JSON.stringify(initialPipelineData));
+										localStorage.setItem('latest_agents', JSON.stringify([]));
+										localStorage.setItem('selectedAgentIds', JSON.stringify([]));
+										localStorage.setItem('pipelineNodes', JSON.stringify([]));
+										localStorage.setItem('pipelineEdges', JSON.stringify([]));
+					
+										// Verify data was stored correctly
+										const verifyData = localStorage.getItem('pipelineData');
+										if (!verifyData) {
+											throw new Error('Failed to store pipeline data');
+										}
+					
+										// Move to next step
+										pipelineStatus.setCurrentStep(currentStep + 1);
+									} catch (error) {
+										console.error('Error initializing pipeline:', error);
+										toast({
+											title: "Error",
+											description: "Failed to initialize pipeline data. Please try again.",
+											duration: 3000,
+										});
+									}
+								}}
+
+							
                                 disabled={!formData.name || !formData.platform || !EDI_API_KEY}
                                 className='bg-blue-500 px-6 hover:bg-blue-600'>
                                 Configure Pipeline
                             </Button>
                         </div>
-                    )} */}
+                    )}
 				</CardContent>
 			</Card>
 		</div>

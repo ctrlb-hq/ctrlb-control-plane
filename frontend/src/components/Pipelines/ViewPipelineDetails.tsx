@@ -110,6 +110,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [selectedAgentsToDelete, setSelectedAgentsToDelete] = useState<string[]>([]);
 	const [hasDeployError, setHasDeployError] = useState(false);
 
+	console.log("xx",healthMetrics);
 	const nodeTypes = useMemo(
 		() => ({
 			source: SourceNode,
@@ -226,6 +227,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const fetchHealthMetrics = async () => {
 		try {
 			const metrics = await agentServices.getAgentHealthMetrics(pipelineOverviewData.agent_id);
+			
 
 			if (
 				Array.isArray(metrics) &&
@@ -522,7 +524,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 								<DialogTrigger asChild>
 									<Button variant="destructive">Delete Pipeline</Button>
 								</DialogTrigger>
-								<DialogContent className="sm:max-w-[40rem] h-[25rem]">
+								<DialogContent className="sm:max-w-[35rem] h-[20rem]">
 									<DialogHeader>
 										<DialogTitle className="text-red-500 text-xl">Delete Pipeline</DialogTitle>
 										<DialogDescription className="text-md text-gray-700">
@@ -532,10 +534,10 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<div className="flex flex-col">
 										<p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
 										<p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
-										<p className="text-red-500 mt-2">
+										{/* <p className="text-red-500 mt-2">
 											Select agents to delete along with the pipeline(else unselected agents will be orphaned)
 											:
-										</p>
+										</p> */}
 
 										{agentValues &&
 											agentValues.map(agent => (

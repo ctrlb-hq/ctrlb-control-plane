@@ -192,7 +192,7 @@ const AddPipelineCanvas = () => {
 
 	return (
 		<>
-			<SheetContent>
+			<SheetContent className="w-full">
 				<SheetHeader>
 					<div className="flex justify-between items-center p-2 border-b">
 						<SheetTitle>
