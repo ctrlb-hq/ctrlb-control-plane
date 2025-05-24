@@ -77,3 +77,20 @@ func (f *FrontendNodeRepository) GetComponentSchemaByName(componentName string) 
 
 	return schema, nil
 }
+
+func (f *FrontendNodeRepository) GetComponentUISchemaByName(componentName string) (any, error) {
+	query := "SELECT ui_schema_json FROM component_schemas WHERE name = ?"
+
+	var rawUISchema string
+	err := f.db.QueryRow(query, componentName).Scan(&rawUISchema)
+	if err != nil {
+		return nil, err
+	}
+
+	var uiSchema any
+	if err := json.Unmarshal([]byte(rawUISchema), &uiSchema); err != nil {
+		return nil, err
+	}
+
+	return uiSchema, nil
+}

@@ -85,7 +85,12 @@ func main() {
 		utils.Logger.Sugar().Errorf("Failed to initialize schema: %s", err)
 	}
 
-	err = database.LoadSchemasFromDirectory(db, schemasFS, database.GetComponentTypeMap(), database.GetSignalSupportMap())
+	uiSchemasFS, err := fs.Sub(assets.Schemas, "ui_schemas")
+	if err != nil {
+		utils.Logger.Sugar().Errorf("Failed to initialize UI schema: %s", err)
+	}
+
+	err = database.LoadSchemasFromDirectory(db, schemasFS, uiSchemasFS, database.GetComponentTypeMap(), database.GetSignalSupportMap())
 	if err != nil {
 		utils.Logger.Sugar().Fatalf("Failed to load component schemas: %v", err)
 	}

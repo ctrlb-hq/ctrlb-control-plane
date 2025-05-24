@@ -67,3 +67,23 @@ func (f *FrontendNodeHandler) GetComponentSchema(w http.ResponseWriter, r *http.
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, schema)
 }
+
+func (f *FrontendNodeHandler) GetComponentUISchema(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	utils.Logger.Info(fmt.Sprintf("Received request to get UI schema for component: %s", name))
+
+	schema, err := f.FrontendNodeService.GetComponentUISchemaByName(name)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error occurred while getting UI schema for %s: %v", name, err))
+
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.SendJSONError(w, http.StatusOK, "UI Schema not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, schema)
+}

@@ -260,6 +260,7 @@ func createComponentSchemasTable(db *sql.DB) error {
         display_name TEXT NOT NULL,          				-- Friendly name for UI
         supported_signals TEXT NOT NULL,     				-- Comma-separated: traces,metrics,logs
         schema_json TEXT NOT NULL,           				-- Full JSON schema
+		ui_schema_json TEXT NOT NULL,                 				-- UI schema for configuration
         created_at INTEGER DEFAULT (strftime('%s', 'now')) 	-- Unix timestamp
     );
     `
