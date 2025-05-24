@@ -1,0 +1,36 @@
+{
+  "type": "Group",
+  "label": "Memory Limiter Processor Configuration",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Check Interval",
+      "scope": "#/properties/check_interval"
+    },
+    {
+      "type": "Control",
+      "label": "Memory Limit (MiB)",
+      "scope": "#/properties/limit_mib"
+    },
+    {
+      "type": "Control",
+      "label": "Spike Limit (MiB)",
+      "scope": "#/properties/spike_limit_mib"
+    },
+    {
+      "type": "Control",
+      "label": "Memory Limit (%)",
+      "scope": "#/properties/limit_percentage"
+    },
+    {
+      "type": "Control",
+      "label": "Spike Limit (%)",
+      "scope": "#/properties/spike_limit_percentage"
+    },
+    {
+      "type": "Control",
+      "label": "Ballast Size (MiB)",
+      "scope": "#/properties/ballast_size_mib"
+    }
+  ]
+}

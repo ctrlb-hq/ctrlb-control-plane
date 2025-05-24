@@ -1,0 +1,55 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/project",
+      "label": "GCP Project ID"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metric_prefix",
+      "label": "Metric Prefix"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/collection_interval",
+      "label": "Collection Interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/credentials_file",
+      "label": "Path to GCP Credentials File"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metric_type_prefix_include",
+      "label": "Metric Type Prefixes to Include"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metric_type_prefix_exclude",
+      "label": "Metric Type Prefixes to Exclude"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/resource_filters",
+      "label": "Resource Filters",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/labels"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

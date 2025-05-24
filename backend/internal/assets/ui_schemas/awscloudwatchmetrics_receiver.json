@@ -1,0 +1,74 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/region",
+      "label": "AWS Region"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/profile",
+      "label": "AWS Profile"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/access_key",
+      "label": "AWS Access Key"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/secret_key",
+      "label": "AWS Secret Key"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/role_arn",
+      "label": "Role ARN to Assume"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/collection_interval",
+      "label": "Collection Interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metrics_namespace",
+      "label": "Metrics Namespace"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metrics",
+      "label": "Metric Declarations",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/metric_name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/statistic"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/dimensions"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/resource_type",
+      "label": "AWS Resource Type"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/polling_interval",
+      "label": "Polling Interval"
+    }
+  ]
+}

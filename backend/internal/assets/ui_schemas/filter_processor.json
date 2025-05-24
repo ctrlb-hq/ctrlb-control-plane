@@ -1,0 +1,138 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/error_mode",
+      "label": "Error Mode"
+    },
+    {
+      "type": "Group",
+      "label": "Trace Filtering Rules",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "Include",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/include/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/include/properties/span_names"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/include/properties/attributes",
+              "options": {
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/key" },
+                    { "type": "Control", "scope": "#/properties/value" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Exclude",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/exclude/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/exclude/properties/span_names"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/traces/properties/exclude/properties/attributes",
+              "options": {
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    { "type": "Control", "scope": "#/properties/key" },
+                    { "type": "Control", "scope": "#/properties/value" }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Metric Filtering Rules",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "Include",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/metrics/properties/include/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/metrics/properties/include/properties/metric_names"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Exclude",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/metrics/properties/exclude/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/metrics/properties/exclude/properties/metric_names"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Log Filtering Rules",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "Include",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/logs/properties/include/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/logs/properties/include/properties/body"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Exclude",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/logs/properties/exclude/properties/match_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/logs/properties/exclude/properties/body"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

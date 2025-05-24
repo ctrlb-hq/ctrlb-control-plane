@@ -1,0 +1,125 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Kafka Protocol Version",
+      "scope": "#/properties/protocol_version"
+    },
+    {
+      "type": "Control",
+      "label": "Broker Addresses",
+      "scope": "#/properties/brokers"
+    },
+    {
+      "type": "Control",
+      "label": "Topic Name",
+      "scope": "#/properties/topic"
+    },
+    {
+      "type": "Control",
+      "label": "Encoding Format",
+      "scope": "#/properties/encoding"
+    },
+    {
+      "type": "Control",
+      "label": "Partition Strategy",
+      "scope": "#/properties/partition"
+    },
+    {
+      "type": "Group",
+      "label": "Metadata Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Full Metadata Fetch",
+          "scope": "#/properties/metadata/properties/full"
+        },
+        {
+          "type": "Control",
+          "label": "Max Metadata Retries",
+          "scope": "#/properties/metadata/properties/retry_max"
+        },
+        {
+          "type": "Control",
+          "label": "Retry Backoff Duration",
+          "scope": "#/properties/metadata/properties/retry_backoff"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Authentication",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Username",
+          "scope": "#/properties/auth/properties/username"
+        },
+        {
+          "type": "Control",
+          "label": "Password",
+          "scope": "#/properties/auth/properties/password"
+        },
+        {
+          "type": "Group",
+          "label": "TLS Settings",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "CA File",
+              "scope": "#/properties/auth/properties/tls/properties/ca_file"
+            },
+            {
+              "type": "Control",
+              "label": "Cert File",
+              "scope": "#/properties/auth/properties/tls/properties/cert_file"
+            },
+            {
+              "type": "Control",
+              "label": "Key File",
+              "scope": "#/properties/auth/properties/tls/properties/key_file"
+            },
+            {
+              "type": "Control",
+              "label": "Insecure Skip Verify",
+              "scope": "#/properties/auth/properties/tls/properties/insecure_skip_verify"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "SASL Settings",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Mechanism",
+              "scope": "#/properties/auth/properties/sasl/properties/mechanism"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Topic Auto-Creation",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Enabled",
+          "scope": "#/properties/topic_creation/properties/enabled"
+        },
+        {
+          "type": "Control",
+          "label": "Number of Partitions",
+          "scope": "#/properties/topic_creation/properties/num_partitions"
+        },
+        {
+          "type": "Control",
+          "label": "Replication Factor",
+          "scope": "#/properties/topic_creation/properties/replication_factor"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "Group",
+  "label": "Tail Sampling Processor Configuration",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Decision Wait Time",
+      "scope": "#/properties/decision_wait"
+    },
+    {
+      "type": "Control",
+      "label": "Number of Traces",
+      "scope": "#/properties/num_traces"
+    },
+    {
+      "type": "Control",
+      "label": "Expected New Traces Per Second",
+      "scope": "#/properties/expected_new_traces_per_sec"
+    },
+    {
+      "type": "Control",
+      "label": "Sampling Policies",
+      "scope": "#/properties/policies"
+    }
+  ]
+}

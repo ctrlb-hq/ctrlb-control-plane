@@ -1,0 +1,40 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/verbosity",
+      "label": "Verbosity"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/sampling_initial",
+      "label": "Initial Sampling Rate"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/sampling_thereafter",
+      "label": "Sampling Thereafter"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/disable_metric_attributes",
+      "label": "Disable Metric Attributes"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/log_level",
+      "label": "Log Level"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/output",
+      "label": "Output Destination"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/format",
+      "label": "Output Format"
+    }
+  ]
+}

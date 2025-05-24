@@ -1,0 +1,26 @@
+{
+  "type": "Group",
+  "label": "Probabilistic Sampler Processor Configuration",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Hash Seed",
+      "scope": "#/properties/hash_seed"
+    },
+    {
+      "type": "Control",
+      "label": "Sampling Percentage",
+      "scope": "#/properties/sampling_percentage"
+    },
+    {
+      "type": "Control",
+      "label": "Attribute Source",
+      "scope": "#/properties/attribute_source"
+    },
+    {
+      "type": "Control",
+      "label": "From Attribute",
+      "scope": "#/properties/from_attribute"
+    }
+  ]
+}

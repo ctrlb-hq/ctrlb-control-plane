@@ -1,0 +1,69 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Azure Credentials",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/tenant_id",
+          "label": "Tenant ID"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/client_id",
+          "label": "Client ID"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/client_secret",
+          "label": "Client Secret"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/subscription_id",
+          "label": "Subscription ID"
+        }
+      ]
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/resource_groups",
+      "label": "Resource Groups"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/collection_interval",
+      "label": "Collection Interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metrics",
+      "label": "Metric Declarations",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/resource_type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/namespace"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/metric_names"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/aggregation"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

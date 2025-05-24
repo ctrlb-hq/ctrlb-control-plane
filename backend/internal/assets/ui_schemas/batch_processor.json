@@ -1,0 +1,30 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/timeout",
+      "label": "Timeout"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/send_batch_size",
+      "label": "Send Batch Size"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/send_batch_max_size",
+      "label": "Send Batch Max Size"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metadata_keys",
+      "label": "Metadata Keys"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/enable_log_batching",
+      "label": "Enable Log Batching"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "type": "Group",
+  "label": "Prometheus Exporter Configuration",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Listen Endpoint",
+      "scope": "#/properties/endpoint"
+    },
+    {
+      "type": "Control",
+      "label": "Metric Namespace",
+      "scope": "#/properties/namespace"
+    },
+    {
+      "type": "Control",
+      "label": "Constant Labels",
+      "scope": "#/properties/const_labels"
+    },
+    {
+      "type": "Control",
+      "label": "Send Timestamps",
+      "scope": "#/properties/send_timestamps"
+    },
+    {
+      "type": "Control",
+      "label": "Metric Expiration Duration",
+      "scope": "#/properties/metric_expiration"
+    },
+    {
+      "type": "Control",
+      "label": "Enable OpenMetrics Format",
+      "scope": "#/properties/enable_open_metrics"
+    },
+    {
+      "type": "Group",
+      "label": "Resource to Telemetry Conversion",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Enabled",
+          "scope": "#/properties/resource_to_telemetry_conversion/properties/enabled"
+        }
+      ]
+    }
+  ]
+}
