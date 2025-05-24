@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
@@ -81,10 +82,13 @@ func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineI
 }
 
 func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*PipelineInfoWithAgent, error) {
+	var jsonConfig []byte
+
 	const query = `
 		SELECT
 			p.pipeline_id                       AS id,
 			p.name                              AS name,
+			p.config_json                       AS config,
 			p.created_by                        AS created_by,
 			p.created_at                        AS created_at,
 			p.updated_at                        AS updated_at,
@@ -105,6 +109,7 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 	err := f.db.QueryRow(query, pipelineId).Scan(
 		&pipelineInfo.ID,
 		&pipelineInfo.Name,
+		&jsonConfig,
 		&pipelineInfo.CreatedBy,
 		&pipelineInfo.CreatedAt,
 		&pipelineInfo.UpdatedAt,
@@ -120,6 +125,10 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 			return nil, fmt.Errorf("pipeline with ID %d not found", pipelineId)
 		}
 		return nil, fmt.Errorf("failed to query pipeline info: %w", err)
+	}
+
+	if err := json.Unmarshal(jsonConfig, &pipelineInfo.Config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal pipeline config: %w", err)
 	}
 
 	pipelineInfo.Labels = make(map[string]string)
@@ -170,7 +179,7 @@ func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models
 
 	// Use the same transaction for everything else
 	// (SyncPipelineGraph would also need to be updated not to require a context)
-	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph.Nodes, createPipelineRequest.PipelineGraph.Edges); err != nil {
+	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph); err != nil {
 		_ = tx.Rollback()
 		return "", fmt.Errorf("failed to sync pipeline graph: %w", err)
 	}
@@ -325,7 +334,8 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineNodes, edges []models.PipelineEdges) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error {
+
 	shouldCommit := false
 	var err error
 
@@ -372,7 +382,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 	defer insertComponentStmt.Close()
 
 	// Insert all components first
-	for _, comp := range components {
+	for _, comp := range graph.Nodes {
 		// Marshal component config to JSON string
 		configBytes, err := json.Marshal(comp.Config)
 		if err != nil {
@@ -427,7 +437,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 	defer insertEdgeStmt.Close()
 
 	// Insert all edges
-	for _, edge := range edges {
+	for _, edge := range graph.Edges {
 		// Map the component IDs to their database IDs
 		sourceID, sourceExists := componentIDMap[edge.Source]
 		targetID, targetExists := componentIDMap[edge.Target]
@@ -449,13 +459,28 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		}
 	}
 
+	jsonConfig, err := configcompiler.CompileGraphToJSON(graph)
+	if err != nil {
+		if shouldCommit {
+			_ = tx.Rollback()
+		}
+		return fmt.Errorf("failed to compile graph to JSON: %w", err)
+	}
+	configBytes, err := json.Marshal(jsonConfig)
+	if err != nil {
+		if shouldCommit {
+			_ = tx.Rollback()
+		}
+		return fmt.Errorf("failed to marshal compiled graph to JSON: %w", err)
+	}
+
 	updatedAt := utils.GetCurrentTime()
 
 	_, err = tx.Exec(`
 		UPDATE pipelines
-		SET updated_at = ?
+		SET updated_at = ?, config_json = ?
 		WHERE pipeline_id = ?
-	`, updatedAt, pipelineID)
+	`, updatedAt, configBytes, pipelineID)
 	if err != nil {
 		if shouldCommit {
 			_ = tx.Rollback()

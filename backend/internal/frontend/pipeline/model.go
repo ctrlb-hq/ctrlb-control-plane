@@ -30,4 +30,5 @@ type PipelineInfoWithAgent struct {
 	IPAddress    string            `json:"ip_address"`
 	AgentID      int               `json:"agent_id"`
 	Labels       map[string]string `json:"labels"`
+	Config       map[string]any    `json:"config"`
 }

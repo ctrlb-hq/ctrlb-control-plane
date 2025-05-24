@@ -24,7 +24,7 @@ type FrontendPipelineRepositoryInterface interface {
 	DetachAgentFromPipeline(pipelineId int, agentId int) error
 	AttachAgentToPipeline(pipelineId int, agentId int) error
 	GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error)
-	SyncPipelineGraph(tx *sql.Tx, pipelineID int, components []models.PipelineNodes, edges []models.PipelineEdges) error
+	SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error
 	GetAgentInfo(agentId int) (*models.AgentInfoHome, error)
 	GetAgentPipelineId(agentId string) (*int, error)
 }
@@ -141,7 +141,7 @@ func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGrap
 		return utils.ErrPipelineDoesNotExists
 	}
 
-	err := f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
+	err := f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph)
 	if err != nil {
 		return err
 	}
