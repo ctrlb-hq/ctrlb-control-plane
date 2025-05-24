@@ -1,0 +1,68 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/include",
+      "label": "Include File Paths"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/exclude",
+      "label": "Exclude File Paths"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/start_at",
+      "label": "Start At"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/poll_interval",
+      "label": "Poll Interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/fingerprint_size",
+      "label": "Fingerprint Size"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/max_log_size",
+      "label": "Max Log Size"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/encoding",
+      "label": "Encoding"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/operators",
+      "label": "Processors",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/type"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/id"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/regex"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/parse_from"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

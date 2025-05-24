@@ -1,0 +1,109 @@
+{
+  "type": "Group",
+  "label": "OTLP Exporter Configuration",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "OTLP Endpoint",
+      "scope": "#/properties/endpoint"
+    },
+    {
+      "type": "Control",
+      "label": "Disable TLS",
+      "scope": "#/properties/insecure"
+    },
+    {
+      "type": "Control",
+      "label": "Compression",
+      "scope": "#/properties/compression"
+    },
+    {
+      "type": "Control",
+      "label": "Request Timeout",
+      "scope": "#/properties/timeout"
+    },
+    {
+      "type": "Control",
+      "label": "Custom Headers",
+      "scope": "#/properties/headers"
+    },
+    {
+      "type": "Control",
+      "label": "Protocol",
+      "scope": "#/properties/protocol"
+    },
+    {
+      "type": "Group",
+      "label": "TLS Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "CA File",
+          "scope": "#/properties/tls/properties/ca_file"
+        },
+        {
+          "type": "Control",
+          "label": "Cert File",
+          "scope": "#/properties/tls/properties/cert_file"
+        },
+        {
+          "type": "Control",
+          "label": "Key File",
+          "scope": "#/properties/tls/properties/key_file"
+        },
+        {
+          "type": "Control",
+          "label": "Insecure Skip Verify",
+          "scope": "#/properties/tls/properties/insecure_skip_verify"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Retry on Failure",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Enabled",
+          "scope": "#/properties/retry_on_failure/properties/enabled"
+        },
+        {
+          "type": "Control",
+          "label": "Initial Interval",
+          "scope": "#/properties/retry_on_failure/properties/initial_interval"
+        },
+        {
+          "type": "Control",
+          "label": "Max Interval",
+          "scope": "#/properties/retry_on_failure/properties/max_interval"
+        },
+        {
+          "type": "Control",
+          "label": "Max Elapsed Time",
+          "scope": "#/properties/retry_on_failure/properties/max_elapsed_time"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Sending Queue",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Enabled",
+          "scope": "#/properties/sending_queue/properties/enabled"
+        },
+        {
+          "type": "Control",
+          "label": "Number of Consumers",
+          "scope": "#/properties/sending_queue/properties/num_consumers"
+        },
+        {
+          "type": "Control",
+          "label": "Queue Size",
+          "scope": "#/properties/sending_queue/properties/queue_size"
+        }
+      ]
+    }
+  ]
+}

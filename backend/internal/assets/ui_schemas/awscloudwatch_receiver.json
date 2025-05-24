@@ -1,0 +1,60 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/region",
+      "label": "AWS Region"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/log_group_names",
+      "label": "Log Group Names"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/profile",
+      "label": "AWS Profile"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/access_key",
+      "label": "AWS Access Key"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/secret_key",
+      "label": "AWS Secret Key"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/role_arn",
+      "label": "Role ARN to Assume"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/poll_interval",
+      "label": "Poll Interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/max_events_per_call",
+      "label": "Max Events Per Call"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/start_time",
+      "label": "Start Time (RFC3339)"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/distribution",
+      "label": "AWS Distribution Type"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/format",
+      "label": "Log Format"
+    }
+  ]
+}

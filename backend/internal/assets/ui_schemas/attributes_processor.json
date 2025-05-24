@@ -1,0 +1,91 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/actions",
+      "label": "Actions",
+      "options": {
+        "detail": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/key"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/value"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/from_attribute"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/action"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Group",
+      "label": "Include Filter",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/include/properties/match_type"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/include/properties/attributes",
+          "options": {
+            "detail": {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/key"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/value"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Exclude Filter",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/exclude/properties/match_type"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/exclude/properties/attributes",
+          "options": {
+            "detail": {
+              "type": "VerticalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/key"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/value"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

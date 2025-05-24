@@ -1,0 +1,89 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "label": "Collection Interval",
+      "scope": "#/properties/collection_interval"
+    },
+    {
+      "type": "Group",
+      "label": "Scrapers",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "CPU Metrics",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Report Per CPU",
+              "scope": "#/properties/scrapers/properties/cpu/properties/report_per_cpu"
+            },
+            {
+              "type": "Group",
+              "label": "CPU Metrics Settings",
+              "elements": [
+                {
+                  "type": "Control",
+                  "label": "System CPU Utilization",
+                  "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.utilization"
+                },
+                {
+                  "type": "Control",
+                  "label": "System CPU Time",
+                  "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.time"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Disk Metrics",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Include Devices",
+              "scope": "#/properties/scrapers/properties/disk/properties/include_devices"
+            },
+            {
+              "type": "Control",
+              "label": "Exclude Devices",
+              "scope": "#/properties/scrapers/properties/disk/properties/exclude_devices"
+            }
+          ]
+        },
+        {
+          "type": "Control",
+          "label": "Memory Metrics",
+          "scope": "#/properties/scrapers/properties/memory"
+        },
+        {
+          "type": "Control",
+          "label": "Filesystem Metrics",
+          "scope": "#/properties/scrapers/properties/filesystem"
+        },
+        {
+          "type": "Control",
+          "label": "Network Metrics",
+          "scope": "#/properties/scrapers/properties/network"
+        },
+        {
+          "type": "Control",
+          "label": "Load Metrics",
+          "scope": "#/properties/scrapers/properties/load"
+        },
+        {
+          "type": "Control",
+          "label": "Paging Metrics",
+          "scope": "#/properties/scrapers/properties/paging"
+        },
+        {
+          "type": "Control",
+          "label": "Processes Metrics",
+          "scope": "#/properties/scrapers/properties/processes"
+        }
+      ]
+    }
+  ]
+}

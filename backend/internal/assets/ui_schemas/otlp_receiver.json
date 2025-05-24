@@ -1,0 +1,146 @@
+{
+  "type": "Group",
+  "label": "OTLP Receiver Configuration",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "gRPC Protocol",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Endpoint",
+          "scope": "#/properties/protocols/properties/grpc/properties/endpoint"
+        },
+        {
+          "type": "Control",
+          "label": "Transport",
+          "scope": "#/properties/protocols/properties/grpc/properties/transport"
+        },
+        {
+          "type": "Group",
+          "label": "TLS Settings",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Certificate File",
+              "scope": "#/properties/protocols/properties/grpc/properties/tls_settings/properties/cert_file"
+            },
+            {
+              "type": "Control",
+              "label": "Key File",
+              "scope": "#/properties/protocols/properties/grpc/properties/tls_settings/properties/key_file"
+            },
+            {
+              "type": "Control",
+              "label": "CA File",
+              "scope": "#/properties/protocols/properties/grpc/properties/tls_settings/properties/ca_file"
+            },
+            {
+              "type": "Control",
+              "label": "Insecure",
+              "scope": "#/properties/protocols/properties/grpc/properties/tls_settings/properties/insecure"
+            },
+            {
+              "type": "Control",
+              "label": "Insecure Skip Verify",
+              "scope": "#/properties/protocols/properties/grpc/properties/tls_settings/properties/insecure_skip_verify"
+            }
+          ]
+        },
+        {
+          "type": "Control",
+          "label": "Max Receive Msg Size (MiB)",
+          "scope": "#/properties/protocols/properties/grpc/properties/max_recv_msg_size_mib"
+        },
+        {
+          "type": "Control",
+          "label": "Compression",
+          "scope": "#/properties/protocols/properties/grpc/properties/compression"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "HTTP Protocol",
+      "elements": [
+        {
+          "type": "Control",
+          "label": "Endpoint",
+          "scope": "#/properties/protocols/properties/http/properties/endpoint"
+        },
+        {
+          "type": "Group",
+          "label": "CORS Settings",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Allowed Origins",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/allowed_origins"
+            },
+            {
+              "type": "Control",
+              "label": "Allowed Headers",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/allowed_headers"
+            },
+            {
+              "type": "Control",
+              "label": "Allowed Methods",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/allowed_methods"
+            },
+            {
+              "type": "Control",
+              "label": "Exposed Headers",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/exposed_headers"
+            },
+            {
+              "type": "Control",
+              "label": "Max Age",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/max_age"
+            },
+            {
+              "type": "Control",
+              "label": "Allow Credentials",
+              "scope": "#/properties/protocols/properties/http/properties/cors/properties/allow_credentials"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "TLS Settings",
+          "elements": [
+            {
+              "type": "Control",
+              "label": "Certificate File",
+              "scope": "#/properties/protocols/properties/http/properties/tls_settings/properties/cert_file"
+            },
+            {
+              "type": "Control",
+              "label": "Key File",
+              "scope": "#/properties/protocols/properties/http/properties/tls_settings/properties/key_file"
+            },
+            {
+              "type": "Control",
+              "label": "CA File",
+              "scope": "#/properties/protocols/properties/http/properties/tls_settings/properties/ca_file"
+            },
+            {
+              "type": "Control",
+              "label": "Insecure",
+              "scope": "#/properties/protocols/properties/http/properties/tls_settings/properties/insecure"
+            },
+            {
+              "type": "Control",
+              "label": "Insecure Skip Verify",
+              "scope": "#/properties/protocols/properties/http/properties/tls_settings/properties/insecure_skip_verify"
+            }
+          ]
+        },
+        {
+          "type": "Control",
+          "label": "Max Request Body Size (bytes)",
+          "scope": "#/properties/protocols/properties/http/properties/max_request_body_size"
+        }
+      ]
+    }
+  ]
+}
