@@ -156,9 +156,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		const updatedNodes = res.nodes.map((node: any, index: number) => {
 			const nodeType =
 				node.component_role === "receiver"
-					? "destination"
+					? "source"
 					: node.component_role === "exporter"
-						? "source"
+						? "destination"
 						: "processor";
 
 			// Calculate position based on node type
@@ -315,7 +315,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					component_id: parseInt(node.id),
 					name: node.data.name,
 					component_role:
-						node.type === "destination" ? "receiver" : node.type === "source" ? "exporter" : "processor",
+						node.type === "destination" ? "exporter" : node.type === "source" ? "receiver" : "processor",
 					component_name: node.data.component_name,
 					config: node.data.config,
 					supported_signals: node.data.supported_signals || [],
