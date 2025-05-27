@@ -18,6 +18,7 @@ import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { customEnumRenderer } from "./CustomEnumControl";
 
 
 interface destination {
@@ -101,7 +102,10 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 		},
 	});
 
-	const renderers = [...materialRenderers];
+	const renderers = [
+		...materialRenderers,
+		customEnumRenderer
+	];
 
 	return (
 		<>

@@ -52,6 +52,7 @@ import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
 import { TransporterService } from "@/services/transporterService";
 import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
+import { customEnumRenderer } from "./DropdownOptions/CustomEnumControl";
 
 
 
@@ -66,8 +67,12 @@ const theme = createTheme({
 		},
 	},
 });
-const renderers = [...materialRenderers];
 
+
+const renderers = [
+	...materialRenderers,
+	customEnumRenderer
+];
 interface DataPoint {
 	timestamp: number;
 	value: number;
@@ -433,7 +438,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<div className="flex gap-2">
 							<Sheet
 								onOpenChange={open => {
-									if(!open){
+									if (!open) {
 										setIsEditMode(false);
 									}
 									if (!open && !hasDeployError) {

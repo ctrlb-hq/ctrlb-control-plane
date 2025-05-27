@@ -11,62 +11,140 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import React, { useEffect, useState } from "react";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
 
-
-interface sources {
+interface Processor {
 	name: string;
 	display_name: string;
 	type: string;
 	supported_signals: string[];
 }
 
-const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
+const uiSchema = {
+	type: 'VerticalLayout',
+	elements: [
+		{
+			type: 'Control',
+			scope: '#/properties/actions',
+			label: 'Actions',
+			options: {
+				detail: {
+					type: 'VerticalLayout',
+					elements: [
+						{
+							type: 'Control',
+							scope: '#/properties/key'
+						},
+						{
+							type: 'Control',
+							scope: '#/properties/action',
+
+						},
+						{
+							type: 'Control',
+							scope: '#/properties/from_attribute'
+						},
+						{
+							type: 'Control',
+							scope: '#/properties/value'
+						}
+					]
+				}
+			}
+		},
+		{
+			type: 'Group',
+			label: 'Include Filter',
+			elements: [
+				{
+					type: 'Control',
+					scope: '#/properties/include/properties/match_type',
+
+				},
+				{
+					type: 'Control',
+					scope: '#/properties/include/properties/attributes',
+					options: {
+						detail: {
+							type: 'VerticalLayout',
+							elements: [
+								{ type: 'Control', scope: '#/properties/key' },
+								{ type: 'Control', scope: '#/properties/value' }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			type: 'Group',
+			label: 'Exclude Filter',
+			elements: [
+				{
+					type: 'Control',
+					scope: '#/properties/exclude/properties/match_type',
+
+				},
+				{
+					type: 'Control',
+					scope: '#/properties/exclude/properties/attributes',
+
+				}
+			]
+		}
+	]
+};
+
+
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { customEnumRenderer } from "./CustomEnumControl";
+const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [sourceOptionValue, setSourceOptionValue] = useState("");
+	const [processorOptionValue, setProcessorOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
-	const [sources, setSources] = useState<sources[]>([]);
-	const [data, setData] = useState<object>();
+	const [config, setConfig] = useState<object>({});
 	const [pluginName, setPluginName] = useState();
+	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
-		setIsSheetOpen(!isSheetOpen);
-		handleGetSourceForm(e);
+		setConfig({});
+		setForm({});
+		setIsSheetOpen(true);
+		handleGetProcessorForm(e);
 	};
 
 	const handleSubmit = () => {
-		const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
+		const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals;
+
 		const newNode = {
-			type: "source",
+			type: "processor",
 			position: { x: 0, y: 0 },
 			data: {
 				type: "receiver",
-				name: sourceOptionValue,
+				name: processorOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
-				config: data,
+				config: config,
 			},
 		};
 
 		const newNodeId = addNode(newNode);
 
 		const log = {
-			type: "source",
-			component_type: pluginName,
+			type: "processor",
 			id: newNodeId,
-			name: sourceOptionValue,
+			name: processorOptionValue,
 			status: "added",
 			initialConfig: undefined,
-			finalConfig: data,
+			finalConfig: config,
 		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
@@ -76,51 +154,57 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 		setIsSheetOpen(false);
 	};
 
-	const handleGetSources = async () => {
-		const res = await TransporterService.getTransporterService("receiver");
-		setSources(res);
+	const handleGetProcessor = async () => {
+		const res = await TransporterService.getTransporterService("processor");
+		setProcessors(res);
 	};
 
-	const handleGetSourceForm = async (sourceOptionValue: string) => {
-		const res = await TransporterService.getTransporterForm(sourceOptionValue);
+	const handleGetProcessorForm = async (processorOptionValue: string) => {
+		const res = await TransporterService.getTransporterForm(processorOptionValue);
+		console.log(res);
 		setForm(res);
 	};
 
 	useEffect(() => {
-		handleGetSources();
-	}, [isSheetOpen]);
+		handleGetProcessor();
+	}, []);
 
 	const theme = createTheme({
 		components: {
-			MuiFormControl: {
-				styleOverrides: {
-					root: {
-						marginBottom: "0.5rem",
+			MuiSelect: {
+				defaultProps: {
+					MenuProps: {
+						container: document.body,
+						disablePortal: true,
 					},
 				},
 			},
+
 		},
 	});
 
-	const renderers = [...materialRenderers];
+	const renderers:any = [
+		...materialRenderers,
+		customEnumRenderer
+	];
 
 	return (
 		<>
 			<DropdownMenu>
 				<DropdownMenuContent className="w-56">
-					<DropdownMenuLabel>Add Source</DropdownMenuLabel>
+					<DropdownMenuLabel>Add Processor</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
 						<DropdownMenuSub>
-							{sources && sources.map((source, index) => (
+							{processors!.map((processor, index) => (
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {
-										handleSheetOpen(source.name);
-										setSourceOptionValue(source.display_name);
+										handleSheetOpen(processor.name);
+										setProcessorOptionValue(processor.display_name);
 									}}
 								>
-									{source.display_name}
+									{processor.display_name}
 								</DropdownMenuItem>
 							))}
 						</DropdownMenuSub>
@@ -128,6 +212,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 				</DropdownMenuContent>
 				<DropdownMenuTrigger asChild disabled={disabled}>
 					<div className="flex justify-center items-center">
+						<div className="bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2" />
 						<div
 							className={
 								disabled
@@ -136,7 +221,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 							}
 							draggable
 						>
-							Add Source
+							Add Processor
 						</div>
 						<div className="bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2" />
 					</div>
@@ -148,23 +233,24 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 						<div className="flex flex-col gap-4 p-4">
 							<div className="flex gap-3 items-center">
 								<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-								<h2 className="text-xl font-bold">{sourceOptionValue}</h2>
+								<h2 className="text-xl font-bold">{processorOptionValue}</h2>
 							</div>
 							<p className="text-gray-500">
 								Generate the defined log type at the rate desired{" "}
 								<span className="text-blue-500 underline">Documentation</span>
 							</p>
 							<ThemeProvider theme={theme}>
-								<div className="">
-									<div className="p-3  ">
+								<div className="mt-3">
+									<div className="p-3 ">
 										<div className="overflow-y-auto h-[32rem] pt-3">
 											{isSheetOpen && form && <JsonForms
-												data={data}
+												data={config}
 												schema={form}
+												uischema={uiSchema}
 												renderers={renderers}
 												cells={materialCells}
 												onChange={({ data, errors }) => {
-													setData(data);
+													setConfig(data);
 													const hasErrors = errors && errors.length > 0;
 													setSubmitDisabled(!!hasErrors);
 												}}
@@ -177,7 +263,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 								<SheetClose>
 									<div className="flex gap-3">
 										<Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>
-											Add Source
+											Add Processor
 										</Button>
 										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
 											Discard Changes
@@ -193,4 +279,4 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 	);
 });
 
-export default SourceDropdownOptions;
+export default ProcessorDropdownOptions;

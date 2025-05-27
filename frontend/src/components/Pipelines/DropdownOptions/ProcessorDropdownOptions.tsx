@@ -24,8 +24,8 @@ interface Processor {
 	supported_signals: string[];
 }
 
-
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { customEnumRenderer } from "./CustomEnumControl";
 const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
@@ -93,40 +93,24 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 		handleGetProcessor();
 	}, []);
 
-	// ...existing code...
 	const theme = createTheme({
 		components: {
 			MuiSelect: {
 				defaultProps: {
 					MenuProps: {
 						container: document.body,
-						disablePortal: false, // ensure menu is rendered in a portal
-						PaperProps: {
-							style: {
-								zIndex: 99999, // very high z-index
-							},
-						},
+						disablePortal: true,
 					},
 				},
 			},
-			MuiPopover: {
-				defaultProps: {
-					container: document.body,
-					disablePortal: false,
-					style: { zIndex: 99999 },
-				},
-			},
-			MuiPopper: {
-				defaultProps: {
-					container: document.body,
-					disablePortal: false,
-					style: { zIndex: 99999 },
-				},
-			},
+
 		},
 	});
-	// ...existing code...
 
+	const renderers:any = [
+		...materialRenderers,
+		customEnumRenderer
+	];
 
 	return (
 		<>
@@ -186,11 +170,12 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 											{isSheetOpen && form && <JsonForms
 												data={config}
 												schema={form}
-												renderers={materialRenderers}
+												renderers={renderers}
 												cells={materialCells}
-												onChange={({ data }) => {
+												onChange={({ data, errors }) => {
 													setConfig(data);
-
+													const hasErrors = errors && errors.length > 0;
+													setSubmitDisabled(!!hasErrors);
 												}}
 											/>}
 										</div>

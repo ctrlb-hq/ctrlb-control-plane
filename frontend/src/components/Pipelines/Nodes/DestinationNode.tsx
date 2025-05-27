@@ -9,6 +9,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ArrowBigRightDash } from "lucide-react";
+import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
 
 interface FormSchema {
 	title?: string;
@@ -30,7 +31,10 @@ const theme = createTheme({
 	},
 });
 
-const renderers = [...materialRenderers];
+const renderers = [
+	...materialRenderers,
+	customEnumRenderer
+];
 
 export const DestinationNode = React.memo(({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
