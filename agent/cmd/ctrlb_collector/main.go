@@ -39,6 +39,15 @@ func main() {
 		logger.Logger.Fatal("BACKEND_URL environment variable is not set. Exiting...")
 	}
 
+	constants.PIPELINE_NAME = os.Getenv("PIPELINE_NAME")
+	if constants.PIPELINE_NAME == "" {
+		logger.Logger.Info("PIPELINE_NAME environment variable is not set. Using default value: empty string.")
+	}
+
+	constants.STARTED_BY = os.Getenv("STARTED_BY")
+	if constants.STARTED_BY == "" {
+		logger.Logger.Info("STARTED_BY environment variable is not set. Using default value: empty string.")
+	}
 	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)

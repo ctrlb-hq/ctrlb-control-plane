@@ -50,8 +50,7 @@ func NewRouter(handler *Handler) *mux.Router {
 
 	frontendAgentAPIsV2.HandleFunc("/component", handler.FrontendNodeHandler.GetComponent).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/component/schema/{name}", handler.FrontendNodeHandler.GetComponentSchema).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/component", handler.FrontendNodeHandler.GetComponent).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/component/schema/{name}", handler.FrontendNodeHandler.GetComponentSchema).Methods("GET")
+	frontendAgentAPIsV2.HandleFunc("/component/ui-schema/{name}", handler.FrontendNodeHandler.GetComponentUISchema).Methods("GET")
 
 	return router
 }

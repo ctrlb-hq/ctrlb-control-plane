@@ -57,8 +57,8 @@ func (m *MockRepo) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, erro
 	args := m.Called(pipelineId)
 	return args.Get(0).(*models.PipelineGraph), args.Error(1)
 }
-func (m *MockRepo) SyncPipelineGraph(tx *sql.Tx, pipelineID int, nodes []models.PipelineNodes, edges []models.PipelineEdges) error {
-	args := m.Called(tx, pipelineID, nodes, edges)
+func (m *MockRepo) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error {
+	args := m.Called(tx, pipelineID, graph)
 	return args.Error(0)
 }
 func (m *MockRepo) GetAgentInfo(agentId int) (*models.AgentInfoHome, error) {

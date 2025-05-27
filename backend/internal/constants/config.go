@@ -1,5 +1,7 @@
 package constants
 
+import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+
 var TelemetryService = map[string]any{
 	"metrics": map[string]any{
 		"level": "detailed",
@@ -39,6 +41,49 @@ var DefaultConfig = map[string]any{
 				"processors": []any{},
 				"exporters":  []any{"debug"},
 			},
+		},
+	},
+}
+
+var DefaultPipelineGraph = models.PipelineGraph{
+	Nodes: []models.PipelineNodes{
+		{
+			ComponentID:   1,
+			Name:          "Debug Exporter Configuration",
+			ComponentName: "debug_exporter",
+			ComponentRole: "exporter",
+			SupportedSignals: []string{
+				"traces",
+				"metrics",
+				"logs",
+			},
+			Config: map[string]any{
+				"format": "json",
+			},
+		},
+		{
+			ComponentID:   2,
+			Name:          "OTLP Receiver Configuration",
+			ComponentName: "otlp_receiver",
+			ComponentRole: "receiver",
+			SupportedSignals: []string{
+				"traces",
+				"metrics",
+				"logs",
+			},
+			Config: map[string]any{
+				"protocols": map[string]any{
+					"http": map[string]any{
+						"endpoint": "0.0.0.0:4317",
+					},
+				},
+			},
+		},
+	},
+	Edges: []models.PipelineEdges{
+		{
+			Source: "2",
+			Target: "1",
 		},
 	},
 }

@@ -1,10 +1,11 @@
 package client
 
 type AgentRequest struct {
-	IP       string `json:"ip"`
-	Version  string `json:"version"`  // The version of the agent
-	Hostname string `json:"hostname"` // The hostname of the machine running the agent
-	Platform string `json:"platform"` // The platform (e.g., OS) the agent is running on
+	IP           string `json:"ip"`
+	Version      string `json:"version"`       // The version of the agent
+	Hostname     string `json:"hostname"`      // The hostname of the machine running the agent
+	Platform     string `json:"platform"`      // The platform (e.g., OS) the agent is running on
+	PipelineName string `json:"pipeline_name"` // The name of the pipeline
 }
 
 type AgentResponse struct {

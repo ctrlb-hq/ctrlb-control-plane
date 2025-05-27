@@ -8,8 +8,9 @@ import (
 
 // MockFrontendNodeRepository is a manual mock for FrontendNodeRepositoryInterface
 type MockFrontendNodeRepository struct {
-	GetComponentsFunc            func(componentType string) (*[]ComponentInfo, error)
-	GetComponentSchemaByNameFunc func(componentName string) (any, error)
+	GetComponentsFunc              func(componentType string) (*[]ComponentInfo, error)
+	GetComponentSchemaByNameFunc   func(componentName string) (any, error)
+	GetComponentUISchemaByNameFunc func(componentName string) (any, error)
 }
 
 func (m *MockFrontendNodeRepository) GetComponents(componentType string) (*[]ComponentInfo, error) {
@@ -18,6 +19,10 @@ func (m *MockFrontendNodeRepository) GetComponents(componentType string) (*[]Com
 
 func (m *MockFrontendNodeRepository) GetComponentSchemaByName(componentName string) (any, error) {
 	return m.GetComponentSchemaByNameFunc(componentName)
+}
+
+func (m *MockFrontendNodeRepository) GetComponentUISchemaByName(name string) (any, error) { // 🔴 Implement this
+	return m.GetComponentUISchemaByNameFunc(name)
 }
 
 // TestFrontendNodeService_GetComponents tests the GetComponents method

@@ -195,6 +195,7 @@ func createPipelinesTable(db *sql.DB) error {
     CREATE TABLE IF NOT EXISTS pipelines (
         pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+		config_json TEXT,
         created_by TEXT NOT NULL,
         created_at INTEGER DEFAULT (strftime('%s', 'now')),
         updated_at INTEGER DEFAULT (strftime('%s', 'now'))
@@ -260,6 +261,7 @@ func createComponentSchemasTable(db *sql.DB) error {
         display_name TEXT NOT NULL,          				-- Friendly name for UI
         supported_signals TEXT NOT NULL,     				-- Comma-separated: traces,metrics,logs
         schema_json TEXT NOT NULL,           				-- Full JSON schema
+		ui_schema_json TEXT NOT NULL,                 				-- UI schema for configuration
         created_at INTEGER DEFAULT (strftime('%s', 'now')) 	-- Unix timestamp
     );
     `

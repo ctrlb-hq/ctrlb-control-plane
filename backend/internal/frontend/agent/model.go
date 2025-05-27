@@ -36,4 +36,5 @@ type LatestAgentResponse struct {
 	ID           string `json:"id"`            // Unique ID for the agent
 	Name         string `json:"name"`          // Descriptive name for the agent
 	RegisteredAt int64  `json:"registered_at"` // Timestamp when the agent was registered
+	PipelineID   string `json:"pipeline_id"`   // Pipeline the agent is associated with
 }
