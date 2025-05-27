@@ -24,81 +24,6 @@ interface Processor {
 	supported_signals: string[];
 }
 
-const uiSchema = {
-	type: 'VerticalLayout',
-	elements: [
-		{
-			type: 'Control',
-			scope: '#/properties/actions',
-			label: 'Actions',
-			options: {
-				detail: {
-					type: 'VerticalLayout',
-					elements: [
-						{
-							type: 'Control',
-							scope: '#/properties/key'
-						},
-						{
-							type: 'Control',
-							scope: '#/properties/action',
-
-						},
-						{
-							type: 'Control',
-							scope: '#/properties/from_attribute'
-						},
-						{
-							type: 'Control',
-							scope: '#/properties/value'
-						}
-					]
-				}
-			}
-		},
-		{
-			type: 'Group',
-			label: 'Include Filter',
-			elements: [
-				{
-					type: 'Control',
-					scope: '#/properties/include/properties/match_type',
-
-				},
-				{
-					type: 'Control',
-					scope: '#/properties/include/properties/attributes',
-					options: {
-						detail: {
-							type: 'VerticalLayout',
-							elements: [
-								{ type: 'Control', scope: '#/properties/key' },
-								{ type: 'Control', scope: '#/properties/value' }
-							]
-						}
-					}
-				}
-			]
-		},
-		{
-			type: 'Group',
-			label: 'Exclude Filter',
-			elements: [
-				{
-					type: 'Control',
-					scope: '#/properties/exclude/properties/match_type',
-
-				},
-				{
-					type: 'Control',
-					scope: '#/properties/exclude/properties/attributes',
-
-				}
-			]
-		}
-	]
-};
-
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { customEnumRenderer } from "./CustomEnumControl";
@@ -112,6 +37,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
+	const [tabs, setTabs] = useState<string>("overview");
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
@@ -183,7 +109,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 		},
 	});
 
-	const renderers:any = [
+	const renderers: any = [
 		...materialRenderers,
 		customEnumRenderer
 	];
@@ -246,7 +172,6 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 											{isSheetOpen && form && <JsonForms
 												data={config}
 												schema={form}
-												uischema={uiSchema}
 												renderers={renderers}
 												cells={materialCells}
 												onChange={({ data, errors }) => {

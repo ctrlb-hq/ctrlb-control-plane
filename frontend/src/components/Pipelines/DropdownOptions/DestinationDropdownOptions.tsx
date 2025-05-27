@@ -92,14 +92,15 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 
 	const theme = createTheme({
 		components: {
-			MuiFormControl: {
-				styleOverrides: {
-					root: {
-						marginBottom: "0.5rem",
+			MuiSelect: {
+				defaultProps: {
+					MenuProps: {
+						disablePortal: true,
+						container: () => document.body,
 					},
 				},
 			},
-		},
+		}
 	});
 
 	const renderers = [

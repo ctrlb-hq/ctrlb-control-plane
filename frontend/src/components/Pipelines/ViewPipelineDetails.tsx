@@ -1,5 +1,5 @@
 import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import  { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // import EditPipelineYAML from "./EditPipelineYAML";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +53,7 @@ import { SourceNode } from "./Nodes/SourceNode";
 import { TransporterService } from "@/services/transporterService";
 import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
 import { customEnumRenderer } from "./DropdownOptions/CustomEnumControl";
+import Yaml from "../YAML/Yaml";
 
 
 
@@ -90,15 +91,6 @@ interface FormSchema {
 	required?: string[];
 	[key: string]: any;
 }
-
-const statusColors: Record<string, string> = {
-	connected: "text-green-600",
-	disconnected: "text-red-600",
-	pending: "text-yellow-600",
-	inactive: "text-blue-600",
-	default: "text-gray-600",
-};
-
 
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -427,11 +419,12 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	};
 
 	return (
-		<div className="py-4 flex flex-col">
-			<div className="flex mb-5 items-center justify-between">
-				<div className="flex mb-5 gap-2 items-center">
-					<Boxes className="text-gray-700" size={36} />
-					<h1 className="text-2xl text-gray-800">{pipelineOverview?.name}</h1>
+		<div className="flex flex-col h-[100vh] overflow-hidden">
+			{/* Header */}
+			<div className="flex items-center justify-between px-6 py-4 border-b bg-white flex-shrink-0">
+				<div className="flex gap-2 items-center">
+					<Boxes className="text-gray-700" size={32} />
+					<h1 className="text-xl text-gray-800 font-semibold">{pipelineOverview?.name}</h1>
 				</div>
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full mb-2">
@@ -642,113 +635,127 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			<div>
 				<ul className="flex border-b">
 					<li
-						className={`mr-6 cursor-pointer ${tabs === "overview" ? "border-b-2 border-blue-500" : ""}`}
+						className={`mr-6 cursor-pointer py-2 ${tabs === "overview" ? "border-b-2 border-blue-500" : ""}`}
 						onClick={() => setTabs("overview")}
 					>
 						Overview
 					</li>
 					<li
-						className={`mr-6 cursor-pointer ${tabs === "health" ? "border-b-2 border-blue-500" : ""}`}
-						onClick={() => setTabs("health")}
+						className={`mr-6 cursor-pointer py-2 ${tabs === "yaml" ? "border-b-2 border-blue-500" : ""}`}
+						onClick={() => setTabs("yaml")}
 					>
 						YAML
 					</li>
 				</ul>
 			</div>
-			{tabs == "overview" && <div className="flex flex-col w-[30rem] md:w-full">
-				<div className="flex flex-col py-2">
-					<p className="capitalize">
-						<span className="font-semibold">Name:</span> {pipelineOverviewData?.name}
-					</p>
-					<p>
-						<span className="font-semibold">Created By:</span> {pipelineOverviewData?.created_by}
-					</p>
-					<p>
-						<span className="font-semibold">Created At:</span>{" "}
-						{formatTimestampWithDate(pipelineOverviewData?.created_at)}
-					</p>
-					<p>
-						<span className="font-semibold">Updated At:</span>{" "}
-						{formatTimestampWithDate(pipelineOverviewData?.updated_at)}
-					</p>
-					<div className="flex items-center gap-2">
-						<p>
-							<span className="font-semibold">Status:</span>{" "}
-							<span
-								className={
-									statusColors[pipelineOverviewData?.status?.toLowerCase()] || statusColors.default
-								}
-							>
-								{pipelineOverviewData?.status}
-							</span>
-						</p>
-						{["disconnected", "pending", "inactive"].includes(
-							pipelineOverviewData?.status?.toLowerCase(),
-						) && (
-								<RefreshCw
-									className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-									onClick={handleRefreshStatus}
-								/>
+			{/* Main Content */}
+			<div className="flex-1 overflow-auto mt-4">
+				{tabs == "overview" && (
+					<>
+						<div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-4">
+							<h2 className="text-xl font-semibold text-gray-800 mb-6">Pipeline Overview</h2>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-gray-700 text-sm">
+								<div>
+									<p className="text-gray-500">Name</p>
+									<p className="font-medium">{pipelineOverviewData?.name || "-"}</p>
+								</div>
+								<div className="flex flex-col">
+									<p className="text-gray-500">Status</p>
+									<div className="flex items-center gap-2">
+										<span
+											className={`capitalize px-2 py-1 rounded-full text-xs font-semibold ${pipelineOverviewData?.status?.toLowerCase() === "connected"
+												? "bg-green-200 text-green-700"
+												: pipelineOverviewData?.status?.toLowerCase() === "disconnected"
+													? "bg-red-100 text-red-700"
+													: "bg-yellow-100 text-yellow-700"
+												}`}>
+											{pipelineOverviewData?.status}
+										</span>
+										{["disconnected", "pending", "inactive"].includes(
+											pipelineOverviewData?.status?.toLowerCase(),
+										) && (
+												<RefreshCw
+													className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
+													onClick={handleRefreshStatus}
+												/>
+											)}
+									</div>
+								</div>
+								<div>
+									<p className="text-gray-500">Created At</p>
+									<p className="font-medium">{formatTimestampWithDate(pipelineOverviewData?.created_at)}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">Created By</p>
+									<p className="font-medium">{pipelineOverviewData?.created_by || "-"}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">Updated At</p>
+									<p className="font-medium">{formatTimestampWithDate(pipelineOverviewData?.updated_at)}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">Hostname</p>
+									<p className="font-medium">{pipelineOverviewData?.hostname}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">Agent Version</p>
+									<p className="font-medium">{pipelineOverviewData?.agent_version}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">IP Address</p>
+									<p className="font-medium">{pipelineOverviewData?.ip_address}</p>
+								</div>
+								<div>
+									<p className="text-gray-500">Platform</p>
+									<p className="font-medium">{pipelineOverviewData?.platform}</p>
+								</div>
+							</div>
+						</div>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							{!isEditMode && healthMetrics.length > 0 ? (
+								healthMetrics.map(metric => (
+									<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm ">
+										<HealthChart
+											name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
+											data={metric.data_points.map(point => ({
+												timestamp: point.timestamp,
+												[metric.metric_name]:
+													metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+											}))}
+											y_axis_data_key={metric.metric_name}
+											chart_color={getRandomChartColor(metric.metric_name)}
+										/>
+									</div>
+								))
+							) : (
+								<div className="col-span-2 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+									<div className="text-gray-400 mb-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											className="h-12 w-12"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+											/>
+										</svg>
+									</div>
+									<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
+									<p className="text-gray-400 text-sm mt-1">
+										Health metrics will appear here once data is available
+									</p>
+								</div>
 							)}
-					</div>
-					<p>
-						<span className="font-semibold">Agent Version:</span> {pipelineOverviewData?.agent_version}
-					</p>
-					<p>
-						<span className="font-semibold">Hostname:</span> {pipelineOverviewData?.hostname}
-					</p>
-					<p>
-						<span className="font-semibold">Platform:</span> {pipelineOverviewData?.platform}
-					</p>
-					<p>
-						<span className="font-semibold">IP Address:</span> {pipelineOverviewData?.ip_address}
-					</p>
-				</div>
-			</div>}
-
-			{tabs == "overview" && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{!isEditMode && healthMetrics.length > 0 ? (
-					healthMetrics.map(metric => (
-
-						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
-							<HealthChart
-								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
-								data={metric.data_points.map(point => ({
-									timestamp: point.timestamp,
-									[metric.metric_name]:
-										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
-								}))}
-								y_axis_data_key={metric.metric_name}
-								chart_color={getRandomChartColor(metric.metric_name)}
-							/>
 						</div>
-					))
-				) : (
-					// <div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
-					<div className="col-span-2 bg-white rounded-lg shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
-						<div className="text-gray-400 mb-2">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								className="h-12 w-12"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-								/>
-							</svg>
-						</div>
-						<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
-						<p className="text-gray-400 text-sm mt-1">
-							Health metrics will appear here once data is available
-						</p>
-					</div>
+					</>
 				)}
-			</div>}
+				{tabs == "yaml" && <Yaml jsonforms={pipelineOverviewData?.config} />}
+			</div>
 		</div>
 	);
 };
