@@ -37,7 +37,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
-	const [tabs, setTabs] = useState<string>("overview");
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
@@ -87,7 +87,8 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 
 	const handleGetProcessorForm = async (processorOptionValue: string) => {
 		const res = await TransporterService.getTransporterForm(processorOptionValue);
-		console.log(res);
+		const ui= await TransporterService.getTransporterUiSchema(processorOptionValue);
+		setUiSchema(ui);
 		setForm(res);
 	};
 
@@ -172,6 +173,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 											{isSheetOpen && form && <JsonForms
 												data={config}
 												schema={form}
+												uischema={uiSchema}
 												renderers={renderers}
 												cells={materialCells}
 												onChange={({ data, errors }) => {

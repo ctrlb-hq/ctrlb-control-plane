@@ -38,3 +38,21 @@ export interface Config {}
 export interface ApiError {
 	message: string;
 }
+
+export interface DataPoint {
+	timestamp: number;
+	value: number;
+}
+
+export interface MetricData {
+	metric_name: string;
+	data_points: DataPoint[];
+}
+
+export interface FormSchema {
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
+}

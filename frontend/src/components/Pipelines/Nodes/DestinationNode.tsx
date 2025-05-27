@@ -41,6 +41,7 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const DestinationLabel = Data.supported_signals;
 	const handleSubmit = () => {
@@ -70,6 +71,8 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 
 	const getForm = async () => {
 		const res = await TransporterService.getTransporterForm(Data.component_name);
+		const ui = await TransporterService.getTransporterUiSchema(Data.component_name);
+		setUiSchema(ui);
 		setForm(res as FormSchema);
 	};
 
@@ -162,6 +165,7 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 										{form && isSheetOpen && <JsonForms
 											data={config}
 											schema={form}
+											uischema={uiSchema}
 											renderers={renderers}
 											cells={materialCells}
 											onChange={({ data }) => setConfig(data)}

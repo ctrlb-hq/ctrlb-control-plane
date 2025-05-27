@@ -37,4 +37,18 @@ export const TransporterService = {
 			throw new Error(axiosError.response?.data.message || "Failed to fetch get transport form.");
 		}
 	},
+	getTransporterUiSchema: async (name: string): Promise<any> => {
+		try {
+			const res = await axiosInstance.get(`/component/ui-schema/${name}`);
+			const data = res.data;
+			return data;
+		} catch (error: any) {
+			if (error.response.status === 401) {
+				return await TransporterService.getTransporterUiSchema(name);
+			}
+			console.log(error);
+			const axiosError = error as AxiosError<ApiError>;
+			throw new Error(axiosError.response?.data.message || "Failed to fetch get transport ui schema.");
+		}
+	}
 };

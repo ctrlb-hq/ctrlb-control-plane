@@ -1,6 +1,5 @@
 import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
-import  { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// import EditPipelineYAML from "./EditPipelineYAML";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -26,7 +25,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
 import pipelineServices from "@/services/pipelineServices";
-import { Pipeline } from "@/types/pipeline.types";
+import { FormSchema, MetricData, Pipeline } from "@/types/pipeline.types";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -54,8 +53,7 @@ import { TransporterService } from "@/services/transporterService";
 import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
 import { customEnumRenderer } from "./DropdownOptions/CustomEnumControl";
 import Yaml from "../YAML/Yaml";
-
-
+import PipelineOverview from "./PipelineOverview";
 
 const theme = createTheme({
 	components: {
@@ -69,28 +67,10 @@ const theme = createTheme({
 	},
 });
 
-
 const renderers = [
 	...materialRenderers,
 	customEnumRenderer
 ];
-interface DataPoint {
-	timestamp: number;
-	value: number;
-}
-
-interface MetricData {
-	metric_name: string;
-	data_points: DataPoint[];
-}
-
-interface FormSchema {
-	title?: string;
-	type?: string;
-	properties?: Record<string, any>;
-	required?: string[];
-	[key: string]: any;
-}
 
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -122,6 +102,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [form, setForm] = useState<FormSchema>({});
 	const [config, setConfig] = useState<object>({});
 	const [selectedChange, setSelectedChange] = useState<any>(null)
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -204,10 +185,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				targetComponentId: edge.target,
 			},
 		}));
-		//filter out edges that have source and target not in updatedNodes id
-		// const filteredEdges = updatedEdges.filter(edge =>
-		// 	updatedNodes.some(node => node.id === edge.source && updatedNodes.some(node => node.id === edge.target)),
-		// );
 		setEdgeValueDirect(updatedEdges);
 	};
 
@@ -279,13 +256,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		},
 		[isEditMode],
 	);
-
-	// const handleDeleteEdge = useCallback(() => {
-	// 	if (selectedEdge) {
-	// 		deleteEdge(selectedEdge);
-	// 		setSelectedEdge(null);
-	// 	}
-	// }, [selectedEdge, deleteEdge]);
 
 	const handleDeleteEdge = useCallback(() => {
 		if (selectedEdge) {
@@ -371,32 +341,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
-	const handleRefreshStatus = async () => {
-		try {
-			if (!pipelineOverviewData?.agent_id) return;
-			await agentServices.restartAgentMonitoring(pipelineOverviewData.agent_id);
-			// Refresh the pipeline data using the existing function
-			await handleGetPipelineOverview();
-			toast({
-				title: "Success",
-				description: "Pipeline status refreshed successfully",
-			});
-		} catch (error) {
-			console.error("Failed to refresh pipeline status:", error);
-			toast({
-				title: "Error",
-				description: "Failed to refresh pipeline status",
-				variant: "destructive",
-			});
-		}
-	};
-
-
 	const EditForm = async (change: any) => {
 		setIsReviewSheetOpen(false)
 		setIsEditFormOpen(true)
 		setSelectedChange(change)
 		const res = await TransporterService.getTransporterForm(change.component_type);
+		const ui = await TransporterService.getTransporterUiSchema(change.component_type);
+		setUiSchema(ui);
 		setForm(res as FormSchema);
 		setConfig(change.finalConfig)
 	}
@@ -421,13 +372,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	return (
 		<div className="flex flex-col h-[100vh] overflow-hidden">
 			{/* Header */}
-			<div className="flex items-center justify-between px-6 py-4 border-b bg-white flex-shrink-0">
+			<div className="flex items-center justify-between px-6 border-b pb-2 bg-white flex-shrink-0">
 				<div className="flex gap-2 items-center">
 					<Boxes className="text-gray-700" size={32} />
 					<h1 className="text-xl text-gray-800 font-semibold">{pipelineOverview?.name}</h1>
 				</div>
 				<div className="flex items-center w-full md:w-auto">
-					<div className="flex gap-2 justify-between w-full mb-2">
+					<div className="flex gap-2 justify-between w-full">
 						<div className="flex gap-2">
 							<Sheet
 								onOpenChange={open => {
@@ -517,6 +468,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 																			{isEditFormOpen && form && <JsonForms
 																				data={config}
 																				schema={form}
+																				uischema={uiSchema}
 																				renderers={renderers}
 																				cells={materialCells}
 																				onChange={({ data }) => {
@@ -652,69 +604,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			<div className="flex-1 overflow-auto mt-4">
 				{tabs == "overview" && (
 					<>
-						<div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-4">
-							<h2 className="text-xl font-semibold text-gray-800 mb-6">Pipeline Overview</h2>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-gray-700 text-sm">
-								<div>
-									<p className="text-gray-500">Name</p>
-									<p className="font-medium">{pipelineOverviewData?.name || "-"}</p>
-								</div>
-								<div className="flex flex-col">
-									<p className="text-gray-500">Status</p>
-									<div className="flex items-center gap-2">
-										<span
-											className={`capitalize px-2 py-1 rounded-full text-xs font-semibold ${pipelineOverviewData?.status?.toLowerCase() === "connected"
-												? "bg-green-200 text-green-700"
-												: pipelineOverviewData?.status?.toLowerCase() === "disconnected"
-													? "bg-red-100 text-red-700"
-													: "bg-yellow-100 text-yellow-700"
-												}`}>
-											{pipelineOverviewData?.status}
-										</span>
-										{["disconnected", "pending", "inactive"].includes(
-											pipelineOverviewData?.status?.toLowerCase(),
-										) && (
-												<RefreshCw
-													className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-transform hover:rotate-180"
-													onClick={handleRefreshStatus}
-												/>
-											)}
-									</div>
-								</div>
-								<div>
-									<p className="text-gray-500">Created At</p>
-									<p className="font-medium">{formatTimestampWithDate(pipelineOverviewData?.created_at)}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">Created By</p>
-									<p className="font-medium">{pipelineOverviewData?.created_by || "-"}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">Updated At</p>
-									<p className="font-medium">{formatTimestampWithDate(pipelineOverviewData?.updated_at)}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">Hostname</p>
-									<p className="font-medium">{pipelineOverviewData?.hostname}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">Agent Version</p>
-									<p className="font-medium">{pipelineOverviewData?.agent_version}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">IP Address</p>
-									<p className="font-medium">{pipelineOverviewData?.ip_address}</p>
-								</div>
-								<div>
-									<p className="text-gray-500">Platform</p>
-									<p className="font-medium">{pipelineOverviewData?.platform}</p>
-								</div>
-							</div>
-						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<PipelineOverview pipelineId={pipelineId} />
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
 							{!isEditMode && healthMetrics.length > 0 ? (
 								healthMetrics.map(metric => (
-									<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm ">
+									<div key={metric.metric_name} className="w-full h-[150px] bg-white rounded-lg shadow-sm">
 										<HealthChart
 											name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
 											data={metric.data_points.map(point => ({
@@ -728,11 +622,11 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									</div>
 								))
 							) : (
-								<div className="col-span-2 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+								<div className="col-span-2 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center min-h-[120px]">
 									<div className="text-gray-400 mb-2">
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
-											className="h-12 w-12"
+											className="h-8 w-8"
 											fill="none"
 											viewBox="0 0 24 24"
 											stroke="currentColor"
@@ -745,8 +639,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 											/>
 										</svg>
 									</div>
-									<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
-									<p className="text-gray-400 text-sm mt-1">
+									<p className="text-gray-500 text-base font-medium">No Health Metrics Available</p>
+									<p className="text-gray-400 text-xs mt-1">
 										Health metrics will appear here once data is available
 									</p>
 								</div>
