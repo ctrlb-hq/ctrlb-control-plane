@@ -67,7 +67,7 @@ const AddPipelineCanvas = () => {
 
 	const pipelineName = localStorage.getItem("pipelinename");
 	const createdBy = localStorage.getItem("userEmail");
-	const agentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "");
+	//const agentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "");
 
 	const onConnect = useCallback(
 		(params: Edge | Connection) => {
@@ -139,7 +139,7 @@ const AddPipelineCanvas = () => {
 		const pipelinePayload = {
 			name: pipelineName,
 			created_by: createdBy,
-			agent_ids: [parseInt(agentIds)],
+			// agent_ids: [parseInt(agentIds)],
 			pipeline_graph: {
 				nodes: nodeValue.map(node => ({
 					component_id: parseInt(node.id),
@@ -192,7 +192,7 @@ const AddPipelineCanvas = () => {
 
 	return (
 		<>
-			<SheetContent>
+			<SheetContent className="w-full">
 				<SheetHeader>
 					<div className="flex justify-between items-center p-2 border-b">
 						<SheetTitle>

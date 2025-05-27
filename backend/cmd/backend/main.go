@@ -85,7 +85,7 @@ func main() {
 		utils.Logger.Sugar().Errorf("Failed to initialize schema: %s", err)
 	}
 
-	uiSchemasFS, err := fs.Sub(assets.Schemas, "ui_schemas")
+	uiSchemasFS, err := fs.Sub(assets.UI_Schemas, "ui_schemas")
 	if err != nil {
 		utils.Logger.Sugar().Errorf("Failed to initialize UI schema: %s", err)
 	}

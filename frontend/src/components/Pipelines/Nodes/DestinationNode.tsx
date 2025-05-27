@@ -1,6 +1,6 @@
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { Button } from "../../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
@@ -32,7 +32,7 @@ const theme = createTheme({
 
 const renderers = [...materialRenderers];
 
-export const DestinationNode = ({ data: Data }: any) => {
+export const DestinationNode = React.memo(({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
@@ -130,7 +130,7 @@ export const DestinationNode = ({ data: Data }: any) => {
 								</div>
 							</div>
 						) : (
-							
+
 							<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem] w-[3rem]">
 								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
@@ -154,14 +154,14 @@ export const DestinationNode = ({ data: Data }: any) => {
 							<div className="mt-3">
 								<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
 								<div className="p-3 ">
-									<div className="overflow-y-auto h-[29rem]">
-										<JsonForms
+									<div className="overflow-y-auto h-[32rem] pt-3">
+										{form && isSheetOpen && <JsonForms
 											data={config}
 											schema={form}
 											renderers={renderers}
 											cells={materialCells}
 											onChange={({ data }) => setConfig(data)}
-										/>
+										/>}
 									</div>
 								</div>
 							</div>
@@ -186,4 +186,4 @@ export const DestinationNode = ({ data: Data }: any) => {
 			</SheetContent>
 		</Sheet>
 	);
-};
+});

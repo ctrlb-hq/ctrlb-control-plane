@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import agentServices from "@/services/agentServices";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
+
 import { Connection, Edge, EdgeMouseHandler, ReactFlowInstance } from "reactflow";
 import "reactflow/dist/style.css";
 import { HealthChart } from "../charts/HealthChart";
@@ -16,7 +17,6 @@ import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
 import PipelineGraphEditor from "./PipelineGraphEditor";
 import DeletePipelineDialog from "./DeletePipelineDialog";
-
 interface DataPoint {
 	timestamp: number;
 	value: number;
@@ -27,6 +27,14 @@ interface MetricData {
 	data_points: DataPoint[];
 }
 
+interface FormSchema {
+	title?: string;
+	type?: string;
+	properties?: Record<string, any>;
+	required?: string[];
+	[key: string]: any;
+}
+
 const statusColors: Record<string, string> = {
 	connected: "text-green-600",
 	disconnected: "text-red-600",
@@ -35,23 +43,7 @@ const statusColors: Record<string, string> = {
 	default: "text-gray-600",
 };
 
-const getRandomChartColor = (name: string) => {
-	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
-	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-	return colors[charSum % colors.length];
-};
 
-const formatTimestampWithDate = (timestamp: number | undefined) => {
-	if (!timestamp) return "N/A";
-	const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
-	const day = date.getDate().toString().padStart(2, "0");
-	const month = (date.getMonth() + 1).toString().padStart(2, "0");
-	const year = date.getFullYear();
-	const hours = date.getHours().toString().padStart(2, "0");
-	const minutes = date.getMinutes().toString().padStart(2, "0");
-	const seconds = date.getSeconds().toString().padStart(2, "0");
-	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-};
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const {
@@ -69,14 +61,21 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-	const { changesLog, clearChangesLog } = usePipelineChangesLog();
+	const { changesLog, clearChangesLog, addChange } = usePipelineChangesLog();
 	const [pipelineOverview, setPipelineOverview] = useState<Pipeline>();
 	const [isOpen, setIsOpen] = useState(false);
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
 	const { toast } = useToast();
 	const [hasDeployError, setHasDeployError] = useState(false);
+	const [tabs, setTabs] = useState<string>("overview");
+	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
+	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+	const [form, setForm] = useState<FormSchema>({});
+	const [config, setConfig] = useState<object>({});
+	const [selectedChange, setSelectedChange] = useState<any>(null)
 
+	console.log("xx",healthMetrics);
 	const nodeTypes = useMemo(
 		() => ({
 			source: SourceNode,
@@ -104,7 +103,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
-
 	useEffect(() => {
 		handleGetPipelineOverview();
 	}, [pipelineId]);
@@ -126,14 +124,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			let x, y;
 			if (nodeType === "source") {
 				x = 50; // Fixed left position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			} else if (nodeType === "destination") {
 				x = 400; // Fixed right position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			} else {
 				// processor
 				x = 225; // Center position
-				y = 50 + index * VERTICAL_SPACING;
+				y = 100 + index * VERTICAL_SPACING;
 			}
 
 			return {
@@ -166,6 +164,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	useEffect(() => {
 		handleGetPipelineGraph();
+		handleGetPipelineOverview();
 	}, [pipelineId]);
 
 	useEffect(() => {
@@ -178,6 +177,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		},
 		[connectNodes],
 	);
+
 
 	const fetchHealthMetrics = async () => {
 		try {
@@ -207,13 +207,13 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	};
 
 	useEffect(() => {
-		if (pipelineOverviewData) {
+		if (pipelineOverviewData && !isEditMode) {
 			fetchHealthMetrics();
 			// Optional: Set up polling to refresh data periodically
-			const interval = setInterval(fetchHealthMetrics, 30000); // every 30 seconds
-			return () => clearInterval(interval);
+			// const interval = setInterval(fetchHealthMetrics, 300000); // every 30 seconds
+			// return () => clearInterval(interval);
 		}
-	}, [pipelineOverviewData]);
+	}, [pipelineOverviewData, isEditMode]);
 
 	const onEdgeClick: EdgeMouseHandler = useCallback(
 		(event, edge) => {
@@ -237,14 +237,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			const sourceNode = nodeValue.find(node => node.id === selectedEdge.source);
 			const targetNode = nodeValue.find(node => node.id === selectedEdge.target);
 
-			// Add to changes log
+			//Add to changes log
 			const changeLogEntry = {
 				type: "Connection",
 				name: `${sourceNode?.data.name || "Unknown"} → ${targetNode?.data.name || "Unknown"}`,
 				status: "deleted",
 			};
 			changesLog.push(changeLogEntry);
-			// Filter out only the specific edge that matches both source and target
+			//Filter out only the specific edge that matches both source and target
 			const newEdges = edgeValue.filter(
 				edge => !(edge.source === selectedEdge.source && edge.target === selectedEdge.target),
 			);
@@ -282,8 +282,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			clearChangesLog();
 			toast({
 				title: "Success",
-				description: "Successfully deployed the pipeline",
+				description: "Pipeline successfully deployed",
 				duration: 3000,
+				variant: "default",
 			});
 			handleGetPipelineGraph();
 		} catch (error) {
@@ -301,6 +302,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const handleDeletePipeline = async () => {
 		try {
 			await agentServices.deleteAgentById(pipelineOverviewData?.agent_id);
+
 			await pipelineServices.deletePipelineById(pipelineId);
 
 			setIsOpen(false);
@@ -336,6 +338,33 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
+
+	const EditForm = async (change: any) => {
+		setIsReviewSheetOpen(false)
+		setIsEditFormOpen(true)
+		setSelectedChange(change)
+		const res = await TransporterService.getTransporterForm(change.component_type);
+		setForm(res as FormSchema);
+		setConfig(change.finalConfig)
+	}
+
+	const handleSubmit = () => {
+		const log = {
+			type: selectedChange.type,
+			component_type: selectedChange.component_type,
+			id: selectedChange.id,
+			name: selectedChange.name,
+			status: "edited",
+			initialConfig: undefined,
+			finalConfig: config,
+		};
+		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
+		addChange(log);
+		const updatedLog = [...existingLog, log];
+		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
+		setIsEditFormOpen(false);
+	};
+
 	return (
 		<div className="py-4 flex flex-col">
 			<div className="flex mb-5 items-center justify-between">
@@ -348,6 +377,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<div className="flex gap-2">
 							<Sheet
 								onOpenChange={open => {
+									if(!open){
+										setIsEditMode(false);
+									}
 									if (!open && !hasDeployError) {
 										clearChangesLog();
 									}
@@ -386,9 +418,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 							/>
 						</div>
 					</div>
+
 				</div>
 			</div>
-
 			<div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm p-6">
 				<h2 className="text-xl font-semibold text-gray-800 mb-6">Pipeline Overview</h2>
 
@@ -456,13 +488,15 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					<div>
 						<p className="text-gray-500">Platform</p>
 						<p className="font-medium">{pipelineOverviewData?.platform}</p>
+
 					</div>
 				</div>
-			</div>
+			</div>}
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{healthMetrics.length > 0 ? (
+			{tabs == "overview" && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+				{!isEditMode && healthMetrics.length > 0 ? (
 					healthMetrics.map(metric => (
+
 						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
 							<HealthChart
 								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
@@ -500,7 +534,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						</p>
 					</div>
 				)}
-			</div>
+			</div>}
 		</div>
 	);
 };

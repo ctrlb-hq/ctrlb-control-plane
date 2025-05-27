@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
 import { ArrowBigRightDash } from "lucide-react";
+
 
 interface FormSchema {
 	title?: string;
@@ -31,7 +32,7 @@ const theme = createTheme({
 });
 
 const renderers = [...materialRenderers];
-export const SourceNode = ({ data: Data }: any) => {
+export const SourceNode = React.memo(({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
@@ -68,8 +69,8 @@ export const SourceNode = ({ data: Data }: any) => {
 	// const sourceConfig = getSource?.config;
 
 	useEffect(() => {
-		getForm();
-	}, []);
+	getForm();
+	}, [isSidebarOpen]);
 
 	const handleSubmit = () => {
 		const log = {
@@ -117,7 +118,7 @@ export const SourceNode = ({ data: Data }: any) => {
 					<div className="bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2" />
 				</div>
 			</SheetTrigger>
-			<SheetContent className="w-[36rem]">
+			{isSidebarOpen && <SheetContent className="w-[36rem]">
 				<div className="flex flex-col gap-4 p-4">
 					<div className="flex gap-3 items-center">
 						<ArrowBigRightDash className="w-6 h-6" />
@@ -131,14 +132,14 @@ export const SourceNode = ({ data: Data }: any) => {
 						<div className="mt-3">
 							<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
 							<div className="p-3 ">
-								<div className="overflow-y-auto h-[29rem]">
-									<JsonForms
+								<div className="overflow-y-auto h-[32rem] pt-3">
+									{form && isSidebarOpen && <JsonForms
 										data={config}
 										schema={form}
 										renderers={renderers}
 										cells={materialCells}
 										onChange={({ data }) => setConfig(data)}
-									/>
+									/>}
 								</div>
 							</div>
 						</div>
@@ -159,7 +160,7 @@ export const SourceNode = ({ data: Data }: any) => {
 						</SheetFooter>
 					</ThemeProvider>
 				</div>
-			</SheetContent>
+			</SheetContent>}
 		</Sheet>
 	);
-};
+});
