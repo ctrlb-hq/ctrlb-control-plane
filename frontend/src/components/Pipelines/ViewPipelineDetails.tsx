@@ -1,4 +1,4 @@
-import { Boxes, Edit, RefreshCw, Trash2 } from "lucide-react";
+import { Boxes, Edit, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,10 +48,15 @@ import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
 
 import { TransporterService } from "@/services/transporterService";
-import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
+import { getRandomChartColor } from "@/constants";
 import { customEnumRenderer } from "./DropdownOptions/CustomEnumControl";
 import Yaml from "../YAML/Yaml";
 import PipelineOverview from "./PipelineOverview";
+import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
+import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
+import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 
 const theme = createTheme({
 	components: {

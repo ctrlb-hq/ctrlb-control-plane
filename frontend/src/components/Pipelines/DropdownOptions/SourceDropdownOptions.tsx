@@ -27,8 +27,6 @@ interface sources {
 	supported_signals: string[];
 }
 
-
-
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { customEnumRenderer } from "./CustomEnumControl";
 
@@ -39,7 +37,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 	const [form, setForm] = useState<object>({});
 	const [config, setConfig] = useState<object>({});
 	const [pluginName, setPluginName] = useState();
-	const [processors, setProcessors] = useState<Processor[]>([]);
+	const [sources, setSources] = useState<sources[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
 	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
@@ -53,10 +51,10 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 	};
 
 	const handleSubmit = () => {
-		const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals;
+		const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
 
 		const newNode = {
-			type: "processor",
+			type: "source",
 			position: { x: 0, y: 0 },
 			data: {
 				type: "receiver",
@@ -86,9 +84,9 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 		setIsSheetOpen(false);
 	};
 
-	const handleGetProcessor = async () => {
+	const handleGetSources = async () => {
 		const res = await TransporterService.getTransporterService("processor");
-		setProcessors(res);
+		setSources(res);
 	};
 
 	const handleGetProcessorForm = async (processorOptionValue: string) => {
@@ -135,11 +133,11 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {
-										handleSheetOpen(processor.name);
-										setProcessorOptionValue(processor.display_name);
+										handleSheetOpen(source.name);
+										setProcessorOptionValue(source.display_name);
 									}}
 								>
-									{processor.display_name}
+									{source.display_name}
 								</DropdownMenuItem>
 							))}
 						</DropdownMenuSub>
@@ -214,4 +212,4 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 	);
 });
 
-export default ProcessorDropdownOptions;
+export default SourceDropdownOptions;
