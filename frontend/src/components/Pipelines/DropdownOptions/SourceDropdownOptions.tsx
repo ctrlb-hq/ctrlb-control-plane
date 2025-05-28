@@ -20,7 +20,6 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 
 interface sources {
-
 	name: string;
 	display_name: string;
 	type: string;
@@ -32,7 +31,7 @@ import { customEnumRenderer } from "./CustomEnumControl";
 
 const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [processorOptionValue, setProcessorOptionValue] = useState("");
+	const [sourceOptionValue, setSourceOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<object>({});
 	const [config, setConfig] = useState<object>({});
@@ -47,7 +46,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 		setConfig({});
 		setForm({});
 		setIsSheetOpen(true);
-		handleGetProcessorForm(e);
+		handleGetSourceForm(e);
 	};
 
 	const handleSubmit = () => {
@@ -58,7 +57,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 			position: { x: 0, y: 0 },
 			data: {
 				type: "receiver",
-				name: processorOptionValue,
+				name: sourceOptionValue,
 				supported_signals: supported_signals,
 				component_name: pluginName,
 				config: config,
@@ -71,7 +70,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 			type: "source",
 			component_type: pluginName,
 			id: newNodeId,
-			name: processorOptionValue,
+			name: sourceOptionValue,
 			status: "added",
 			initialConfig: undefined,
 			finalConfig: config,
@@ -85,13 +84,13 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 	};
 
 	const handleGetSources = async () => {
-		const res = await TransporterService.getTransporterService("processor");
+		const res = await TransporterService.getTransporterService("receiver");
 		setSources(res);
 	};
 
-	const handleGetProcessorForm = async (processorOptionValue: string) => {
-		const res = await TransporterService.getTransporterForm(processorOptionValue);
-		const ui= await TransporterService.getTransporterUiSchema(processorOptionValue);
+	const handleGetSourceForm = async (sourceOptionValue: string) => {
+		const res = await TransporterService.getTransporterForm(sourceOptionValue);
+		const ui = await TransporterService.getTransporterUiSchema(sourceOptionValue);
 		setUiSchema(ui);
 		setForm(res);
 	};
@@ -124,7 +123,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 		<>
 			<DropdownMenu>
 				<DropdownMenuContent className="w-56">
-					<DropdownMenuLabel>Add Processor</DropdownMenuLabel>
+					<DropdownMenuLabel>Add Source</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
 						<DropdownMenuSub>
@@ -134,7 +133,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 									key={index}
 									onClick={() => {
 										handleSheetOpen(source.name);
-										setProcessorOptionValue(source.display_name);
+										setSourceOptionValue(source.display_name);
 									}}
 								>
 									{source.display_name}
@@ -154,7 +153,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 							}
 							draggable
 						>
-							Add Processor
+							Add Source
 						</div>
 						<div className="bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2" />
 					</div>
@@ -166,7 +165,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 						<div className="flex flex-col gap-4 p-4">
 							<div className="flex gap-3 items-center">
 								<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-								<h2 className="text-xl font-bold">{processorOptionValue}</h2>
+								<h2 className="text-xl font-bold">{sourceOptionValue}</h2>
 							</div>
 							<p className="text-gray-500">
 								Generate the defined log type at the rate desired{" "}
@@ -196,7 +195,7 @@ const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) =
 								<SheetClose>
 									<div className="flex gap-3">
 										<Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>
-											Add Processor
+											Add Source
 										</Button>
 										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
 											Discard Changes
