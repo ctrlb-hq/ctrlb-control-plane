@@ -22,7 +22,7 @@ func TestLoadSchemasFromDirectory_Success(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
-	mockFS := fstest.MapFS{
+	mockSchemasFS := fstest.MapFS{
 		"testcomponent.json": &fstest.MapFile{
 			Data: []byte(`{
 				"title": "Test Component",
@@ -32,29 +32,35 @@ func TestLoadSchemasFromDirectory_Success(t *testing.T) {
 				}
 			}`),
 		},
-		"ignore.txt": &fstest.MapFile{ // Should be ignored
+		"ignore.txt": &fstest.MapFile{
 			Data: []byte("not a json file"),
+		},
+	}
+
+	mockUISchemasFS := fstest.MapFS{
+		"testcomponent.json": &fstest.MapFile{
+			Data: []byte(`{
+				"ui:order": ["field"]
+			}`),
 		},
 	}
 
 	typeMapping := map[string]string{
 		"testcomponent": "receiver",
 	}
-
 	signalMapping := map[string][]string{
 		"testcomponent": {"metrics", "logs"},
 	}
 
-	err := database.LoadSchemasFromDirectory(db, mockFS, typeMapping, signalMapping)
+	err := database.LoadSchemasFromDirectory(db, mockSchemasFS, mockUISchemasFS, typeMapping, signalMapping)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Validate inserted schema
-	row := db.QueryRow("SELECT name, type, display_name, supported_signals FROM component_schemas WHERE name = ?", "testcomponent")
+	row := db.QueryRow(`SELECT name, type, display_name, supported_signals, ui_schema_json FROM component_schemas WHERE name = ?`, "testcomponent")
 
-	var name, typ, displayName, supportedSignals string
-	if err := row.Scan(&name, &typ, &displayName, &supportedSignals); err != nil {
+	var name, typ, displayName, supportedSignals, uiSchema string
+	if err := row.Scan(&name, &typ, &displayName, &supportedSignals, &uiSchema); err != nil {
 		t.Fatalf("failed querying inserted component: %v", err)
 	}
 
@@ -70,19 +76,27 @@ func TestLoadSchemasFromDirectory_Success(t *testing.T) {
 	if !strings.Contains(supportedSignals, "metrics") || !strings.Contains(supportedSignals, "logs") {
 		t.Errorf("expected supported_signals to include 'metrics' and 'logs', got %s", supportedSignals)
 	}
+	if !strings.Contains(uiSchema, `"ui:order"`) {
+		t.Errorf("expected ui_schema_json to include 'ui:order', got %s", uiSchema)
+	}
 }
 
 func TestLoadSchemasFromDirectory_InvalidJSON(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
-	mockFS := fstest.MapFS{
+	mockSchemasFS := fstest.MapFS{
 		"badcomponent.json": &fstest.MapFile{
 			Data: []byte(`{ invalid json}`),
 		},
 	}
+	mockUISchemasFS := fstest.MapFS{
+		"badcomponent.json": &fstest.MapFile{
+			Data: []byte(`{}`), // valid or dummy ui schema
+		},
+	}
 
-	err := database.LoadSchemasFromDirectory(db, mockFS, map[string]string{}, map[string][]string{})
+	err := database.LoadSchemasFromDirectory(db, mockSchemasFS, mockUISchemasFS, map[string]string{}, map[string][]string{})
 	if err == nil {
 		t.Fatal("expected error due to invalid JSON, but got nil")
 	}

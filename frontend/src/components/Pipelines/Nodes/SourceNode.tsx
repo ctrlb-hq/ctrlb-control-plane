@@ -12,6 +12,7 @@ import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
 
 
+
 interface FormSchema {
 	title?: string;
 	type?: string;
@@ -36,6 +37,7 @@ const renderers = [
 	...materialRenderers,
 	customEnumRenderer
 ];
+
 
 export const SourceNode = React.memo(({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);

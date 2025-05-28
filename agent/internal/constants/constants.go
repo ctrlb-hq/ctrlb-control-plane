@@ -7,7 +7,8 @@ var (
 	BACKEND_URL       = "http://controlplane.ctrlb.ai:8096"
 	PORT              = "443"
 	TESTING           = false
-	IS_PIPELINE       = false
+	PIPELINE_NAME     = ""
+	STARTED_BY        = "Admin"
 )
 
 var AGENTID int64

@@ -13,8 +13,9 @@ import (
 
 // MockFrontendAgentService is a mock implementation of FrontendAgentServiceInterface
 type MockFrontendAgentService struct {
-	GetComponentsFunc            func(componentType string) (*[]ComponentInfo, error)
-	GetComponentSchemaByNameFunc func(componentName string) (any, error)
+	GetComponentsFunc              func(componentType string) (*[]ComponentInfo, error)
+	GetComponentSchemaByNameFunc   func(componentName string) (any, error)
+	GetComponentUISchemaByNameFunc func(componentName string) (any, error)
 }
 
 func (m *MockFrontendAgentService) GetComponents(componentType string) (*[]ComponentInfo, error) {
@@ -23,6 +24,10 @@ func (m *MockFrontendAgentService) GetComponents(componentType string) (*[]Compo
 
 func (m *MockFrontendAgentService) GetComponentSchemaByName(componentName string) (any, error) {
 	return m.GetComponentSchemaByNameFunc(componentName)
+}
+
+func (m *MockFrontendAgentService) GetComponentUISchemaByName(componentName string) (any, error) {
+	return m.GetComponentUISchemaByNameFunc(componentName)
 }
 
 // TestFrontendNodeHandler_GetComponent tests GetComponent endpoint
@@ -132,6 +137,76 @@ func TestFrontendNodeHandler_GetComponentSchema(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			handler.GetComponentSchema(w, req)
+
+			resp := w.Result()
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, resp.StatusCode)
+			}
+
+			if tt.expectedErrorMessage != "" {
+				var responseBody map[string]any
+				json.NewDecoder(resp.Body).Decode(&responseBody)
+
+				errorMessage, ok := responseBody["error"].(string)
+				if !ok || errorMessage != tt.expectedErrorMessage {
+					t.Errorf("expected error message %q, got %q", tt.expectedErrorMessage, errorMessage)
+				}
+			}
+		})
+	}
+}
+
+func TestFrontendNodeHandler_GetComponentUISchema(t *testing.T) {
+	tests := []struct {
+		name                 string
+		componentName        string
+		mockServiceOutput    any
+		mockServiceError     error
+		expectedStatus       int
+		expectedErrorMessage string
+	}{
+		{
+			name:              "UI Schema found",
+			componentName:     "comp1",
+			mockServiceOutput: map[string]string{"ui:order": "field1"},
+			mockServiceError:  nil,
+			expectedStatus:    http.StatusOK,
+		},
+		{
+			name:                 "UI Schema not found (sql.ErrNoRows)",
+			componentName:        "comp2",
+			mockServiceOutput:    nil,
+			mockServiceError:     sql.ErrNoRows,
+			expectedStatus:       http.StatusOK,
+			expectedErrorMessage: "UI Schema not found",
+		},
+		{
+			name:                 "Internal server error",
+			componentName:        "comp3",
+			mockServiceOutput:    nil,
+			mockServiceError:     errors.New("internal error"),
+			expectedStatus:       http.StatusInternalServerError,
+			expectedErrorMessage: "internal error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockService := &MockFrontendAgentService{
+				GetComponentUISchemaByNameFunc: func(componentName string) (any, error) {
+					return tt.mockServiceOutput, tt.mockServiceError
+				},
+			}
+
+			handler := NewFrontendNodeHandler(mockService)
+
+			req := httptest.NewRequest(http.MethodGet, "/ui-schema/"+tt.componentName, nil)
+			req = mux.SetURLVars(req, map[string]string{"name": tt.componentName})
+			w := httptest.NewRecorder()
+
+			handler.GetComponentUISchema(w, req)
 
 			resp := w.Result()
 			defer resp.Body.Close()

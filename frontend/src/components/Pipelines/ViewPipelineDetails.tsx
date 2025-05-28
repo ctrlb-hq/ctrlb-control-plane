@@ -20,6 +20,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
@@ -39,16 +40,13 @@ import ReactFlow, {
 	Panel,
 	ReactFlowInstance,
 } from "reactflow";
+
 import "reactflow/dist/style.css";
 import { HealthChart } from "../charts/HealthChart";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
-import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
-import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { DestinationNode } from "./Nodes/DestinationNode";
 import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
+
 import { TransporterService } from "@/services/transporterService";
 import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
 import { customEnumRenderer } from "./DropdownOptions/CustomEnumControl";
@@ -104,6 +102,8 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [selectedChange, setSelectedChange] = useState<any>(null)
 	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
+
+	console.log("xx", healthMetrics);
 	const nodeTypes = useMemo(
 		() => ({
 			source: SourceNode,
@@ -131,6 +131,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			});
 		}
 	};
+	useEffect(() => {
+		handleGetPipelineOverview();
+	}, [pipelineId]);
 
 
 	const handleGetPipelineGraph = async () => {
@@ -141,9 +144,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		const updatedNodes = res.nodes.map((node: any, index: number) => {
 			const nodeType =
 				node.component_role === "receiver"
-					? "destination"
+					? "source"
 					: node.component_role === "exporter"
-						? "source"
+						? "destination"
 						: "processor";
 
 			// Calculate position based on node type
@@ -289,7 +292,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					component_id: parseInt(node.id),
 					name: node.data.name,
 					component_role:
-						node.type === "destination" ? "receiver" : node.type === "source" ? "exporter" : "processor",
+						node.type === "destination" ? "exporter" : node.type === "source" ? "receiver" : "processor",
 					component_name: node.data.component_name,
 					config: node.data.config,
 					supported_signals: node.data.supported_signals || [],
@@ -328,14 +331,15 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		try {
 
 			await pipelineServices.deletePipelineById(pipelineId);
+
 			setIsOpen(false);
 			resetGraph();
 			window.location.reload();
 		} catch (error) {
-			console.error("Error deleting pipeline or agents:", error);
+			console.error("Error deleting pipeline or collector:", error);
 			toast({
 				title: "Error",
-				description: "Failed to delete pipeline or agents",
+				description: "Failed to delete pipeline or collector",
 				variant: "destructive",
 			});
 		}
@@ -388,8 +392,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									if (!open && !hasDeployError) {
 										clearChangesLog();
 									}
-								}}
-							>
+								}}>
 								<SheetTrigger asChild>
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>

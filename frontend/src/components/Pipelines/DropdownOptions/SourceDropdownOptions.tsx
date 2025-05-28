@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import React, { useEffect, useState } from "react";
+
 import { useGraphFlow } from "@/context/useGraphFlowContext";
+
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 
-interface Processor {
+interface sources {
+
 	name: string;
 	display_name: string;
 	type: string;
@@ -25,9 +28,11 @@ interface Processor {
 }
 
 
+
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { customEnumRenderer } from "./CustomEnumControl";
-const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
+
+const SourceDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
 	const { addChange } = usePipelineChangesLog();
@@ -65,7 +70,8 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 		const newNodeId = addNode(newNode);
 
 		const log = {
-			type: "processor",
+			type: "source",
+			component_type: pluginName,
 			id: newNodeId,
 			name: processorOptionValue,
 			status: "added",
@@ -93,8 +99,9 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 	};
 
 	useEffect(() => {
-		handleGetProcessor();
-	}, []);
+		handleGetSources();
+	}, [isSheetOpen]);
+
 
 	const theme = createTheme({
 		components: {
@@ -123,7 +130,8 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
 						<DropdownMenuSub>
-							{processors!.map((processor, index) => (
+
+							{sources && sources.map((source, index) => (
 								<DropdownMenuItem
 									key={index}
 									onClick={() => {

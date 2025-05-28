@@ -38,10 +38,12 @@ func InformBackendServerStart(sys systeminfo.SystemInfoProvider,
 	}
 	// Step 3: Create the agent request
 	agentRequest := AgentRequest{
-		IP:       ip,
-		Version:  constants.AGENT_VERSION,
-		Platform: platform,
-		Hostname: hostname,
+		IP:           ip,
+		Version:      constants.AGENT_VERSION,
+		Platform:     platform,
+		Hostname:     hostname,
+		PipelineName: constants.PIPELINE_NAME,
+		StartedBy:    constants.STARTED_BY,
 	}
 
 	// Step 4: Marshal the agent request into JSON

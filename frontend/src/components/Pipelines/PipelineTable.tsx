@@ -23,11 +23,26 @@ interface pipeline {
 	updatedAt: number;
 }
 
+const formatTimestamp = (timestamp: number) => {
+	return new Date(timestamp * 1000)
+		.toLocaleString("en-GB", {
+			day: "2-digit",
+			month: "2-digit",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		})
+		.replace(",", "");
+};
+
 const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
 	const { setPipelineOverview } = usePipelineOverview();
 	const [pipelineId, setPipelineId] = useState<string>("");
 	const { resetGraph } = useGraphFlow();
+	
 	const handleGetPipelines = async () => {
 		const res = await pipelineServices.getAllPipelines();
 		setPipelines(res);
@@ -40,22 +55,13 @@ const PipelineTable = () => {
 
 	useEffect(() => {
 		handleGetPipelines();
-		handleGetPipeline();
 	}, []);
 
-	const formatTimestamp = (timestamp: number) => {
-		return new Date(timestamp * 1000)
-			.toLocaleString("en-GB", {
-				day: "2-digit",
-				month: "2-digit",
-				year: "numeric",
-				hour: "2-digit",
-				minute: "2-digit",
-				second: "2-digit",
-				hour12: false,
-			})
-			.replace(",", "");
-	};
+	useEffect(() => {
+		if (pipelineId) {
+			handleGetPipeline();
+		}
+	}, [pipelineId]);
 
 	return (
 		<>
@@ -76,17 +82,11 @@ const PipelineTable = () => {
 								<Sheet
 									key={pipeline.id}
 									onOpenChange={open => {
-										if (!open) {
-											resetGraph();
-										}
-									}}
-								>
+										if (open) setPipelineId(pipeline.id);
+										else resetGraph();
+									}}>
 									<SheetTrigger asChild>
-										<TableRow
-											className="cursor-pointer"
-											key={pipeline.id}
-											onClick={() => setPipelineId(pipeline.id)}
-										>
+										<TableRow className="cursor-pointer">
 											<TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
 											<TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>
 											<TableCell className="text-gray-700">{pipeline.outgoing_bytes}</TableCell>

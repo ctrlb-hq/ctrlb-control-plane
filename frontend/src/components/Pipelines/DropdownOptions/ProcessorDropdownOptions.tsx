@@ -24,6 +24,7 @@ interface Processor {
 	supported_signals: string[];
 }
 
+
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { customEnumRenderer } from "./CustomEnumControl";
 const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
@@ -86,6 +87,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 
 	const handleGetProcessorForm = async (processorOptionValue: string) => {
 		const res = await TransporterService.getTransporterForm(processorOptionValue);
+
 		const ui = await TransporterService.getTransporterUiSchema(processorOptionValue);
 		setUiSchema(ui);
 		setForm(res);
@@ -95,6 +97,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 		handleGetProcessor();
 	}, []);
 
+	// ...existing code...
 	const theme = createTheme({
 		components: {
 			MuiSelect: {
@@ -105,14 +108,14 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 					},
 				},
 			},
-
 		},
-	});
-
+	})
+        
 	const renderers:any = [
 		...materialRenderers,
 		customEnumRenderer
 	];
+
 
 	return (
 		<>

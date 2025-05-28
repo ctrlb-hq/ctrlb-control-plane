@@ -3,6 +3,7 @@ package frontendnode
 type FrontendNodeRepositoryInterface interface {
 	GetComponents(componentType string) (*[]ComponentInfo, error)
 	GetComponentSchemaByName(componentName string) (any, error)
+	GetComponentUISchemaByName(componentName string) (any, error)
 }
 
 type FrontendNodeService struct {
@@ -12,6 +13,7 @@ type FrontendNodeService struct {
 type FrontendNodeServiceInterface interface {
 	GetComponents(componentType string) (*[]ComponentInfo, error)
 	GetComponentSchemaByName(componentName string) (any, error)
+	GetComponentUISchemaByName(componentName string) (any, error)
 }
 
 func NewFrontendNodeService(frontendNodeRepositoryInterface FrontendNodeRepositoryInterface) *FrontendNodeService {
@@ -26,4 +28,8 @@ func (f *FrontendNodeService) GetComponents(componentType string) (*[]ComponentI
 
 func (f *FrontendNodeService) GetComponentSchemaByName(componentName string) (any, error) {
 	return f.FrontendNodeRepository.GetComponentSchemaByName(componentName)
+}
+
+func (f *FrontendNodeService) GetComponentUISchemaByName(componentName string) (any, error) {
+	return f.FrontendNodeRepository.GetComponentUISchemaByName(componentName)
 }
