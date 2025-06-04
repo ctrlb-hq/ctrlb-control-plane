@@ -13,7 +13,6 @@ const agentServices = {
 			if (error.response.status === 401) {
 				return await agentServices.getAllAgents();
 			}
-			console.log(error);
 			const axiosError = error as AxiosError<ApiError>;
 			throw new Error(axiosError.response?.data.message || "Failed to fetch agent list");
 		}
@@ -30,7 +29,6 @@ const agentServices = {
 			if (error.response.status === 401) {
 				return await agentServices.getLatestAgents({ since });
 			}
-			console.log(error);
 			const axiosError = error as AxiosError<ApiError>;
 			throw new Error(axiosError.response?.data.message || "Failed to fetch agent list");
 		}
@@ -58,7 +56,6 @@ const agentServices = {
 			const response = await axiosInstance.delete(`/agents/${id}`);
 			const data = response.data;
 
-			console.log("Agent Deleted successfully");
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {
@@ -75,7 +72,6 @@ const agentServices = {
 			const response = await axiosInstance.post(`/agents/${id}/start`);
 			const data = response.data;
 
-			console.log("Agent Started successfully");
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {

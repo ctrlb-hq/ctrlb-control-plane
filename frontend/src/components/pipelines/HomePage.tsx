@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import authService from "../../services/authService";
-import PipelineTable from "./overview/PipelineTable";
+import authService from "../../services/auth";
+import PipelineTable from "@/components/pipelines/overview/PipelineTable";
 import { ROUTES } from "../../constants";
-import AddPipelineSheet from "./create/AddPipelineSheet";
+import AddPipelineSheet from "@/components/pipelines/create/AddPipelineSheet";
 import { Button } from "../ui/button";
 import { ArrowLeftRight } from "lucide-react";
 

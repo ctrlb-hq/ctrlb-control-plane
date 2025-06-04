@@ -11,8 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { Pipeline } from "@/types/pipeline.types";
-import pipelineServices from "@/services/pipelineServices";
-import { toast } from "@/hooks/use-toast";
+import pipelineServices from "@/services/pipeline";
+import { toast } from "@/hooks/useToast";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface Props {

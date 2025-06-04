@@ -12,9 +12,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-import { useToast } from "@/hooks/use-toast";
-import pipelineServices from "@/services/pipelineServices";
-import { TransporterService } from "@/services/transporterService";
+import { useToast } from "@/hooks/useToast";
+import pipelineServices from "@/services/pipeline";
+import { TransporterService } from "@/services/transporter";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { JsonForms } from "@jsonforms/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";

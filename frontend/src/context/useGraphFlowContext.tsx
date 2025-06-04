@@ -13,7 +13,7 @@ import {
 	Connection,
 } from "reactflow";
 import { initialNodes, initialEdges } from "../constants";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 
 interface BaseNodeData {
 	component_role?: string;
@@ -198,35 +198,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 		setEdgeValue(fetchLocalStorageEdgeData(true));
 	}, []);
 
-	// useEffect(() => {
-	// 	const handleStorageChange = (event: StorageEvent) => {
-	// 		if (event.key === "Nodes" && event.newValue) {
-	// 			try {
-	// 				const updatedNodes = JSON.parse(event.newValue);
-	// 				const isReactFlowFormat = updatedNodes.length > 0 && "type" in updatedNodes[0] && "data" in updatedNodes[0];
-	// 				const formattedNodes = isReactFlowFormat ? updatedNodes : convertToReactFlowNodesFormat(updatedNodes);
-	// 				setNodeValue(formattedNodes);
-	// 			} catch (error) {
-	// 				console.error("Error parsing updated Nodes from localStorage:", error);
-	// 			}
-	// 		}
-	// 		if (event.key === "PipelineEdges" && event.newValue) {
-	// 			try {
-	// 				const updatedEdges = JSON.parse(event.newValue);
-	// 				const isReactFlowFormat = updatedEdges.length > 0 && "source" in updatedEdges[0] && "target" in updatedEdges[0];
-	// 				const formattedEdges = isReactFlowFormat ? updatedEdges : convertToReactFlowEdgeFormatEdges(updatedEdges);
-	// 				setEdgeValue(formattedEdges);
-	// 			} catch (error) {
-	// 				console.error("Error parsing updated Edges from localStorage:", error);
-	// 			}
-	// 		}
-	// 	};
-
-	// 	window.addEventListener("storage", handleStorageChange);
-	// 	return () => {
-	// 		window.removeEventListener("storage", handleStorageChange);
-	// 	};
-	// }, [setNodeValue, setEdgeValue]);
+	
 
 	const setNodeValueDirect = (nodes: Node<NodeData>[]) => {
 		setNodeValue(nodes);

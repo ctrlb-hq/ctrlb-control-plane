@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import authService from "../../services/authService";
+import authService from "../../services/auth";
 import { LoginCredentials } from "../../types/auth.types";
 import { ROUTES } from "../../constants";
 

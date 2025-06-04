@@ -12,7 +12,7 @@ import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sh
 import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-import { TransporterService } from "@/services/transporterService";
+import { TransporterService } from "@/services/transporter";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";

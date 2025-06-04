@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import authService from "../../services/authService";
+import authService from "../../services/auth";
 import { RegisterCredentials } from "../../types/auth.types";
 
 const Register: React.FC = () => {

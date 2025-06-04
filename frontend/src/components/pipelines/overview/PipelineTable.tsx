@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ViewPipelineDetails from "./ViewPipelineDetails";
-import pipelineServices from "@/services/pipelineServices";
+import pipelineServices from "@/services/pipeline";
 import { useEffect, useState } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import { useGraphFlow } from "@/context/useGraphFlowContext";

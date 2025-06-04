@@ -15,9 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
-import agentServices from "@/services/agentServices";
+import agentServices from "@/services/agent";
 
 interface formData {
 	name: string;

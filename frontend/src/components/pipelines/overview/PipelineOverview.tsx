@@ -1,7 +1,7 @@
 import { formatTimestampWithDate } from "@/constants";
-import { useToast } from "@/hooks/use-toast";
-import agentServices from "@/services/agentServices";
-import pipelineServices from "@/services/pipelineServices";
+import { useToast } from "@/hooks/useToast";
+import agentServices from "@/services/agent";
+import pipelineServices from "@/services/pipeline";
 import { MetricData } from "@/types/pipeline.types";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";

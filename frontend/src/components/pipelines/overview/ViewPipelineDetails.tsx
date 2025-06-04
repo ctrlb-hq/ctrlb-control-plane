@@ -1,7 +1,7 @@
 import { Boxes } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import pipelineServices from "@/services/pipelineServices";
+import { useToast } from "@/hooks/useToast";
+import pipelineServices from "@/services/pipeline";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
