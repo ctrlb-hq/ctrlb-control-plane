@@ -7,10 +7,10 @@ import {
 	useLocation,
 	Location,
 } from "react-router-dom";
-import { HomePage } from "./pages/HomePage";
+import { HomePage } from "./components/Pipelines/HomePage";
 // import { EditConfig } from './components/EditConfig';
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Signup";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Signup";
 import { ROUTES } from "./constants";
 
 interface LocationState {

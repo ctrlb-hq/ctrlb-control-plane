@@ -32,8 +32,8 @@ import ReactFlow, {
 	ReactFlowInstance,
 } from "reactflow";
 import { customEnumRenderer } from "./CustomEnumControl";
-import GenericNode from "@/components/Pipelines/GenericNode";
-import PluginDropdownOptions from "./PluginDropdownOptions";
+import GenericNode from "@/components/pipelines/editor/GenericNode";
+import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
 
 const theme = createTheme({
 	components: {

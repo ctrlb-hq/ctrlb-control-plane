@@ -1,7 +1,6 @@
 import { Button } from "../../ui/button";
 import { PlusIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
 import {
 	Dialog,
 	DialogContent,
@@ -10,12 +9,13 @@ import {
 	DialogTitle,
 	DialogDescription,
 } from "@/components/ui/dialog";
-
-import AddPipelineDetails from "./AddPipelineDetails";
+import AddPipelineDetails from "@/components/pipelines/create/AddPipelineDetails";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import PipelineEditorSheet from "../PipelineGraphEditor";
+import PipelineEditorSheet from "@/components/pipelines/editor/PipelineGraphEditor";
+
+
 const AddPipelineSheet = () => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {
@@ -65,8 +65,8 @@ const AddPipelineSheet = () => {
 				}}>
 				<SheetTrigger asChild>
 					<Button className="flex gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">
-						Add New Pipeline
 						<PlusIcon className="h-4 w-4" />
+						Add New Pipeline
 					</Button>
 				</SheetTrigger>
 				<SheetContent>

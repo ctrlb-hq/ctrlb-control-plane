@@ -16,7 +16,7 @@ import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { customEnumRenderer } from "./CustomEnumControl";
+import { customEnumRenderer } from "@/components/pipelines/editor/CustomEnumControl";
 import { JsonSchema } from "@jsonforms/core";
 import { ArrowBigRightDash } from "lucide-react";
 

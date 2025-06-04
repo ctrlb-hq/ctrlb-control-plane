@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ProgressFlow from "./ProgressFlow";
+import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
 
 import {
 	Select,

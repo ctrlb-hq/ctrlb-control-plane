@@ -6,11 +6,11 @@ import pipelineServices from "@/services/pipelineServices";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import "reactflow/dist/style.css";
-import Yaml from "../YAML/Yaml";
+import Yaml from "./Yaml";
 import PipelineOverview from "./PipelineOverview";
 
 import DeletePipelineDialog from "./DeletePipelineDialog";
-import PipelineEditorSheet from "./PipelineGraphEditor";
+import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { Button } from "@/components/ui/button";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {

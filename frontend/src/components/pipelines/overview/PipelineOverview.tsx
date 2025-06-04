@@ -6,7 +6,7 @@ import { MetricData } from "@/types/pipeline.types";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { HealthChart } from "../charts/HealthChart";
+import { HealthChart } from "./HealthChart";
 import { getRandomChartColor } from "@/constants";
 
 type Props = {
