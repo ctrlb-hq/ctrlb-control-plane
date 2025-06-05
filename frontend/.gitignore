@@ -7,19 +7,51 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Build artifacts
+node_modules/
+dist/
+dist-ssr/
+build/
+coverage/
+.out/
+.next/
+
+# TypeScript
+*.tsbuildinfo
+*.tsbuildinfo.backup
+
+# Environment files (keep .env.production for CI/CD)
+.env
+.env.*
+!.env.production
+
+# Local config
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS-specific
 .DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+!.vscode/extensions.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# Testing
+coverage/
+test-results/
+
+# System artifacts
+*.pid
+*.seed
+*.tgz
+*.orig
+
+# Caches
+.cache/
+.eslintcache

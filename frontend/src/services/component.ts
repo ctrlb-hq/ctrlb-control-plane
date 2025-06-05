@@ -2,7 +2,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { ApiError } from "@/types/agent.types";
 import { AxiosError } from "axios";
 
-export const TransporterService = {
+export const ComponentService = {
 	getTransporterService: async (type: string): Promise<any> => {
 		try {
 			const res = await axiosInstance.get("/component", {
@@ -14,7 +14,7 @@ export const TransporterService = {
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {
-				return await TransporterService.getTransporterService(type);
+				return await ComponentService.getTransporterService(type);
 			}
 			console.log(error);
 			const axiosError = error as AxiosError<ApiError>;
@@ -29,7 +29,7 @@ export const TransporterService = {
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {
-				return await TransporterService.getTransporterService(name);
+				return await ComponentService.getTransporterService(name);
 			}
 			console.log(error);
 			const axiosError = error as AxiosError<ApiError>;
@@ -43,7 +43,7 @@ export const TransporterService = {
 			return data;
 		} catch (error: any) {
 			if (error.response.status === 401) {
-				return await TransporterService.getTransporterUiSchema(name);
+				return await ComponentService.getTransporterUiSchema(name);
 			}
 			console.log(error);
 			const axiosError = error as AxiosError<ApiError>;

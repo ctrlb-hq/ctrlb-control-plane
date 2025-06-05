@@ -7,7 +7,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { TransporterService } from "@/services/transporter";
+import { ComponentService } from "@/services/component";
 import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "./CustomEnumControl";
 
@@ -86,8 +86,8 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 	};
 
 	const getForm = async () => {
-		const res = await TransporterService.getTransporterForm(Data.component_name);
-		const ui = await TransporterService.getTransporterUiSchema(Data.component_name);
+		const res = await ComponentService.getTransporterForm(Data.component_name);
+		const ui = await ComponentService.getTransporterUiSchema(Data.component_name);
 		setForm(res);
 		setUiSchema(ui);
 	};

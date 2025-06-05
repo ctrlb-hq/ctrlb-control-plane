@@ -14,7 +14,7 @@ import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
-import { TransporterService } from "@/services/transporter";
+import { ComponentService } from "@/services/component";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { JsonForms } from "@jsonforms/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -85,19 +85,12 @@ const PipelineEditorSheet = ({
 
 	const nodeTypes = useMemo(
 		() => ({
-			source: (props: NodeProps) => (
-				<GenericNode {...props} type="source" />
-			),
-			processor: (props: NodeProps) => (
-				<GenericNode {...props} type="processor" />
-			),
-			destination: (props: NodeProps) => (
-				<GenericNode {...props} type="destination" />
-			),
+			source: (props: NodeProps) => <GenericNode {...props} type="source" />,
+			processor: (props: NodeProps) => <GenericNode {...props} type="processor" />,
+			destination: (props: NodeProps) => <GenericNode {...props} type="destination" />,
 		}),
-		[]
+		[],
 	);
-
 
 	const fetchGraph = async () => {
 		const res = await pipelineServices.getPipelineGraph(pipelineId);
@@ -205,8 +198,8 @@ const PipelineEditorSheet = ({
 		setIsReviewSheetOpen(false);
 		setIsEditFormOpen(true);
 		setSelectedChange(change);
-		const schema = await TransporterService.getTransporterForm(change.component_type);
-		const ui = await TransporterService.getTransporterUiSchema(change.component_type);
+		const schema = await ComponentService.getTransporterForm(change.component_type);
+		const ui = await ComponentService.getTransporterUiSchema(change.component_type);
 		setForm(schema);
 		setUiSchema(ui);
 		setConfig(change.finalConfig);

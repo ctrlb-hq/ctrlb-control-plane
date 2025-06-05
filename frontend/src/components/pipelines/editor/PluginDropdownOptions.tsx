@@ -12,7 +12,7 @@ import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sh
 import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-import { TransporterService } from "@/services/transporter";
+import { ComponentService } from "@/services/component";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -61,8 +61,8 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 	};
 
 	const fetchForm = async (plugin: string) => {
-		const schema = await TransporterService.getTransporterForm(plugin);
-		const ui = await TransporterService.getTransporterUiSchema(plugin);
+		const schema = await ComponentService.getTransporterForm(plugin);
+		const ui = await ComponentService.getTransporterUiSchema(plugin);
 		setForm(schema);
 		setUiSchema(ui);
 	};
@@ -96,7 +96,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 	};
 
 	const fetchPlugins = async () => {
-		const res = await TransporterService.getTransporterService(kind);
+		const res = await ComponentService.getTransporterService(kind);
 		setPlugins(res);
 	};
 
@@ -125,8 +125,9 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 				<DropdownMenuTrigger asChild disabled={disabled}>
 					<Button
 						variant="outline"
-						className={`flex items-center gap-2 border-2 rounded-md shadow-md px-4 py-2 ${disabled ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
-							}`}>
+						className={`flex items-center gap-2 border-2 rounded-md shadow-md px-4 py-2 ${
+							disabled ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
+						}`}>
 						➕ Add {label}
 					</Button>
 				</DropdownMenuTrigger>

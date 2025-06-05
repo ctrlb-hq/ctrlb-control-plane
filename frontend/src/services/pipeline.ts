@@ -18,20 +18,6 @@ const pipelineServices = {
 		}
 	},
 
-	addPipeline: async (payload: any): Promise<any> => {
-		try {
-			const response = await axiosInstance.post(`/pipelines`, payload);
-			const data = response.data;
-			return data;
-		} catch (error: any) {
-			if (error.response.status === 401) {
-				return await pipelineServices.addPipeline(payload);
-			}
-			const axiosError = error as AxiosError<ApiError>;
-			throw new Error(axiosError.response?.data.message || "Failed to add pipeline.");
-		}
-	},
-
 	getPipelineById: async (id: string): Promise<any> => {
 		try {
 			if (!id) return;
@@ -102,37 +88,6 @@ const pipelineServices = {
 			throw new Error(
 				axiosError.response?.data.message ||
 					"Failed to fetch agents connected to the given pipeline by it's id.",
-			);
-		}
-	},
-	detachAgentFromPipeline: async (id: string, agent_id: string): Promise<any> => {
-		try {
-			if (!id || !agent_id) return;
-			await axiosInstance.delete(`/pipelines/${id}/agents/${agent_id}`);
-		} catch (error: any) {
-			if (error.response.status === 401) {
-				return await pipelineServices.detachAgentFromPipeline(id, agent_id);
-			}
-			const axiosError = error as AxiosError<ApiError>;
-			throw new Error(
-				axiosError.response?.data.message || "Failed to detach agent from the pipeline.",
-			);
-		}
-	},
-	attachAgentToPipeline: async (id: string, agent_id: string): Promise<any> => {
-		try {
-			if (!id || !agent_id) return;
-			const response = await axiosInstance.post(`/pipelines/${id}/agents/${agent_id}`);
-			const data = response.data;
-
-			return data;
-		} catch (error: any) {
-			if (error.response.status === 401) {
-				return await pipelineServices.attachAgentToPipeline(id, agent_id);
-			}
-			const axiosError = error as AxiosError<ApiError>;
-			throw new Error(
-				axiosError.response?.data.message || "Failed to attach an agent to the pipeline.",
 			);
 		}
 	},
