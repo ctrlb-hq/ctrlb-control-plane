@@ -5,7 +5,8 @@
         "check_interval": {
             "type": "string",
             "title": "Check Interval",
-            "default": "1s"
+            "default": "1s",
+            "minLength": 2
         },
         "limit_mib": {
             "type": "integer",

@@ -6,7 +6,8 @@
       "type": "string",
       "title": "Decision Wait Time",
       "default": "30s",
-      "description": "Time to wait for a decision before forcefully sampling or dropping"
+      "description": "Time to wait for a decision before forcefully sampling or dropping",
+      "minLength": 1
     },
     "num_traces": {
       "type": "integer",
@@ -27,7 +28,8 @@
         "properties": {
           "name": {
             "type": "string",
-            "title": "Policy Name"
+            "title": "Policy Name",
+            "minLength": 1
           },
           "type": {
             "type": "string",
@@ -41,7 +43,8 @@
               "probabilistic",
               "status_code",
               "latency"
-            ]
+            ],
+            "minLength": 1
           },
           "numeric_attribute": {
             "type": "object",
@@ -66,7 +69,8 @@
               "values": {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1
                 },
                 "default": [
                   ""
@@ -98,7 +102,8 @@
               "status_codes": {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1
                 },
                 "default": [
                   ""

@@ -4,34 +4,37 @@
   "properties": {
     "tenant_id": {
       "type": "string",
-      "title": "Tenant ID"
+      "title": "Tenant ID",
+      "minLength": 1
     },
     "client_id": {
       "type": "string",
-      "title": "Client ID"
+      "title": "Client ID",
+      "minLength": 1
     },
     "client_secret": {
       "type": "string",
-      "title": "Client Secret"
+      "title": "Client Secret",
+      "minLength": 1
     },
     "subscription_id": {
       "type": "string",
-      "title": "Subscription ID"
+      "title": "Subscription ID",
+      "minLength": 1
     },
     "resource_groups": {
       "type": "array",
       "title": "Resource Groups",
       "items": {
-        "type": "string"
-      },
-      "default": [
-        ""
-      ]
+        "type": "string",
+        "minLength": 1
+      }
     },
     "collection_interval": {
       "type": "string",
       "title": "Collection Interval",
-      "default": "300s"
+      "default": "300s",
+      "minLength": 1
     },
     "metrics": {
       "type": "array",
@@ -42,7 +45,8 @@
           "resource_type": {
             "type": "string",
             "title": "Azure Resource Type",
-            "default": "Microsoft.Compute/virtualMachines"
+            "default": "Microsoft.Compute/virtualMachines",
+            "minLength": 1
           },
           "namespace": {
             "type": "string",
@@ -52,11 +56,9 @@
             "type": "array",
             "title": "Metric Names",
             "items": {
-              "type": "string"
-            },
-            "default": [
-              ""
-            ]
+              "type": "string",
+              "minLength": 1
+            }
           },
           "aggregation": {
             "type": "string",
@@ -68,7 +70,8 @@
               "Minimum",
               "Maximum",
               "Count"
-            ]
+            ],
+            "minLength": 1
           }
         },
         "required": [

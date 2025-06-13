@@ -10,7 +10,8 @@
         "properties": {
           "key": {
             "type": "string",
-            "title": "Attribute Key"
+            "title": "Attribute Key",
+            "minLength": 1
           },
           "value": {
             "type": [
@@ -35,7 +36,8 @@
               "hash",
               "extract"
             ],
-            "description": "Type of attribute modification to apply"
+            "description": "Type of attribute modification to apply",
+            "minLength": 1
           }
         },
         "required": [
@@ -60,7 +62,8 @@
             "strict",
             "regexp"
           ],
-          "default": "strict"
+          "default": "strict",
+          "minLength": 1
         },
         "attributes": {
           "type": "array",
@@ -68,22 +71,18 @@
             "type": "object",
             "properties": {
               "key": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               },
               "value": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
               "key"
             ]
-          },
-          "default": [
-            {
-              "key": "",
-              "value": ""
-            }
-          ]
+          }
         }
       }
     },
@@ -97,7 +96,8 @@
             "strict",
             "regexp"
           ],
-          "default": "strict"
+          "default": "strict",
+          "minLength": 1
         },
         "attributes": {
           "type": "array",
@@ -105,22 +105,18 @@
             "type": "object",
             "properties": {
               "key": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               },
               "value": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
               "key"
             ]
-          },
-          "default": [
-            {
-              "key": "",
-              "value": ""
-            }
-          ]
+          }
         }
       }
     }

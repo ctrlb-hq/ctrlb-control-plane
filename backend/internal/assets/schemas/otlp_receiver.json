@@ -13,7 +13,8 @@
             "endpoint": {
               "type": "string",
               "title": "Endpoint",
-              "default": "0.0.0.0:4317"
+              "default": "0.0.0.0:4317",
+              "minLength": 1
             },
             "transport": {
               "type": "string",
@@ -21,7 +22,8 @@
               "default": "tcp",
               "enum": [
                 "tcp"
-              ]
+              ],
+              "minLength": 1
             },
             "tls_settings": {
               "type": "object",
@@ -59,7 +61,8 @@
             "compression": {
               "type": "string",
               "title": "Compression",
-              "default": ""
+              "default": "",
+              "minLength": 1
             }
           },
           "required": [
@@ -73,7 +76,8 @@
             "endpoint": {
               "type": "string",
               "title": "Endpoint",
-              "default": "0.0.0.0:4318"
+              "default": "0.0.0.0:4318",
+              "minLength": 1
             },
             "cors": {
               "type": "object",
@@ -83,7 +87,8 @@
                   "type": "array",
                   "title": "Allowed Origins",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "default": [
                     ""
@@ -93,7 +98,8 @@
                   "type": "array",
                   "title": "Allowed Headers",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "default": [
                     ""
@@ -103,7 +109,8 @@
                   "type": "array",
                   "title": "Allowed Methods",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "default": [
                     ""
@@ -113,7 +120,8 @@
                   "type": "array",
                   "title": "Exposed Headers",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "default": [
                     ""
@@ -122,7 +130,8 @@
                 "max_age": {
                   "type": "string",
                   "title": "Max Age",
-                  "default": ""
+                  "default": "",
+                  "minLength": 1
                 },
                 "allow_credentials": {
                   "type": "boolean",

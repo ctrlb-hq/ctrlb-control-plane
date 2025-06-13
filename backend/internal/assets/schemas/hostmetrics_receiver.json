@@ -6,7 +6,8 @@
       "type": "string",
       "title": "Collection Interval",
       "default": "60s",
-      "description": "The time between data collections"
+      "description": "The time between data collections",
+      "minLength": 1
     },
     "scrapers": {
       "type": "object",
@@ -48,20 +49,16 @@
             "include_devices": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             },
             "exclude_devices": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },

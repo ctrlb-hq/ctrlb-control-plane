@@ -5,13 +5,15 @@
     "protocol_version": {
       "type": "string",
       "title": "Kafka Protocol Version",
-      "default": "2.0.0"
+      "default": "2.0.0",
+      "minLength": 1
     },
     "brokers": {
       "type": "array",
       "title": "Broker Addresses",
       "items": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1
       },
       "default": [
         ""
@@ -20,7 +22,8 @@
     "topic": {
       "type": "string",
       "title": "Topic Name",
-      "default": "otlp_spans"
+      "default": "otlp_spans",
+      "minLength": 1
     },
     "encoding": {
       "type": "string",
@@ -30,7 +33,8 @@
         "otlp_json",
         "raw"
       ],
-      "default": "otlp_proto"
+      "default": "otlp_proto",
+      "minLength": 1
     },
     "partition": {
       "type": "string",
@@ -40,7 +44,8 @@
         "random",
         "round_robin"
       ],
-      "default": "hash"
+      "default": "hash",
+      "minLength": 1
     },
     "metadata": {
       "type": "object",
@@ -59,7 +64,8 @@
         "retry_backoff": {
           "type": "string",
           "title": "Retry Backoff Duration",
-          "default": "250ms"
+          "default": "250ms",
+          "minLength": 1
         }
       }
     },
@@ -101,7 +107,8 @@
                 "SCRAM-SHA-256",
                 "SCRAM-SHA-512"
               ],
-              "default": "PLAIN"
+              "default": "PLAIN",
+              "minLength": 1
             }
           }
         }

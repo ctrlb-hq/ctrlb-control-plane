@@ -5,37 +5,36 @@
     "region": {
       "type": "string",
       "title": "AWS Region",
-      "default": ""
+      "default": "",
+      "minLength": 1
     },
     "profile": {
       "type": "string",
-      "title": "AWS Profile",
-      "default": ""
+      "title": "AWS Profile"
     },
     "access_key": {
       "type": "string",
-      "title": "AWS Access Key",
-      "default": ""
+      "title": "AWS Access Key"
     },
     "secret_key": {
       "type": "string",
-      "title": "AWS Secret Key",
-      "default": ""
+      "title": "AWS Secret Key"
     },
     "role_arn": {
       "type": "string",
-      "title": "Role ARN to Assume",
-      "default": ""
+      "title": "Role ARN to Assume"
     },
     "collection_interval": {
       "type": "string",
       "title": "Collection Interval",
-      "default": "300s"
+      "default": "300s",
+      "minLength": 1
     },
     "metrics_namespace": {
       "type": "string",
       "title": "Metrics Namespace",
-      "default": "AWS/EC2"
+      "default": "AWS/EC2",
+      "minLength": 1
     },
     "metrics": {
       "type": "array",
@@ -45,7 +44,8 @@
         "properties": {
           "metric_name": {
             "type": "string",
-            "title": "Metric Name"
+            "title": "Metric Name",
+            "minLength": 1
           },
           "statistic": {
             "type": "string",
@@ -56,17 +56,16 @@
               "Minimum",
               "Maximum",
               "SampleCount"
-            ]
+            ],
+            "minLength": 1
           },
           "dimensions": {
             "type": "array",
             "title": "Dimensions",
             "items": {
-              "type": "string"
-            },
-            "default": [
-              ""
-            ]
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "required": [
@@ -86,7 +85,8 @@
     "resource_type": {
       "type": "string",
       "title": "AWS Resource Type",
-      "default": "ec2"
+      "default": "ec2",
+      "minLength": 1
     },
     "polling_interval": {
       "type": "string",

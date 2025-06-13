@@ -6,7 +6,8 @@
       "type": "string",
       "title": "Timeout",
       "default": "5s",
-      "description": "Maximum time to wait before sending a batch."
+      "description": "Maximum time to wait before sending a batch.",
+      "minLength": 1
     },
     "send_batch_size": {
       "type": "integer",
@@ -24,12 +25,10 @@
       "type": "array",
       "title": "Metadata Keys",
       "items": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1
       },
-      "description": "Keys used for batch metadata routing, if supported.",
-      "default": [
-        ""
-      ]
+      "description": "Keys used for batch metadata routing, if supported."
     },
     "enable_log_batching": {
       "type": "boolean",

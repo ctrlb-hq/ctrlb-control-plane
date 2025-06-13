@@ -10,7 +10,8 @@
         "detailed"
       ],
       "default": "normal",
-      "description": "Level of detail for the output"
+      "description": "Level of detail for the output",
+      "minLength": 1
     },
     "sampling_initial": {
       "type": "integer",
@@ -38,7 +39,8 @@
         "warn",
         "error"
       ],
-      "default": "debug"
+      "default": "debug",
+      "minLength": 1
     },
     "output": {
       "type": "string",
@@ -47,7 +49,8 @@
         "stdout",
         "stderr"
       ],
-      "default": "stdout"
+      "default": "stdout",
+      "minLength": 1
     },
     "format": {
       "type": "string",
@@ -56,7 +59,8 @@
         "console",
         "json"
       ],
-      "default": "console"
+      "default": "console",
+      "minLength": 1
     }
   }
 }

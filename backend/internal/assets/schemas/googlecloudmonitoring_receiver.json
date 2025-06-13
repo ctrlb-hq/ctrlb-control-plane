@@ -4,17 +4,20 @@
   "properties": {
     "project": {
       "type": "string",
-      "title": "GCP Project ID"
+      "title": "GCP Project ID",
+      "minLength": 1
     },
     "metric_prefix": {
       "type": "string",
       "title": "Metric Prefix",
-      "default": "workload.googleapis.com"
+      "default": "workload.googleapis.com",
+      "minLength": 1
     },
     "collection_interval": {
       "type": "string",
       "title": "Collection Interval",
-      "default": "60s"
+      "default": "60s",
+      "minLength": 1
     },
     "credentials_file": {
       "type": "string",
@@ -24,21 +27,17 @@
       "type": "array",
       "title": "Metric Type Prefixes to Include",
       "items": {
-        "type": "string"
-      },
-      "default": [
-        ""
-      ]
+        "type": "string",
+        "minLength": 1
+      }
     },
     "metric_type_prefix_exclude": {
       "type": "array",
       "title": "Metric Type Prefixes to Exclude",
       "items": {
-        "type": "string"
-      },
-      "default": [
-        ""
-      ]
+        "type": "string",
+        "minLength": 1
+      }
     },
     "resource_filters": {
       "type": "array",
@@ -48,27 +47,21 @@
         "properties": {
           "type": {
             "type": "string",
-            "title": "GCP Resource Type"
+            "title": "GCP Resource Type",
+            "minLength": 1
           },
           "labels": {
             "type": "object",
             "title": "Label Filters",
             "additionalProperties": {
               "type": "string"
-            },
-            "default": {}
+            }
           }
         },
         "required": [
           "type"
         ]
-      },
-      "default": [
-        {
-          "type": "",
-          "labels": {}
-        }
-      ]
+      }
     }
   },
   "required": [

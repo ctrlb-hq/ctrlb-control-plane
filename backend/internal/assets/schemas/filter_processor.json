@@ -10,7 +10,8 @@
         "propagate"
       ],
       "default": "ignore",
-      "description": "How the processor handles filter evaluation errors"
+      "description": "How the processor handles filter evaluation errors",
+      "minLength": 1
     },
     "traces": {
       "type": "object",
@@ -26,16 +27,15 @@
                 "regexp",
                 "expr"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "span_names": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             },
             "attributes": {
               "type": "array",
@@ -43,22 +43,18 @@
                 "type": "object",
                 "properties": {
                   "key": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "value": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "required": [
                   "key"
                 ]
-              },
-              "default": [
-                {
-                  "key": "",
-                  "value": ""
-                }
-              ]
+              }
             }
           }
         },
@@ -72,16 +68,15 @@
                 "regexp",
                 "expr"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "span_names": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             },
             "attributes": {
               "type": "array",
@@ -89,22 +84,18 @@
                 "type": "object",
                 "properties": {
                   "key": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "value": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "required": [
                   "key"
                 ]
-              },
-              "default": [
-                {
-                  "key": "",
-                  "value": ""
-                }
-              ]
+              }
             }
           }
         }
@@ -123,16 +114,15 @@
                 "strict",
                 "regexp"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "metric_names": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },
@@ -145,16 +135,15 @@
                 "strict",
                 "regexp"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "metric_names": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "default": [
-                ""
-              ]
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
@@ -173,12 +162,12 @@
                 "strict",
                 "regexp"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "body": {
               "type": "string",
-              "title": "Log Body Pattern",
-              "default": ""
+              "title": "Log Body Pattern"
             }
           }
         },
@@ -191,12 +180,12 @@
                 "strict",
                 "regexp"
               ],
-              "default": "strict"
+              "default": "strict",
+              "minLength": 1
             },
             "body": {
               "type": "string",
-              "title": "Log Body Pattern",
-              "default": ""
+              "title": "Log Body Pattern"
             }
           }
         }

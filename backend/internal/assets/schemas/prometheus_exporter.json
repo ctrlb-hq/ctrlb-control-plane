@@ -5,7 +5,8 @@
     "endpoint": {
       "type": "string",
       "title": "Listen Endpoint",
-      "default": "0.0.0.0:8889"
+      "default": "0.0.0.0:8889",
+      "minLength": 1
     },
     "namespace": {
       "type": "string",
@@ -28,7 +29,8 @@
     "metric_expiration": {
       "type": "string",
       "title": "Metric Expiration Duration",
-      "default": "5m"
+      "default": "5m",
+      "minLength": 1
     },
     "enable_open_metrics": {
       "type": "boolean",

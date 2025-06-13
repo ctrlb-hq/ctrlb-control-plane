@@ -6,7 +6,8 @@
       "type": "array",
       "title": "Include File Paths",
       "items": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1
       },
       "default": [
         ""
@@ -16,11 +17,9 @@
       "type": "array",
       "title": "Exclude File Paths",
       "items": {
-        "type": "string"
-      },
-      "default": [
-        ""
-      ]
+        "type": "string",
+        "minLength": 1
+      }
     },
     "start_at": {
       "type": "string",
@@ -29,7 +28,8 @@
         "beginning",
         "end"
       ],
-      "default": "end"
+      "default": "end",
+      "minLength": 1
     },
     "poll_interval": {
       "type": "string",
@@ -49,7 +49,8 @@
     "encoding": {
       "type": "string",
       "title": "Encoding",
-      "default": "utf-8"
+      "default": "utf-8",
+      "minLength": 1
     },
     "operators": {
       "type": "array",
@@ -59,11 +60,13 @@
         "properties": {
           "type": {
             "type": "string",
-            "title": "Operator Type"
+            "title": "Operator Type",
+            "minLength": 1
           },
           "id": {
             "type": "string",
-            "title": "Operator ID"
+            "title": "Operator ID",
+            "minLength": 1
           },
           "regex": {
             "type": "string",

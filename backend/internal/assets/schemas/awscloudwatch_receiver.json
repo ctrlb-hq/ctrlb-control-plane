@@ -5,13 +5,15 @@
     "region": {
       "type": "string",
       "title": "AWS Region",
-      "default": ""
+      "default": "",
+      "minLength": 1
     },
     "log_group_names": {
       "type": "array",
       "title": "Log Group Names",
       "items": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1
       },
       "default": [
         ""
@@ -19,23 +21,19 @@
     },
     "profile": {
       "type": "string",
-      "title": "AWS Profile",
-      "default": ""
+      "title": "AWS Profile"
     },
     "access_key": {
       "type": "string",
-      "title": "AWS Access Key",
-      "default": ""
+      "title": "AWS Access Key"
     },
     "secret_key": {
       "type": "string",
-      "title": "AWS Secret Key",
-      "default": ""
+      "title": "AWS Secret Key"
     },
     "role_arn": {
       "type": "string",
-      "title": "Role ARN to Assume",
-      "default": ""
+      "title": "Role ARN to Assume"
     },
     "poll_interval": {
       "type": "string",
@@ -49,8 +47,7 @@
     },
     "start_time": {
       "type": "string",
-      "title": "Start Time (RFC3339)",
-      "default": ""
+      "title": "Start Time (RFC3339)"
     },
     "distribution": {
       "type": "string",
@@ -61,7 +58,8 @@
         "eks",
         "lambda"
       ],
-      "default": "standard"
+      "default": "standard",
+      "minLength": 1
     },
     "format": {
       "type": "string",
@@ -70,7 +68,8 @@
         "json",
         "text"
       ],
-      "default": "json"
+      "default": "json",
+      "minLength": 1
     }
   },
   "required": [

@@ -5,7 +5,8 @@
     "endpoint": {
       "type": "string",
       "title": "OTLP Endpoint",
-      "default": ""
+      "default": "",
+      "minLength": 1
     },
     "insecure": {
       "type": "boolean",
@@ -19,12 +20,14 @@
         "none",
         "gzip"
       ],
-      "default": "none"
+      "default": "none",
+      "minLength": 1
     },
     "timeout": {
       "type": "string",
       "title": "Request Timeout",
-      "default": "5s"
+      "default": "5s",
+      "minLength": 1
     },
     "headers": {
       "type": "object",
@@ -41,7 +44,8 @@
         "grpc",
         "http/protobuf"
       ],
-      "default": "grpc"
+      "default": "grpc",
+      "minLength": 1
     },
     "tls": {
       "type": "object",
@@ -72,15 +76,18 @@
         },
         "initial_interval": {
           "type": "string",
-          "default": "5s"
+          "default": "5s",
+          "minLength": 1
         },
         "max_interval": {
           "type": "string",
-          "default": "30s"
+          "default": "30s",
+          "minLength": 1
         },
         "max_elapsed_time": {
           "type": "string",
-          "default": "300s"
+          "default": "300s",
+          "minLength": 1
         }
       }
     },
