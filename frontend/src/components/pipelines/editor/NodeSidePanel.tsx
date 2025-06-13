@@ -28,7 +28,6 @@ const applySchemaDefaults = (schema: any, data: any) => {
 	const ajv = new Ajv({ useDefaults: true, allErrors: true });
 	const validate = ajv.compile(schema);
 
-	// Clone data so we don't mutate parent's object reference
 	const clonedData = { ...data };
 	validate(clonedData);
 
@@ -55,40 +54,40 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 			MuiFormControl: {
 				styleOverrides: {
 					root: {
-						marginBottom: "0.5rem", // your existing setting
+						marginBottom: "0.5rem",
 					},
 				},
 			},
 			MuiInputBase: {
 				styleOverrides: {
 					root: {
-						fontSize: "0.8rem", // ~13px
-						minHeight: "32px", // compact input height
+						fontSize: "0.8rem",
+						minHeight: "32px",
 					},
 					input: {
-						padding: "6px 8px", // compact padding inside input
+						padding: "6px 8px",
 					},
 				},
 			},
 			MuiFormLabel: {
 				styleOverrides: {
 					root: {
-						fontSize: "0.75rem", // ~12px label
+						fontSize: "0.75rem",
 					},
 				},
 			},
 			MuiSelect: {
 				styleOverrides: {
 					root: {
-						fontSize: "0.8rem", // ~13px select font
+						fontSize: "0.8rem",
 					},
 				},
 			},
 			MuiTypography: {
 				styleOverrides: {
 					h5: {
-						fontSize: "1.25rem", // ~16px — now matches your Sheet heading better
-						fontWeight: 500, // optional: make it bold like your other headings
+						fontSize: "1rem",
+						fontWeight: 500,
 					},
 				},
 			},
@@ -105,8 +104,8 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		<SheetContent className="w-[36rem] h-full">
 			<div className="flex flex-col h-full p-4 gap-4">
 				<div className="flex gap-3 items-center">
-					<ArrowBigRightDash className="w-6 h-6" /> {/* Slightly bigger arrow */}
-					<h2 className="text-2xl font-bold">{title}</h2> {/* Bigger heading */}
+					<ArrowBigRightDash className="w-6 h-6" />
+					<h2 className="text-2xl font-bold">{title}</h2>
 				</div>
 
 				{description && (
