@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Ajv from "ajv";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { JsonForms } from "@jsonforms/react";
@@ -10,7 +10,6 @@ import { customEnumRenderer } from "@/components/pipelines/editor/CustomEnumCont
 
 interface NodeSidePanelProps {
 	title: string;
-	description?: string;
 	formSchema: any;
 	uiSchema: any;
 	config: any;
@@ -36,7 +35,6 @@ const applySchemaDefaults = (schema: any, data: any) => {
 
 const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	title,
-	description,
 	formSchema,
 	uiSchema,
 	config,
@@ -49,6 +47,8 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	showDelete = false,
 	onErrorsChange,
 }) => {
+	const [showErrors, setShowErrors] = useState(false);
+
 	const theme = createTheme({
 		components: {
 			MuiFormControl: {
@@ -91,6 +91,36 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 					},
 				},
 			},
+			MuiAccordion: {
+				styleOverrides: {
+					root: {
+						marginBottom: "1rem",
+					},
+				},
+			},
+			MuiAvatar: {
+				styleOverrides: {
+					root: {
+						minWidth: "1.8rem",
+						width: "1.8rem",
+						height: "1.8rem",
+						fontSize: "0.8rem",
+						marginRight: "0.5rem",
+						boxSizing: "border-box",
+						backgroundColor: "#3B82F6",
+						color: "#FFFFFF",
+					},
+				},
+			},
+			MuiGrid: {
+				styleOverrides: {
+					root: {
+						"&.MuiGrid-container.MuiGrid-direction-xs-column": {
+							rowGap: "1rem",
+						},
+					},
+				},
+			},
 		},
 	});
 
@@ -100,6 +130,15 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		return applySchemaDefaults(formSchema, config);
 	}, [formSchema, config]);
 
+	const handleSubmit = () => {
+		setShowErrors(true);
+		onSubmit();
+	};
+	const handleDiscard = () => {
+		setShowErrors(false);
+		onDiscard();
+	};
+
 	return (
 		<SheetContent className="w-[36rem] h-full">
 			<div className="flex flex-col h-full p-4 gap-4">
@@ -108,41 +147,40 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 					<h2 className="text-2xl font-bold">{title}</h2>
 				</div>
 
-				{description && (
-					<p className="text-gray-500 text-sm">
-						{" "}
-						{/* Description stays small */}
-						{description} <span className="text-blue-500 underline cursor-pointer">Documentation</span>
-					</p>
-				)}
+				<p className="text-gray-500 text-sm">
+					{"For more information please refer "}
+					<span className="text-blue-500 underline cursor-pointer">Documentation</span>
+				</p>
 
 				<ThemeProvider theme={theme}>
-					<div className="flex-grow overflow-y-auto pt-2">
-						<div className="p-3 text-xs">
-							<JsonForms
-								data={configWithDefaults}
-								schema={formSchema}
-								uischema={uiSchema}
-								renderers={renderers}
-								cells={materialCells}
-								onChange={({ data, errors }) => {
-									setConfig(data);
-									if (onErrorsChange) {
-										onErrorsChange(errors);
-									}
-								}}
-							/>
-						</div>
+					<div className="flex-grow overflow-y-auto pt-2 p-3 text-xs">
+						<JsonForms
+							data={configWithDefaults}
+							schema={formSchema}
+							uischema={uiSchema}
+							renderers={renderers}
+							cells={materialCells}
+							validationMode={showErrors ? "ValidateAndShow" : "ValidateAndHide"}
+							onChange={({ data, errors }) => {
+								setConfig(data);
+								if (onErrorsChange) {
+									onErrorsChange(errors);
+								}
+							}}
+						/>
 					</div>
 				</ThemeProvider>
 
 				<SheetFooter className="pt-4">
 					<SheetClose>
 						<div className="flex gap-3">
-							<Button className="bg-blue-500 text-sm" onClick={onSubmit} disabled={submitDisabled}>
+							<Button
+								className="bg-blue-500 text-sm"
+								onClick={submitLabel ? undefined : handleSubmit}
+								disabled={submitDisabled}>
 								{submitLabel}
 							</Button>
-							<Button variant={"outline"} className="text-sm" onClick={onDiscard}>
+							<Button variant={"outline"} className="text-sm" onClick={handleDiscard}>
 								Discard Changes
 							</Button>
 							{showDelete && (

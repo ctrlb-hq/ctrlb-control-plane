@@ -275,7 +275,9 @@ const PipelineEditorSheet = ({
 					</Sheet>
 				</div>
 			</div>
-			<div ref={reactFlowWrapper} style={{ height: "77vh", backgroundColor: "#f9f9f9" }}>
+			<div
+				ref={reactFlowWrapper}
+				style={{ height: "92.5vh", width: "100vw", backgroundColor: "#f9f9f9" }}>
 				<ReactFlow
 					nodes={nodeValue}
 					edges={edgeValue}
@@ -313,36 +315,41 @@ const PipelineEditorSheet = ({
 						</Panel>
 					)}
 				</ReactFlow>
-			</div>
-			<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
-				<div className="flex justify-around gap-2">
-					<div className="flex items-center">
-						<PluginDropdownOptions
-							kind="receiver"
-							nodeType="source"
-							label="Source"
-							dataType="receiver"
-							disabled={!isEditMode}
-						/>
-					</div>
-					<div className="flex items-center">
-						<PluginDropdownOptions
-							kind="processor"
-							nodeType="processor"
-							label="Processor"
-							dataType="receiver"
-							disabled={!isEditMode}
-						/>
-					</div>
-					<div className="flex items-center">
-						<PluginDropdownOptions
-							kind="exporter"
-							nodeType="destination"
-							label="Destination"
-							dataType="exporter"
-							disabled={!isEditMode}
-						/>
-					</div>
+				<div
+					style={{
+						position: "absolute",
+						bottom: "5rem", // distance from bottom
+						left: "50%",
+						transform: "translateX(-50%)",
+						backgroundColor: "#f1f5f9",
+						padding: "12px 24px",
+						borderRadius: "8px",
+						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+						display: "flex",
+						gap: "12px",
+						zIndex: 20,
+					}}>
+					<PluginDropdownOptions
+						kind="receiver"
+						nodeType="source"
+						label="Source"
+						dataType="receiver"
+						disabled={!isEditMode}
+					/>
+					<PluginDropdownOptions
+						kind="processor"
+						nodeType="processor"
+						label="Processor"
+						dataType="receiver"
+						disabled={!isEditMode}
+					/>
+					<PluginDropdownOptions
+						kind="exporter"
+						nodeType="destination"
+						label="Destination"
+						dataType="exporter"
+						disabled={!isEditMode}
+					/>
 				</div>
 			</div>
 		</>

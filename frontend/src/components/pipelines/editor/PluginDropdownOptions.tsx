@@ -136,7 +136,6 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 				<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
 					<NodeSidePanel
 						title={optionValue}
-						description="Generate the defined log type at the rate desired"
 						formSchema={form}
 						uiSchema={uiSchema}
 						config={config}

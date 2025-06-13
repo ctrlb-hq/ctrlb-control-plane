@@ -36,6 +36,7 @@
       "scope": "#/properties/resource_filters",
       "label": "Resource Filters",
       "options": {
+        "elementLabelProp": "type",
         "detail": {
           "type": "VerticalLayout",
           "elements": [

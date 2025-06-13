@@ -150,10 +150,8 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 				</div>
 			</SheetTrigger>
 
-			{/* === ReusableSheetContent instead of SheetContent === */}
 			<NodeSidePanel
 				title={Data.name}
-				description="Generate the defined log type at the rate desired."
 				formSchema={form}
 				uiSchema={uiSchema}
 				config={config}

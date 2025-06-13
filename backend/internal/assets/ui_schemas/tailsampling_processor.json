@@ -20,7 +20,10 @@
     {
       "type": "Control",
       "label": "Sampling Policies",
-      "scope": "#/properties/policies"
+      "scope": "#/properties/policies",
+      "options": {
+        "elementLabelProp": "name"
+      }
     }
   ]
 }

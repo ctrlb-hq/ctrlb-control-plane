@@ -23,7 +23,10 @@
             },
             {
               "type": "Control",
-              "scope": "#/properties/action"
+              "scope": "#/properties/action",
+              "options": {
+                "elementLabelProp": "key"
+              }
             }
           ]
         }

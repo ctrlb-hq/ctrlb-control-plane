@@ -41,6 +41,7 @@
       "scope": "#/properties/operators",
       "label": "Processors",
       "options": {
+        "elementLabelProp": "type",
         "detail": {
           "type": "VerticalLayout",
           "elements": [

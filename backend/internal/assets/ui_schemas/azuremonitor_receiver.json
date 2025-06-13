@@ -42,6 +42,7 @@
       "scope": "#/properties/metrics",
       "label": "Metric Declarations",
       "options": {
+        "elementLabelProp": "resource_type",
         "detail": {
           "type": "VerticalLayout",
           "elements": [
