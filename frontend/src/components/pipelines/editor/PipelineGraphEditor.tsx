@@ -5,7 +5,6 @@ import {
 	SheetClose,
 	SheetContent,
 	SheetDescription,
-	SheetFooter,
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
@@ -15,9 +14,6 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
-import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-import { JsonForms } from "@jsonforms/react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Edit, Trash2 } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
@@ -31,21 +27,9 @@ import ReactFlow, {
 	Panel,
 	ReactFlowInstance,
 } from "reactflow";
-import { customEnumRenderer } from "./CustomEnumControl";
 import GenericNode from "@/components/pipelines/editor/GenericNode";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
-
-const theme = createTheme({
-	components: {
-		MuiFormControl: {
-			styleOverrides: {
-				root: { marginBottom: "0.5rem" },
-			},
-		},
-	},
-});
-
-const renderers = [...materialRenderers, customEnumRenderer];
+import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 
 const PipelineEditorSheet = ({
 	pipelineId,
@@ -275,36 +259,17 @@ const PipelineEditorSheet = ({
 								</div>
 							)}
 							{isEditFormOpen && selectedChange && (
-								<div className="flex flex-col gap-4 p-4">
-									<div className="flex gap-3 items-center">
-										<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-										<h2 className="text-xl font-bold">{selectedChange.name}</h2>
-									</div>
-									<ThemeProvider theme={theme}>
-										<div className="overflow-y-auto h-[32rem] pt-3">
-											<JsonForms
-												data={config}
-												schema={form}
-												uischema={uiSchema}
-												renderers={renderers}
-												cells={materialCells}
-												onChange={({ data }) => setConfig(data)}
-											/>
-										</div>
-									</ThemeProvider>
-									<SheetFooter>
-										<SheetClose>
-											<div className="flex gap-3">
-												<Button onClick={handleSubmit} className="bg-blue-500">
-													Update
-												</Button>
-												<Button variant="outline" onClick={() => setIsEditFormOpen(false)}>
-													Cancel
-												</Button>
-											</div>
-										</SheetClose>
-									</SheetFooter>
-								</div>
+								<NodeSidePanel
+									title={selectedChange.name}
+									formSchema={form}
+									uiSchema={uiSchema}
+									config={config}
+									setConfig={setConfig}
+									submitLabel="Apply"
+									onSubmit={handleSubmit}
+									onDiscard={() => setSelectedChange(null)}
+									showDelete={false}
+								/>
 							)}
 						</SheetContent>
 					</Sheet>

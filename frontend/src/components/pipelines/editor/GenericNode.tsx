@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
-import { Sheet, SheetTrigger, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-import { JsonForms } from "@jsonforms/react";
-import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ComponentService } from "@/services/component";
 import { ArrowBigRightDash } from "lucide-react";
-import { customEnumRenderer } from "./CustomEnumControl";
+import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 
 interface FormSchema {
 	title?: string;
@@ -18,20 +14,6 @@ interface FormSchema {
 	required?: string[];
 	[key: string]: any;
 }
-
-const theme = createTheme({
-	components: {
-		MuiFormControl: {
-			styleOverrides: {
-				root: {
-					marginBottom: "0.5rem",
-				},
-			},
-		},
-	},
-});
-
-const renderers = [...materialRenderers, customEnumRenderer];
 
 interface GenericNodeProps extends NodeProps {
 	type: "source" | "processor" | "destination";
@@ -59,6 +41,7 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 			status: "deleted",
 			initialConfig: Data.config,
 			finalConfig: undefined,
+			component_type: Data.component_name,
 		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
@@ -76,6 +59,7 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 			status: "edited",
 			initialConfig: Data.config,
 			finalConfig: config,
+			component_type: Data.component_name,
 		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
@@ -166,52 +150,20 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 				</div>
 			</SheetTrigger>
 
-			<SheetContent className="w-[36rem]">
-				<div className="flex flex-col gap-4 p-4">
-					<div className="flex gap-3 items-center">
-						<ArrowBigRightDash className="w-6 h-6" />
-						<h2 className="text-xl font-bold">{Data.name}</h2>
-					</div>
-					<p className="text-gray-500">
-						Generate the defined log type at the rate desired.{" "}
-						<span className="text-blue-500 underline">Documentation</span>
-					</p>
-					<ThemeProvider theme={theme}>
-						<div className="mt-3">
-							<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
-							<div className="p-3">
-								<div className="overflow-y-auto h-[32rem] pt-3">
-									{form && isOpen && (
-										<JsonForms
-											data={config}
-											schema={form}
-											uischema={uiSchema}
-											renderers={renderers}
-											cells={materialCells}
-											onChange={({ data }) => setConfig(data)}
-										/>
-									)}
-								</div>
-							</div>
-						</div>
-					</ThemeProvider>
-					<SheetFooter>
-						<SheetClose>
-							<div className="flex gap-3">
-								<Button className="bg-blue-500" onClick={handleSubmit}>
-									Apply
-								</Button>
-								<Button variant="outline" onClick={() => setIsOpen(false)}>
-									Discard Changes
-								</Button>
-								<Button variant="outline" onClick={handleDeleteNode}>
-									Delete Node
-								</Button>
-							</div>
-						</SheetClose>
-					</SheetFooter>
-				</div>
-			</SheetContent>
+			{/* === ReusableSheetContent instead of SheetContent === */}
+			<NodeSidePanel
+				title={Data.name}
+				description="Generate the defined log type at the rate desired."
+				formSchema={form}
+				uiSchema={uiSchema}
+				config={config}
+				setConfig={setConfig}
+				submitLabel="Apply"
+				onSubmit={handleSubmit}
+				onDiscard={() => setIsOpen(false)}
+				onDelete={handleDeleteNode}
+				showDelete={true}
+			/>
 		</Sheet>
 	);
 });

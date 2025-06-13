@@ -8,17 +8,13 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
+import { Sheet } from "@/components/ui/sheet";
 import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { ComponentService } from "@/services/component";
-import { JsonForms } from "@jsonforms/react";
-import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { customEnumRenderer } from "@/components/pipelines/editor/CustomEnumControl";
 import { JsonSchema } from "@jsonforms/core";
-import { ArrowBigRightDash } from "lucide-react";
+import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 
 interface Plugin {
 	name: string;
@@ -88,6 +84,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 			status: "added",
 			initialConfig: undefined,
 			finalConfig: config,
+			component_type: pluginName,
 		};
 		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
 		addChange(log);
@@ -103,21 +100,6 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 	useEffect(() => {
 		fetchPlugins();
 	}, [isSheetOpen]);
-
-	const theme = createTheme({
-		components: {
-			MuiSelect: {
-				defaultProps: {
-					MenuProps: {
-						container: document.body,
-						disablePortal: true,
-					},
-				},
-			},
-		},
-	});
-
-	const renderers = [...materialRenderers, customEnumRenderer];
 
 	return (
 		<>
@@ -152,51 +134,20 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 
 			{isSheetOpen && (
 				<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-					<SheetContent className="w-[36rem]">
-						<div className="flex flex-col gap-4 p-4">
-							<div className="flex gap-3 items-center">
-								<ArrowBigRightDash className="w-6 h-6" />
-								<h2 className="text-xl font-bold">{optionValue}</h2>
-							</div>
-							<p className="text-gray-500">
-								Generate the defined log type at the rate desired{" "}
-								<span className="text-blue-500 underline">Documentation</span>
-							</p>
-							<ThemeProvider theme={theme}>
-								<div className="mt-3">
-									<div className="p-3">
-										<div className="overflow-y-auto h-[32rem] pt-3">
-											{form && (
-												<JsonForms
-													data={config}
-													schema={form}
-													uischema={uiSchema}
-													renderers={renderers}
-													cells={materialCells}
-													onChange={({ data, errors }) => {
-														setConfig(data);
-														setSubmitDisabled(!!errors?.length);
-													}}
-												/>
-											)}
-										</div>
-									</div>
-								</div>
-							</ThemeProvider>
-							<SheetFooter>
-								<SheetClose>
-									<div className="flex gap-3">
-										<Button className="bg-blue-500" onClick={handleSubmit} disabled={submitDisabled}>
-											{`Add ${label}`}
-										</Button>
-										<Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>
-											Discard Changes
-										</Button>
-									</div>
-								</SheetClose>
-							</SheetFooter>
-						</div>
-					</SheetContent>
+					<NodeSidePanel
+						title={optionValue}
+						description="Generate the defined log type at the rate desired"
+						formSchema={form}
+						uiSchema={uiSchema}
+						config={config}
+						setConfig={setConfig}
+						submitLabel={`Add ${label}`}
+						submitDisabled={submitDisabled}
+						onSubmit={handleSubmit}
+						onDiscard={() => setIsSheetOpen(false)}
+						showDelete={false}
+						onErrorsChange={errors => setSubmitDisabled(!!errors?.length)}
+					/>
 				</Sheet>
 			)}
 		</>
