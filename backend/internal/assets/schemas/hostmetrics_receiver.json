@@ -1,77 +1,95 @@
 {
-    "title": "Host Metrics Receiver Configuration",
-    "type": "object",
-    "properties": {
-      "collection_interval": {
-        "type": "string",
-        "title": "Collection Interval",
-        "default": "60s",
-        "description": "The time between data collections"
-      },
-      "scrapers": {
-        "type": "object",
-        "title": "Scrapers",
-        "properties": {
-          "cpu": {
-            "type": "object",
-            "title": "CPU Metrics",
-            "properties": {
-              "report_per_cpu": {
-                "type": "boolean",
-                "title": "Report Per CPU",
-                "default": true
-              },
-              "metrics": {
-                "type": "object",
-                "title": "CPU Metrics Settings",
-                "properties": {
-                  "system.cpu.utilization": { "type": "boolean", "default": true },
-                  "system.cpu.time": { "type": "boolean", "default": false }
+  "title": "Host Metrics Receiver Configuration",
+  "type": "object",
+  "properties": {
+    "collection_interval": {
+      "type": "string",
+      "title": "Collection Interval",
+      "default": "60s",
+      "description": "The time between data collections"
+    },
+    "scrapers": {
+      "type": "object",
+      "title": "Scrapers",
+      "properties": {
+        "cpu": {
+          "type": "object",
+          "title": "CPU Metrics",
+          "properties": {
+            "report_per_cpu": {
+              "type": "boolean",
+              "title": "Report Per CPU",
+              "default": true
+            },
+            "metrics": {
+              "type": "object",
+              "title": "CPU Metrics Settings",
+              "properties": {
+                "system.cpu.utilization": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "system.cpu.time": {
+                  "type": "boolean",
+                  "default": false
                 }
               }
             }
-          },
-          "memory": {
-            "type": "object",
-            "title": "Memory Metrics"
-          },
-          "disk": {
-            "type": "object",
-            "title": "Disk Metrics",
-            "properties": {
-              "include_devices": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "exclude_devices": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            }
-          },
-          "filesystem": {
-            "type": "object",
-            "title": "Filesystem Metrics"
-          },
-          "network": {
-            "type": "object",
-            "title": "Network Metrics"
-          },
-          "load": {
-            "type": "object",
-            "title": "Load Metrics"
-          },
-          "paging": {
-            "type": "object",
-            "title": "Paging Metrics"
-          },
-          "processes": {
-            "type": "object",
-            "title": "Processes Metrics"
           }
+        },
+        "memory": {
+          "type": "object",
+          "title": "Memory Metrics"
+        },
+        "disk": {
+          "type": "object",
+          "title": "Disk Metrics",
+          "properties": {
+            "include_devices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                ""
+              ]
+            },
+            "exclude_devices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                ""
+              ]
+            }
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "title": "Filesystem Metrics"
+        },
+        "network": {
+          "type": "object",
+          "title": "Network Metrics"
+        },
+        "load": {
+          "type": "object",
+          "title": "Load Metrics"
+        },
+        "paging": {
+          "type": "object",
+          "title": "Paging Metrics"
+        },
+        "processes": {
+          "type": "object",
+          "title": "Processes Metrics"
         }
       }
-    },
-    "required": ["collection_interval", "scrapers"]
-  }
-  
+    }
+  },
+  "required": [
+    "collection_interval",
+    "scrapers"
+  ]
+}

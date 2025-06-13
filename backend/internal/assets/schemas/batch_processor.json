@@ -26,7 +26,10 @@
       "items": {
         "type": "string"
       },
-      "description": "Keys used for batch metadata routing, if supported."
+      "description": "Keys used for batch metadata routing, if supported.",
+      "default": [
+        ""
+      ]
     },
     "enable_log_batching": {
       "type": "boolean",

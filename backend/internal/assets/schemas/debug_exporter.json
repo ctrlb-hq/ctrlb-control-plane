@@ -1,49 +1,62 @@
 {
-    "title": "Debug Exporter Configuration",
-    "type": "object",
-    "properties": {
-      "verbosity": {
-        "type": "string",
-        "title": "Verbosity",
-        "enum": ["normal", "detailed"],
-        "default": "normal",
-        "description": "Level of detail for the output"
-      },
-      "sampling_initial": {
-        "type": "integer",
-        "title": "Initial Sampling Rate",
-        "default": 2,
-        "description": "Number of initial telemetry items to export"
-      },
-      "sampling_thereafter": {
-        "type": "integer",
-        "title": "Sampling Thereafter",
-        "default": 500,
-        "description": "Number of items to skip after each exported one"
-      },
-      "disable_metric_attributes": {
-        "type": "boolean",
-        "title": "Disable Metric Attributes",
-        "default": false
-      },
-      "log_level": {
-        "type": "string",
-        "title": "Log Level",
-        "enum": ["info", "debug", "warn", "error"],
-        "default": "debug"
-      },
-      "output": {
-        "type": "string",
-        "title": "Output Destination",
-        "enum": ["stdout", "stderr"],
-        "default": "stdout"
-      },
-      "format": {
-        "type": "string",
-        "title": "Output Format",
-        "enum": ["console", "json"],
-        "default": "console"
-      }
+  "title": "Debug Exporter Configuration",
+  "type": "object",
+  "properties": {
+    "verbosity": {
+      "type": "string",
+      "title": "Verbosity",
+      "enum": [
+        "normal",
+        "detailed"
+      ],
+      "default": "normal",
+      "description": "Level of detail for the output"
+    },
+    "sampling_initial": {
+      "type": "integer",
+      "title": "Initial Sampling Rate",
+      "default": 2,
+      "description": "Number of initial telemetry items to export"
+    },
+    "sampling_thereafter": {
+      "type": "integer",
+      "title": "Sampling Thereafter",
+      "default": 500,
+      "description": "Number of items to skip after each exported one"
+    },
+    "disable_metric_attributes": {
+      "type": "boolean",
+      "title": "Disable Metric Attributes",
+      "default": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log Level",
+      "enum": [
+        "info",
+        "debug",
+        "warn",
+        "error"
+      ],
+      "default": "debug"
+    },
+    "output": {
+      "type": "string",
+      "title": "Output Destination",
+      "enum": [
+        "stdout",
+        "stderr"
+      ],
+      "default": "stdout"
+    },
+    "format": {
+      "type": "string",
+      "title": "Output Format",
+      "enum": [
+        "console",
+        "json"
+      ],
+      "default": "console"
     }
   }
-  
+}

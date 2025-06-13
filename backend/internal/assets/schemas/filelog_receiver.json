@@ -1,74 +1,95 @@
 {
-    "title": "Filelog Receiver Configuration",
-    "type": "object",
-    "properties": {
-      "include": {
-        "type": "array",
-        "title": "Include File Paths",
-        "items": {
-          "type": "string"
-        }
+  "title": "Filelog Receiver Configuration",
+  "type": "object",
+  "properties": {
+    "include": {
+      "type": "array",
+      "title": "Include File Paths",
+      "items": {
+        "type": "string"
       },
-      "exclude": {
-        "type": "array",
-        "title": "Exclude File Paths",
-        "items": {
-          "type": "string"
-        }
-      },
-      "start_at": {
-        "type": "string",
-        "title": "Start At",
-        "enum": ["beginning", "end"],
-        "default": "end"
-      },
-      "poll_interval": {
-        "type": "string",
-        "title": "Poll Interval",
-        "default": "200ms"
-      },
-      "fingerprint_size": {
-        "type": "integer",
-        "title": "Fingerprint Size",
-        "default": 100
-      },
-      "max_log_size": {
-        "type": "integer",
-        "title": "Max Log Size",
-        "default": 0
-      },
-      "encoding": {
-        "type": "string",
-        "title": "Encoding",
-        "default": "utf-8"
-      },
-      "operators": {
-        "type": "array",
-        "title": "Processors",
-        "items": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "title": "Operator Type"
-            },
-            "id": {
-              "type": "string",
-              "title": "Operator ID"
-            },
-            "regex": {
-              "type": "string",
-              "title": "Regex Pattern"
-            },
-            "parse_from": {
-              "type": "string",
-              "title": "Parse From Field"
-            }
-          },
-          "required": ["type", "id"]
-        }
-      }
+      "default": [
+        ""
+      ]
     },
-    "required": ["include"]
-  }
-  
+    "exclude": {
+      "type": "array",
+      "title": "Exclude File Paths",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        ""
+      ]
+    },
+    "start_at": {
+      "type": "string",
+      "title": "Start At",
+      "enum": [
+        "beginning",
+        "end"
+      ],
+      "default": "end"
+    },
+    "poll_interval": {
+      "type": "string",
+      "title": "Poll Interval",
+      "default": "200ms"
+    },
+    "fingerprint_size": {
+      "type": "integer",
+      "title": "Fingerprint Size",
+      "default": 100
+    },
+    "max_log_size": {
+      "type": "integer",
+      "title": "Max Log Size",
+      "default": 0
+    },
+    "encoding": {
+      "type": "string",
+      "title": "Encoding",
+      "default": "utf-8"
+    },
+    "operators": {
+      "type": "array",
+      "title": "Processors",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Operator Type"
+          },
+          "id": {
+            "type": "string",
+            "title": "Operator ID"
+          },
+          "regex": {
+            "type": "string",
+            "title": "Regex Pattern"
+          },
+          "parse_from": {
+            "type": "string",
+            "title": "Parse From Field"
+          }
+        },
+        "required": [
+          "type",
+          "id"
+        ]
+      },
+      "default": [
+        {
+          "type": "",
+          "id": "",
+          "regex": "",
+          "parse_from": ""
+        }
+      ]
+    }
+  },
+  "required": [
+    "include"
+  ]
+}

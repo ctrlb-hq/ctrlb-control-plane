@@ -1,102 +1,136 @@
 {
-    "title": "Tail Sampling Processor Configuration",
-    "type": "object",
-    "properties": {
-      "decision_wait": {
-        "type": "string",
-        "title": "Decision Wait Time",
-        "default": "30s",
-        "description": "Time to wait for a decision before forcefully sampling or dropping"
-      },
-      "num_traces": {
-        "type": "integer",
-        "title": "Number of Traces",
-        "default": 50000,
-        "description": "Maximum number of traces kept in memory"
-      },
-      "expected_new_traces_per_sec": {
-        "type": "integer",
-        "title": "Expected New Traces Per Second",
-        "default": 0
-      },
-      "policies": {
-        "type": "array",
-        "title": "Sampling Policies",
-        "items": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "title": "Policy Name"
-            },
-            "type": {
-              "type": "string",
-              "title": "Policy Type",
-              "enum": [
-                "always_sample",
-                "never_sample",
-                "numeric_attribute",
-                "string_attribute",
-                "rate_limiting",
-                "probabilistic",
-                "status_code",
-                "latency"
-              ]
-            },
-            "numeric_attribute": {
-              "type": "object",
-              "properties": {
-                "key": { "type": "string" },
-                "min_value": { "type": "number" },
-                "max_value": { "type": "number" }
-              }
-            },
-            "string_attribute": {
-              "type": "object",
-              "properties": {
-                "key": { "type": "string" },
-                "values": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
-              }
-            },
-            "rate_limiting": {
-              "type": "object",
-              "properties": {
-                "spans_per_second": { "type": "integer" }
-              }
-            },
-            "probabilistic": {
-              "type": "object",
-              "properties": {
-                "sampling_percentage": {
-                  "type": "number",
-                  "minimum": 0.0,
-                  "maximum": 100.0
-                }
-              }
-            },
-            "status_code": {
-              "type": "object",
-              "properties": {
-                "status_codes": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
-              }
-            },
-            "latency": {
-              "type": "object",
-              "properties": {
-                "threshold_ms": { "type": "integer" }
+  "title": "Tail Sampling Processor Configuration",
+  "type": "object",
+  "properties": {
+    "decision_wait": {
+      "type": "string",
+      "title": "Decision Wait Time",
+      "default": "30s",
+      "description": "Time to wait for a decision before forcefully sampling or dropping"
+    },
+    "num_traces": {
+      "type": "integer",
+      "title": "Number of Traces",
+      "default": 50000,
+      "description": "Maximum number of traces kept in memory"
+    },
+    "expected_new_traces_per_sec": {
+      "type": "integer",
+      "title": "Expected New Traces Per Second",
+      "default": 0
+    },
+    "policies": {
+      "type": "array",
+      "title": "Sampling Policies",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Policy Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Policy Type",
+            "enum": [
+              "always_sample",
+              "never_sample",
+              "numeric_attribute",
+              "string_attribute",
+              "rate_limiting",
+              "probabilistic",
+              "status_code",
+              "latency"
+            ]
+          },
+          "numeric_attribute": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "min_value": {
+                "type": "number"
+              },
+              "max_value": {
+                "type": "number"
               }
             }
           },
-          "required": ["name", "type"]
+          "string_attribute": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [
+                  ""
+                ]
+              }
+            }
+          },
+          "rate_limiting": {
+            "type": "object",
+            "properties": {
+              "spans_per_second": {
+                "type": "integer"
+              }
+            }
+          },
+          "probabilistic": {
+            "type": "object",
+            "properties": {
+              "sampling_percentage": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 100.0
+              }
+            }
+          },
+          "status_code": {
+            "type": "object",
+            "properties": {
+              "status_codes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [
+                  ""
+                ]
+              }
+            }
+          },
+          "latency": {
+            "type": "object",
+            "properties": {
+              "threshold_ms": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      },
+      "default": [
+        {
+          "name": "",
+          "type": "always_sample"
         }
-      }
-    },
-    "required": ["decision_wait", "num_traces", "policies"]
-  }
-  
+      ]
+    }
+  },
+  "required": [
+    "decision_wait",
+    "num_traces",
+    "policies"
+  ]
+}

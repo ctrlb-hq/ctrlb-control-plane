@@ -1,67 +1,80 @@
 {
-    "title": "AWS CloudWatch Receiver Configuration",
-    "type": "object",
-    "properties": {
-      "region": {
-        "type": "string",
-        "title": "AWS Region",
-        "default": "us-west-2"
-      },
-      "log_group_names": {
-        "type": "array",
-        "title": "Log Group Names",
-        "items": {
-          "type": "string"
-        }
-      },
-      "profile": {
-        "type": "string",
-        "title": "AWS Profile",
-        "default": ""
-      },
-      "access_key": {
-        "type": "string",
-        "title": "AWS Access Key",
-        "default": ""
-      },
-      "secret_key": {
-        "type": "string",
-        "title": "AWS Secret Key",
-        "default": ""
-      },
-      "role_arn": {
-        "type": "string",
-        "title": "Role ARN to Assume",
-        "default": ""
-      },
-      "poll_interval": {
-        "type": "string",
-        "title": "Poll Interval",
-        "default": "1m"
-      },
-      "max_events_per_call": {
-        "type": "integer",
-        "title": "Max Events Per Call",
-        "default": 10000
-      },
-      "start_time": {
-        "type": "string",
-        "title": "Start Time (RFC3339)",
-        "default": ""
-      },
-      "distribution": {
-        "type": "string",
-        "title": "AWS Distribution Type",
-        "enum": ["standard", "fargate", "eks", "lambda"],
-        "default": "standard"
-      },
-      "format": {
-        "type": "string",
-        "title": "Log Format",
-        "enum": ["json", "text"],
-        "default": "json"
-      }
+  "title": "AWS CloudWatch Receiver Configuration",
+  "type": "object",
+  "properties": {
+    "region": {
+      "type": "string",
+      "title": "AWS Region",
+      "default": ""
     },
-    "required": ["region", "log_group_names"]
-  }
-  
+    "log_group_names": {
+      "type": "array",
+      "title": "Log Group Names",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        ""
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "title": "AWS Profile",
+      "default": ""
+    },
+    "access_key": {
+      "type": "string",
+      "title": "AWS Access Key",
+      "default": ""
+    },
+    "secret_key": {
+      "type": "string",
+      "title": "AWS Secret Key",
+      "default": ""
+    },
+    "role_arn": {
+      "type": "string",
+      "title": "Role ARN to Assume",
+      "default": ""
+    },
+    "poll_interval": {
+      "type": "string",
+      "title": "Poll Interval",
+      "default": "1m"
+    },
+    "max_events_per_call": {
+      "type": "integer",
+      "title": "Max Events Per Call",
+      "default": 10000
+    },
+    "start_time": {
+      "type": "string",
+      "title": "Start Time (RFC3339)",
+      "default": ""
+    },
+    "distribution": {
+      "type": "string",
+      "title": "AWS Distribution Type",
+      "enum": [
+        "standard",
+        "fargate",
+        "eks",
+        "lambda"
+      ],
+      "default": "standard"
+    },
+    "format": {
+      "type": "string",
+      "title": "Log Format",
+      "enum": [
+        "json",
+        "text"
+      ],
+      "default": "json"
+    }
+  },
+  "required": [
+    "region",
+    "log_group_names"
+  ]
+}

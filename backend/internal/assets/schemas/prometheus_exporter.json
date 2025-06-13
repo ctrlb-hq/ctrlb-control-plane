@@ -1,50 +1,52 @@
 {
-    "title": "Prometheus Exporter Configuration",
-    "type": "object",
-    "properties": {
-      "endpoint": {
-        "type": "string",
-        "title": "Listen Endpoint",
-        "default": "0.0.0.0:8889"
+  "title": "Prometheus Exporter Configuration",
+  "type": "object",
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "title": "Listen Endpoint",
+      "default": "0.0.0.0:8889"
+    },
+    "namespace": {
+      "type": "string",
+      "title": "Metric Namespace",
+      "default": ""
+    },
+    "const_labels": {
+      "type": "object",
+      "title": "Constant Labels",
+      "additionalProperties": {
+        "type": "string"
       },
-      "namespace": {
-        "type": "string",
-        "title": "Metric Namespace",
-        "default": ""
-      },
-      "const_labels": {
-        "type": "object",
-        "title": "Constant Labels",
-        "additionalProperties": {
-          "type": "string"
-        }
-      },
-      "send_timestamps": {
-        "type": "boolean",
-        "title": "Send Timestamps",
-        "default": true
-      },
-      "metric_expiration": {
-        "type": "string",
-        "title": "Metric Expiration Duration",
-        "default": "5m"
-      },
-      "enable_open_metrics": {
-        "type": "boolean",
-        "title": "Enable OpenMetrics Format",
-        "default": false
-      },
-      "resource_to_telemetry_conversion": {
-        "type": "object",
-        "title": "Resource to Telemetry Conversion",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "default": false
-          }
+      "default": {}
+    },
+    "send_timestamps": {
+      "type": "boolean",
+      "title": "Send Timestamps",
+      "default": true
+    },
+    "metric_expiration": {
+      "type": "string",
+      "title": "Metric Expiration Duration",
+      "default": "5m"
+    },
+    "enable_open_metrics": {
+      "type": "boolean",
+      "title": "Enable OpenMetrics Format",
+      "default": false
+    },
+    "resource_to_telemetry_conversion": {
+      "type": "object",
+      "title": "Resource to Telemetry Conversion",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
         }
       }
-    },
-    "required": ["endpoint"]
-  }
-  
+    }
+  },
+  "required": [
+    "endpoint"
+  ]
+}
