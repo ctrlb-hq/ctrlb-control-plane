@@ -1,6 +1,6 @@
-# 📘 API Reference (CTRLTower Backend)
+# 📘 API Reference (CtrlB Control Plane Backend)
 
-This document provides an overview of the available API endpoints in the CTRLTower backend.
+This document provides an overview of the available API endpoints in the CtrlB Control Plane backend.
 
 ---
 
@@ -29,17 +29,17 @@ This document provides an overview of the available API endpoints in the CTRLTow
 
 ### 🔍 Agent Management
 
-| Method | Endpoint                          | Description                                                                |
-| ------ | --------------------------------- | -------------------------------------------------------------------------- |
-| GET    | `/agents`                         | Get all registered agents                                                  |
-| GET    | `/agents/{id}`                    | Get detailed info of a single agent                                        |
-| DELETE | `/agents/{id}`                    | Delete an agent                                                            |
-| POST   | `/agents/{id}/start`              | Start an agent                                                             |
-| POST   | `/agents/{id}/stop`               | Stop an agent                                                              |
-| POST   | `/agents/{id}/restart-monitoring` | Restart agent's monitoring                                                 |
-| GET    | `/agents/{id}/healthmetrics`      | Get health metrics for a specific agent                                    |
-| GET    | `/agents/{id}/ratemetrics`        | Get rate metrics for a specific agent                                      |
-| POST   | `/agents/{id}/labels`             | Add or update labels for a specific agent                                  |
+| Method | Endpoint                          | Description                                                                    |
+| ------ | --------------------------------- | ------------------------------------------------------------------------------ |
+| GET    | `/agents`                         | Get all registered agents                                                      |
+| GET    | `/agents/{id}`                    | Get detailed info of a single agent                                            |
+| DELETE | `/agents/{id}`                    | Delete an agent                                                                |
+| POST   | `/agents/{id}/start`              | Start an agent                                                                 |
+| POST   | `/agents/{id}/stop`               | Stop an agent                                                                  |
+| POST   | `/agents/{id}/restart-monitoring` | Restart agent's monitoring                                                     |
+| GET    | `/agents/{id}/healthmetrics`      | Get health metrics for a specific agent                                        |
+| GET    | `/agents/{id}/ratemetrics`        | Get rate metrics for a specific agent                                          |
+| POST   | `/agents/{id}/labels`             | Add or update labels for a specific agent                                      |
 | GET    | `/unassigned-agents`              | Retrieve a list of agents that are active but not yet assigned to any pipeline |
 
 ### 🔁 Pipeline Management
@@ -62,4 +62,3 @@ This document provides an overview of the available API endpoints in the CTRLTow
 | ------ | -------------------------- | ------------------------------------------------------------------- |
 | GET    | `/component`               | Get all components (optional query param: `type` to filter results) |
 | GET    | `/component/schema/{name}` | Get schema for a specific component                                 |
-

@@ -1,12 +1,12 @@
-# 🏗️ CTRLTower Architecture
+# 🏗️ CtrlB Control Plane Architecture
 
-This document explains the high-level design and internal components of **CTRLTower**, the telemetry agent control plane built by **CTRLB**.
+This document explains the high-level design and internal components of **CtrlB Control Plane**, the telemetry agent control plane built by **CTRLB**.
 
 ---
 
 ## 📚 Overview
 
-CTRLTower is designed to manage distributed telemetry agents (specifically OpenTelemetry Collector instances) across a variety of environments. It includes:
+CtrlB Control Plane is designed to manage distributed telemetry agents (specifically OpenTelemetry Collector instances) across a variety of environments. It includes:
 
 - A **Control Plane** (frontend + backend)
 - A **Lightweight Agent** installed on target environments
@@ -83,21 +83,22 @@ CTRLTower is designed to manage distributed telemetry agents (specifically OpenT
 
 ## 📈 Scalability Notes
 
-CTRLTower was initially designed for small-scale systems with around 40–50 agents and pipelines, with simplicity as the guiding principle.
+CtrlB Control Plane was initially designed for small-scale systems with around 40–50 agents and pipelines, with simplicity as the guiding principle.
 
 Planned improvements for scalability:
--   Stateless backend (backed by external DB)
--   Agent polling is lightweight and time-interval based
--   Config push model in roadmap
--   Scaling architecture to support 1,000+ agents/pipelines in upcoming iterations
+
+- Stateless backend (backed by external DB)
+- Agent polling is lightweight and time-interval based
+- Config push model in roadmap
+- Scaling architecture to support 1,000+ agents/pipelines in upcoming iterations
 
 ---
 
 ## 🧱 Diagrams
 
-![CTRLTower ER Diagram](./assets/ctrltower-er-diagram.png)
+![CtrlB Control Plane ER Diagram](./assets/CtrlB Control Plane-er-diagram.png)
 
-*Entity-Relationship Diagram of CTRLTower's internal database schema*
+_Entity-Relationship Diagram of CtrlB Control Plane's internal database schema_
 
 ---
 
@@ -107,4 +108,3 @@ Planned improvements for scalability:
 - Cloud-native deployment (Helm, Terraform modules)
 - Plugin system for other agent types
 - Agent auto-upgrade and signature validation
-

@@ -1,32 +1,32 @@
-# 🛠️ CTRLTOWER – Control Plane for Managing Agents
+# 🛠️ CtrlB Control Plane – Manage Telemetry Collectors at Scale
 
-**CTRLTower** is a control plane developed by **CTRLB** to manage telemetry agents across diverse environments. It currently supports the configuration and lifecycle management of **OpenTelemetry Collector** agents.
+**CtrlB Control Plane** is an orchestration system developed by **CTRLB** to manage telemetry collectors across diverse environments. It currently supports lifecycle and configuration management for the **OpenTelemetry Collector**.
 
 This monorepo is organized into three primary components:
 
-- **Frontend**: A modern React-based UI to visualize and manage agents and their configurations.
-- **Backend**: A Go-powered API and orchestration engine that communicates with agents, handles configuration state, and offers installation scripts that users can run manually to set up agents.
-- **Agent**: A lightweight wrapper around the OpenTelemetry Collector, capable of dynamically receiving configurations and reporting status back to the control plane.
+- **Frontend**: A modern React-based UI to visualize and manage collectors and their configurations.
+- **Backend**: A Go-powered API server that communicates with agents, manages configuration state, and provides installation scripts for manual setup.
+- **Agent**: A lightweight wrapper around the OpenTelemetry Collector with dynamic config fetching and status reporting.
 
 ---
 
 ## ✨ Features
 
-- Centralized management of distributed telemetry agents.
-- Declarative, graph-based configuration interface for OpenTelemetry Collector (OTEL) only.
-- Real-time agent status monitoring.
+- 🧹 Centralized management of distributed OpenTelemetry Collectors
+- ⚙️ Declarative, graph-based configuration interface
+- ⌚ Real-time health and status monitoring of connected collectors
 
 ---
 
-## 📆 Repository Structure
+## 🗖️ Repository Structure
 
-```
-ctrltower/
-├── frontend/        # React UI
-├── backend/         # Go-based API server and logic
-├── agent/           # OTel Collector wrapper with remote config support
-├── scripts/         # Scripts for installing agent and backend
-└── docs/            # Architecture diagrams, usage guides, etc.
+```text
+ctrlb-control-plane/
+├── frontend/        # React + Vite-based UI for configuration and control
+├── backend/         # Go-based API server for orchestration, config delivery, and agent registration
+├── agent/           # Wrapper on OpenTelemetry Collector with dynamic config support
+├── scripts/         # Shell scripts to install and manage backend or collectors
+└── docs/            # Architecture diagrams, development guides, usage examples
 ```
 
 ---
@@ -42,30 +42,41 @@ ctrltower/
 Clone the repository:
 
 ```bash
-git clone https://github.com/ctrlb-hq/ctrltower.git
-cd ctrltower
+git clone https://github.com/ctrlb-hq/ctrlb-control-plane.git
+cd ctrlb-control-plane
 ```
 
-Start the dev environment (local setup guide coming soon).
+Start the development environment:
+
+```bash
+# Backend
+cd backend && go run cmd/backend/main.go
+
+# Frontend
+cd ../frontend && npm install && npm run dev
+```
+
+> 📘 Local development guide coming soon in `docs/development.md`
 
 ---
 
 ## 💧 Architecture
 
-**CTRLTower** is built to support agent orchestration at scale. Key components include:
+**CtrlB Control Plane** is built for scalable collector orchestration. Key architectural components include:
 
-- **Agent Communication Layer**: Simple HTTP communication to and from registered agents. Token-based authentication is a work in progress.
-- **Configuration Manager**: Handles creation, versioning, and delivery of agent configs.
-- **Storage Backend**: Currently supports SQLite for storing configuration and telemetry metadata. Support for other SQL-based databases is coming soon.
+- **Collector Communication Layer**: Simple HTTP interface for agents to register, fetch config, and report health
+- **Configuration Manager**: Tracks, versions, and delivers pipeline configs
+- **Storage Backend**: Uses SQLite for metadata and state storage (PostgreSQL support coming soon)
+- **Authentication**: Token-based auth for agent registration and communication (in progress)
 
-*More details are available in the* **[docs/architecture.md](docs/architecture.md)**
+More details in [docs/architecture.md](docs/architecture.md)
 
 ---
 
 ## 📖 Documentation
 
-- [Agent Configuration](docs/agent-config.md)
-- [API Reference](docs/api.md)
+- [Collector Configuration](docs/collector/configuration.md)
+- [API Reference](docs/backend/api-reference.md)
 - [Deployment Guide](docs/deployment.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
@@ -73,11 +84,10 @@ Start the dev environment (local setup guide coming soon).
 
 ## 🤝 Contributing
 
-Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get involved.
+We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding guidelines, and more.
 
 ---
 
 ## 📜 License
 
-AGPL License. See [LICENSE](LICENSE) for more details.
-
+This project is licensed under the **GNU Affero General Public License v3.0**. See [LICENSE](LICENSE) for details.

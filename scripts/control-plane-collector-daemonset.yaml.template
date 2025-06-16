@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: control-plane-collector
+  namespace: observability
+  labels:
+    app: control-plane-collector
+spec:
+  selector:
+    matchLabels:
+      app: control-plane-collector
+  template:
+    metadata:
+      labels:
+        app: control-plane-collector
+    spec:
+      serviceAccountName: control-plane-collector
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: control-plane-collector
+          image: ghcr.io/ctrlb-hq/collector:v1.0.0-alpha
+          imagePullPolicy: Always
+          env:
+            - name: BACKEND_URL
+              value: "${BACKEND_URL}"
+            - name: PIPELINE_NAME
+              value: "${PIPELINE_NAME}"
+            - name: STARTED_BY
+              value: "${STARTED_BY}"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: control-plane-collector
+  namespace: observability

@@ -2,8 +2,8 @@
 
 set -e
 
-BACKEND_NAME="ctrlb-control-plane-backend"
-VERSION="v1.0.0"
+BACKEND_NAME="control-plane-backend"
+VERSION="v1.0.0-alpha"
 INSTALL_DIR="/usr/local/bin"
 ENV_FILE="/etc/${BACKEND_NAME}/env"
 SERVICE_FILE="/etc/systemd/system/${BACKEND_NAME}.service"
@@ -90,8 +90,20 @@ BINARY_URL="${DOWNLOAD_BASE_URL}/${BACKEND_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${BACKEND_NAME}"
 
 echo "📥 Downloading ${BACKEND_NAME} ${VERSION} for ${OS}/${ARCH}..."
-curl -L "$BINARY_URL" -o "$BINARY_PATH"
+if ! curl -fL "$BINARY_URL" -o "$BINARY_PATH"; then
+  echo "❌ Failed to download binary from $BINARY_URL"
+  exit 1
+fi
+
 chmod +x "$BINARY_PATH"
+
+# Verify it is a valid ELF binary (or Mach-O if on macOS)
+if ! file "$BINARY_PATH" | grep -q 'ELF'; then
+  echo "❌ Downloaded file is not a valid executable (check architecture or release asset)"
+  rm -f "$BINARY_PATH"
+  exit 1
+fi
+
 
 # Write env vars to file
 mkdir -p "$(dirname "$ENV_FILE")"

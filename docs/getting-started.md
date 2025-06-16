@@ -1,6 +1,6 @@
-# 🚀 Getting Started with CTRLTower
+# 🚀 Getting Started with CtrlB Control Plane
 
-This guide helps you set up and run **CTRLTower** in your local development environment.
+This guide helps you set up and run **CtrlB Control Plane** in your local development environment.
 
 ---
 
@@ -17,8 +17,8 @@ Before you begin, make sure you have the following installed:
 ## 📦 Clone the Repository
 
 ```bash
-git clone https://github.com/ctrlb-hq/ctrltower.git
-cd ctrltower
+git clone https://github.com/ctrlb-hq/CtrlB Control Plane.git
+cd CtrlB Control Plane
 ```
 
 ---
@@ -40,10 +40,11 @@ Here's a quick overview of the major components you'll interact with:
 
 ```bash
 cd backend
-go run cmd/backend/main.go 
+go run cmd/backend/main.go
 ```
 
 This will:
+
 - Run the Go backend locally.
 - Use SQLite by default
 
@@ -68,13 +69,12 @@ cd agent
 go run cmd/ctrlb_collector/main.go -backend=localhost:8096 -config=./internal/config/otel.yaml
 ```
 
-
 ---
 
 ## 🏦 Directory Structure Reference
 
 ```
-ctrltower/
+CtrlB Control Plane/
 ├── frontend/        # React UI
 ├── backend/         # Go API server
 ├── agent/           # Telemetry agent wrapper
@@ -93,4 +93,3 @@ ctrltower/
 ---
 
 Need help? Create an issue or join our community at [ctrlb.dev](https://docs.ctrlb.ai/)
-

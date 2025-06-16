@@ -2,59 +2,32 @@
 
 set -e
 
-AGENT_NAME="ctrlb-agent"
-VERSION="v1.0.0"
+COLLECTOR_NAME="ctrlb-collector"
+VERSION="v1.0.0-alpha"
 INSTALL_DIR="/usr/local/bin"
-ENV_FILE="/etc/${AGENT_NAME}/env"
-SERVICE_FILE="/etc/systemd/system/${AGENT_NAME}.service"
+ENV_FILE="/etc/${COLLECTOR_NAME}/env"
+SERVICE_FILE="/etc/systemd/system/${COLLECTOR_NAME}.service"
 
-# Defaults (can be overridden by args)
-BACKEND_URL=""
-SECRET_KEY=""
-
-# Usage
-usage() {
-  echo "Usage: sudo $0 --backend-url <url> --secret-key <key>"
-  echo "You can also omit these arguments to input them interactively."
-}
+# Read from env or prompt interactively
+BACKEND_URL="${BACKEND_URL:-}"
+PIPELINE_NAME="${PIPELINE_NAME:-}"
+STARTED_BY="${STARTED_BY:-}"
 
 # Require root
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Please run this script with sudo or as root."
-  usage
   exit 1
 fi
 
-# Parse CLI args
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --backend-url)
-      BACKEND_URL="$2"
-      shift 2
-      ;;
-    --secret-key)
-      SECRET_KEY="$2"
-      shift 2
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      usage
-      exit 1
-      ;;
-  esac
-done
+# Prompt if not provided
+[ -z "$BACKEND_URL" ] && read -p "Enter backend URL: " BACKEND_URL
+[ -z "$PIPELINE_NAME" ] && read -p "Enter pipeline name: " PIPELINE_NAME
+[ -z "$STARTED_BY" ] && read -p "Enter started by (email): " STARTED_BY
 
-# Prompt if values not passed
-if [ -z "$BACKEND_URL" ]; then
-  read -p "Enter backend URL (e.g. https://api.yourdomain.com): " BACKEND_URL
-fi
-
-if [ -z "$SECRET_KEY" ]; then
-  read -p "Enter secret key: " SECRET_KEY
+# Validate required fields
+if [[ -z "$BACKEND_URL" || -z "$PIPELINE_NAME" || -z "$STARTED_BY" ]]; then
+  echo "❌ BACKEND_URL, PIPELINE_NAME, and STARTED_BY are required."
+  exit 1
 fi
 
 # Detect arch/OS
@@ -70,20 +43,21 @@ case "$ARCH" in
     ;;
 esac
 
-# Construct download URL *after* arch is known
+# Download binary
 DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download/${VERSION}"
-BINARY_URL="${DOWNLOAD_BASE_URL}/${AGENT_NAME}-${OS}-${ARCH}"
-BINARY_PATH="${INSTALL_DIR}/${AGENT_NAME}"
+BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_NAME}-${OS}-${ARCH}"
+BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
-echo "📥 Downloading ${AGENT_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
 curl -L "$BINARY_URL" -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"
 
-# Write environment variables
+# Write environment file
 mkdir -p "$(dirname "$ENV_FILE")"
 cat <<EOF > "$ENV_FILE"
 BACKEND_URL=${BACKEND_URL}
-SECRET_KEY=${SECRET_KEY}
+PIPELINE_NAME=${PIPELINE_NAME}
+STARTED_BY=${STARTED_BY}
 EOF
 
 chmod 600 "$ENV_FILE"
@@ -91,7 +65,7 @@ chmod 600 "$ENV_FILE"
 # Create systemd unit
 cat <<EOF > "$SERVICE_FILE"
 [Unit]
-Description=${AGENT_NAME} Service
+Description=${COLLECTOR_NAME} Service
 After=network.target
 
 [Service]
@@ -103,11 +77,11 @@ EnvironmentFile=${ENV_FILE}
 WantedBy=multi-user.target
 EOF
 
-# Enable and start systemd service
+# Enable and start service
 echo "🔧 Configuring systemd service..."
 systemctl daemon-reexec
-systemctl enable "$AGENT_NAME"
-systemctl restart "$AGENT_NAME"
+systemctl enable "$COLLECTOR_NAME"
+systemctl restart "$COLLECTOR_NAME"
 
-echo "✅ ${AGENT_NAME} installed and running!"
-systemctl status "$AGENT_NAME" --no-pager
+echo "✅ ${COLLECTOR_NAME} installed and running!"
+systemctl status "$COLLECTOR_NAME" --no-pager
