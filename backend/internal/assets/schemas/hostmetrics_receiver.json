@@ -6,8 +6,7 @@
       "type": "string",
       "title": "Collection Interval",
       "default": "60s",
-      "description": "The time between data collections",
-      "minLength": 1
+      "description": "The time between data collections"
     },
     "scrapers": {
       "type": "object",
@@ -17,20 +16,26 @@
           "type": "object",
           "title": "CPU Metrics",
           "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
             "report_per_cpu": {
               "type": "boolean",
               "title": "Report Per CPU",
-              "default": true
+              "default": false
             },
             "metrics": {
               "type": "object",
               "title": "CPU Metrics Settings",
               "properties": {
                 "system.cpu.utilization": {
+                  "title": "System CPU Utilization",
                   "type": "boolean",
-                  "default": true
+                  "default": false
                 },
                 "system.cpu.time": {
+                  "title": "System CPU Time",
                   "type": "boolean",
                   "default": false
                 }
@@ -40,49 +45,88 @@
         },
         "memory": {
           "type": "object",
-          "title": "Memory Metrics"
+          "title": "Memory Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
         "disk": {
           "type": "object",
           "title": "Disk Metrics",
           "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
             "include_devices": {
               "type": "array",
               "items": {
-                "type": "string",
-                "minLength": 1
+                "type": "string"
               }
             },
             "exclude_devices": {
               "type": "array",
               "items": {
-                "type": "string",
-                "minLength": 1
+                "type": "string"
               }
             }
           }
         },
         "filesystem": {
           "type": "object",
-          "title": "Filesystem Metrics"
+          "title": "Filesystem Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
         "network": {
           "type": "object",
-          "title": "Network Metrics"
+          "title": "Network Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
         "load": {
           "type": "object",
-          "title": "Load Metrics"
+          "title": "Load Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
         "paging": {
           "type": "object",
-          "title": "Paging Metrics"
+          "title": "Paging Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
         "processes": {
           "type": "object",
-          "title": "Processes Metrics"
+          "title": "Processes Metrics",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

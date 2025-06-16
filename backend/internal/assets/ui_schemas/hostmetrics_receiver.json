@@ -3,85 +3,150 @@
   "elements": [
     {
       "type": "Control",
-      "label": "Collection Interval",
       "scope": "#/properties/collection_interval"
     },
     {
       "type": "Group",
-      "label": "Scrapers",
+      "label": "CPU Metrics",
       "elements": [
         {
-          "type": "Group",
-          "label": "CPU Metrics",
-          "elements": [
-            {
-              "type": "Control",
-              "label": "Report Per CPU",
-              "scope": "#/properties/scrapers/properties/cpu/properties/report_per_cpu"
-            },
-            {
-              "type": "Group",
-              "label": "CPU Metrics Settings",
-              "elements": [
-                {
-                  "type": "Control",
-                  "label": "System CPU Utilization",
-                  "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.utilization"
-                },
-                {
-                  "type": "Control",
-                  "label": "System CPU Time",
-                  "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.time"
-                }
-              ]
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/cpu/properties/enabled"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/cpu/properties/report_per_cpu",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/scrapers/properties/cpu/properties/enabled",
+              "schema": {
+                "const": true
+              }
             }
-          ]
+          }
         },
         {
-          "type": "Group",
-          "label": "Disk Metrics",
-          "elements": [
-            {
-              "type": "Control",
-              "label": "Include Devices",
-              "scope": "#/properties/scrapers/properties/disk/properties/include_devices"
-            },
-            {
-              "type": "Control",
-              "label": "Exclude Devices",
-              "scope": "#/properties/scrapers/properties/disk/properties/exclude_devices"
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.utilization",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/scrapers/properties/cpu/properties/enabled",
+              "schema": {
+                "const": true
+              }
             }
-          ]
+          }
         },
         {
           "type": "Control",
-          "label": "Memory Metrics",
-          "scope": "#/properties/scrapers/properties/memory"
+          "scope": "#/properties/scrapers/properties/cpu/properties/metrics/properties/system.cpu.time",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/scrapers/properties/cpu/properties/enabled",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Memory Metrics",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/memory/properties/enabled"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Disk Metrics",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/disk/properties/enabled"
         },
         {
           "type": "Control",
-          "label": "Filesystem Metrics",
-          "scope": "#/properties/scrapers/properties/filesystem"
+          "scope": "#/properties/scrapers/properties/disk/properties/include_devices",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/scrapers/properties/disk/properties/enabled",
+              "schema": {
+                "const": true
+              }
+            }
+          }
         },
         {
           "type": "Control",
-          "label": "Network Metrics",
-          "scope": "#/properties/scrapers/properties/network"
-        },
+          "scope": "#/properties/scrapers/properties/disk/properties/exclude_devices",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/scrapers/properties/disk/properties/enabled",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Filesystem Metrics",
+      "elements": [
         {
           "type": "Control",
-          "label": "Load Metrics",
-          "scope": "#/properties/scrapers/properties/load"
-        },
+          "scope": "#/properties/scrapers/properties/filesystem/properties/enabled"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Network Metrics",
+      "elements": [
         {
           "type": "Control",
-          "label": "Paging Metrics",
-          "scope": "#/properties/scrapers/properties/paging"
-        },
+          "scope": "#/properties/scrapers/properties/network/properties/enabled"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Load Metrics",
+      "elements": [
         {
           "type": "Control",
-          "label": "Processes Metrics",
-          "scope": "#/properties/scrapers/properties/processes"
+          "scope": "#/properties/scrapers/properties/load/properties/enabled"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Paging Metrics",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/paging/properties/enabled"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Processes Metrics",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/scrapers/properties/processes/properties/enabled"
         }
       ]
     }

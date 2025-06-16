@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SheetFooter, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "@/components/pipelines/editor/CustomEnumControl";
+import { customKeyValueRenderer } from "@/components/pipelines/editor/CustomKeyValueControl";
 
 interface NodeSidePanelProps {
 	title: string;
@@ -124,7 +125,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		},
 	});
 
-	const renderers = [...materialRenderers, customEnumRenderer];
+	const renderers = [...materialRenderers, customEnumRenderer, customKeyValueRenderer];
 
 	const configWithDefaults = useMemo(() => {
 		return applySchemaDefaults(formSchema, config);
