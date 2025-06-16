@@ -14,7 +14,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Loader2 } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
 	Background,
@@ -141,6 +141,19 @@ const PipelineEditorSheet = ({
 	}, [selectedEdge]);
 
 	const handleDeployChanges = async () => {
+		const toastId = toast({
+			title: "Deploying changes...",
+			description: (
+				<div className="flex items-center">
+					<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+					Please wait while we sync the pipeline
+				</div>
+			),
+			variant: "default",
+			duration: Infinity,
+			className: "bg-blue-100 text-blue-800 border border-blue-200",
+		});
+
 		try {
 			const syncPayload = {
 				nodes: nodeValue.map(node => ({
@@ -157,12 +170,17 @@ const PipelineEditorSheet = ({
 					target: edge.target,
 				})),
 			};
+
 			await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
+
+			toastId.dismiss();
+
 			toast({
 				title: "Success",
 				description: "Changes deployed successfully",
 				variant: "default",
 			});
+
 			setHasDeployError(false);
 			localStorage.removeItem("changesLog");
 			setIsEditMode(false);
@@ -171,6 +189,8 @@ const PipelineEditorSheet = ({
 			setIsSheetOpen(false);
 		} catch (err) {
 			console.error("Deploy error:", err);
+			toastId.dismiss();
+
 			setHasDeployError(true);
 			toast({
 				title: "Error",

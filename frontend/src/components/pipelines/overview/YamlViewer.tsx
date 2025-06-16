@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import yaml from "js-yaml";
 import MonacoEditor from "@monaco-editor/react";
+import { convertToYaml } from "@/utils/yaml";
 
 const sampleYaml = `
 apiVersion: v1
@@ -13,21 +13,14 @@ spec:
       image: nginx:latest
 `;
 
-const PipelinYAML = ({ jsonforms }: { jsonforms: any }) => {
+const PipelineYAML = ({ jsonforms }: { jsonforms: any }) => {
 	const [yamlOutput, setYamlOutput] = useState(sampleYaml);
 
-	const convertToYaml = () => {
-		try {
-			const yamlStr = yaml.dump(jsonforms);
-			setYamlOutput(yamlStr);
-		} catch (error) {
-			console.log("Error converting JSON to YAML:", error);
-			setYamlOutput("Invalid JSON");
-		}
-	};
 	useEffect(() => {
-		convertToYaml();
+		const yamlStr = convertToYaml(jsonforms);
+		setYamlOutput(yamlStr);
 	}, [jsonforms]);
+
 	return (
 		<div style={{ height: "80vh" }}>
 			<MonacoEditor
@@ -43,4 +36,4 @@ const PipelinYAML = ({ jsonforms }: { jsonforms: any }) => {
 	);
 };
 
-export default PipelinYAML;
+export default PipelineYAML;

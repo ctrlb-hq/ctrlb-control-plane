@@ -6,8 +6,8 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 import { Button } from "@/components/ui/button";
 import { SheetFooter, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ArrowBigRightDash } from "lucide-react";
-import { customEnumRenderer } from "@/components/pipelines/editor/CustomEnumControl";
-import { customKeyValueRenderer } from "@/components/pipelines/editor/CustomKeyValueControl";
+import { customEnumRenderer } from "@/components/pipelines/editor/custom_renderers/CustomEnumControl";
+import { customKeyValueRenderer } from "@/components/pipelines/editor/custom_renderers/CustomKeyValueControl";
 
 interface NodeSidePanelProps {
 	title: string;
@@ -175,10 +175,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 				<SheetFooter className="pt-4">
 					<SheetClose>
 						<div className="flex gap-3">
-							<Button
-								className="bg-blue-500 text-sm"
-								onClick={submitLabel ? undefined : handleSubmit}
-								disabled={submitDisabled}>
+							<Button className="bg-blue-500 text-sm" onClick={handleSubmit} disabled={submitDisabled}>
 								{submitLabel}
 							</Button>
 							<Button variant={"outline"} className="text-sm" onClick={handleDiscard}>
