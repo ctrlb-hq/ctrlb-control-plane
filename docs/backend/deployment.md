@@ -18,10 +18,9 @@ Key components:
 
 ## ⚙️ Prerequisites
 
-- Go >= 1.20
+- Go >= 1.23
 - SQLite3 CLI (optional for debugging)
 - Git
-- Make (optional)
 
 ---
 
@@ -40,15 +39,29 @@ JWT_SECRET=your-secure-secret
 
 ## 🚧 Running Locally
 
-### 1. Clone and build:
+### 1. Fork and build:
 
 ```bash
-git clone https://github.com/ctrlb-hq/ctrlb-control-plane.git
+git clone https://github.com/<your-username>/ctrlb-control-plane.git
 cd ctrlb-control-plane/backend
+```
+
+### 2. Set required environment variables
+
+Create a `.env` file or export them in your shell session:
+
+```env
+BACKEND_PORT=8096
+JWT_SECRET=your-secure-secret
+```
+
+### 3. Run the backend
+
+```bash
 go run main.go
 ```
 
-The backend will run at `http://localhost:8096` by default.
+The backend will start at `http://localhost:8096` by default.
 
 ---
 
@@ -69,8 +82,8 @@ Use the existing `Dockerfile` to build and run the backend container.
 Then run:
 
 ```bash
-docker build -t ctrlbtower-backend .
-docker run -p 8096:8096 --env JWT_SECRET=xxx ctrlbtower-backend
+docker build -t control-plane-backend .
+docker run -p 8096:8096 --env JWT_SECRET=xxx control-plane-backend
 ```
 
 ---
@@ -79,16 +92,6 @@ docker run -p 8096:8096 --env JWT_SECRET=xxx ctrlbtower-backend
 
 Logs are written to `app.log` in the current directory in JSON format.
 They are also streamed to the console in human-readable format by default.
-
----
-
-## 📈 Logs
-
-Logs are printed to stdout. You can pipe to a file using:
-
-```bash
-go run main.go > backend.log 2>&1
-```
 
 ---
 

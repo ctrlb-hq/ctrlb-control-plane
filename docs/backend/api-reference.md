@@ -41,6 +41,7 @@ This document provides an overview of the available API endpoints in the CtrlB C
 | GET    | `/agents/{id}/ratemetrics`        | Get rate metrics for a specific agent                                          |
 | POST   | `/agents/{id}/labels`             | Add or update labels for a specific agent                                      |
 | GET    | `/unassigned-agents`              | Retrieve a list of agents that are active but not yet assigned to any pipeline |
+| GET    | `/latest-agent`                   | Get the most recently registered agent since a given time                      |
 
 ### 🔁 Pipeline Management
 
@@ -58,7 +59,8 @@ This document provides an overview of the available API endpoints in the CtrlB C
 
 ### 🧩 Component Management
 
-| Method | Endpoint                   | Description                                                         |
-| ------ | -------------------------- | ------------------------------------------------------------------- |
-| GET    | `/component`               | Get all components (optional query param: `type` to filter results) |
-| GET    | `/component/schema/{name}` | Get schema for a specific component                                 |
+| Method | Endpoint                      | Description                                                         |
+| ------ | ----------------------------- | ------------------------------------------------------------------- |
+| GET    | `/component`                  | Get all components (optional query param: `type` to filter results) |
+| GET    | `/component/schema/{name}`    | Get schema for a specific component                                 |
+| GET    | `/component/ui-schema/{name}` | Get UI schema for a specific component                              |

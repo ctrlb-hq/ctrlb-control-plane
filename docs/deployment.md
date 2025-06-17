@@ -7,7 +7,7 @@ This guide walks you through deploying the CtrlB Control Plane components in a p
 ## 🧱 Deployment Modes
 
 - **All-in-One (Dev/Staging)**: Run backend and frontend on a single VM.
-- **Split (Prod)**: Run backend, frontend, and agents independently with service isolation.
+- **Split (Prod)**: Run backend, frontend, and collector independently with service isolation.
 
 ---
 
@@ -28,12 +28,11 @@ sudo cp control-plane-backend /usr/local/bin/
 sudo cp scripts/systemd/control-plane-backend.service /etc/systemd/system/
 ```
 
-### 3. Create Environment File (Optional)
+### 3. Create Environment File
 
 ```bash
 sudo tee /etc/control-plane-backend/env > /dev/null <<EOF
-BACKEND_PORT=8080
-SQLITE_PATH=/var/lib/control-plane/data.db
+JWT_SECRET=<SECRET_HERE>
 # Other environment variables as needed
 EOF
 ```
@@ -83,23 +82,20 @@ Or deploy via Nginx, Netlify, Vercel, etc.
 
 ---
 
-## 🛰️ Agent Installation
+## 🛰️ Collector Installation
 
-Agent installation steps are provided via the UI. Once a new agent is created, a corresponding installation command with a unique token and configuration is displayed.
-
-The control plane will wait for the agent to complete the setup and come online.
-
-Each agent:
+Collector installation steps are provided via the UI. Once a new collector is created, a corresponding installation command with a unique token and configuration is displayed.
+The control plane will wait for the collector to complete the setup and come online.
+Each collector:
 
 - Fetches its configuration from the control plane
-- Exposes Prometheus metrics on `:8888`
-- Reports health and status to the backend
+- Exposes health metrics on `:8888`
 
 ---
 
 ## 🔒 Security Notes
 
-- Token-based authentication for agents is under development.
+- Token-based authentication for collector is under development.
 - Use HTTPS reverse proxies (e.g., Nginx, Caddy) in production.
 
 ---
