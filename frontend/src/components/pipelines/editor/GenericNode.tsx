@@ -161,6 +161,7 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 				onDiscard={() => setIsOpen(false)}
 				onDelete={handleDeleteNode}
 				showDelete={true}
+				isOpen={isOpen}
 			/>
 		</Sheet>
 	);

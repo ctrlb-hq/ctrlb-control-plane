@@ -145,7 +145,6 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 						onSubmit={handleSubmit}
 						onDiscard={() => setIsSheetOpen(false)}
 						showDelete={false}
-						onErrorsChange={errors => setSubmitDisabled(!!errors?.length)}
 					/>
 				</Sheet>
 			)}

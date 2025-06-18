@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Ajv from "ajv";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { JsonForms } from "@jsonforms/react";
@@ -21,7 +21,7 @@ interface NodeSidePanelProps {
 	onDiscard: () => void;
 	onDelete?: () => void;
 	showDelete?: boolean;
-	onErrorsChange?: (errors: any[] | undefined) => void;
+	isOpen?: boolean; // for mounted Sheet usage
 }
 
 const applySchemaDefaults = (schema: any, data: any) => {
@@ -46,97 +46,90 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	onDiscard,
 	onDelete,
 	showDelete = false,
-	onErrorsChange,
+	isOpen = true,
 }) => {
 	const [showErrors, setShowErrors] = useState(false);
+	const [draftConfig, setDraftConfig] = useState(() => applySchemaDefaults(formSchema, config));
+	const [formErrors, setFormErrors] = useState<any[]>([]);
+	const closeRef = useRef<HTMLButtonElement | null>(null);
 
-	const theme = createTheme({
-		components: {
-			MuiFormControl: {
-				styleOverrides: {
-					root: {
-						marginBottom: "0.5rem",
+	// Reset draft config on sheet open if component is mounted always
+	useEffect(() => {
+		if (isOpen !== undefined && isOpen) {
+			setDraftConfig(applySchemaDefaults(formSchema, config));
+			setShowErrors(false);
+		}
+	}, [isOpen, formSchema, config]);
+
+	const ajv = useMemo(() => new Ajv({ allErrors: true, strict: false }), []);
+	const validate = useMemo(() => ajv.compile(formSchema), [ajv, formSchema]);
+
+	const theme = useMemo(
+		() =>
+			createTheme({
+				components: {
+					MuiFormControl: { styleOverrides: { root: { marginBottom: "0.5rem" } } },
+					MuiInputBase: {
+						styleOverrides: {
+							root: { fontSize: "0.8rem", minHeight: "32px" },
+							input: { padding: "6px 8px" },
+						},
 					},
-				},
-			},
-			MuiInputBase: {
-				styleOverrides: {
-					root: {
-						fontSize: "0.8rem",
-						minHeight: "32px",
+					MuiFormLabel: { styleOverrides: { root: { fontSize: "0.75rem" } } },
+					MuiSelect: { styleOverrides: { root: { fontSize: "0.8rem" } } },
+					MuiTypography: { styleOverrides: { h5: { fontSize: "1rem", fontWeight: 500 } } },
+					MuiAccordion: { styleOverrides: { root: { marginBottom: "1rem" } } },
+					MuiAvatar: {
+						styleOverrides: {
+							root: {
+								minWidth: "1.8rem",
+								width: "1.8rem",
+								height: "1.8rem",
+								fontSize: "0.8rem",
+								marginRight: "0.5rem",
+								boxSizing: "border-box",
+								backgroundColor: "#3B82F6",
+								color: "#FFFFFF",
+							},
+						},
 					},
-					input: {
-						padding: "6px 8px",
-					},
-				},
-			},
-			MuiFormLabel: {
-				styleOverrides: {
-					root: {
-						fontSize: "0.75rem",
-					},
-				},
-			},
-			MuiSelect: {
-				styleOverrides: {
-					root: {
-						fontSize: "0.8rem",
-					},
-				},
-			},
-			MuiTypography: {
-				styleOverrides: {
-					h5: {
-						fontSize: "1rem",
-						fontWeight: 500,
-					},
-				},
-			},
-			MuiAccordion: {
-				styleOverrides: {
-					root: {
-						marginBottom: "1rem",
-					},
-				},
-			},
-			MuiAvatar: {
-				styleOverrides: {
-					root: {
-						minWidth: "1.8rem",
-						width: "1.8rem",
-						height: "1.8rem",
-						fontSize: "0.8rem",
-						marginRight: "0.5rem",
-						boxSizing: "border-box",
-						backgroundColor: "#3B82F6",
-						color: "#FFFFFF",
-					},
-				},
-			},
-			MuiGrid: {
-				styleOverrides: {
-					root: {
-						"&.MuiGrid-container.MuiGrid-direction-xs-column": {
-							rowGap: "1rem",
+					MuiGrid: {
+						styleOverrides: {
+							root: {
+								"&.MuiGrid-container.MuiGrid-direction-xs-column": {
+									rowGap: "1rem",
+								},
+							},
 						},
 					},
 				},
-			},
-		},
-	});
+			}),
+		[],
+	);
 
-	const renderers = [...materialRenderers, customEnumRenderer, customKeyValueRenderer];
-
-	const configWithDefaults = useMemo(() => {
-		return applySchemaDefaults(formSchema, config);
-	}, [formSchema, config]);
+	const renderers = useMemo(
+		() => [...materialRenderers, customEnumRenderer, customKeyValueRenderer],
+		[],
+	);
 
 	const handleSubmit = () => {
 		setShowErrors(true);
+
+		const isValid = validate(draftConfig);
+		if (!isValid) {
+			setFormErrors(validate.errors || []);
+			return;
+		}
+
+		setFormErrors([]);
+		setConfig(draftConfig);
 		onSubmit();
+		closeRef.current?.click();
 	};
+
 	const handleDiscard = () => {
 		setShowErrors(false);
+		setDraftConfig(applySchemaDefaults(formSchema, config));
 		onDiscard();
 	};
 
@@ -156,38 +149,46 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 				<ThemeProvider theme={theme}>
 					<div className="flex-grow overflow-y-auto pt-2 p-3 text-xs">
 						<JsonForms
-							data={configWithDefaults}
+							data={draftConfig}
 							schema={formSchema}
 							uischema={uiSchema}
 							renderers={renderers}
 							cells={materialCells}
 							validationMode={showErrors ? "ValidateAndShow" : "ValidateAndHide"}
-							onChange={({ data, errors }) => {
-								setConfig(data);
-								if (onErrorsChange) {
-									onErrorsChange(errors);
-								}
+							onChange={({ data }) => {
+								setDraftConfig(data);
+								const valid = validate(data);
+								setFormErrors(valid ? [] : validate.errors || []);
 							}}
 						/>
 					</div>
 				</ThemeProvider>
 
 				<SheetFooter className="pt-4">
-					<SheetClose>
-						<div className="flex gap-3">
-							<Button className="bg-blue-500 text-sm" onClick={handleSubmit} disabled={submitDisabled}>
-								{submitLabel}
-							</Button>
-							<Button variant={"outline"} className="text-sm" onClick={handleDiscard}>
+					<SheetClose asChild>
+						<button ref={closeRef} className="hidden" />
+					</SheetClose>
+
+					<div className="flex gap-3">
+						<Button
+							className="bg-blue-500 text-sm"
+							onClick={handleSubmit}
+							disabled={submitDisabled && formErrors.length > 0}>
+							{submitLabel}
+						</Button>
+						<SheetClose asChild>
+							<Button variant="outline" className="text-sm" onClick={handleDiscard}>
 								Discard Changes
 							</Button>
-							{showDelete && (
-								<Button variant={"outline"} className="text-sm" onClick={onDelete}>
+						</SheetClose>
+						{showDelete && (
+							<SheetClose asChild>
+								<Button variant="outline" className="text-sm" onClick={onDelete}>
 									Delete Node
 								</Button>
-							)}
-						</div>
-					</SheetClose>
+							</SheetClose>
+						)}
+					</div>
 				</SheetFooter>
 			</div>
 		</SheetContent>
