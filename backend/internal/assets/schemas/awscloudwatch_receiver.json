@@ -11,6 +11,7 @@
     "log_group_names": {
       "type": "array",
       "title": "Log Group Names",
+      "description": "At least one log group name is required",
       "items": {
         "type": "string",
         "minLength": 1

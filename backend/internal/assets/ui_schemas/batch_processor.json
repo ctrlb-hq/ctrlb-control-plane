@@ -20,11 +20,6 @@
       "type": "Control",
       "scope": "#/properties/metadata_keys",
       "label": "Metadata Keys"
-    },
-    {
-      "type": "Control",
-      "scope": "#/properties/enable_log_batching",
-      "label": "Enable Log Batching"
     }
   ]
 }

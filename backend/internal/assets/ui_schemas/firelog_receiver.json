@@ -60,7 +60,10 @@
               "type": "Control",
               "scope": "#/properties/parse_from"
             }
-          ]
+          ],
+          "options": {
+            "expand": true
+          }
         }
       }
     }
