@@ -6,18 +6,18 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/operators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
 )
 
 // mockAdapter is a no-op implementation for interface satisfaction
 type mockAdapter struct{}
 
-func (m *mockAdapter) Initialize() error           { return nil }
-func (m *mockAdapter) StartAgent() error           { return nil }
-func (m *mockAdapter) StopAgent() error            { return nil }
-func (m *mockAdapter) UpdateConfig() error         { return nil }
-func (m *mockAdapter) GracefulShutdown() error     { return nil }
-func (m *mockAdapter) GetVersion() (string, error) { return "mock", nil }
+func (m *mockAdapter) Initialize() error                                 { return nil }
+func (m *mockAdapter) StartAgent() error                                 { return nil }
+func (m *mockAdapter) StopAgent() error                                  { return nil }
+func (m *mockAdapter) UpdateConfig() error                               { return nil }
+func (m *mockAdapter) GracefulShutdown() error                           { return nil }
+func (m *mockAdapter) GetVersion() (string, error)                       { return "mock", nil }
+func (m *mockAdapter) ValidateConfigInMemory(data *map[string]any) error { return nil }
 
 func TestNewOperatorService_ReturnsOtelOperator(t *testing.T) {
 	adapter := &mockAdapter{}

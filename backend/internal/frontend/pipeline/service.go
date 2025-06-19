@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler"
@@ -154,38 +156,6 @@ func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGrap
 	return f.sendConfigToAgents(attachedAgent, pipelineGraph)
 }
 
-func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
-	config, err := configcompiler.CompileGraphToJSON(pipelineGraph)
-	if err != nil {
-		return err
-	}
-
-	jsonData, err := json.Marshal(config)
-	if err != nil {
-		return fmt.Errorf("error marshaling config: %v", err)
-	}
-
-	for _, agent := range agents {
-		url := fmt.Sprintf("http://%s:443/agent/v1/config", agent.Hostname)
-		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			utils.Logger.Sugar().Errorf("Retry failed using Hostname for agent [ID:%v]: %v", agent.ID, err)
-			url = fmt.Sprintf("http://%s:443/agent/v1/config", agent.IP)
-			resp, err = http.Post(url, "application/json", bytes.NewBuffer(jsonData))
-			if err != nil {
-				utils.Logger.Sugar().Errorf("Retry failed using IP for agent [ID:%v]: %v", agent.ID, err)
-				continue
-			}
-		}
-		if resp != nil {
-			defer resp.Body.Close()
-		}
-
-	}
-
-	return nil
-}
-
 func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 	pipelineId, err := f.FrontendPipelineRepository.GetAgentPipelineId(agentId)
 	if err != nil {
@@ -211,4 +181,71 @@ func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 	agents = append(agents, *agent)
 
 	return f.sendConfigToAgents(agents, *graph)
+}
+
+func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
+	config, err := configcompiler.CompileGraphToJSON(pipelineGraph)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("error marshaling config: %v", err)
+	}
+
+	var failedAgents []string
+	var lastErr error
+
+	for _, agent := range agents {
+		if err := f.sendConfigToSingleAgent(agent, jsonData); err != nil {
+			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+			lastErr = err
+			utils.Logger.Sugar().Errorf("Failed to send config to agent [ID:%v]: %v", agent.ID, err)
+		}
+	}
+
+	if len(failedAgents) == len(agents) {
+		return fmt.Errorf("failed to send configuration to all %d agent(s): last error: %v", len(agents), lastErr)
+	} else if len(failedAgents) > 0 {
+		return fmt.Errorf("partial failure: configuration failed for %d out of %d agent(s) [%v]; last error: %v",
+			len(failedAgents), len(agents), failedAgents, lastErr)
+	}
+
+	return nil
+}
+
+func (f *FrontendPipelineService) sendConfigToSingleAgent(agent models.AgentInfoHome, jsonData []byte) error {
+	// create a client with 10s timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	trySend := func(endpoint string) error {
+		url := fmt.Sprintf("http://%s:443/agent/v1/config", endpoint)
+		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		switch {
+		case resp.StatusCode >= 200 && resp.StatusCode < 300:
+			return nil
+		case resp.StatusCode == 500:
+			return utils.ErrInvalidConfig
+		default:
+			return fmt.Errorf("request failed with status %d", resp.StatusCode)
+		}
+	}
+
+	// Try with hostname first
+	err := trySend(agent.Hostname)
+	if err == nil || errors.Is(err, utils.ErrInvalidConfig) {
+		return err
+	}
+
+	// Retry with IP if hostname failed due to network error
+	utils.Logger.Sugar().Warnf("Hostname failed for agent [ID:%v], retrying with IP: %v", agent.ID, err)
+	return trySend(agent.IP)
 }

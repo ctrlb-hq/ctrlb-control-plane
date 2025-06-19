@@ -25,8 +25,10 @@ func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
 
 func (otc *OtelOperator) Initialize() (map[string]string, error) {
 	go func() {
-		logger.Logger.Info("Started procecss of initializing otel agent context")
-		otc.Adapter.Initialize()
+		logger.Logger.Info("Started process of initializing otel agent context")
+		if err := otc.Adapter.Initialize(); err != nil {
+			logger.Logger.Error(fmt.Sprintf("Failed to initialize adapter: %s", err))
+		}
 	}()
 	jsonStr := `{"message": "Otel Agent initializing"}`
 
@@ -57,7 +59,7 @@ func (otc *OtelOperator) GracefulShutdown() error {
 	go func() {
 		err := otc.Adapter.GracefulShutdown()
 		if err != nil {
-			logger.Logger.Error(fmt.Sprintf("Error occured while shutting down agent: %s", err))
+			logger.Logger.Error(fmt.Sprintf("Error occurred while shutting down agent: %s", err))
 		}
 	}()
 
@@ -65,10 +67,20 @@ func (otc *OtelOperator) GracefulShutdown() error {
 }
 
 func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
-
-	if err := config.SaveToYAML(updateConfigRequest, constants.AGENT_CONFIG_PATH); err != nil {
-		return err
+	if updateConfigRequest == nil {
+		return fmt.Errorf("configuration data is nil")
 	}
 
+	// Validate configuration before saving
+	if err := otc.Adapter.ValidateConfigInMemory(&updateConfigRequest); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	// If validation passes, save to the actual config path
+	if err := config.SaveToYAML(updateConfigRequest, constants.AGENT_CONFIG_PATH); err != nil {
+		return fmt.Errorf("failed to save config to final location: %w", err)
+	}
+
+	logger.Logger.Info("Configuration updated and validated successfully")
 	return nil
 }

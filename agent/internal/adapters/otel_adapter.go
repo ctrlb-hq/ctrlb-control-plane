@@ -13,12 +13,14 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
+
+	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/otelcol"
 )
 
 type OTELAdapter struct {
 	svc    *otelcol.Collector
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	wg     *sync.WaitGroup
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -58,12 +60,12 @@ func (a *OTELAdapter) Initialize() error {
 }
 
 func (a *OTELAdapter) StartAgent() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	if a.svc != nil {
 		return fmt.Errorf("OTEL collector instance already running")
 	}
-
-	a.mu.Lock()
-	defer a.mu.Unlock()
 
 	svc, err := getNewOTELCollector()
 	if err != nil {
@@ -95,22 +97,27 @@ func (a *OTELAdapter) StopAgent() error {
 	return nil
 }
 
-func (o *OTELAdapter) UpdateConfig() error {
-	o.mu.Lock()
-	defer o.mu.Unlock()
+func (a *OTELAdapter) UpdateConfig() error {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGHUP)
+	defer signal.Stop(sigChan)
 
 	go func() {
-		for {
-			sig := <-sigChan
+		select {
+		case sig := <-sigChan:
 			logger.Logger.Sugar().Infof("Received signal for updating config in otel collector: %s\n", sig)
+		case <-time.After(5 * time.Second):
+			logger.Logger.Warn("Timeout waiting for config update signal")
 		}
 	}()
 
 	logger.Logger.Info("Sending SIGHUP signal to hot-reload otel collector for updating config...")
-	syscall.Kill(os.Getpid(), syscall.SIGHUP)
+	if err := syscall.Kill(os.Getpid(), syscall.SIGHUP); err != nil {
+		return fmt.Errorf("failed to send SIGHUP signal: %w", err)
+	}
 
 	time.Sleep(2 * time.Second)
 
@@ -119,24 +126,34 @@ func (o *OTELAdapter) UpdateConfig() error {
 }
 
 func (a *OTELAdapter) GracefulShutdown() error {
+	logger.Logger.Info("Starting graceful shutdown...")
+
+	// Cancel context to stop running goroutines
+	a.cancel()
+
+	// Shutdown external services
 	shutdown.ShutdownServer()
-	a.StopAgent()
+
+	// Stop the agent
+	if err := a.StopAgent(); err != nil {
+		logger.Logger.Error(fmt.Sprintf("Error stopping agent during shutdown: %v", err))
+	}
 
 	logger.Logger.Info("Waiting for all goroutines to finish...")
 	done := make(chan struct{})
-	a.wg.Wait()
-	close(done)
+	go func() {
+		a.wg.Wait()
+		close(done)
+	}()
 
 	select {
 	case <-done:
 		logger.Logger.Info("All goroutines finished successfully")
-
 	case <-time.After(20 * time.Second):
 		return fmt.Errorf("timed out waiting for goroutines to finish")
 	}
 
 	logger.Logger.Info("Agent shutdown successfully")
-	os.Exit(0)
 	return nil
 }
 
@@ -149,4 +166,33 @@ func (a *OTELAdapter) GetVersion() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("failed to determine OpenTelemetry Collector version")
+}
+
+func (a *OTELAdapter) ValidateConfigInMemory(data *map[string]any) error {
+	if data == nil || *data == nil {
+		return fmt.Errorf("configuration data is nil")
+	}
+
+	// Get factories
+	factories, err := componentsFactory()
+	if err != nil {
+		return fmt.Errorf("failed to create component factories: %w", err)
+	}
+
+	// Create in-memory config map
+	configMap := confmap.NewFromStringMap(*data)
+
+	// Create collector config
+	collectorConfig := &otelcol.Config{}
+	if err := configMap.Unmarshal(collectorConfig); err != nil {
+		return fmt.Errorf("failed to unmarshal collector config: %w", err)
+	}
+
+	// Validate the configuration by attempting to create components
+	if err := validateComponents(collectorConfig, factories); err != nil {
+		return fmt.Errorf("component validation failed: %w", err)
+	}
+
+	logger.Logger.Info("In-memory configuration validation successful")
+	return nil
 }

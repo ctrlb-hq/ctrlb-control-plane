@@ -45,6 +45,11 @@ func (m *MockAdapter) GetVersion() (string, error) {
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockAdapter) ValidateConfigInMemory(data *map[string]any) error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 func TestOtelOperator_Initialize(t *testing.T) {
 	mockAdapter := new(MockAdapter)
 	mockAdapter.On("Initialize").Return(nil)

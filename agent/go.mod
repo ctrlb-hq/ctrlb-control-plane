@@ -224,7 +224,7 @@ require (
 	go.opentelemetry.io/collector/scraper v0.122.0 // indirect
 	go.opentelemetry.io/collector/scraper/scraperhelper v0.122.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.122.0 // indirect
-	go.opentelemetry.io/collector/service v0.122.0 // indirect
+	go.opentelemetry.io/collector/service v0.122.0 // indirect; direct
 	go.opentelemetry.io/collector/service/hostcapabilities v0.122.0 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.10.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0 // indirect

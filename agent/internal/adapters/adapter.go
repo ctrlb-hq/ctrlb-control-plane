@@ -13,6 +13,7 @@ type Adapter interface {
 	UpdateConfig() error
 	GracefulShutdown() error
 	GetVersion() (string, error)
+	ValidateConfigInMemory(data *map[string]any) error
 }
 
 func NewAdapter(wg *sync.WaitGroup, agentType string) (Adapter, error) {
