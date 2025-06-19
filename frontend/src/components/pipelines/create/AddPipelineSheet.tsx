@@ -10,17 +10,13 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 import AddPipelineDetails from "@/components/pipelines/create/AddPipelineDetails";
-import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import PipelineEditorSheet from "@/components/pipelines/editor/PipelineGraphEditor";
 
 const AddPipelineSheet = () => {
-	const pipelineStatus = usePipelineStatus();
-	if (!pipelineStatus) {
-		return null;
-	}
-	const { currentStep, setCurrentStep } = pipelineStatus;
+	const [currentStep, setCurrentStep] = useState<number>(0);
+
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [pipelineId, setPipelineId] = useState<string>("");
@@ -70,7 +66,11 @@ const AddPipelineSheet = () => {
 				</SheetTrigger>
 				<SheetContent className={currentStep === 0 ? "" : "w-screen"}>
 					{currentStep == 0 ? (
-						<AddPipelineDetails sendPipelineDataToParent={getDataFromChild} />
+						<AddPipelineDetails
+							sendPipelineDataToParent={getDataFromChild}
+							currentStep={currentStep}
+							setCurrentStep={setCurrentStep}
+						/>
 					) : (
 						<PipelineEditorSheet
 							pipelineId={pipelineId}

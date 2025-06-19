@@ -1,15 +1,11 @@
 import { steps } from "@/constants";
-import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { motion } from "framer-motion";
-const ProgressFlow = () => {
-	const pipelineStatus = usePipelineStatus();
 
-	if (!pipelineStatus) {
-		return null;
-	}
+interface ProgressFlowProps {
+	currentStep: number;
+}
 
-	const { currentStep } = pipelineStatus;
-
+const ProgressFlow: React.FC<ProgressFlowProps> = ({ currentStep }) => {
 	return (
 		<div className="flex flex-1 p-6 bg-gray-50 shadow-lg rounded-lg">
 			<div className="relative">
@@ -30,11 +26,9 @@ const ProgressFlow = () => {
 							className="pb-6"
 							initial={{ opacity: 0, x: -10 }}
 							animate={{ opacity: 1, x: 0 }}
-							transition={{ duration: 0.3 }}
-						>
+							transition={{ duration: 0.3 }}>
 							<h3
-								className={`text-lg font-semibold ${index === currentStep ? "text-blue-600" : "text-gray-700"}`}
-							>
+								className={`text-lg font-semibold ${index === currentStep ? "text-blue-600" : "text-gray-700"}`}>
 								{step.title}
 							</h3>
 							<p className="text-gray-500 text-sm">{step.description}</p>

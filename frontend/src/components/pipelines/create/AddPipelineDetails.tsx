@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
@@ -20,18 +19,19 @@ interface formData {
 }
 
 interface AddPipelineDetailsProps {
-	sendPipelineDataToParent: (pipelineId: string, pipelineName: string) => void;
+	sendPipelineDataToParent: (id: string, name: string) => void;
+	currentStep: number;
+	setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProps) => {
-	const pipelineStatus = usePipelineStatus();
-	if (!pipelineStatus) {
-		return null;
-	}
+const AddPipelineDetails = ({
+	sendPipelineDataToParent,
+	currentStep,
+	setCurrentStep,
+}: AddPipelineDetailsProps) => {
 	const pipelineName = localStorage.getItem("pipelinename") || "";
 	const platform = localStorage.getItem("platform") as Platform | null;
 
-	const { currentStep } = pipelineStatus;
 	const [showRunCommand, setShowRunCommand] = useState(false);
 	const [showHeartBeat, setShowHeartBeat] = useState(false);
 	const [showStatus, setShowStatus] = useState(false);
@@ -206,7 +206,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 	return (
 		<div className="flex flex-row gap-5 mt-4">
 			<div className="w-1/4 h-full">
-				<ProgressFlow />
+				<ProgressFlow currentStep={currentStep} />
 			</div>
 			<Card className="w-3/4 h-full">
 				<CardHeader>
@@ -376,7 +376,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 										}
 
 										// Move to next step
-										pipelineStatus.setCurrentStep(currentStep + 1);
+										setCurrentStep(currentStep + 1);
 									} catch (error) {
 										console.error("Error initializing pipeline:", error);
 										toast({
