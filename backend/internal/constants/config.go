@@ -58,7 +58,7 @@ var DefaultPipelineGraph = models.PipelineGraph{
 				"logs",
 			},
 			Config: map[string]any{
-				"format": "json",
+				"verbosity": "basic",
 			},
 		},
 		{
