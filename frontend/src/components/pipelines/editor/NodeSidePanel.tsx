@@ -21,16 +21,14 @@ interface NodeSidePanelProps {
 	onDiscard: () => void;
 	onDelete?: () => void;
 	showDelete?: boolean;
-	isOpen?: boolean; // for mounted Sheet usage
+	isOpen?: boolean;
 }
 
 const applySchemaDefaults = (schema: any, data: any) => {
-	const ajv = new Ajv({ useDefaults: true, allErrors: true });
+	const ajv = new Ajv({ useDefaults: true, allErrors: true, strict: false });
+	const clonedData = JSON.parse(JSON.stringify(data || {}));
 	const validate = ajv.compile(schema);
-
-	const clonedData = { ...data };
 	validate(clonedData);
-
 	return clonedData;
 };
 
@@ -53,12 +51,19 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	const [formErrors, setFormErrors] = useState<any[]>([]);
 	const closeRef = useRef<HTMLButtonElement | null>(null);
 
-	// Reset draft config on sheet open if component is mounted always
+	const lastConfigRef = useRef<string>("");
+
 	useEffect(() => {
-		if (isOpen !== undefined && isOpen) {
-			setDraftConfig(applySchemaDefaults(formSchema, config));
-			setShowErrors(false);
-		}
+		if (!isOpen) return;
+
+		const newConfigString = JSON.stringify(config);
+		if (newConfigString === lastConfigRef.current) return;
+
+		lastConfigRef.current = newConfigString;
+
+		const withDefaults = applySchemaDefaults(formSchema, config);
+		setDraftConfig(withDefaults);
+		setShowErrors(false);
 	}, [isOpen, formSchema, config]);
 
 	const ajv = useMemo(() => new Ajv({ allErrors: true, strict: false }), []);
@@ -114,7 +119,6 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 
 	const handleSubmit = () => {
 		setShowErrors(true);
-
 		const isValid = validate(draftConfig);
 		if (!isValid) {
 			setFormErrors(validate.errors || []);
@@ -129,7 +133,8 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 
 	const handleDiscard = () => {
 		setShowErrors(false);
-		setDraftConfig(applySchemaDefaults(formSchema, config));
+		const reset = applySchemaDefaults(formSchema, config);
+		setDraftConfig(reset);
 		onDiscard();
 	};
 
@@ -142,7 +147,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 				</div>
 
 				<p className="text-gray-500 text-sm">
-					{"For more information please refer "}
+					For more information please refer{" "}
 					<span className="text-blue-500 underline cursor-pointer">Documentation</span>
 				</p>
 

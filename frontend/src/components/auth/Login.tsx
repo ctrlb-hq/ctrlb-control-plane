@@ -4,45 +4,62 @@ import authService from "../../services/auth";
 import { LoginCredentials } from "../../types/auth.types";
 import { ROUTES } from "../../constants";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const Login: React.FC = () => {
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState<LoginCredentials>({
 		email: "",
 		password: "",
 	});
+	const [emailError, setEmailError] = useState<string>("");
+	const [passwordError, setPasswordError] = useState<string>("");
 	const [error, setError] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
 		const { name, value } = e.target;
-		setFormData(prev => ({
-			...prev,
-			[name]: value,
-		}));
+		setFormData(prev => ({ ...prev, [name]: value }));
+
+		if (name === "email") {
+			setEmailError(!emailRegex.test(value) ? "Enter a valid email address." : "");
+		}
+		if (name === "password") {
+			setPasswordError(value.length < 8 ? "Password must be at least 8 characters." : "");
+		}
 	};
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 		setError("");
-		setIsLoading(true);
 
+		// Final client-side checks
+		if (!emailRegex.test(formData.email)) {
+			setEmailError("Enter a valid email address.");
+			return;
+		}
+		if (formData.password.length < 8) {
+			setPasswordError("Password must be at least 8 characters.");
+			return;
+		}
+
+		setIsLoading(true);
 		try {
 			const response = await authService.login(formData);
 			if (response) {
 				if (!localStorage.getItem("userEmail")) {
 					localStorage.setItem("userEmail", response.email);
 				}
-				const from = ROUTES.HOME;
-				navigate(from, { replace: true });
+				navigate(ROUTES.HOME, { replace: true });
 			}
-		} catch (error) {
-			if (error instanceof Error && error.message === "Token expired") {
+		} catch (err) {
+			// existing refresh-token logic...
+			if (err instanceof Error && err.message === "Token expired") {
 				try {
 					const refreshResponse = await authService.refreshToken();
 					if (refreshResponse) {
-						const retryResponse = await authService.login(formData);
-						console.log("Login successful after refresh:", retryResponse);
-						navigate(ROUTES.HOME);
+						await authService.login(formData);
+						navigate(ROUTES.HOME, { replace: true });
 					} else {
 						setError("Session expired. Please log in again.");
 					}
@@ -50,14 +67,14 @@ const Login: React.FC = () => {
 					setError("Login failed. Please check your credentials.");
 				}
 			} else {
-				setError(
-					error instanceof Error ? error.message : "Login failed. Please check your credentials.",
-				);
+				setError(err instanceof Error ? err.message : "Login failed. Please check your credentials.");
 			}
 		} finally {
 			setIsLoading(false);
 		}
 	};
+
+	const hasValidationError = !!emailError || !!passwordError;
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -84,8 +101,11 @@ const Login: React.FC = () => {
 								onChange={handleChange}
 								required
 								disabled={isLoading}
-								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+								className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+									emailError ? "border-red-500" : "border-gray-300"
+								}`}
 							/>
+							{emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
 						</div>
 
 						<div>
@@ -100,48 +120,25 @@ const Login: React.FC = () => {
 								onChange={handleChange}
 								required
 								disabled={isLoading}
-								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+								className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+									passwordError ? "border-red-500" : "border-gray-300"
+								}`}
 							/>
+							{passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
 						</div>
 					</div>
 
 					<button
 						type="submit"
-						disabled={isLoading}
-						className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-              ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-					>
-						{isLoading ? (
-							<span className="flex items-center justify-center">
-								<svg
-									className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<circle
-										className="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										strokeWidth="4"
-									></circle>
-									<path
-										className="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-								Signing in...
-							</span>
-						) : (
-							"Sign In"
-						)}
+						disabled={isLoading || hasValidationError}
+						className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+							isLoading || hasValidationError ? "opacity-50 cursor-not-allowed" : ""
+						}`}>
+						{isLoading ? "Signing in..." : "Sign In"}
 					</button>
 
 					<p className="text-center mt-4 text-sm">
-						Don't have an account?{" "}
+						Don’t have an account?{" "}
 						<Link to="/register" className="text-blue-600 hover:underline">
 							Register here
 						</Link>

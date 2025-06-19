@@ -93,10 +93,30 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 			<div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-2 mb-2">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-gray-700 text-sm">
 					<div>
-						<p className="text-gray-500 leading-tight">Name</p>
+						<p className="text-gray-500 leading-tight">Pipeline Name</p>
 						<p className="font-medium leading-tight">{pipelineOverviewData?.name || "-"}</p>
 					</div>
 					<div className="flex flex-col">
+						<p className="text-gray-500 leading-tight">Pipeline ID</p>
+						<p className="font-medium leading-tight">{pipelineOverviewData?.id || "-"}</p>
+					</div>
+					<div>
+						<p className="text-gray-500 leading-tight">Created At</p>
+						<p className="font-medium leading-tight">
+							{formatTimestampWithDate(pipelineOverviewData?.created_at)}
+						</p>
+					</div>
+					<div>
+						<p className="text-gray-500 leading-tight">Created By</p>
+						<p className="font-medium leading-tight">{pipelineOverviewData?.created_by || "-"}</p>
+					</div>
+					<div>
+						<p className="text-gray-500 leading-tight">Updated At</p>
+						<p className="font-medium leading-tight">
+							{formatTimestampWithDate(pipelineOverviewData?.updated_at)}
+						</p>
+					</div>
+					<div>
 						<p className="text-gray-500 leading-tight">Status</p>
 						<div className="flex items-center gap-2">
 							<span
@@ -120,36 +140,20 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 						</div>
 					</div>
 					<div>
-						<p className="text-gray-500 leading-tight">Created At</p>
-						<p className="font-medium leading-tight">
-							{formatTimestampWithDate(pipelineOverviewData?.created_at)}
-						</p>
-					</div>
-					<div>
-						<p className="text-gray-500 leading-tight">Created By</p>
-						<p className="font-medium leading-tight">{pipelineOverviewData?.created_by || "-"}</p>
-					</div>
-					<div>
-						<p className="text-gray-500 leading-tight">Updated At</p>
-						<p className="font-medium leading-tight">
-							{formatTimestampWithDate(pipelineOverviewData?.updated_at)}
-						</p>
+						<p className="text-gray-500 leading-tight">Collector Version</p>
+						<p className="font-medium leading-tight">v{pipelineOverviewData?.agent_version}</p>
 					</div>
 					<div>
 						<p className="text-gray-500 leading-tight">Hostname</p>
 						<p className="font-medium leading-tight">{pipelineOverviewData?.hostname}</p>
 					</div>
 					<div>
-						<p className="text-gray-500 leading-tight">Agent Version</p>
-						<p className="font-medium leading-tight">{pipelineOverviewData?.agent_version}</p>
+						<p className="text-gray-500 leading-tight">Platform</p>
+						<p className="font-medium leading-tight">{pipelineOverviewData?.platform}</p>
 					</div>
 					<div>
 						<p className="text-gray-500 leading-tight">IP Address</p>
 						<p className="font-medium leading-tight">{pipelineOverviewData?.ip_address}</p>
-					</div>
-					<div>
-						<p className="text-gray-500 leading-tight">Platform</p>
-						<p className="font-medium leading-tight">{pipelineOverviewData?.platform}</p>
 					</div>
 				</div>
 			</div>
@@ -166,6 +170,9 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 								}))}
 								y_axis_data_key={metric.metric_name}
 								chart_color={getRandomChartColor(metric.metric_name)}
+								yAxisLabel={
+									metric.metric_name === "cpu_utilization" ? "CPU Utilization (%)" : "Memory Utilization (%)"
+								}
 							/>
 						</div>
 					))

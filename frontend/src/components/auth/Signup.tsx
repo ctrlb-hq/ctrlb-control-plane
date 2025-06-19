@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth";
 import { RegisterCredentials } from "../../types/auth.types";
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const Register: React.FC = () => {
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState<RegisterCredentials>({
@@ -10,34 +12,57 @@ const Register: React.FC = () => {
 		password: "",
 		name: "",
 	});
+	const [emailError, setEmailError] = useState<string>("");
+	const [passwordError, setPasswordError] = useState<string>("");
 	const [error, setError] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
 		const { name, value } = e.target;
+
 		setFormData(prev => ({
 			...prev,
 			[name]: value,
 		}));
+
+		if (name === "email") {
+			setEmailError(!emailRegex.test(value) ? "Please enter a valid email address." : "");
+		}
+
+		if (name === "password") {
+			setPasswordError(value.length < 8 ? "Password must be at least 8 characters long." : "");
+		}
 	};
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 		setError("");
-		setIsLoading(true);
 
+		// Final client-side checks
+		if (!emailRegex.test(formData.email)) {
+			setEmailError("Please enter a valid email address.");
+			return;
+		}
+		if (formData.password.length < 8) {
+			setPasswordError("Password must be at least 8 characters long.");
+			return;
+		}
+
+		setIsLoading(true);
 		try {
 			const response = await authService.register(formData);
 			if (!localStorage.getItem("userEmail")) {
 				localStorage.setItem("userEmail", response.email);
 			}
 			navigate("/login");
-		} catch (error) {
-			setError(error instanceof Error ? error.message : "Registration failed. Please try again.");
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
 		} finally {
 			setIsLoading(false);
 		}
 	};
+
+	const hasFormError = !!emailError || !!passwordError;
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -80,8 +105,11 @@ const Register: React.FC = () => {
 								onChange={handleChange}
 								required
 								disabled={isLoading}
-								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+								className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+									emailError ? "border-red-500" : "border-gray-300"
+								}`}
 							/>
+							{emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
 						</div>
 
 						<div>
@@ -96,25 +124,27 @@ const Register: React.FC = () => {
 								onChange={handleChange}
 								required
 								disabled={isLoading}
-								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+								className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+									passwordError ? "border-red-500" : "border-gray-300"
+								}`}
 							/>
+							{passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
 						</div>
 					</div>
 
 					<button
 						type="submit"
-						disabled={isLoading}
-						className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-              ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-					>
+						disabled={isLoading || hasFormError}
+						className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+							isLoading || hasFormError ? "opacity-50 cursor-not-allowed" : ""
+						}`}>
 						{isLoading ? (
 							<span className="flex items-center justify-center">
 								<svg
 									className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
-									viewBox="0 0 24 24"
-								>
+									viewBox="0 0 24 24">
 									<circle
 										className="opacity-25"
 										cx="12"
@@ -122,12 +152,12 @@ const Register: React.FC = () => {
 										r="10"
 										stroke="currentColor"
 										strokeWidth="4"
-									></circle>
+									/>
 									<path
 										className="opacity-75"
 										fill="currentColor"
 										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
+									/>
 								</svg>
 								Creating Account...
 							</span>
@@ -136,6 +166,7 @@ const Register: React.FC = () => {
 						)}
 					</button>
 				</form>
+
 				<div className="text-center mt-4">
 					<p className="text-sm">
 						Already have an account?{" "}

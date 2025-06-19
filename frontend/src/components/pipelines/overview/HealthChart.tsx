@@ -19,11 +19,13 @@ export function HealthChart({
 	name,
 	y_axis_data_key,
 	chart_color,
+	yAxisLabel,
 }: {
 	data: any;
 	name: string;
 	y_axis_data_key?: string;
 	chart_color?: string;
+	yAxisLabel?: string;
 }) {
 	const formatTimestamp = (timestamp: string) => {
 		const date = new Date(parseInt(timestamp, 10) * 1000);
@@ -46,8 +48,7 @@ export function HealthChart({
 						margin={{
 							left: 12,
 							right: 12,
-						}}
-					>
+						}}>
 						<CartesianGrid vertical={false} />
 						<XAxis
 							dataKey="timestamp"
@@ -56,7 +57,19 @@ export function HealthChart({
 							tickMargin={8}
 							tickFormatter={formatTimestamp}
 						/>
-						<YAxis dataKey={y_axis_data_key || "value"} />
+						<YAxis
+							dataKey={y_axis_data_key || "value"}
+							label={
+								yAxisLabel
+									? {
+											value: yAxisLabel,
+											angle: -90,
+											position: "insideLeft",
+											offset: 8,
+										}
+									: undefined
+							}
+						/>
 						<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
 						<Area
 							dataKey={y_axis_data_key || "value"}

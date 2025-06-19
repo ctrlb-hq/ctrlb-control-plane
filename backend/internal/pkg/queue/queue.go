@@ -170,29 +170,48 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		fmt.Sprintf("http://%s:8888/metrics", agent.IP),
 	}
 
-	var metrics map[string]*io_prometheus_client.MetricFamily
-	var err error
-
+	var (
+		metrics map[string]*io_prometheus_client.MetricFamily
+		err     error
+	)
+	// try hostname first, then IP
 	for _, url := range endpoints {
 		metrics, err = q.Metrics.Fetch(url)
 		if err == nil {
 			break
 		}
 	}
-
 	if err != nil {
-		return fmt.Errorf("failed to fetch metrics from both hostname and IP: %w", err)
+		return fmt.Errorf("fetch metrics failed (hostname & IP): %w", err)
 	}
 
+	// helper to pull a float64, defaulting to 0 if missing
+	get := func(name string) float64 {
+		return q.Metrics.ExtractValue(metrics, name)
+	}
+
+	// build the aggregated (DB) metrics
 	agg := AggregatedAgentMetrics{
 		AgentID:           agent.AgentID,
-		LogsRateSent:      q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_log_records"),
-		TracesRateSent:    q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_spans"),
-		MetricsRateSent:   q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_metric_points"),
-		DataSentBytes:     q.Metrics.ExtractValue(metrics, "otelcol_exporter_sent_bytes"),
-		DataReceivedBytes: q.Metrics.ExtractValue(metrics, "otelcol_receiver_accepted_bytes"),
+		LogsRateSent:      get("otelcol_exporter_sent_log_records"),
+		TracesRateSent:    get("otelcol_exporter_sent_spans"),
+		MetricsRateSent:   get("otelcol_exporter_sent_metric_points"),
+		DataSentBytes:     get("otelcol_exporter_sent_bytes"),
+		DataReceivedBytes: get("otelcol_receiver_accepted_bytes"),
 		Status:            "connected",
 		UpdatedAt:         time.Now().Unix(),
+	}
+
+	// pick the “right” CPU/memory streams:
+	// first try the normalized gauges, else fallback to process counters
+	cpuUtil := get("system_cpu_utilization")
+	if cpuUtil == 0 {
+		// raw counter per-second rate would be better–but at least show the total
+		cpuUtil = get("otelcol_process_cpu_seconds_total")
+	}
+	memUtil := get("system_memory_utilization")
+	if memUtil == 0 {
+		memUtil = get("otelcol_process_memory_rss")
 	}
 
 	rt := RealtimeAgentMetrics{
@@ -202,8 +221,8 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		MetricsRateSent:   agg.MetricsRateSent,
 		DataSentBytes:     agg.DataSentBytes,
 		DataReceivedBytes: agg.DataReceivedBytes,
-		CPUUtilization:    q.Metrics.ExtractValue(metrics, "otelcol_process_cpu_seconds_total"),
-		MemoryUtilization: q.Metrics.ExtractValue(metrics, "otelcol_process_memory_rss"),
+		CPUUtilization:    cpuUtil,
+		MemoryUtilization: memUtil,
 		Timestamp:         time.Now().Unix(),
 	}
 
