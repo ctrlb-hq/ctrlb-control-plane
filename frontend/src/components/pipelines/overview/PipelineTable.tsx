@@ -11,7 +11,7 @@ import {
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import pipelineServices from "@/services/pipeline";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ViewPipelineDetails from "./ViewPipelineDetails";
 
 interface pipeline {
@@ -48,10 +48,10 @@ const PipelineTable = () => {
 		setPipelines(res);
 	};
 
-	const handleGetPipeline = async () => {
+	const handleGetPipeline = useCallback(async () => {
 		const res = await pipelineServices.getPipelineById(pipelineId);
 		setPipelineOverview(res);
-	};
+	}, [pipelineId, setPipelineOverview]);
 
 	useEffect(() => {
 		handleGetPipelines();
@@ -61,7 +61,7 @@ const PipelineTable = () => {
 		if (pipelineId) {
 			handleGetPipeline();
 		}
-	}, [pipelineId]);
+	}, [pipelineId, handleGetPipeline]);
 
 	return (
 		<>

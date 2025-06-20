@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
@@ -61,10 +60,12 @@ const PipelineEditorSheet = ({
 		setEdgeValueDirect,
 		setNodeValueDirect,
 		connectNodes,
+		changesLog,
+		deleteEdge,
+		clearChangesLog,
 	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-	const { changesLog, clearChangesLog, addChange } = usePipelineChangesLog();
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
 	const { toast } = useToast();
@@ -79,6 +80,10 @@ const PipelineEditorSheet = ({
 	);
 
 	const fetchGraph = async () => {
+		setNodeValueDirect([]);
+		setEdgeValueDirect([]);
+		clearChangesLog();
+
 		const res = await pipelineServices.getPipelineGraph(pipelineId);
 		const VERTICAL_SPACING = 100;
 
@@ -131,14 +136,10 @@ const PipelineEditorSheet = ({
 	);
 
 	const handleDeleteEdge = useCallback(() => {
-		if (selectedEdge) {
-			const newEdges = edgeValue.filter(
-				e => !(e.source === selectedEdge.source && e.target === selectedEdge.target),
-			);
-			setEdgeValueDirect(newEdges);
-			setSelectedEdge(null);
-		}
-	}, [selectedEdge]);
+		if (!selectedEdge) return;
+		deleteEdge(selectedEdge);
+		setSelectedEdge(null);
+	}, [selectedEdge, deleteEdge]);
 
 	const handleDeployChanges = async () => {
 		const toastId = toast({
@@ -182,7 +183,6 @@ const PipelineEditorSheet = ({
 			});
 
 			setHasDeployError(false);
-			localStorage.removeItem("changesLog");
 			setIsEditMode(false);
 			clearChangesLog();
 			fetchGraph();
@@ -212,15 +212,6 @@ const PipelineEditorSheet = ({
 	};
 
 	const handleSubmit = () => {
-		const log = {
-			...selectedChange,
-			status: "edited",
-			initialConfig: undefined,
-			finalConfig: config,
-		};
-		addChange(log);
-		const updatedLog = [...JSON.parse(localStorage.getItem("changesLog") || "[]"), log];
-		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		setIsEditFormOpen(false);
 	};
 
@@ -265,7 +256,9 @@ const PipelineEditorSheet = ({
 															className={`text-lg ${change.status === "deleted" ? "text-red-500" : change.status === "added" ? "text-green-500" : "text-gray-500"}`}>
 															[{change.status}]
 														</p>
-														<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
+														{change.type !== "Edge" && (
+															<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
+														)}
 													</div>
 												</div>
 											))}

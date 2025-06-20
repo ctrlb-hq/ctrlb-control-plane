@@ -29,8 +29,8 @@ const AddPipelineDetails = ({
 	currentStep,
 	setCurrentStep,
 }: AddPipelineDetailsProps) => {
-	const pipelineName = localStorage.getItem("pipelinename") || "";
-	const platform = localStorage.getItem("platform") as Platform | null;
+	const pipelineName = "";
+	const platform = null;
 
 	const [showRunCommand, setShowRunCommand] = useState(false);
 	const [showHeartBeat, setShowHeartBeat] = useState(false);
@@ -364,10 +364,6 @@ const AddPipelineDetails = ({
 										localStorage.setItem("pipelinename", formData.name);
 										localStorage.setItem("platform", formData.platform);
 										localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
-										localStorage.setItem("latest_agents", JSON.stringify([]));
-										localStorage.setItem("selectedAgentIds", JSON.stringify([]));
-										localStorage.setItem("pipelineNodes", JSON.stringify([]));
-										localStorage.setItem("pipelineEdges", JSON.stringify([]));
 
 										// Verify data was stored correctly
 										const verifyData = localStorage.getItem("pipelineData");

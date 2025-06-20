@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { ComponentService } from "@/services/component";
 import { ArrowBigRightDash } from "lucide-react";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
@@ -24,7 +23,6 @@ interface GenericNodeProps extends NodeProps {
 const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
-	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
 	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
 		type: "VerticalLayout",
@@ -34,37 +32,11 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 	const nodeId = Data.component_id.toString();
 
 	const handleDeleteNode = () => {
-		const log = {
-			type,
-			id: nodeId,
-			name: Data.name,
-			status: "deleted",
-			initialConfig: Data.config,
-			finalConfig: undefined,
-			component_type: Data.component_name,
-		};
-		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-		addChange(log);
-		const updatedLog = [...existingLog, log];
-		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		deleteNode(nodeId);
 		setIsOpen(false);
 	};
 
 	const handleSubmit = () => {
-		const log = {
-			type,
-			id: nodeId,
-			name: Data.name,
-			status: "edited",
-			initialConfig: Data.config,
-			finalConfig: config,
-			component_type: Data.component_name,
-		};
-		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-		addChange(log);
-		const updatedLog = [...existingLog, log];
-		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
 		updateNodeConfig(nodeId, config);
 		setIsOpen(false);
 	};
@@ -84,7 +56,6 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 		<Sheet open={isOpen} onOpenChange={setIsOpen}>
 			<SheetTrigger asChild>
 				<div onClick={() => setIsOpen(true)} className="flex items-center gap-0">
-					{/* === Source Node === */}
 					{type === "source" && (
 						<>
 							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-l-md flex items-center justify-center">
@@ -105,7 +76,6 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 						</>
 					)}
 
-					{/* === Processor Node === */}
 					{type === "processor" && (
 						<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-md relative">
 							<Handle
@@ -127,7 +97,6 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 						</div>
 					)}
 
-					{/* === Destination Node === */}
 					{type === "destination" && (
 						<>
 							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-l-md relative">

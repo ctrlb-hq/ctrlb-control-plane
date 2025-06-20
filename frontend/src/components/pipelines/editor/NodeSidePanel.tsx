@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
+import { createAjv } from "@jsonforms/core";
 import { Button } from "@/components/ui/button";
 import { SheetFooter, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ArrowBigRightDash } from "lucide-react";
@@ -24,11 +25,13 @@ interface NodeSidePanelProps {
 	isOpen?: boolean;
 }
 
+// Single AJV instance with defaults enabled for both default population and validation
+const ajv = new Ajv({ useDefaults: true, allErrors: true, strict: false });
+
 const applySchemaDefaults = (schema: any, data: any) => {
-	const ajv = new Ajv({ useDefaults: true, allErrors: true, strict: false });
 	const clonedData = JSON.parse(JSON.stringify(data || {}));
-	const validate = ajv.compile(schema);
-	validate(clonedData);
+	const validateWithDefaults = ajv.compile(schema);
+	validateWithDefaults(clonedData); // mutates clonedData to include defaults
 	return clonedData;
 };
 
@@ -60,14 +63,18 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		if (newConfigString === lastConfigRef.current) return;
 
 		lastConfigRef.current = newConfigString;
-
-		const withDefaults = applySchemaDefaults(formSchema, config);
-		setDraftConfig(withDefaults);
+		setDraftConfig(applySchemaDefaults(formSchema, config));
 		setShowErrors(false);
 	}, [isOpen, formSchema, config]);
 
-	const ajv = useMemo(() => new Ajv({ allErrors: true, strict: false }), []);
-	const validate = useMemo(() => ajv.compile(formSchema), [ajv, formSchema]);
+	// JSON Forms AJV factory to support defaults
+	const defaultsAjv = useMemo(
+		() => createAjv({ useDefaults: true, allErrors: true, strict: false }),
+		[],
+	);
+
+	// Compile validator once per schema
+	const validate = useMemo(() => ajv.compile(formSchema), [formSchema]);
 
 	const theme = useMemo(
 		() =>
@@ -101,9 +108,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 					MuiGrid: {
 						styleOverrides: {
 							root: {
-								"&.MuiGrid-container.MuiGrid-direction-xs-column": {
-									rowGap: "1rem",
-								},
+								"&.MuiGrid-container.MuiGrid-direction-xs-column": { rowGap: "1rem" },
 							},
 						},
 					},
@@ -133,8 +138,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 
 	const handleDiscard = () => {
 		setShowErrors(false);
-		const reset = applySchemaDefaults(formSchema, config);
-		setDraftConfig(reset);
+		setDraftConfig(applySchemaDefaults(formSchema, config));
 		onDiscard();
 	};
 
@@ -159,6 +163,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 							uischema={uiSchema}
 							renderers={renderers}
 							cells={materialCells}
+							ajv={defaultsAjv}
 							validationMode={showErrors ? "ValidateAndShow" : "ValidateAndHide"}
 							onChange={({ data }) => {
 								setDraftConfig(data);

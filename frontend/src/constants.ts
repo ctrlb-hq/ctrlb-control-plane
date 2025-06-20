@@ -1,11 +1,5 @@
 import { Edge, Node } from "reactflow";
 
-export interface Changes {
-	type: string;
-	name: string;
-	status: string;
-	
-}
 
 export interface PipelineNodeData {
 	component_id: string;

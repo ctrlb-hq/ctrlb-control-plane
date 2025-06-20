@@ -1,6 +1,7 @@
 {
   "title": "OTLP Receiver Configuration",
   "type": "object",
+  "description": "One of either HTTP or gRPC must be configured",
   "properties": {
     "protocols": {
       "type": "object",

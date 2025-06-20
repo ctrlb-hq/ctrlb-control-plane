@@ -1,9 +1,17 @@
 import { Boxes } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from "@/components/ui/dialog";
 
 import "reactflow/dist/style.css";
 import PipelinYAML from "./YamlViewer";
@@ -12,12 +20,44 @@ import PipelineOverview from "./PipelineOverview";
 import DeletePipelineDialog from "./DeletePipelineDialog";
 import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { Button } from "@/components/ui/button";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const { toast } = useToast();
 	const [tabs, setTabs] = useState<string>("overview");
+
+	const [isSheetOpen, setIsSheetOpen] = useState(false);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const { changesLog, clearChangesLog } = useGraphFlow();
+
+	// Intercept any attempt to close the Sheet
+	const handleSheetOpenChange = useCallback(
+		(open: boolean) => {
+			if (!open && changesLog.length > 0) {
+				// there are unsaved edits → show discard dialog instead of closing
+				setIsDialogOpen(true);
+			} else {
+				// either opening, or closing cleanly
+				setIsSheetOpen(open);
+			}
+		},
+		[changesLog.length],
+	);
+
+	const handleDialogCancel = () => {
+		// keep sheet open, just close dialog
+		setIsDialogOpen(false);
+		setIsSheetOpen(true);
+	};
+
+	const handleDialogOkay = () => {
+		// user confirmed discard → close both dialog & sheet, clear changes
+		setIsDialogOpen(false);
+		setIsSheetOpen(false);
+		clearChangesLog();
+	};
 
 	const handleGetPipelineOverview = async () => {
 		try {
@@ -48,7 +88,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full">
 						<div className="flex gap-2">
-							<Sheet>
+							<Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
 								<SheetTrigger asChild>
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>
@@ -61,6 +101,24 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									/>
 								</SheetContent>
 							</Sheet>
+							<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+								<DialogContent className="w-[32rem]">
+									<DialogHeader>
+										<DialogTitle>Discard Changes?</DialogTitle>
+										<DialogDescription>
+											You have unsaved changes in this pipeline. Closing now will lose all edits. Continue?
+										</DialogDescription>
+									</DialogHeader>
+									<DialogFooter>
+										<Button variant="outline" onClick={handleDialogCancel}>
+											Cancel
+										</Button>
+										<Button className="bg-blue-500" onClick={handleDialogOkay}>
+											OK
+										</Button>
+									</DialogFooter>
+								</DialogContent>
+							</Dialog>
 							<DeletePipelineDialog
 								isOpen={isOpen}
 								setIsOpen={setIsOpen}

@@ -11,7 +11,6 @@ import {
 import { Sheet } from "@/components/ui/sheet";
 import React, { useEffect, useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { ComponentService } from "@/services/component";
 import { JsonSchema } from "@jsonforms/core";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
@@ -38,14 +37,12 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 	const [plugins, setPlugins] = useState<Plugin[]>([]);
 	const [form, setForm] = useState<JsonSchema>({});
 	const [config, setConfig] = useState<object>({});
-	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
 		type: "VerticalLayout",
 		elements: [],
 	});
 
 	const { addNode } = useGraphFlow();
-	const { addChange } = usePipelineChangesLog();
 
 	const handleSheetOpen = (plugin: string, displayName: string) => {
 		setPluginName(plugin);
@@ -76,30 +73,18 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 				config,
 			},
 		};
-		const id = addNode(newNode);
-		const log = {
-			type: nodeType,
-			id,
-			name: optionValue,
-			status: "added",
-			initialConfig: undefined,
-			finalConfig: config,
-			component_type: pluginName,
-		};
-		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-		addChange(log);
-		localStorage.setItem("changesLog", JSON.stringify([...existingLog, log]));
+		addNode(newNode);
 		setIsSheetOpen(false);
 	};
 
-	const fetchPlugins = async () => {
+	const fetchPlugins = React.useCallback(async () => {
 		const res = await ComponentService.getTransporterService(kind);
 		setPlugins(res);
-	};
+	}, [kind]);
 
 	useEffect(() => {
 		fetchPlugins();
-	}, [isSheetOpen]);
+	}, [isSheetOpen, fetchPlugins]);
 
 	return (
 		<>
@@ -141,7 +126,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 						config={config}
 						setConfig={setConfig}
 						submitLabel={`Add ${label}`}
-						submitDisabled={submitDisabled}
+						submitDisabled={true}
 						onSubmit={handleSubmit}
 						onDiscard={() => setIsSheetOpen(false)}
 						showDelete={false}
