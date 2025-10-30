@@ -4,7 +4,7 @@ set -e
 
 BACKEND_NAME="control-plane-backend"
 VERSION="v1.0.0"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="/usr/local/bin/control-plane-backend"
 ENV_FILE="/etc/${BACKEND_NAME}/env"
 SERVICE_FILE="/etc/systemd/system/${BACKEND_NAME}.service"
 
@@ -88,6 +88,8 @@ esac
 DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download/${VERSION}"
 BINARY_URL="${DOWNLOAD_BASE_URL}/${BACKEND_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${BACKEND_NAME}"
+
+mkdir -p "$INSTALL_DIR"
 
 echo "📥 Downloading ${BACKEND_NAME} ${VERSION} for ${OS}/${ARCH}..."
 if ! curl -fL "$BINARY_URL" -o "$BINARY_PATH"; then

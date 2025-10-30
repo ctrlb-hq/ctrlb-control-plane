@@ -4,8 +4,10 @@ set -e
 
 COLLECTOR_NAME="ctrlb-collector"
 VERSION="v1.0.0"
-INSTALL_DIR="/usr/local/bin"
-ENV_FILE="/etc/${COLLECTOR_NAME}/env"
+INSTALL_DIR="/usr/local/bin/collector"
+CONFIG_DIR="/etc/${COLLECTOR_NAME}"
+ENV_FILE="${CONFIG_DIR}/env"
+CONFIG_FILE="${CONFIG_DIR}/config.yaml"
 SERVICE_FILE="/etc/systemd/system/${COLLECTOR_NAME}.service"
 
 # Read from env or prompt interactively
@@ -49,20 +51,55 @@ BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
 echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
+mkdir -p "$INSTALL_DIR"
 curl -L "$BINARY_URL" -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"
 
+# Write configuration
+echo "🧩 Creating configuration..."
+mkdir -p "$CONFIG_DIR"
+
+cat <<'EOF' > "$CONFIG_FILE"
+exporters:
+    debug: {}
+processors: {}
+receivers:
+    otlp:
+        protocols:
+            grpc: {}
+            http: {}
+service:
+    pipelines:
+        logs/default:
+            exporters:
+                - debug
+            processors: []
+            receivers:
+                - otlp
+    telemetry:
+        metrics:
+            level: detailed
+            readers:
+                - pull:
+                    exporter:
+                        prometheus:
+                            host: 0.0.0.0
+                            port: 8888
+
+EOF
+
 # Write environment file
-mkdir -p "$(dirname "$ENV_FILE")"
 cat <<EOF > "$ENV_FILE"
 BACKEND_URL=${BACKEND_URL}
 PIPELINE_NAME=${PIPELINE_NAME}
 STARTED_BY=${STARTED_BY}
+AGENT_CONFIG_PATH=${CONFIG_FILE}
 EOF
 
 chmod 600 "$ENV_FILE"
+chmod 644 "$CONFIG_FILE"
 
-# Create systemd unit
+# Create systemd service
 cat <<EOF > "$SERVICE_FILE"
 [Unit]
 Description=${COLLECTOR_NAME} Service
@@ -70,8 +107,9 @@ After=network.target
 
 [Service]
 ExecStart=${BINARY_PATH}
-Restart=always
 EnvironmentFile=${ENV_FILE}
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -79,9 +117,10 @@ EOF
 
 # Enable and start service
 echo "🔧 Configuring systemd service..."
-systemctl daemon-reexec
-systemctl enable "$COLLECTOR_NAME"
-systemctl restart "$COLLECTOR_NAME"
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable "$COLLECTOR_NAME"
+sudo systemctl restart "$COLLECTOR_NAME"
 
 echo "✅ ${COLLECTOR_NAME} installed and running!"
-systemctl status "$COLLECTOR_NAME" --no-pager
+sudo systemctl status "$COLLECTOR_NAME" --no-pager
