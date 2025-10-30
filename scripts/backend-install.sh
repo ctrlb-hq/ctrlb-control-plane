@@ -139,9 +139,9 @@ EOF
 mkdir -p /var/lib/${BACKEND_NAME}
 
 echo "🔧 Enabling systemd service..."
-systemctl daemon-reexec
-systemctl enable "$BACKEND_NAME"
-systemctl restart "$BACKEND_NAME"
+sudo systemctl daemon-reexec
+sudo systemctl enable "$BACKEND_NAME"
+sudo systemctl restart "$BACKEND_NAME"
 
 echo "✅ ${BACKEND_NAME} is running on port ${PORT}"
-systemctl status "$BACKEND_NAME" --no-pager
+sudo systemctl status "$BACKEND_NAME" --no-pager
