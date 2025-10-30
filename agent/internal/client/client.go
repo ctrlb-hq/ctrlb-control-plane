@@ -53,7 +53,7 @@ func InformBackendServerStart(sys systeminfo.SystemInfoProvider,
 	}
 
 	// Step 5: Create the HTTP request to inform the backend server
-	url := fmt.Sprintf("http://%s/api/agent/v1/agents", constants.BACKEND_URL)
+	url := fmt.Sprintf("%s/api/agent/v1/agents", constants.BACKEND_URL)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
