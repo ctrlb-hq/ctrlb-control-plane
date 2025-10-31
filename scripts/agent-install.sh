@@ -4,10 +4,9 @@ set -e
 
 COLLECTOR_NAME="ctrlb-collector"
 VERSION="v1.0.0"
-INSTALL_DIR="/usr/local/bin/collector"
-CONFIG_DIR="/etc/${COLLECTOR_NAME}"
-ENV_FILE="${CONFIG_DIR}/env"
-CONFIG_FILE="${CONFIG_DIR}/config.yaml"
+INSTALL_DIR="/opt/ctrlb/${COLLECTOR_NAME}"
+ENV_FILE="${INSTALL_DIR}/.env"
+CONFIG_FILE="${INSTALL_DIR}/config.yaml"
 SERVICE_FILE="/etc/systemd/system/${COLLECTOR_NAME}.service"
 
 # Read from env or prompt interactively
@@ -57,7 +56,7 @@ chmod +x "$BINARY_PATH"
 
 # Write configuration
 echo "🧩 Creating configuration..."
-mkdir -p "$CONFIG_DIR"
+
 
 cat <<'EOF' > "$CONFIG_FILE"
 exporters:
@@ -106,6 +105,7 @@ Description=${COLLECTOR_NAME} Service
 After=network.target
 
 [Service]
+User=root
 ExecStart=${BINARY_PATH}
 EnvironmentFile=${ENV_FILE}
 Restart=always

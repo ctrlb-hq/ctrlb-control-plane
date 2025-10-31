@@ -4,8 +4,8 @@ set -e
 
 BACKEND_NAME="control-plane-backend"
 VERSION="v1.0.0"
-INSTALL_DIR="/usr/local/bin/control-plane-backend"
-ENV_FILE="/etc/${BACKEND_NAME}/env"
+INSTALL_DIR="/opt/ctrlb/control-plane-backend"
+ENV_FILE="${INSTALL_DIR}/.env"
 SERVICE_FILE="/etc/systemd/system/${BACKEND_NAME}.service"
 
 # Defaults (can be overridden)
