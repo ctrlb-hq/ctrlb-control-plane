@@ -85,7 +85,7 @@ case "$ARCH" in
 esac
 
 # Set download URL after detecting ARCH/OS
-DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download/${VERSION}"
+DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/latest/download/"
 BINARY_URL="${DOWNLOAD_BASE_URL}/${BACKEND_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${BACKEND_NAME}"
 
