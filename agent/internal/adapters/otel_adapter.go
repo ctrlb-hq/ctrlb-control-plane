@@ -55,6 +55,9 @@ func (a *OTELAdapter) Initialize() error {
 		if err := a.svc.Run(a.ctx); err != nil {
 			logger.Logger.Sugar().Errorf("OTEL collector stopped with error: %v", err)
 		}
+		a.mu.Lock()
+		a.svc = nil
+		a.mu.Unlock()
 	}()
 	return nil
 }
@@ -79,6 +82,9 @@ func (a *OTELAdapter) StartAgent() error {
 		if err := a.svc.Run(a.ctx); err != nil {
 			logger.Logger.Sugar().Errorf("OTEL collector stopped with error: %v", err)
 		}
+		a.mu.Lock()
+		a.svc = nil
+		a.mu.Unlock()
 	}()
 	return nil
 }
