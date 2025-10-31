@@ -21,7 +21,6 @@ You can customize agent behavior using the following command-line flags:
 
 - `--config`: Path to the agent configuration file. Default is `./config.yaml`
 - `--backend`: URL of the backend server. Default is `http://pipeline.ctrlb.ai:8096`
-- `--port`: Port on which the agent listens for communication. Default is `3421`. This is currently an experimental feature.
 
 ---
 
