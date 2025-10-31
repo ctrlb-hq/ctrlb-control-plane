@@ -99,27 +99,32 @@ func (a *OTELAdapter) StopAgent() error {
 
 func (a *OTELAdapter) UpdateConfig() error {
 	a.mu.RLock()
-	defer a.mu.RUnlock()
+	running := a.svc != nil
+	a.mu.RUnlock()
+
+	if !running {
+		if err := a.StartAgent(); err != nil {
+			return fmt.Errorf("failed to start OTEL collector: %w", err)
+		}
+		logger.Logger.Info("OTEL collector started with updated config")
+		return nil
+	}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGHUP)
 	defer signal.Stop(sigChan)
-
-	go func() {
-		select {
-		case sig := <-sigChan:
-			logger.Logger.Sugar().Infof("Received signal for updating config in otel collector: %s\n", sig)
-		case <-time.After(5 * time.Second):
-			logger.Logger.Warn("Timeout waiting for config update signal")
-		}
-	}()
 
 	logger.Logger.Info("Sending SIGHUP signal to hot-reload otel collector for updating config...")
 	if err := syscall.Kill(os.Getpid(), syscall.SIGHUP); err != nil {
 		return fmt.Errorf("failed to send SIGHUP signal: %w", err)
 	}
 
-	time.Sleep(2 * time.Second)
+	select {
+	case sig := <-sigChan:
+		logger.Logger.Sugar().Infof("Received signal for updating config in otel collector: %s", sig)
+	case <-time.After(5 * time.Second):
+		logger.Logger.Warn("Timeout waiting for config update signal")
+	}
 
 	logger.Logger.Info("Config updated. OTEL collector restarted")
 	return nil
