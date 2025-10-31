@@ -13,14 +13,59 @@ This guide walks you through deploying the CtrlB Control Plane components in a p
 
 ## 📦 Backend Deployment
 
-### 1. Build the Binary
+### Option A: Quick Install (Recommended)
+
+The easiest way to install the backend is to use our automated installation script. This will download the latest release binary and configure it as a systemd service.
+
+**Basic Installation:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash
+```
+
+> **Note:** If you don't provide a JWT secret, the script will prompt you to enter one interactively.
+
+**Installation with JWT Secret:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash -s -- --jwt-secret "your-secret-key-here"
+```
+
+**Advanced Options:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash -s -- \
+  --jwt-secret "your-secret-key-here" \
+  --port 8096 \
+  --env prod \
+  --workers 4 \
+  --check-interval 10
+```
+
+Available options:
+- `--jwt-secret <secret>`: JWT secret key (required, will prompt if not provided)
+- `--port <port>`: Port to run the backend on (default: 8096)
+- `--env <env>`: Environment (default: prod)
+- `--workers <count>`: Number of workers (default: 4)
+- `--check-interval <mins>`: Check interval in minutes (default: 10)
+
+The script will:
+- Download the appropriate binary for your OS and architecture
+- Install it to `/opt/ctrlb/control-plane-backend/`
+- Create a systemd service file
+- Configure environment variables
+- Enable and start the service automatically
+
+### Option B: Manual Installation
+
+#### 1. Build the Binary
 
 ```bash
 cd backend
 go build -o control-plane-backend cmd/backend/main.go
 ```
 
-### 2. Install Binary and Create Service
+#### 2. Install Binary and Create Service
 
 ```bash
 sudo mkdir -p /etc/control-plane-backend
@@ -28,7 +73,7 @@ sudo cp control-plane-backend /usr/local/bin/
 sudo cp scripts/systemd/control-plane-backend.service /etc/systemd/system/
 ```
 
-### 3. Create Environment File
+#### 3. Create Environment File
 
 ```bash
 sudo tee /etc/control-plane-backend/env > /dev/null <<EOF
@@ -37,7 +82,7 @@ JWT_SECRET=<SECRET_HERE>
 EOF
 ```
 
-### 4. Enable & Start Service
+#### 4. Enable & Start Service
 
 ```bash
 sudo systemctl daemon-reexec
