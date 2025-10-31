@@ -207,7 +207,7 @@ func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) er
 }
 
 func (f *FrontendAgentService) trySendingAgentCommand(client *http.Client, target, command string) error {
-	url := fmt.Sprintf("http://%s:443/agent/v1/%s", target, command)
+	url := fmt.Sprintf("http://%s:3421/agent/v1/%s", target, command)
 
 	resp, err := client.Post(url, "application/json", nil)
 	if err != nil {

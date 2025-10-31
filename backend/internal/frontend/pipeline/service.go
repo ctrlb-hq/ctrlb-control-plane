@@ -222,7 +222,7 @@ func (f *FrontendPipelineService) sendConfigToSingleAgent(agent models.AgentInfo
 	}
 
 	trySend := func(endpoint string) error {
-		url := fmt.Sprintf("http://%s:443/agent/v1/config", endpoint)
+		url := fmt.Sprintf("http://%s:3421/agent/v1/config", endpoint)
 		resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
 			return err

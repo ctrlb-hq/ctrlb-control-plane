@@ -65,5 +65,5 @@ ctrlb-collector
 | Issue                             | Possible Fix                             |
 | --------------------------------- | ---------------------------------------- |
 | `Failed to register with backend` | Check `BACKEND_URL`, pipeline name       |
-| Port `:443` already in use        | Update config or run on a different port |
+| Port `:3421` already in use        | Update config or run on a different port |
 | Config not applying               | Check logs, ensure backend is reachable  |

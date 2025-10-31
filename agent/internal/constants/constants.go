@@ -5,7 +5,7 @@ var (
 	AGENT_TYPE        = "otel"
 	AGENT_VERSION     = "3.1.5"
 	BACKEND_URL       = "http://controlplane.ctrlb.ai:8096"
-	PORT              = "443"
+	PORT              = "3421"
 	TESTING           = false
 	PIPELINE_NAME     = ""
 	STARTED_BY        = "Admin"

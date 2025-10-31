@@ -16,11 +16,11 @@
 
 ---
 
-## 🔒 Port Binding Error: `bind: address already in use :443`
+## 🔒 Port Binding Error: `bind: address already in use :3421`
 
-**Cause:** Port `443` is already in use by another process on the system.
+**Cause:** Port `3421` is already in use by another process on the system.
 
 **Fix:**
 
-- ✅ Ensure no other service (like nginx or apache) is occupying port 443
-- ✅ Use `sudo lsof -i :443` or `sudo netstat -tulpn | grep :443` to identify the process
+- ✅ Ensure no other service (like nginx or apache) is occupying port 3421
+- ✅ Use `sudo lsof -i :3421` or `sudo netstat -tulpn | grep :3421` to identify the process
