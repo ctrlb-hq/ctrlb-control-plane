@@ -23,11 +23,6 @@
       "scope": "#/properties/headers"
     },
     {
-      "type": "Control",
-      "label": "Protocol",
-      "scope": "#/properties/protocol"
-    },
-    {
       "type": "Group",
       "label": "TLS Settings",
       "elements": [

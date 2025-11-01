@@ -33,7 +33,7 @@ func TestCompileGraphToJSON_Success(t *testing.T) {
 			{
 				ComponentID:      3,
 				Name:             "exporter_otlp",
-				ComponentName:    "otlp_exporter",
+				ComponentName:    "otlp_grpc_exporter",
 				ComponentRole:    "exporter",
 				SupportedSignals: []string{"metrics", "logs"},
 				Config: map[string]any{
