@@ -205,8 +205,6 @@ const PipelineEditorSheet = ({
 		setIsReviewSheetOpen(false);
 		setIsEditFormOpen(true);
 		setSelectedChange(change);
-		console.log(changesLog);
-		console.log(change);
 		const schema = await ComponentService.getTransporterForm(change.component_type);
 		const ui = await ComponentService.getTransporterUiSchema(change.component_type);
 		setForm(schema);
