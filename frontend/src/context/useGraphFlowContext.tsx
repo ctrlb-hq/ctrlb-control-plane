@@ -50,7 +50,8 @@ export interface GraphFlowContextType {
 	nodeValue: Node<NodeData>[];
 	edgeValue: Edge<EdgeData>[];
 	changesLog: Changes[];
-	setNodeValueDirect: (nodes: Node<NodeData>[]) => void;
+	setNodeValueDirect:React.Dispatch<React.SetStateAction<Node<NodeData>[]>>;
+
 	setEdgeValueDirect: (edges: Edge<EdgeData>[]) => void;
 	updateNodes: (changes: NodeChange[]) => void;
 	updateEdges: (changes: EdgeChange[]) => void;
@@ -102,13 +103,13 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 
 	// NODE OPERATIONS
 	const addNode = (newNode: NewNode): string => {
+
 		// generate numeric id not currently used
 		const usedIds = nodeValue.map(n => n.id);
 		const newId =
 			Array.from({ length: usedIds.length + 2 }, (_, i) => (i + 1).toString()).find(
 				id => !usedIds.includes(id),
 			) || `${usedIds.length + 1}`;
-
 		const nodeToAdd: Node<NodeData> = {
 			id: newId,
 			type: newNode.type,

@@ -30,14 +30,18 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 	});
 	const [config, setConfig] = useState<object>(Data.config);
 	const nodeId = Data.component_id.toString();
+	
+	useEffect(() => {
+		setConfig(Data.config || {});
+	}, [Data.config]);
 
 	const handleDeleteNode = () => {
 		deleteNode(nodeId);
 		setIsOpen(false);
 	};
 
-	const handleSubmit = () => {
-		updateNodeConfig(nodeId, config);
+	const handleSubmit = (submittedConfig: any) => {
+		updateNodeConfig(nodeId, submittedConfig);
 		setIsOpen(false);
 	};
 

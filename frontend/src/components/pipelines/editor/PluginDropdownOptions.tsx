@@ -60,7 +60,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 		setUiSchema(ui);
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = (submittedConfig: any) => {
 		const supported_signals = plugins.find(p => p.name === pluginName)?.supported_signals;
 		const newNode = {
 			type: nodeType,
@@ -70,7 +70,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 				name: optionValue,
 				supported_signals,
 				component_name: pluginName,
-				config,
+				config:submittedConfig,
 			},
 		};
 		addNode(newNode);

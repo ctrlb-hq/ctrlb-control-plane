@@ -27,10 +27,52 @@ export interface Pipeline {
 	updated_at: number;
 }
 
-export interface PipeLineOverview {
-	label: string;
-	value: string | any[];
+export interface PipelineOverviewInterface {
+	id: string;
+	name: string;
+	status: string;
+	agent_id: number;
+	agent_version: string;
+	ip_address: string;
+	hostname: string;
+	platform: string;
+	created_at: number;
+	created_by: string;
+	labels: Record<string, string>;
+	config: {
+		exporters: Record<string, ExporterConfig>;
+		processors: Record<string, ProcessorConfig>;
+		receivers: Record<string, ReceiverConfig>;
+		service: {
+			pipelines: Record<string, {
+				exporters: string[];
+				processors: string[] | null;
+				receivers: string[];
+			}>;
+		};
+		telemetry: {
+			metrics: {
+				level: string;
+				readers: string[];
+			};
+		};
+	};
 }
+
+export interface ExporterConfig {
+	verbosity?: string;
+	[key: string]: unknown;
+}
+
+export interface ProcessorConfig {
+	[key: string]: unknown;
+}
+
+export interface ReceiverConfig {
+	protocols?: Record<string, unknown>;
+	[key: string]: unknown;
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Config {}

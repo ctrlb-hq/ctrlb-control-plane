@@ -63,6 +63,7 @@ const PipelineEditorSheet = ({
 		changesLog,
 		deleteEdge,
 		clearChangesLog,
+		updateNodeConfig
 	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -204,6 +205,8 @@ const PipelineEditorSheet = ({
 		setIsReviewSheetOpen(false);
 		setIsEditFormOpen(true);
 		setSelectedChange(change);
+		console.log(changesLog);
+		console.log(change);
 		const schema = await ComponentService.getTransporterForm(change.component_type);
 		const ui = await ComponentService.getTransporterUiSchema(change.component_type);
 		setForm(schema);
@@ -211,9 +214,30 @@ const PipelineEditorSheet = ({
 		setConfig(change.finalConfig);
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = useCallback((submittedConfig: any) => {
+		if (selectedChange) {
+			updateNodeConfig(selectedChange.id, submittedConfig);
+			setNodeValueDirect((nodes) =>
+				nodes.map((node) =>
+				node.id === selectedChange.id
+					? {
+						...node,
+						data: {
+						...node.data,
+						config: submittedConfig,
+						},
+					}
+					: node
+				)
+			);
+			setSelectedChange((prev) =>
+				prev ? { ...prev, finalConfig: submittedConfig } : prev
+			);
+		}
 		setIsEditFormOpen(false);
-	};
+	},
+		[selectedChange, setNodeValueDirect, updateNodeConfig]
+	);
 
 	const onPaneClick = useCallback(() => {
 		setSelectedEdge(null);

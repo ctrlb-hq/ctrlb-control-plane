@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { Pipeline } from "@/types/pipeline.types";
+import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import pipelineServices from "@/services/pipeline";
 import { toast } from "@/hooks/useToast";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
@@ -18,7 +18,7 @@ import { useGraphFlow } from "@/context/useGraphFlowContext";
 interface Props {
 	isOpen: boolean;
 	setIsOpen: (open: boolean) => void;
-	pipelineOverview?: Pipeline;
+	pipelineOverview?: PipelineOverviewInterface;
 }
 
 const DeletePipelineDialog = ({ isOpen, setIsOpen, pipelineOverview }: Props) => {

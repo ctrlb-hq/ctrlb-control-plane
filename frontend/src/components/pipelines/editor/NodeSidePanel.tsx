@@ -18,7 +18,7 @@ interface NodeSidePanelProps {
 	setConfig: (data: any) => void;
 	submitLabel?: string;
 	submitDisabled?: boolean;
-	onSubmit: () => void;
+	onSubmit: (data: any) => void;
 	onDiscard: () => void;
 	onDelete?: () => void;
 	showDelete?: boolean;
@@ -52,20 +52,18 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	const [showErrors, setShowErrors] = useState(false);
 	const [draftConfig, setDraftConfig] = useState(() => applySchemaDefaults(formSchema, config));
 	const [formErrors, setFormErrors] = useState<any[]>([]);
-	const closeRef = useRef<HTMLButtonElement | null>(null);
 
 	const lastConfigRef = useRef<string>("");
 
 	useEffect(() => {
-		if (!isOpen) return;
+	const newConfigString = JSON.stringify(config);
+	if (newConfigString === lastConfigRef.current) return;
 
-		const newConfigString = JSON.stringify(config);
-		if (newConfigString === lastConfigRef.current) return;
+	lastConfigRef.current = newConfigString;
+	setDraftConfig(applySchemaDefaults(formSchema, config));
+	setShowErrors(false);
+}, [formSchema, config]);
 
-		lastConfigRef.current = newConfigString;
-		setDraftConfig(applySchemaDefaults(formSchema, config));
-		setShowErrors(false);
-	}, [isOpen, formSchema, config]);
 
 	// JSON Forms AJV factory to support defaults
 	const defaultsAjv = useMemo(
@@ -129,11 +127,9 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 			setFormErrors(validate.errors || []);
 			return;
 		}
-
 		setFormErrors([]);
 		setConfig(draftConfig);
-		onSubmit();
-		closeRef.current?.click();
+		onSubmit(draftConfig);
 	};
 
 	const handleDiscard = () => {
@@ -175,9 +171,6 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 				</ThemeProvider>
 
 				<SheetFooter className="pt-4">
-					<SheetClose asChild>
-						<button ref={closeRef} className="hidden" />
-					</SheetClose>
 
 					<div className="flex gap-3">
 						<Button

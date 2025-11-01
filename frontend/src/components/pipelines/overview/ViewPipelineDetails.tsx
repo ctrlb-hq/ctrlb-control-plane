@@ -2,7 +2,7 @@ import { Boxes } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
-
+import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
 	Dialog,
@@ -24,7 +24,7 @@ import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
-	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
+	const [pipelineOverviewData, setPipelineOverviewData] = useState<PipelineOverviewInterface>();
 	const { toast } = useToast();
 	const [tabs, setTabs] = useState<string>("overview");
 
@@ -59,7 +59,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		clearChangesLog();
 	};
 
-	const handleGetPipelineOverview = async () => {
+	const handleGetPipelineOverview = useCallback(async () => {
 		try {
 			const response = await pipelineServices.getPipelineOverviewById(pipelineId);
 			setPipelineOverviewData(response);
@@ -71,11 +71,12 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				variant: "destructive",
 			});
 		}
-	};
+	}, [pipelineId, toast]);
+
 
 	useEffect(() => {
 		handleGetPipelineOverview();
-	}, [pipelineId]);
+	}, [handleGetPipelineOverview]);
 
 	return (
 		<div className="flex flex-col h-[100vh] overflow-hidden">
