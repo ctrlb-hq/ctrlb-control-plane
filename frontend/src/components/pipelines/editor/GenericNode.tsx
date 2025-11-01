@@ -18,9 +18,10 @@ interface GenericNodeProps extends NodeProps {
 	type: "source" | "processor" | "destination";
 	triggerPosition?: "left" | "right";
 	labelComponent?: React.ReactNode;
+	isEditMode?:boolean
 }
 
-const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
+const GenericNode = React.memo(({ data: Data, type,isEditMode = false }: GenericNodeProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const [form, setForm] = useState<FormSchema>({});
@@ -71,6 +72,7 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 									position={Position.Right}
 									className="bg-green-600 w-1.5 h-3.5 rounded-full"
 									style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
+									isConnectable={isEditMode}
 								/>
 								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
 								<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
@@ -87,12 +89,14 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 								position={Position.Left}
 								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 								style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
+								isConnectable={isEditMode}
 							/>
 							<Handle
 								type="source"
 								position={Position.Right}
 								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 								style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
+								isConnectable={isEditMode}
 							/>
 							<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
 							<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
@@ -109,6 +113,7 @@ const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 									position={Position.Left}
 									className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 									style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
+									isConnectable={isEditMode}
 								/>
 								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
 								<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">

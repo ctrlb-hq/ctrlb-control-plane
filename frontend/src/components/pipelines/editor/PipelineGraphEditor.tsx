@@ -73,11 +73,11 @@ const PipelineEditorSheet = ({
 
 	const nodeTypes = useMemo(
 		() => ({
-			source: (props: NodeProps) => <GenericNode {...props} type="source" />,
-			processor: (props: NodeProps) => <GenericNode {...props} type="processor" />,
-			destination: (props: NodeProps) => <GenericNode {...props} type="destination" />,
+			source: (props: NodeProps) => <GenericNode {...props} type="source" isEditMode={isEditMode} />,
+			processor: (props: NodeProps) => <GenericNode {...props} type="processor" isEditMode={isEditMode} />,
+			destination: (props: NodeProps) => <GenericNode {...props} type="destination" isEditMode={isEditMode} />,
 		}),
-		[],
+	[isEditMode],
 	);
 
 	const fetchGraph = async () => {
