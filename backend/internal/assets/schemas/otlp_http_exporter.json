@@ -1,0 +1,144 @@
+{
+  "title": "OTLP HTTP Exporter Configuration",
+  "type": "object",
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "title": "Base Endpoint",
+      "minLength": 1
+    },
+    "traces_endpoint": {
+      "type": "string",
+      "title": "Traces Endpoint",
+      "minLength": 1
+    },
+    "metrics_endpoint": {
+      "type": "string",
+      "title": "Metrics Endpoint",
+      "minLength": 1
+    },
+    "logs_endpoint": {
+      "type": "string",
+      "title": "Logs Endpoint",
+      "minLength": 1
+    },
+    "profiles_endpoint": {
+      "type": "string",
+      "title": "Profiles Endpoint",
+      "minLength": 1
+    },
+    "compression": {
+      "type": "string",
+      "title": "Compression",
+      "enum": [
+        "none",
+        "gzip"
+      ],
+      "default": "gzip",
+      "minLength": 1
+    },
+    "timeout": {
+      "type": "string",
+      "title": "Request Timeout",
+      "default": "30s",
+      "minLength": 1
+    },
+    "read_buffer_size": {
+      "type": "integer",
+      "title": "Read Buffer Size",
+      "default": 0
+    },
+    "write_buffer_size": {
+      "type": "integer",
+      "title": "Write Buffer Size",
+      "default": 524288
+    },
+    "headers": {
+      "type": "object",
+      "title": "Custom Headers",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    },
+    "encoding": {
+      "type": "string",
+      "title": "Payload Encoding",
+      "enum": [
+        "proto",
+        "json"
+      ],
+      "default": "proto",
+      "minLength": 1
+    },
+    "tls": {
+      "type": "object",
+      "title": "TLS Settings",
+      "properties": {
+        "insecure": {
+          "type": "boolean",
+          "default": false
+        },
+        "ca_file": {
+          "type": "string"
+        },
+        "cert_file": {
+          "type": "string"
+        },
+        "key_file": {
+          "type": "string"
+        },
+        "insecure_skip_verify": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "retry_on_failure": {
+      "type": "object",
+      "title": "Retry on Failure",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "initial_interval": {
+          "type": "string",
+          "default": "5s",
+          "minLength": 1
+        },
+        "max_interval": {
+          "type": "string",
+          "default": "30s",
+          "minLength": 1
+        },
+        "max_elapsed_time": {
+          "type": "string",
+          "default": "300s",
+          "minLength": 1
+        }
+      }
+    },
+    "sending_queue": {
+      "type": "object",
+      "title": "Sending Queue",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "num_consumers": {
+          "type": "integer",
+          "default": 10
+        },
+        "queue_size": {
+          "type": "integer",
+          "default": 5000
+        }
+      }
+    }
+  },
+  "required": [
+    "endpoint"
+  ]
+}
