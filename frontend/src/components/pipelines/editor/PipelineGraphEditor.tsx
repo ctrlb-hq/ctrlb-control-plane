@@ -37,7 +37,7 @@ const PipelineEditorSheet = ({
 	isEditModeStart,
 }: {
 	pipelineId: string;
-	name: string;
+	name?: string;
 	setIsSheetOpen: Dispatch<SetStateAction<boolean>>;
 	isEditModeStart: boolean;
 }) => {
@@ -228,7 +228,7 @@ const PipelineEditorSheet = ({
 					: node
 				)
 			);
-			setSelectedChange((prev) =>
+			setSelectedChange((prev: any) =>
 				prev ? { ...prev, finalConfig: submittedConfig } : prev
 			);
 		}
