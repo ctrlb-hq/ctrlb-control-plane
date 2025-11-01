@@ -1,5 +1,5 @@
 {
-  "title": "OTLP Exporter Configuration",
+  "title": "OTLP gRPC Exporter Configuration",
   "type": "object",
   "properties": {
     "endpoint": {
@@ -8,11 +8,6 @@
       "default": "",
       "minLength": 1
     },
-    "insecure": {
-      "type": "boolean",
-      "title": "Disable TLS",
-      "default": false
-    },
     "compression": {
       "type": "string",
       "title": "Compression",
@@ -20,7 +15,7 @@
         "none",
         "gzip"
       ],
-      "default": "none",
+      "default": "gzip",
       "minLength": 1
     },
     "timeout": {
@@ -37,20 +32,14 @@
       },
       "default": {}
     },
-    "protocol": {
-      "type": "string",
-      "title": "Protocol",
-      "enum": [
-        "grpc",
-        "http/protobuf"
-      ],
-      "default": "grpc",
-      "minLength": 1
-    },
     "tls": {
       "type": "object",
       "title": "TLS Settings",
       "properties": {
+        "insecure": {
+          "type": "boolean",
+          "default": false
+        },
         "ca_file": {
           "type": "string"
         },
