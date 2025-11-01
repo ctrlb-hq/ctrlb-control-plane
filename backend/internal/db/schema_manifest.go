@@ -20,7 +20,7 @@ func GetComponentTypeMap() map[string]string {
 		"tailsampling_processor":         "processor",
 
 		// Exporters
-		"otlp_exporter":       "exporter",
+		"otlp_grpc_exporter":  "exporter",
 		"debug_exporter":      "exporter",
 		"kafka_exporter":      "exporter",
 		"prometheus_exporter": "exporter",
