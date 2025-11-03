@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/debugexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
+	"go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	"go.opentelemetry.io/collector/extension"
 	"go.opentelemetry.io/collector/otelcol"
 	"go.opentelemetry.io/collector/processor"
@@ -65,6 +66,7 @@ func componentsFactory() (otelcol.Factories, error) {
 	// Exporters
 	factories.Exporters = map[component.Type]exporter.Factory{
 		otlpexporter.NewFactory().Type():       otlpexporter.NewFactory(),
+		otlphttpexporter.NewFactory().Type():   otlpexporter.NewFactory(),
 		debugexporter.NewFactory().Type():      debugexporter.NewFactory(),
 		kafkaexporter.NewFactory().Type():      kafkaexporter.NewFactory(),
 		prometheusexporter.NewFactory().Type(): prometheusexporter.NewFactory(),
