@@ -21,7 +21,7 @@ func GetComponentTypeMap() map[string]string {
 
 		// Exporters
 		"otlp_grpc_exporter":  "exporter",
-		"otlp_http_exporter":  "exporter",
+		"otlphttp_exporter":   "exporter",
 		"debug_exporter":      "exporter",
 		"kafka_exporter":      "exporter",
 		"prometheus_exporter": "exporter",
@@ -49,7 +49,7 @@ func GetSignalSupportMap() map[string][]string {
 
 		// Exporters
 		"otlp_grpc_exporter":  {"traces", "metrics", "logs"},
-		"otlp_http_exporter":  {"traces", "metrics", "logs"},
+		"otlphttp_exporter":   {"traces", "metrics", "logs"},
 		"debug_exporter":      {"traces", "metrics", "logs"},
 		"kafka_exporter":      {"traces", "metrics", "logs"},
 		"prometheus_exporter": {"metrics"},
