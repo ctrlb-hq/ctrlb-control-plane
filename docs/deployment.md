@@ -15,17 +15,9 @@ This guide walks you through deploying the CtrlB Control Plane components in a p
 
 ### Option A: Quick Install (Recommended)
 
-The easiest way to install the backend is to use our automated installation script. This will download the latest release binary and configure it as a systemd service.
+The easiest way to install the backend is to use our automated installation script. This will download the latest release binary and configure it as a systemd service. Because the script runs non-interactively when piped into `bash`, you must provide the JWT secret in the command.
 
-**Basic Installation:**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash
-```
-
-> **Note:** If you don't provide a JWT secret, the script will prompt you to enter one interactively.
-
-**Installation with JWT Secret:**
+**Basic Installation (requires JWT secret):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash -s -- --jwt-secret "your-secret-key-here"
@@ -43,7 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/s
 ```
 
 Available options:
-- `--jwt-secret <secret>`: JWT secret key (required, will prompt if not provided)
+- `--jwt-secret <secret>`: JWT secret key (required; cannot prompt when piped to bash)
 - `--port <port>`: Port to run the backend on (default: 8096)
 - `--env <env>`: Environment (default: prod)
 - `--workers <count>`: Number of workers (default: 4)

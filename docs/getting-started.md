@@ -37,15 +37,7 @@ Here's a quick overview of the major components you'll interact with:
 
 ### 1. Install the Backend (Quick)
 
-The fastest way to get started is to use our automated installation script:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash
-```
-
-> **Note:** You'll be prompted to enter a JWT secret during installation.
-
-Or provide the JWT secret directly:
+The fastest way to get started is to use our automated installation script. Because the script runs non-interactively when piped into `bash`, you must provide the JWT secret flag in the command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/main/scripts/backend-install.sh | sudo bash -s -- --jwt-secret "your-secret-key-here"
