@@ -22,12 +22,7 @@ var TelemetryService = map[string]any{
 
 var DefaultConfig = map[string]any{
 	"receivers": map[string]any{
-		"otlp": map[string]any{
-			"protocols": map[string]any{
-				"http": map[string]any{},
-				"grpc": map[string]any{},
-			},
-		},
+		"otlp": map[string]any{},
 	},
 	"processors": map[string]any{},
 	"exporters": map[string]any{
