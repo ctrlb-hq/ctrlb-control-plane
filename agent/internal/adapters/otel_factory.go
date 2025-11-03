@@ -66,7 +66,7 @@ func componentsFactory() (otelcol.Factories, error) {
 	// Exporters
 	factories.Exporters = map[component.Type]exporter.Factory{
 		otlpexporter.NewFactory().Type():       otlpexporter.NewFactory(),
-		otlphttpexporter.NewFactory().Type():   otlpexporter.NewFactory(),
+		otlphttpexporter.NewFactory().Type():   otlphttpexporter.NewFactory(),
 		debugexporter.NewFactory().Type():      debugexporter.NewFactory(),
 		kafkaexporter.NewFactory().Type():      kafkaexporter.NewFactory(),
 		prometheusexporter.NewFactory().Type(): prometheusexporter.NewFactory(),
