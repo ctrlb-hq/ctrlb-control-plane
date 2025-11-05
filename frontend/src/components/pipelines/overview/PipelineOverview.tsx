@@ -166,12 +166,12 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 								data={metric.data_points.map(point => ({
 									timestamp: point.timestamp,
 									[metric.metric_name]:
-										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+										metric.metric_name === "memory_utilization" ? point.value/(1024*1024)  : point.value,
 								}))}
 								y_axis_data_key={metric.metric_name}
 								chart_color={getRandomChartColor(metric.metric_name)}
 								yAxisLabel={
-									metric.metric_name === "cpu_utilization" ? "CPU Utilization (%)" : "Memory Utilization (%)"
+									metric.metric_name === "cpu_utilization" ? "CPU Utilization (%)" : "Memory Utilization (MB)"
 								}
 							/>
 						</div>

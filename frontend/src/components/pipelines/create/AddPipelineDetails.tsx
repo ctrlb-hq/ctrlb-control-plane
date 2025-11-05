@@ -93,32 +93,31 @@ const AddPipelineDetails = ({
 	const handleCopy = async (command: string) => {
 		try {
 			await navigator.clipboard.writeText(command);
+			toast({
+				title: "Copied",
+				description: "Install command copied to clipboard",
+				duration: 2000,
+			});
 			setIsApiKeyCopied(true);
-			const since = Math.floor(new Date().getTime() / 1000);
-			setShowConfigureButton(true);
-
-			setTimeout(() => {
-				toast({
-					title: "Copied",
-					description: "Install command copied to clipboard",
-					duration: 2000,
-				});
-			}, 1000);
-
-			setTimeout(() => setShowHeartBeat(true), 2000);
-			setTimeout(() => setShowStatus(true), 6000);
-			setTimeout(() => {
-				setShowAgentInfo(true);
-				checkAgentStatus(since);
-			}, 1000);
 		} catch (error) {
 			console.error("Clipboard copy failed:", error);
 			toast({
-				title: "Error",
-				description: "Unable to copy install command to clipboard.",
+				title: "Failed to Copy",
+				description: "Clipboard access blocked. Press ⌘ + C (Mac) or Ctrl + C (Windows) to copy manually.",
 				duration: 3000,
+				variant: "destructive",
 			});
 		}
+
+		const since = Math.floor(new Date().getTime() / 1000);
+		setShowConfigureButton(true);
+
+		setTimeout(() => setShowHeartBeat(true), 2000);
+		setTimeout(() => setShowStatus(true), 6000);
+		setTimeout(() => {
+			setShowAgentInfo(true);
+			checkAgentStatus(since);
+		}, 1000);
 	};
 
 	const handleTryAgain = () => {
@@ -261,7 +260,6 @@ const AddPipelineDetails = ({
 								<option value="linux">Linux</option>
 								<option value="kubernetes">Kubernetes</option>
 								<option value="macOS">macOS</option>
-								<option value="openShift">openShift</option>
 							</select>
 
 							{errors.platform && touched.platform && (
@@ -303,7 +301,7 @@ const AddPipelineDetails = ({
 													installCommands[formData.platform as keyof typeof installCommands](formData.name),
 												)
 											}
-											className="h-5 w-5 text-orange-400 cursor-pointer"
+											className="h-8 w-8 text-orange-400 cursor-pointer"
 										/>
 									)}
 								</div>
