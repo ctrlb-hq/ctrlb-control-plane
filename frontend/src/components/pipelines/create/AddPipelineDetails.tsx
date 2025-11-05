@@ -103,7 +103,7 @@ const AddPipelineDetails = ({
 			console.error("Clipboard copy failed:", error);
 			toast({
 				title: "Failed to Copy",
-				description: "Use manual copy if clipboard access is blocked.",
+				description: "Clipboard access blocked. Press ⌘ + C (Mac) or Ctrl + C (Windows) to copy manually.",
 				duration: 3000,
 				variant: "destructive",
 			});
