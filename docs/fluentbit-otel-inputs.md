@@ -1,33 +1,44 @@
-# Fluent Bit → OpenTelemetry: Input Plugins Mapping
+## Input Plugin Mapping
 
-This document maps input sources supported by Fluent Bit to their closest equivalents in OpenTelemetry Collector (or notes when no direct support exists).  
-Based on the list from Issue #10 of this repository.
+This document provides a reference for mapping Fluent Bit input plugins to their OpenTelemetry (OTel) Collector exporter equivalents. It is intended to help users migrating pipelines from Fluent Bit to the OTel Collector.
 
-| Fluent Bit Input Plugin | Fluent Bit Docs | OTel Receiver / Equivalent | OTel Docs | Notes |
-|-------------------------|------------------|-----------------------------|-------------|-------|
-| CollectD | https://docs.fluentbit.io/manual/pipeline/inputs/collectd | `collectdreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/collectdreceiver | — :contentReference[oaicite:2]{index=2} |
-| CPU metrics | https://docs.fluentbit.io/manual/pipeline/inputs/cpu-metrics | `hostmetricsreceiver` | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver | Host-level CPU metrics :contentReference[oaicite:3]{index=3} |
-| Disk I/O metrics | https://docs.fluentbit.io/manual/pipeline/inputs/disk-io-metrics | `hostmetricsreceiver` | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver | Disk I/O grouped under host metrics :contentReference[oaicite:4]{index=4} |
-| Docker metrics | https://docs.fluentbit.io/manual/pipeline/inputs/docker-metrics | `dockerstatsreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/dockerstatsreceiver | Container-level metrics via Docker stats :contentReference[oaicite:5]{index=5} |
-| Docker events | https://docs.fluentbit.io/manual/pipeline/inputs/docker-events | `dockerstatsreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/dockerstatsreceiver | Events + metrics coverage :contentReference[oaicite:6]{index=6} |
-| Dummy | https://docs.fluentbit.io/manual/pipeline/inputs/dummy | — (no direct support) | — | Might use file-based receiver or host metrics depending on use. :contentReference[oaicite:7]{index=7} |
-| Elasticsearch | https://docs.fluentbit.io/manual/pipeline/inputs/elasticsearch | `elasticsearchreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/elasticsearchreceiver | — :contentReference[oaicite:8]{index=8} |
-| Exec | https://docs.fluentbit.io/manual/pipeline/inputs/exec | — (no direct support) | — | Custom / scripting input — likely requires custom receiver. :contentReference[oaicite:9]{index=9} |
-| Forward | https://docs.fluentbit.io/manual/pipeline/inputs/forward | `fluentforwardreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/fluentforwardreceiver | Forward protocol support :contentReference[oaicite:10]{index=10} |
-| Head | https://docs.fluentbit.io/manual/pipeline/inputs/head | `filelogreceiver` (beta) | https://github.github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver | For file-based log ingestion :contentReference[oaicite:11]{index=11} |
-| HTTP | https://docs.fluentbit.io/manual/pipeline/inputs/http | `otlpreceiver` | https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver | Accepts OTLP over HTTP/gRPC :contentReference[oaicite:12]{index=12} |
-| Kafka | https://docs.fluentbit.io/manual/pipeline/inputs/kafka | `kafkareceiver` | https://github.com.open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kafkareceiver | Kafka as input queue :contentReference[oaicite:13]{index=13} |
-| Memory metrics | https://docs.fluentbit.io/manual/pipeline/inputs/memory-metrics | `hostmetricsreceiver` | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver | System memory metrics :contentReference[oaicite:14]{index=14} |
-| Network I/O metrics | https://docs.fluentbit.io/manual/pipeline/inputs/network-io-metrics | `hostmetricsreceiver` | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver | Network I/O grouped under host metrics :contentReference[oaicite:15]{index=15} |
-| NGINX exporter metrics | https://docs.fluentbit.io/manual/pipeline/inputs/nginx | `nginxreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/nginxreceiver | For NGINX-specific stats :contentReference[oaicite:16]{index=16} |
-| Podman metrics | https://docs.fluentbit.io/manual/pipeline/inputs/podman-metrics | `podmanreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/podmanreceiver | Container metrics for Podman :contentReference[oaicite:17]{index=17} |
-| Prometheus scrape metrics | https://docs.fluentbit.io/manual/pipeline/inputs/prometheus-scrape-metrics | `prometheusreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver | Native Prometheus scrape support :contentReference[oaicite:18]{index=18} |
-| Prometheus remote-write | https://docs.fluentbit.io/manual/pipeline/inputs/prometheus-remote-write | `prometheusremotewritereceiver` (dev) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusremotewritereceiver | Remote write ingestion support :contentReference[oaicite:19]{index=19} |
-| Splunk | https://docs.fluentbit.io/manual/pipeline/inputs/splunk | `splunkhecreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/splunkhecreceiver | Splunk HEC ingestion :contentReference[oaicite:20]{index=20} |
-| StatsD | https://docs.fluentbit.io/manual/pipeline/inputs/statsd | `statsdreceiver` (beta) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/statsdreceiver | StatsD metrics ingestion :contentReference[oaicite:21]{index=21} |
-| Syslog | https://docs.fluentbit.io/manual/pipeline/inputs/syslog | `syslogreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/syslogreceiver | Syslog ingestion support :contentReference[oaicite:22]{index=22} |
-| systemd | https://docs.fluentbit.io/manual/pipeline/inputs/systemd | `systemdreceiver` (dev) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/systemdreceiver | systemd-journal logs support :contentReference[oaicite:23]{index=23} |
-| TCP (logs) | https://docs.fluentbit.io/manual/pipeline/inputs/tcp | `tcplogreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/tcplogreceiver | Generic TCP log ingestion :contentReference[oaicite:24]{index=24} |
-| UDP (logs) | https://docs.fluentbit.io/manual/pipeline/inputs/udp | `udplogreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/udplogreceiver | Generic UDP log ingestion :contentReference[oaicite:25]{index=25} |
-| Windows Event Log | https://docs.fluentbit.io/manual/pipeline/inputs/windows-event-log | `windowseventlogreceiver` (alpha) | https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/windowseventlogreceiver | For Windows event logs :contentReference[oaicite:26]{index=26} |
-
+| Fluent Bit Input | OTel Collector Equivalent | Status / Notes |
+| :--- | :--- | :--- |
+| [CollectD](https://docs.fluentbit.io/manual/pipeline/inputs/collectd) | [CollectD Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/collectdreceiver) | 🚧 **Beta** |
+| [CPU](https://docs.fluentbit.io/manual/pipeline/inputs/cpu-metrics) | [Host Metrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver) | 🚧 **Beta** |
+| [Disk](https://docs.fluentbit.io/manual/pipeline/inputs/disk-io-metrics) | [Host Metrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver) | 🚧 **Beta** |
+| [Docker log](https://docs.fluentbit.io/manual/pipeline/inputs/docker-metrics) | [Docker Stats Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/dockerstatsreceiver) | 🧪 **Alpha** |
+| [Docker events](https://docs.fluentbit.io/manual/pipeline/inputs/docker-events) | [Docker Stats Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/dockerstatsreceiver) | 🧪 **Alpha** |
+| [Dummy](https://docs.fluentbit.io/manual/pipeline/inputs/dummy) | No direct support | Workaround: `hostmetrics` or `filelog` can be used |
+| [Elasticsearch](https://docs.fluentbit.io/manual/pipeline/inputs/elasticsearch) | [Elasticsearch Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/elasticsearchreceiver) | 🚧 **Beta** |
+| [Exec](https://docs.fluentbit.io/manual/pipeline/inputs/exec) | No direct support | |
+| [Forward](https://docs.fluentbit.io/manual/pipeline/inputs/forward) | [FluentForward Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/fluentforwardreceiver) | 🚧 **Beta** |
+| [Head](https://docs.fluentbit.io/manual/pipeline/inputs/head) | [Filelog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver) | 🚧 **Beta** |
+| [Http](https://docs.fluentbit.io/manual/pipeline/inputs/http) | [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver) | ✅ **Stable** |
+| [Health](https://docs.fluentbit.io/manual/pipeline/inputs/health) | No direct support | |
+| [Kafka](https://docs.fluentbit.io/manual/pipeline/inputs/kafka) | [Kafka Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kafkareceiver) | 🚧 **Beta** |
+| [Kernel logs](https://docs.fluentbit.io/manual/pipeline/inputs/kernel-logs) | No direct support | |
+| [Kubernetes](https://docs.fluentbit.io/manual/pipeline/inputs/kubernetes-events) | No direct support | Workaround: `kubeletstats` receiver maybe used |
+| [Memory metrics](https://docs.fluentbit.io/manual/pipeline/inputs/memory-metrics) | [Host Metrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver) | 🚧 **Beta** |
+| [MQTT](https://docs.fluentbit.io/manual/pipeline/inputs/mqtt) | No direct support | |
+| [Network I/O](https://docs.fluentbit.io/manual/pipeline/inputs/network-io-metrics) | [Host Metrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver) | 🚧 **Beta** |
+| [Nginx](https://docs.fluentbit.io/manual/pipeline/inputs/nginx) | [Nginx Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/nginxreceiver) | 🚧 **Beta** |
+| [Node exporter metrics](https://docs.fluentbit.io/manual/pipeline/inputs/node-exporter-metrics) | No direct support | Workaround: `prometheus` receiver maybe used |
+| [Podman](https://docs.fluentbit.io/manual/pipeline/inputs/podman-metrics) | [Podman Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/podmanreceiver) | 🧪 **Alpha** |
+| [Process log based metrics](https://docs.fluentbit.io/manual/pipeline/inputs/process) | No direct support | Workaround: `filelog` receiver may be used |
+| [Process Exporter Metrics](https://docs.fluentbit.io/manual/pipeline/inputs/process-exporter-metrics) | No direct support | |
+| [Prometheus Scrape Metrics](https://docs.fluentbit.io/manual/pipeline/inputs/prometheus-scrape-metrics) | [Prometheus Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver) | 🚧 **Beta** |
+| [Prometheus Remote Write](https://docs.fluentbit.io/manual/pipeline/inputs/prometheus-remote-write) | [Prometheus Remote Write Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusremotewritereceiver) | 🛠 **Dev** |
+| [Random](https://docs.fluentbit.io/manual/pipeline/inputs/random) | No direct support | |
+| [Serial Interface](https://docs.fluentbit.io/manual/pipeline/inputs/serial-interface) | No direct support | |
+| [Splunk](https://docs.fluentbit.io/manual/pipeline/inputs/splunk) | [Splunk HEC Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/splunkhecreceiver) | 🚧 **Beta** |
+| [Standard Input](https://docs.fluentbit.io/manual/pipeline/inputs/standard-input) | No direct support | |
+| [StatsD](https://docs.fluentbit.io/manual/pipeline/inputs/statsd) | [StatsD Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/statsdreceiver) | 🚧 **Beta** |
+| [Syslog](https://docs.fluentbit.io/manual/pipeline/inputs/syslog) | [Syslog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/syslogreceiver) | 🧪 **Alpha** |
+| [SystemD](https://docs.fluentbit.io/manual/pipeline/inputs/systemd) | [SystemD Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/systemdreceiver) | 🛠 **Dev** |
+| [Tail](https://docs.fluentbit.io/manual/pipeline/inputs/tail) | No direct support | Workaround: `filelog` receiver maybe used |
+| [TCP](https://docs.fluentbit.io/manual/pipeline/inputs/tcp) | [TCP Logs Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/tcplogreceiver) | 🧪 **Alpha** |
+| [Thermal](https://docs.fluentbit.io/manual/pipeline/inputs/thermal) | No direct support | |
+| [UDP](https://docs.fluentbit.io/manual/pipeline/inputs/udp) | [UDP Logs Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/udplogreceiver) | 🧪 **Alpha** |
+| [Windows Event Log](https://docs.fluentbit.io/manual/pipeline/inputs/windows-event-log) | [Windows Event Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/windowseventlogreceiver) | 🧪 **Alpha** |
+| [Windows Exporter Metrics](https://docs.fluentbit.io/manual/pipeline/inputs/windows-exporter-metrics) | No direct support | Workaround: `prometheus` receiver may be used |
