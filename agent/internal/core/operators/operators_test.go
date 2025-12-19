@@ -11,6 +11,7 @@ import (
 // mockAdapter is a no-op implementation for interface satisfaction
 type mockAdapter struct{}
 
+func (m *mockAdapter) GetAgentInfo() (map[string]string, error) { return map[string]string{"version": "mock"}, nil }
 func (m *mockAdapter) Initialize() error                                 { return nil }
 func (m *mockAdapter) StartAgent() error                                 { return nil }
 func (m *mockAdapter) StopAgent() error                                  { return nil }
@@ -35,6 +36,11 @@ type MockOperator struct {
 	mock.Mock
 }
 
+func (m *MockOperator) GetAgentInfo() (map[string]string, error) {
+	args := m.Called()
+	return args.Get(0).(map[string]string), args.Error(1) 
+}
+
 func (m *MockOperator) StartAgent() error {
 	args := m.Called()
 	return args.Error(0)
@@ -53,6 +59,16 @@ func (m *MockOperator) GracefulShutdown() error {
 func (m *MockOperator) UpdateCurrentConfig(cfg map[string]any) error {
 	args := m.Called(cfg)
 	return args.Error(0)
+}
+
+func TestOperatorService_GetAgentInfo(t *testing.T) {
+	mockOp := new(MockOperator)
+	mockOp.On("GetAgentInfo").Return(map[string]string{"version": "mock"}, nil)
+
+	service := &operators.OperatorService{Operator: mockOp}
+	info, err := service.GetAgentInfo()
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"version": "mock"}, info)
 }
 
 func TestOperatorService_StartAgent(t *testing.T) {

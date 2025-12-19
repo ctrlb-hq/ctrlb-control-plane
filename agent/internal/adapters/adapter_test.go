@@ -20,6 +20,16 @@ func TestNewAdapter_OTEL(t *testing.T) {
 	assert.True(t, ok, "adapter should be of type OTELAdapter")
 }
 
+func TestNewAdapter_FLUENTBIT(t *testing.T) {
+	wg := &sync.WaitGroup{}
+
+	adapter, err := adapters.NewAdapter(wg, "fluent-bit")
+	assert.NoError(t, err)
+	assert.NotNil(t, adapter)
+	_, ok := adapter.(*adapters.FluentBitAdapter)
+	assert.True(t, ok, "adapter should be of type FluentBitAdapter")
+}
+
 func TestNewAdapter_DefaultEmptyType(t *testing.T) {
 	wg := &sync.WaitGroup{}
 
@@ -31,7 +41,7 @@ func TestNewAdapter_DefaultEmptyType(t *testing.T) {
 func TestNewAdapter_UnsupportedType(t *testing.T) {
 	wg := &sync.WaitGroup{}
 
-	adapter, err := adapters.NewAdapter(wg, "fluentbit")
+	adapter, err := adapters.NewAdapter(wg, "unsupported-type")
 	assert.Error(t, err)
 	assert.Nil(t, adapter)
 	assert.Contains(t, err.Error(), "unsupported agent type")

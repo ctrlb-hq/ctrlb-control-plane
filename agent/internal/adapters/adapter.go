@@ -20,5 +20,8 @@ func NewAdapter(wg *sync.WaitGroup, agentType string) (Adapter, error) {
 	if agentType == "otel" || agentType == "" {
 		return NewOTELAdapter(wg), nil
 	}
+	if agentType == "fluent-bit" || agentType == "fluentbit" || agentType == "fb" {
+		return NewFluentBitAdapter(wg), nil
+	}
 	return nil, fmt.Errorf("unsupported agent type: %s", agentType)
 }

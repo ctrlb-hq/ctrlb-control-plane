@@ -1,6 +1,7 @@
 package main
 
 import (
+	"slices"
 	"net/http"
 	"os"
 	"os/signal"
@@ -48,6 +49,19 @@ func main() {
 	if constants.STARTED_BY == "" {
 		logger.Logger.Info("STARTED_BY environment variable is not set. Using default value: empty string.")
 	}
+
+	constants.AGENT_TYPE = os.Getenv("AGENT_TYPE")
+	if constants.AGENT_TYPE == "" {
+		logger.Logger.Info("AGENT_TYPE environment variable is not set. Using default value: otel.")
+		constants.AGENT_TYPE = "otel"
+	}
+	
+	isValid := slices.Contains(constants.SUPPORTED_AGENT_TYPES, constants.AGENT_TYPE)
+	if !isValid {
+		logger.Logger.Sugar().Infof("Invalid AGENT_TYPE: %s. Using default value: otel.", constants.AGENT_TYPE)
+		constants.AGENT_TYPE = "otel"
+	}
+
 	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
