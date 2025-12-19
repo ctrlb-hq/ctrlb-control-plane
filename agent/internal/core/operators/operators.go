@@ -5,6 +5,7 @@ import (
 )
 
 type Operator interface {
+	GetAgentInfo() (map[string]string, error)
 	StartAgent() error
 	StopAgent() error
 	GracefulShutdown() error
@@ -19,6 +20,10 @@ func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	operator := NewOtelOperator(adapter)
 
 	return &OperatorService{Operator: operator}
+}
+
+func (o *OperatorService) GetAgentInfo() (map[string]string, error) {
+	return o.Operator.GetAgentInfo()
 }
 
 func (o *OperatorService) StartAgent() error {

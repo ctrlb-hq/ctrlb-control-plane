@@ -16,6 +16,20 @@ func NewOperatorHandler(operatorService *operators.OperatorService) *OperatorHan
 	return operatorHandler
 }
 
+func (o *OperatorHandler) GetAgentInfo(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Request received to get agent info")
+
+	agentInfo, err := o.OperatorService.GetAgentInfo()
+	if err != nil {
+		logger.Logger.Sugar().Errorf("Error getting agent info: %v", err.Error())
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	logger.Logger.Info("Successfully got agent info")
+	utils.WriteJSONResponse(w, http.StatusOK, agentInfo)
+}
+
 func (o *OperatorHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Request received to start agent")
 
