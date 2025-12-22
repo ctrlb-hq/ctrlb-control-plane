@@ -146,17 +146,19 @@ Can be used for:
 ## 🧪 Testing
 
 ```bash
+cd agent
+
 # Unit tests
-go test -v ./agent/internal/adapters/ -run TestFluentBit
+go test -v ./internal/adapters/ -run TestFluentBit
 
 # With race detection
-go test -race ./agent/internal/adapters/
+go test -race ./internal/adapters/
 
 # Integration test (requires Fluent Bit installed)
-go test -v ./agent/internal/adapters/ -run TestFluentBitAdapter_Integration
+go test -v ./internal/adapters/ -run TestFluentBitAdapter_Integration
 
 # Docker test
-docker-compose -f agent/docker-compose.fluentbit.yml up
+docker-compose -f docker-compose.fluentbit.yml up
 ```
 
 ## 📈 Next Steps for Users

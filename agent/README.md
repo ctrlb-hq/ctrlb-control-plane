@@ -49,6 +49,63 @@ See [Fluent Bit Integration Guide](../docs/collector/fluentbit-integration.md) f
 
 ---
 
+## 🐳 Docker Deployment
+
+### Building the Fluent Bit Agent Image
+
+Build the Docker image with Fluent Bit support:
+
+```bash
+docker build -f Dockerfile.fluentbit -t ctrlb-agent-fluentbit:latest .
+```
+
+### Running the Fluent Bit Agent Container
+
+Run the agent container with Fluent Bit:
+
+```bash
+docker run -d \
+  --name ctrlb-agent-fluentbit \
+  -p 3421:3421 \
+  -v $(pwd)/internal/config:/app/internal/config \
+  -v /var/log:/var/log \
+  -e BACKEND_URL=http://host.docker.internal:8096 \
+  -e AGENT_TYPE=fluent-bit \
+  -e AGENT_CONFIG_PATH=./internal/config/fb-conf.yaml \
+  -e PORT=3421 \
+  ctrlb-agent-fluentbit:latest
+```
+
+**Configuration Options:**
+
+- `-p 3421:3421` – Exposes the agent API port
+- `-v $(pwd)/internal/config:/app/internal/config` – Mounts config directory for dynamic updates
+- `-v /var/log:/var/log` – Mounts host logs for collection (optional)
+- `-e BACKEND_URL` – Backend server URL (use `host.docker.internal` for local development)
+- `-e AGENT_TYPE=fluent-bit` – Specifies Fluent Bit as the telemetry backend
+- `-e AGENT_CONFIG_PATH` – Path to Fluent Bit configuration file
+- `-e PORT=3421` – Agent API port
+
+**Useful Commands:**
+
+```bash
+# View agent logs
+docker logs -f ctrlb-agent-fluentbit
+
+# Stop the agent
+docker stop ctrlb-agent-fluentbit
+
+# Remove the container
+docker rm ctrlb-agent-fluentbit
+
+# Interactive mode (for testing)
+docker run -it --rm \
+  -e BACKEND_URL=http://host.docker.internal:8096 \
+  ctrlb-agent-fluentbit:latest
+```
+
+---
+
 ## 🌐 Agent API Endpoints
 
 All endpoints are served under the base path: `/agent/v1`

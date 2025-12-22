@@ -13,7 +13,6 @@ var (
 
 var AGENTID int64
 
-
 var SUPPORTED_AGENT_TYPES = []string{"otel", "fluent-bit"}
 
 const (

@@ -1,0 +1,14 @@
+pipeline:
+    inputs:
+        - dummy: '{"message": "custom dummy event"}'
+          name: dummy
+          rate: 5
+          samples: 10
+          tag: dummy.log
+    outputs:
+        - format: json_lines
+          match: '*'
+          name: stdout
+service:
+    flush: 1
+    log_level: info
