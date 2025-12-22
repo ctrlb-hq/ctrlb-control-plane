@@ -11,8 +11,8 @@ import {
 	Connection,
 	XYPosition,
 } from "reactflow";
-import { useToast } from "@/hooks/useToast";
 import { capitalize } from "@/utils/utils";
+import { useGlobalSnackbar } from "./useGlobalSnackbar";
 
 export interface Changes {
 	id?: string;
@@ -70,7 +70,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	const [nodeValue, setNodeValue] = useNodesState<NodeData>([]);
 	const [edgeValue, setEdgeValue] = useEdgesState<EdgeData>([]);
 	const [changesLog, setChangesLog] = useState<Changes[]>([]);
-	const { toast } = useToast();
+	const { showSnackbar } = useGlobalSnackbar();
 
 	// helper: human-readable node name
 	const findNodeName = (id: string) => nodeValue.find(n => n.id === id)?.data.name ?? `#${id}`;
@@ -181,7 +181,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	const connectNodes = (params: Edge<EdgeData> | Connection) => {
 		const { source, target } = params;
 		if (!source || !target) {
-			toast({ title: "Invalid edge: source or target is missing", variant: "destructive" });
+			showSnackbar("Invalid edge: source or target is missing", "error");
 			return;
 		}
 		const edgeId = `edge-${source}-${target}`;
@@ -202,7 +202,7 @@ export const GraphFlowProvider = ({ children }: { children: React.ReactNode }) =
 	const deleteEdge = (params: Edge<EdgeData> | Connection) => {
 		const targetEdge = edgeValue.find(e => e.source === params.source && e.target === params.target);
 		if (!targetEdge) {
-			toast({ title: "Edge not found", variant: "destructive" });
+			showSnackbar("Edge not found", "error");
 			return;
 		}
 		setEdgeValue(edgeValue.filter(e => !(e.source === params.source && e.target === params.target)));

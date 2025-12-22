@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
 	Sheet,
-	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetTitle,
@@ -10,10 +9,9 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
-import { Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Loader2, Trash2 } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
 	Background,
@@ -29,6 +27,7 @@ import ReactFlow, {
 import GenericNode from "@/components/pipelines/editor/GenericNode";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 
 const PipelineEditorSheet = ({
 	pipelineId,
@@ -69,7 +68,8 @@ const PipelineEditorSheet = ({
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 	const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 	const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-	const { toast } = useToast();
+	const { showSnackbar } = useGlobalSnackbar();
+	const [isDeploying, setIsDeploying] = useState(false);
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -143,46 +143,33 @@ const PipelineEditorSheet = ({
 	}, [selectedEdge, deleteEdge]);
 
 	const handleDeployChanges = async () => {
-		const toastId = toast({
-			title: "Deploying changes...",
-			description: (
-				<div className="flex items-center">
-					<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-					Please wait while we sync the pipeline
-				</div>
-			),
-			variant: "default",
-			duration: Infinity,
-			className: "bg-blue-100 text-blue-800 border border-blue-200",
-		});
-
 		try {
+			setIsDeploying(true);
+			showSnackbar("Deploying changes…", "loading");
+
 			const syncPayload = {
-				nodes: nodeValue.map(node => ({
-					component_id: parseInt(node.id),
-					name: node.data.name,
-					component_role:
-						node.type === "destination" ? "exporter" : node.type === "source" ? "receiver" : "processor",
-					component_name: node.data.component_name,
-					config: node.data.config,
-					supported_signals: node.data.supported_signals || [],
-				})),
-				edges: edgeValue.map(edge => ({
-					source: edge.source,
-					target: edge.target,
-				})),
+			nodes: nodeValue.map(node => ({
+				component_id: parseInt(node.id),
+				name: node.data.name,
+				component_role:
+				node.type === "destination"
+					? "exporter"
+					: node.type === "source"
+					? "receiver"
+					: "processor",
+				component_name: node.data.component_name,
+				config: node.data.config,
+				supported_signals: node.data.supported_signals || [],
+			})),
+			edges: edgeValue.map(edge => ({
+				source: edge.source,
+				target: edge.target,
+			})),
 			};
 
 			await pipelineServices.syncPipelineGraph(pipelineId, syncPayload);
 
-			toastId.dismiss();
-
-			toast({
-				title: "Success",
-				description: "Changes deployed successfully",
-				variant: "default",
-			});
-
+			showSnackbar("Changes deployed successfully", "success");
 			setHasDeployError(false);
 			setIsEditMode(false);
 			clearChangesLog();
@@ -190,14 +177,10 @@ const PipelineEditorSheet = ({
 			setIsSheetOpen(false);
 		} catch (err) {
 			console.error("Deploy error:", err);
-			toastId.dismiss();
-
 			setHasDeployError(true);
-			toast({
-				title: "Error",
-				description: "Failed to deploy changes",
-				variant: "destructive",
-			});
+			showSnackbar("Failed to deploy changes", "error");
+		} finally {
+			setIsDeploying(false);
 		}
 	};
 
@@ -286,11 +269,22 @@ const PipelineEditorSheet = ({
 											))}
 										</div>
 									</SheetDescription>
-									<SheetClose className="mt-4">
-										<Button onClick={handleDeployChanges} className="bg-blue-500">
-											Deploy Changes
+									<div className="mt-4">
+										<Button
+											onClick={handleDeployChanges}
+											className="bg-blue-500 flex items-center gap-2"
+											disabled={isDeploying}
+										>
+											{isDeploying ? (
+											<>
+												<Loader2 className="h-4 w-4 animate-spin" />
+												Deploying…
+											</>
+											) : (
+											"Deploy Changes"
+											)}
 										</Button>
-									</SheetClose>
+									</div>
 								</div>
 							)}
 							{isEditFormOpen && selectedChange && (
