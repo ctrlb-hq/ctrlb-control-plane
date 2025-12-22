@@ -7,6 +7,7 @@ type AgentRequest struct {
 	Platform     string `json:"platform"`      // The platform (e.g., OS) the agent is running on
 	PipelineName string `json:"pipeline_name"` // The name of the pipeline
 	StartedBy    string `json:"started_by"`    // The user who started the agent
+	Type         string `json:"type"`          // The type of agent
 }
 
 type AgentResponse struct {

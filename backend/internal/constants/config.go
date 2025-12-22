@@ -20,7 +20,7 @@ var TelemetryService = map[string]any{
 	},
 }
 
-var DefaultConfig = map[string]any{
+var DefaultConfigOTEL = map[string]any{
 	"receivers": map[string]any{
 		"otlp": map[string]any{},
 	},
@@ -35,6 +35,31 @@ var DefaultConfig = map[string]any{
 				"receivers":  []any{"otlp"},
 				"processors": []any{},
 				"exporters":  []any{"debug"},
+			},
+		},
+	},
+}
+
+var DefaultConfigFluentBit = map[string]any{
+	"service": map[string]any{
+		"flush":    1,
+		"log_level": "info",
+	},
+	"pipeline": map[string]any{
+		"inputs": []any{
+			map[string]any{
+				"name": "dummy",
+				"tag":  "dummy.log",
+				"dummy": `{"message": "custom dummy event"}`,
+				"rate": 5,
+				"samples": 10,
+			},
+		},
+		"outputs": []any{
+			map[string]any{
+				"name":   "stdout",
+				"match":  "*",
+				"format": "json_lines",
 			},
 		},
 	},

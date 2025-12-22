@@ -44,6 +44,7 @@ func InformBackendServerStart(sys systeminfo.SystemInfoProvider,
 		Hostname:     hostname,
 		PipelineName: constants.PIPELINE_NAME,
 		StartedBy:    constants.STARTED_BY,
+		Type:         constants.AGENT_TYPE,
 	}
 
 	// Step 4: Marshal the agent request into JSON
