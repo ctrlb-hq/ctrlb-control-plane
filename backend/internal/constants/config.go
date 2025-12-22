@@ -42,16 +42,20 @@ var DefaultConfigOTEL = map[string]any{
 
 var DefaultConfigFluentBit = map[string]any{
 	"service": map[string]any{
-		"flush":    1,
-		"log_level": "info",
+		"flush":       1,
+		"log_level":   "info",
+		"http_server": "on",
+		"http_listen": "0.0.0.0",
+		"http_port":   2020,
+		"hot_reload":  "on",
 	},
 	"pipeline": map[string]any{
 		"inputs": []any{
 			map[string]any{
-				"name": "dummy",
-				"tag":  "dummy.log",
-				"dummy": `{"message": "custom dummy event"}`,
-				"rate": 5,
+				"name":    "dummy",
+				"tag":     "dummy.log",
+				"dummy":   `{"message": "custom dummy event"}`,
+				"rate":    5,
 				"samples": 10,
 			},
 		},
