@@ -91,3 +91,16 @@ func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Req
 	logger.Logger.Info("Successfully updated current config")
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Successfully updated current config"})
 }
+
+func (o *OperatorHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Request received to get metrics")
+
+	metrics, err := o.OperatorService.GetMetrics()
+	if err != nil {
+		logger.Logger.Sugar().Errorf("Error getting metrics: %v", err.Error())
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, metrics)
+}

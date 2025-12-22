@@ -12,3 +12,7 @@ pipeline:
 service:
     flush: 1
     log_level: info
+    hot_reload: "on"
+    http_listen: 0.0.0.0
+    http_port: 2020
+    http_server: "on"

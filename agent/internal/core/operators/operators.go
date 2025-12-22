@@ -10,6 +10,7 @@ type Operator interface {
 	StopAgent() error
 	GracefulShutdown() error
 	UpdateCurrentConfig(map[string]any) error
+	GetMetrics() (map[string]any, error)
 }
 
 type OperatorService struct {
@@ -40,4 +41,8 @@ func (o *OperatorService) GracefulShutdown() error {
 
 func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest map[string]any) error {
 	return o.Operator.UpdateCurrentConfig(updateConfigRequest)
+}
+
+func (o *OperatorService) GetMetrics() (map[string]any, error) {
+	return o.Operator.GetMetrics()
 }

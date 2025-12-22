@@ -40,6 +40,11 @@ func (m *MockOperator) UpdateCurrentConfig(cfg map[string]any) error {
 	return args.Error(0)
 }
 
+func (m *MockOperator) GetMetrics() (map[string]any, error) {
+	args := m.Called()
+	return args.Get(0).(map[string]any), args.Error(1)
+}
+
 func TestNewRouter_CallsAreWired(t *testing.T) {
 	mockOperator := new(MockOperator)
 	mockOperator.On("GetAgentInfo").Return(map[string]string{"version": "mock", "agent_type": "mock", "pipeline_name": "mock", "started_by": "mock"}, nil)

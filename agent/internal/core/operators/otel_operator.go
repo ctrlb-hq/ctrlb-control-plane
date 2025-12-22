@@ -97,3 +97,12 @@ func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest map[string]any)
 	logger.Logger.Info("Configuration updated and validated successfully")
 	return nil
 }
+
+
+func (otc *OtelOperator) GetMetrics() (map[string]any, error) {
+	metrics, err := otc.Adapter.GetMetrics()
+	if err != nil {
+		return nil, err
+	}
+	return metrics, nil
+}

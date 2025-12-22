@@ -24,5 +24,8 @@ func NewRouter(operatorService *operators.OperatorService) *mux.Router {
 	// Agent configuration (GET and PUT) - Retrieves or updates the current config of the agent
 	agentApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("POST")
 
+	// Agent metrics (GET) - Get metrics of the agent
+	agentApiV1.HandleFunc("/metrics", operatorHandler.GetMetrics).Methods("GET")
+
 	return router
 }

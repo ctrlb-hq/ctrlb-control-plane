@@ -19,6 +19,7 @@ func (m *mockAdapter) UpdateConfig() error                               { retur
 func (m *mockAdapter) GracefulShutdown() error                           { return nil }
 func (m *mockAdapter) GetVersion() (string, error)                       { return "mock", nil }
 func (m *mockAdapter) ValidateConfigInMemory(data *map[string]any) error { return nil }
+func (m *mockAdapter) GetMetrics() (map[string]any, error) { return map[string]any{"metrics": "mock"}, nil }
 
 func TestNewOperatorService_ReturnsOtelOperator(t *testing.T) {
 	adapter := &mockAdapter{}
@@ -59,6 +60,11 @@ func (m *MockOperator) GracefulShutdown() error {
 func (m *MockOperator) UpdateCurrentConfig(cfg map[string]any) error {
 	args := m.Called(cfg)
 	return args.Error(0)
+}
+
+func (m *MockOperator) GetMetrics() (map[string]any, error) {
+	args := m.Called()
+	return args.Get(0).(map[string]any), args.Error(1)
 }
 
 func TestOperatorService_GetAgentInfo(t *testing.T) {
