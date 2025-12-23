@@ -41,7 +41,7 @@ WORKDIR /app
 
 # Copy the binary from the builder stage.
 COPY --from=builder /app/ctrlb-agent .
-COPY --from=builder /app/internal/config/fb-conf.yaml .
+COPY --from=builder /app/internal/config/config.yaml .
 
 # Command to run the executable
 CMD ["./ctrlb-agent"]

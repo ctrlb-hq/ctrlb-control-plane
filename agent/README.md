@@ -71,7 +71,7 @@ docker run -d \
   -v /var/log:/var/log \
   -e BACKEND_URL=http://host.docker.internal:8096 \
   -e AGENT_TYPE=fluent-bit \
-  -e AGENT_CONFIG_PATH=./internal/config/fb-conf.yaml \
+  -e AGENT_CONFIG_PATH=./internal/config/config.yaml \
   -e PORT=3421 \
   ctrlb-agent-fluentbit:latest
 ```
