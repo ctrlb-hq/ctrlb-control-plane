@@ -58,12 +58,23 @@ var DefaultConfigFluentBit = map[string]any{
 				"rate":    5,
 				"samples": 10,
 			},
+			map[string]any{
+				"name":            "process_exporter_metrics",
+				"tag":             "process_metrics",
+				"scrape_interval": 5,
+			},
 		},
 		"outputs": []any{
 			map[string]any{
 				"name":   "stdout",
 				"match":  "*",
 				"format": "json_lines",
+			},
+			map[string]any{
+				"name":  "prometheus_exporter",
+				"match": "process_metrics",
+				"host":  "0.0.0.0",
+				"port":  2021,
 			},
 		},
 	},

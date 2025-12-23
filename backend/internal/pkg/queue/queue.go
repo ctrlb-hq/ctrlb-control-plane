@@ -11,7 +11,7 @@ import (
 
 // AgentQueueInterface defines the operations supported by an AgentQueue.
 type AgentQueueInterface interface {
-	AddAgent(id, hostname, ip string) error
+	AddAgent(id, hostname, ip, agentType string) error
 	RemoveAgent(id string) error
 	RefreshMonitoring() error
 }
@@ -49,7 +49,7 @@ func NewQueue(workerCount int, intervalSec int, queueRepository AgentQueueReposi
 }
 
 // AddAgent adds a new agent to the queue
-func (q *AgentQueue) AddAgent(id, hostname, ip string) error {
+func (q *AgentQueue) AddAgent(id, hostname, ip, agentType string) error {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	if _, exists := q.agents[id]; exists {
@@ -60,6 +60,7 @@ func (q *AgentQueue) AddAgent(id, hostname, ip string) error {
 		AgentID:        id,
 		Hostname:       hostname,
 		IP:             ip,
+		Type:           agentType,
 		CurrentStatus:  "unknown",
 		RetryRemaining: 3,
 		NextCheck:      time.Now(), // eligible immediately
@@ -86,7 +87,7 @@ func (q *AgentQueue) RefreshMonitoring() error {
 	}
 
 	for _, agent := range agents {
-		if err := q.AddAgent(agent.AgentID, agent.Hostname, agent.IP); err != nil {
+		if err := q.AddAgent(agent.AgentID, agent.Hostname, agent.IP, agent.Type); err != nil {
 			utils.Logger.Sugar().Errorf("Error adding agent [ID: %v] to queue", agent.AgentID)
 		}
 	}
@@ -163,18 +164,25 @@ func (q *AgentQueue) worker() {
 	}
 }
 
-// checkAgentStatus fetches Prometheus metrics from agent
+// checkAgentStatus fetches Prometheus metrics from agent using the appropriate strategy
 func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
+	// Get the appropriate metrics extraction strategy for this agent type
+	strategy := GetMetricsStrategy(agent.Type)
+
+	// Build endpoints using the strategy's port
+	port := strategy.GetPort()
 	endpoints := []string{
-		fmt.Sprintf("http://%s:8888/metrics", agent.Hostname),
-		fmt.Sprintf("http://%s:8888/metrics", agent.IP),
+		fmt.Sprintf("http://%s:%d/metrics", agent.Hostname, port),
+		fmt.Sprintf("http://%s:%d/metrics", agent.IP, port),
 	}
 
+	utils.Logger.Sugar().Infof("endpoints: %v", endpoints)
+
+	// Fetch metrics from the agent (try hostname first, then IP)
 	var (
 		metrics map[string]*io_prometheus_client.MetricFamily
 		err     error
 	)
-	// try hostname first, then IP
 	for _, url := range endpoints {
 		metrics, err = q.Metrics.Fetch(url)
 		if err == nil {
@@ -185,44 +193,34 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		return fmt.Errorf("fetch metrics failed (hostname & IP): %w", err)
 	}
 
-	// helper to pull a float64, defaulting to 0 if missing
-	get := func(name string) float64 {
-		return q.Metrics.ExtractValue(metrics, name)
-	}
+	// Extract metrics using the strategy
+	metricsData := strategy.ExtractMetrics(metrics, q.Metrics)
 
-	// build the aggregated (DB) metrics
+	utils.Logger.Sugar().Infof("metricsData: %v", metricsData)
+	utils.Logger.Sugar().Infof("Connected agent: %v", agent.AgentID)
+
+	// Build the aggregated (DB) metrics
 	agg := AggregatedAgentMetrics{
 		AgentID:           agent.AgentID,
-		LogsRateSent:      get("otelcol_exporter_sent_log_records"),
-		TracesRateSent:    get("otelcol_exporter_sent_spans"),
-		MetricsRateSent:   get("otelcol_exporter_sent_metric_points"),
-		DataSentBytes:     get("otelcol_exporter_sent_bytes"),
-		DataReceivedBytes: get("otelcol_receiver_accepted_bytes"),
+		LogsRateSent:      metricsData.LogsRateSent,
+		TracesRateSent:    metricsData.TracesRateSent,
+		MetricsRateSent:   metricsData.MetricsRateSent,
+		DataSentBytes:     metricsData.DataSentBytes,
+		DataReceivedBytes: metricsData.DataReceivedBytes,
 		Status:            "connected",
 		UpdatedAt:         time.Now().Unix(),
 	}
 
-	// pick the “right” CPU/memory streams:
-	// first try the normalized gauges, else fallback to process counters
-	cpuUtil := get("system_cpu_utilization")
-	if cpuUtil == 0 {
-		// raw counter per-second rate would be better–but at least show the total
-		cpuUtil = get("otelcol_process_cpu_seconds_total")
-	}
-	memUtil := get("system_memory_utilization")
-	if memUtil == 0 {
-		memUtil = get("otelcol_process_memory_rss")
-	}
-
+	// Build the realtime metrics
 	rt := RealtimeAgentMetrics{
 		AgentID:           agent.AgentID,
-		LogsRateSent:      agg.LogsRateSent,
-		TracesRateSent:    agg.TracesRateSent,
-		MetricsRateSent:   agg.MetricsRateSent,
-		DataSentBytes:     agg.DataSentBytes,
-		DataReceivedBytes: agg.DataReceivedBytes,
-		CPUUtilization:    cpuUtil,
-		MemoryUtilization: memUtil,
+		LogsRateSent:      metricsData.LogsRateSent,
+		TracesRateSent:    metricsData.TracesRateSent,
+		MetricsRateSent:   metricsData.MetricsRateSent,
+		DataSentBytes:     metricsData.DataSentBytes,
+		DataReceivedBytes: metricsData.DataReceivedBytes,
+		CPUUtilization:    metricsData.CPUUtilization,
+		MemoryUtilization: metricsData.MemoryUtilization,
 		Timestamp:         time.Now().Unix(),
 	}
 

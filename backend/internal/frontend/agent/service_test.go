@@ -39,9 +39,9 @@ func (m *MockRepo) AgentStatus(id string) string {
 	args := m.Called(id)
 	return args.String(0)
 }
-func (m *MockRepo) GetAgentNetworkInfoByID(id string) (string, string, error) {
+func (m *MockRepo) GetAgentNetworkInfoByID(id string) (string, string, models.AgentType, error) {
 	args := m.Called(id)
-	return args.String(0), args.String(1), args.Error(2)
+	return args.String(0), args.String(1), args.Get(2).(models.AgentType), args.Error(3)
 }
 func (m *MockRepo) DeleteAgent(id string) error {
 	args := m.Called(id)
@@ -64,10 +64,11 @@ func (m *MockRepo) GetLatestAgentSince(since string) (*frontendagent.LatestAgent
 	return args.Get(0).(*frontendagent.LatestAgentResponse), args.Error(1)
 }
 
-func (mq *MockQueue) AddAgent(id, hostname, ip string) error {
-	args := mq.Called(id, hostname, ip)
+func (mq *MockQueue) AddAgent(id, hostname, ip, agentType string) error {
+	args := mq.Called(id, hostname, ip, agentType)
 	return args.Error(0)
 }
+
 func (mq *MockQueue) RemoveAgent(id string) error {
 	args := mq.Called(id)
 	return args.Error(0)

@@ -50,6 +50,10 @@ func (m *mockMetricsHelper) ExtractValue(map[string]*io_prometheus_client.Metric
 	return 0
 }
 
+func (m *mockMetricsHelper) ExtractValueWithLabels(map[string]*io_prometheus_client.MetricFamily, string, map[string]string) float64 {
+	return 0
+}
+
 // --- Test Case ---
 
 func TestAgentQueue_RetryScheduler_RemovesAfterFailures(t *testing.T) {
@@ -63,7 +67,7 @@ func TestAgentQueue_RetryScheduler_RemovesAfterFailures(t *testing.T) {
 	q.Metrics = helper
 
 	// Add agent
-	err := q.AddAgent("agent-1", "agent1.test.local", "192.168.1.100")
+	err := q.AddAgent("agent-1", "agent1.test.local", "192.168.1.100", "otel")
 	assert.NoError(t, err)
 
 	// Poll for agent removal within timeout

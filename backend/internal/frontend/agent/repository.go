@@ -137,15 +137,15 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	return agent, nil
 }
 
-func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, err error) {
-	query := `SELECT hostname, ip FROM agents WHERE id = ?`
+func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, agentType models.AgentType, err error) {
+	query := `SELECT hostname, ip, type FROM agents WHERE id = ?`
 
-	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip)
+	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip, &agentType)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to fetch network info for agent ID %s: %w", agentID, err)
+		return "", "", "", fmt.Errorf("failed to fetch network info for agent ID %s: %w", agentID, err)
 	}
 
-	return hostname, ip, nil
+	return hostname, ip, agentType, nil
 }
 
 // DeleteAgent removes an agent by ID

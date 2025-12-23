@@ -26,14 +26,14 @@ func (m *MockAgentRepository) AgentExists(hostname string) (bool, error) {
 }
 
 type MockAgentQueue struct {
-	AddFunc            func(id, hostname, ip string) error
+	AddFunc            func(id, hostname, ip, agentType string) error
 	RemoveFunc         func(id string) error
 	RefreshFunc        func() error
 	CheckAllAgentsFunc func()
 }
 
-func (m *MockAgentQueue) AddAgent(id, hostname, ip string) error {
-	return m.AddFunc(id, hostname, ip)
+func (m *MockAgentQueue) AddAgent(id, hostname, ip, agentType string) error {
+	return m.AddFunc(id, hostname, ip, agentType)
 }
 
 func (m *MockAgentQueue) RemoveAgent(id string) error {
@@ -97,7 +97,7 @@ func TestAgentService_RegisterAgent_Success(t *testing.T) {
 		},
 	}
 	mockQueue := &MockAgentQueue{
-		AddFunc: func(agentID string, hostname string, ip string) error {
+		AddFunc: func(agentID string, hostname string, ip string, agentType string) error {
 			return nil
 		},
 		RemoveFunc:  func(id string) error { return nil },
@@ -130,7 +130,7 @@ func TestAgentService_RegisterAgent_RepoError(t *testing.T) {
 		},
 	}
 	mockQueue := &MockAgentQueue{
-		AddFunc: func(agentID string, hostname string, ip string) error {
+		AddFunc: func(agentID string, hostname string, ip string, agentType string) error {
 			return nil
 		},
 		RemoveFunc:  func(id string) error { return nil },
@@ -156,7 +156,7 @@ func TestAgentService_RegisterAgent_RepoError(t *testing.T) {
 func TestAgentService_ConfigChangedPing_Success(t *testing.T) {
 	mockRepo := &MockAgentRepository{}
 	mockQueue := &MockAgentQueue{
-		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
+		AddFunc:     func(agentID string, hostname string, ip string, agentType string) error { return nil },
 		RemoveFunc:  func(id string) error { return nil },
 		RefreshFunc: func() error { return nil },
 	}
@@ -175,7 +175,7 @@ func TestAgentService_ConfigChangedPing_Success(t *testing.T) {
 func TestAgentService_ConfigChangedPing_Failure(t *testing.T) {
 	mockRepo := &MockAgentRepository{}
 	mockQueue := &MockAgentQueue{
-		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
+		AddFunc:     func(agentID string, hostname string, ip string, agentType string) error { return nil },
 		RemoveFunc:  func(id string) error { return nil },
 		RefreshFunc: func() error { return nil },
 	}

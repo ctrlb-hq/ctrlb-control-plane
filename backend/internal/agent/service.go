@@ -41,7 +41,7 @@ func NewAgentService(agentRepository AgentRepositoryInterface, agentQueue queue.
 // RegisterAgent processes the registration of a new agent.
 func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
 	if req.Type == "" {
-		req.Type = "OTEL"
+		req.Type = models.AgentTypeOTEL
 	}
 	req.RegisteredAt = time.Now().Unix()
 
@@ -65,7 +65,7 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		}
 	}
 
-	err = a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP)
+	err = a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP, string(req.Type))
 	if err != nil {
 		return nil, err
 	}

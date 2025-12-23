@@ -9,6 +9,7 @@ type AgentStatus struct {
 	AgentID        string    `json:"agentId"`        // Unique ID of the agent
 	Hostname       string    `json:"hostname"`       // Hostname where the agent is running
 	IP             string    `json:"ip"`             // IP where the agent is running
+	Type           string    `json:"type"`           // Type of the agent (e.g., otel, fluent-bit)
 	CurrentStatus  string    `json:"currentStatus"`  // Status of the agent (e.g., online, offline)
 	RetryRemaining int       `json:"retryRemaining"` // Number of retry attempts left
 	UpdatedAt      time.Time `json:"updatedAt"`      // Timestamp of the last status update

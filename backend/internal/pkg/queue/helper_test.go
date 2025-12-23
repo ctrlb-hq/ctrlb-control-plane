@@ -92,3 +92,133 @@ func TestDefaultMetricsHelper_ExtractValue_NoGaugeOrCounter(t *testing.T) {
 	value := helper.ExtractValue(metricFamily, "weird_metric")
 	assert.Equal(t, 0.0, value)
 }
+
+func TestDefaultMetricsHelper_ExtractValueWithLabels_MatchingLabels(t *testing.T) {
+	cpuVal := 42.5
+	nameLabel := "fluent-bit"
+	modeLabel := "user"
+
+	metricFamily := map[string]*io_prometheus_client.MetricFamily{
+		"process_cpu_seconds_total": {
+			Metric: []*io_prometheus_client.Metric{
+				{
+					Label: []*io_prometheus_client.LabelPair{
+						{Name: &[]string{"name"}[0], Value: &nameLabel},
+						{Name: &[]string{"mode"}[0], Value: &modeLabel},
+					},
+					Counter: &io_prometheus_client.Counter{
+						Value: &cpuVal,
+					},
+				},
+			},
+		},
+	}
+
+	helper := queue.DefaultMetricsHelper{}
+	value := helper.ExtractValueWithLabels(metricFamily, "process_cpu_seconds_total", map[string]string{
+		"name": "fluent-bit",
+		"mode": "user",
+	})
+	assert.Equal(t, 42.5, value)
+}
+
+func TestDefaultMetricsHelper_ExtractValueWithLabels_NoMatch(t *testing.T) {
+	cpuVal := 42.5
+	nameLabel := "fluent-bit"
+	modeLabel := "user"
+
+	metricFamily := map[string]*io_prometheus_client.MetricFamily{
+		"process_cpu_seconds_total": {
+			Metric: []*io_prometheus_client.Metric{
+				{
+					Label: []*io_prometheus_client.LabelPair{
+						{Name: &[]string{"name"}[0], Value: &nameLabel},
+						{Name: &[]string{"mode"}[0], Value: &modeLabel},
+					},
+					Counter: &io_prometheus_client.Counter{
+						Value: &cpuVal,
+					},
+				},
+			},
+		},
+	}
+
+	helper := queue.DefaultMetricsHelper{}
+	value := helper.ExtractValueWithLabels(metricFamily, "process_cpu_seconds_total", map[string]string{
+		"name": "otel-collector",
+		"mode": "user",
+	})
+	assert.Equal(t, 0.0, value)
+}
+
+func TestDefaultMetricsHelper_ExtractValueWithLabels_MultipleMetrics(t *testing.T) {
+	cpuVal1 := 10.0
+	cpuVal2 := 20.0
+	cpuVal3 := 30.0
+	nameLabel1 := "fluent-bit"
+	nameLabel2 := "fluent-bit"
+	nameLabel3 := "other-process"
+	modeLabel1 := "user"
+	modeLabel2 := "system"
+	modeLabel3 := "user"
+
+	metricFamily := map[string]*io_prometheus_client.MetricFamily{
+		"process_cpu_seconds_total": {
+			Metric: []*io_prometheus_client.Metric{
+				{
+					Label: []*io_prometheus_client.LabelPair{
+						{Name: &[]string{"name"}[0], Value: &nameLabel1},
+						{Name: &[]string{"mode"}[0], Value: &modeLabel1},
+					},
+					Counter: &io_prometheus_client.Counter{
+						Value: &cpuVal1,
+					},
+				},
+				{
+					Label: []*io_prometheus_client.LabelPair{
+						{Name: &[]string{"name"}[0], Value: &nameLabel2},
+						{Name: &[]string{"mode"}[0], Value: &modeLabel2},
+					},
+					Counter: &io_prometheus_client.Counter{
+						Value: &cpuVal2,
+					},
+				},
+				{
+					Label: []*io_prometheus_client.LabelPair{
+						{Name: &[]string{"name"}[0], Value: &nameLabel3},
+						{Name: &[]string{"mode"}[0], Value: &modeLabel3},
+					},
+					Counter: &io_prometheus_client.Counter{
+						Value: &cpuVal3,
+					},
+				},
+			},
+		},
+	}
+
+	helper := queue.DefaultMetricsHelper{}
+
+	// Should get the first matching metric (user mode)
+	value := helper.ExtractValueWithLabels(metricFamily, "process_cpu_seconds_total", map[string]string{
+		"name": "fluent-bit",
+		"mode": "user",
+	})
+	assert.Equal(t, 10.0, value)
+
+	// Should get the system mode metric
+	value = helper.ExtractValueWithLabels(metricFamily, "process_cpu_seconds_total", map[string]string{
+		"name": "fluent-bit",
+		"mode": "system",
+	})
+	assert.Equal(t, 20.0, value)
+}
+
+func TestDefaultMetricsHelper_ExtractValueWithLabels_MissingMetric(t *testing.T) {
+	metricFamily := map[string]*io_prometheus_client.MetricFamily{}
+
+	helper := queue.DefaultMetricsHelper{}
+	value := helper.ExtractValueWithLabels(metricFamily, "non_existent", map[string]string{
+		"name": "fluent-bit",
+	})
+	assert.Equal(t, 0.0, value)
+}

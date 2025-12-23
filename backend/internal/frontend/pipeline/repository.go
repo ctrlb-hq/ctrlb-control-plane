@@ -211,7 +211,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	// Optimized query for SQLite
 	query := `
-		SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, 
+		SELECT a.id, a.name, a.version, a.type, a.pipeline_name, a.hostname, a.IP, 
 		       IFNULL(m.logs_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
 		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
 		FROM agents a
@@ -226,7 +226,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	for rows.Next() {
 		agent := models.AgentInfoHome{}
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName, &agent.Hostname, &agent.IP,
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Type, &agent.PipelineName, &agent.Hostname, &agent.IP,
 			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
 		if err != nil {
 			return nil, err
@@ -502,7 +502,7 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	agent := &models.AgentInfoHome{}
 	var pipelineName sql.NullString
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP)
+	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip, type FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP, &agent.Type)
 	if err != nil {
 		return nil, err
 	}

@@ -184,26 +184,40 @@ func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 }
 
 func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
-	config, err := configcompiler.CompileGraphToJSON(pipelineGraph)
-	if err != nil {
-		return err
-	}
+    var failedAgents []string
+    var lastErr error
 
-	jsonData, err := json.Marshal(config)
-	if err != nil {
-		return fmt.Errorf("error marshaling config: %v", err)
-	}
+    for _, agent := range agents {
+        // Compile config based on agent type
+        var config *map[string]any
+        var err error
+        
+        if agent.Type == "fluent-bit" {
+            config, err = configcompiler.CompileGraphToFluentBit(pipelineGraph)
+        } else {
+            config, err = configcompiler.CompileGraphToJSON(pipelineGraph)
+        }
+        
+        if err != nil {
+            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+            lastErr = err
+            utils.Logger.Sugar().Errorf("Failed to compile config for agent [ID:%v]: %v", agent.ID, err)
+            continue
+        }
 
-	var failedAgents []string
-	var lastErr error
+        jsonData, err := json.Marshal(config)
+        if err != nil {
+            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+            lastErr = fmt.Errorf("error marshaling config: %v", err)
+            continue
+        }
 
-	for _, agent := range agents {
-		if err := f.sendConfigToSingleAgent(agent, jsonData); err != nil {
-			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
-			lastErr = err
-			utils.Logger.Sugar().Errorf("Failed to send config to agent [ID:%v]: %v", agent.ID, err)
-		}
-	}
+        if err := f.sendConfigToSingleAgent(agent, jsonData); err != nil {
+            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+            lastErr = err
+            utils.Logger.Sugar().Errorf("Failed to send config to agent [ID:%v]: %v", agent.ID, err)
+        }
+    }
 
 	if len(failedAgents) == len(agents) {
 		return fmt.Errorf("failed to send configuration to all %d agent(s): last error: %v", len(agents), lastErr)

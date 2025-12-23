@@ -16,7 +16,7 @@ type FrontendAgentRepositoryInterface interface {
 	GetAgent(id string) (*AgentInfoWithLabels, error)
 	AgentExists(id string) bool
 	AgentStatus(id string) string
-	GetAgentNetworkInfoByID(id string) (string, string, error)
+	GetAgentNetworkInfoByID(id string) (string, string, models.AgentType, error)
 	DeleteAgent(id string) error
 	GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error)
 	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
@@ -79,7 +79,7 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, agentType, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 	status := f.FrontendAgentRepository.AgentStatus(id)
 	if status != "disconnected" {
 		if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
-			f.AgentQueue.AddAgent(id, hostname, ip)
+			f.AgentQueue.AddAgent(id, hostname, ip, string(agentType))
 			return fmt.Errorf("failed to shut down agent: %v. The agent remains active and under monitoring", err)
 		}
 	}
@@ -107,7 +107,7 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, agentType, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 		return fmt.Errorf("error encountered while starting agent")
 	}
 
-	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
+	if err = f.AgentQueue.AddAgent(id, hostname, ip, string(agentType)); err != nil {
 		return fmt.Errorf("error while starting agent monitoring")
 	}
 
@@ -129,7 +129,7 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, agentType, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 	}
 
 	if err := f.sendAgentCommand(hostname, ip, "stop"); err != nil {
-		f.AgentQueue.AddAgent(id, hostname, ip)
+		f.AgentQueue.AddAgent(id, hostname, ip, string(agentType))
 		return fmt.Errorf("error encountered while stopping agent")
 	}
 	return nil
@@ -152,12 +152,12 @@ func (f *FrontendAgentService) RestartMonitoring(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, agentType, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
+	if err = f.AgentQueue.AddAgent(id, hostname, ip, string(agentType)); err != nil {
 		return err
 	}
 
