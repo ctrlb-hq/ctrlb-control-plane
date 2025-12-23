@@ -67,7 +67,7 @@ func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) error
 func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
 	// Join with aggregated_agent_metrics to get agent status
 	rows, err := q.db.Query(`
-		SELECT a.id, a.hostname, a.ip, m.status
+		SELECT a.id, a.hostname, a.ip, a.type, m.status
 		FROM agents a
 		JOIN aggregated_agent_metrics m ON a.id = m.agent_id
 		WHERE m.status IN ('unknown', 'connected')
@@ -79,8 +79,8 @@ func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
 
 	var agents []AgentStatus
 	for rows.Next() {
-		var agentID, hostname, ip, status string
-		if err := rows.Scan(&agentID, &hostname, &ip, &status); err != nil {
+		var agentID, hostname, ip, agentType, status string
+		if err := rows.Scan(&agentID, &hostname, &ip, &agentType, &status); err != nil {
 			utils.Logger.Sugar().Errorf("Error scanning agent row: %v", err)
 			continue
 		}
@@ -89,6 +89,7 @@ func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
 			AgentID:        agentID,
 			Hostname:       hostname,
 			IP:             ip,
+			Type:           agentType,
 			CurrentStatus:  status,
 			RetryRemaining: 3,
 			UpdatedAt:      time.Now(),

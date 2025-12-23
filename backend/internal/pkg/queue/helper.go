@@ -3,6 +3,7 @@ package queue
 import (
 	"bufio"
 	"net/http"
+	"time"
 
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
@@ -19,7 +20,12 @@ type MetricsHelper interface {
 type DefaultMetricsHelper struct{}
 
 func (DefaultMetricsHelper) Fetch(url string) (map[string]*io_prometheus_client.MetricFamily, error) {
-	resp, err := http.Get(url)
+	// Create HTTP client with timeout to prevent indefinite hangs
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}

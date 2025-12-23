@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
@@ -100,6 +102,7 @@ func main() {
 	agentQueueRepository := queue.NewQueueRepository(db)
 
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_SEC, agentQueueRepository)
+	agentQueueWithShutdown := agentQueue.(*queue.AgentQueue)
 
 	if err = agentQueue.RefreshMonitoring(); err != nil {
 		utils.Logger.Fatal("Unable to update existing agent")
@@ -144,4 +147,30 @@ func main() {
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
 	<-interruptChan
 	utils.Logger.Info("Received interrupt signal, shutting down...")
+
+	// Create shutdown context with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	// Shutdown HTTP server
+	utils.Logger.Info("Shutting down HTTP server...")
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		utils.Logger.Sugar().Errorf("HTTP server shutdown error: %v", err)
+	} else {
+		utils.Logger.Info("HTTP server shutdown completed")
+	}
+
+	// Shutdown agent queue
+	if err := agentQueueWithShutdown.Shutdown(5 * time.Second); err != nil {
+		utils.Logger.Sugar().Errorf("AgentQueue shutdown error: %v", err)
+	}
+
+	// Close database connection
+	if err := db.Close(); err != nil {
+		utils.Logger.Sugar().Errorf("Database close error: %v", err)
+	} else {
+		utils.Logger.Info("Database connection closed")
+	}
+
+	utils.Logger.Info("Shutdown complete, exiting")
 }

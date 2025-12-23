@@ -31,17 +31,23 @@ type AgentQueue struct {
 	IntervalSecond  int
 	QueueRepository AgentQueueRepositoryInterface
 	Metrics         MetricsHelper
+	stopChan        chan struct{}
+	wg              sync.WaitGroup
 }
 
 // NewQueue creates a new AgentQueue
 func NewQueue(workerCount int, intervalSec int, queueRepository AgentQueueRepositoryInterface) AgentQueueInterface {
+	// Buffer size: larger to handle bursts of agents becoming ready
+	bufferSize := max(workerCount*10, 100)
+
 	q := &AgentQueue{
 		agents:          make(map[string]*AgentStatus),
-		checkQueue:      make(chan string, workerCount*2),
+		checkQueue:      make(chan string, bufferSize),
 		workerCount:     workerCount,
 		IntervalSecond:  intervalSec,
 		QueueRepository: queueRepository,
 		Metrics:         DefaultMetricsHelper{},
+		stopChan:        make(chan struct{}),
 	}
 	q.startWorkers()
 	q.startRetryScheduler()
@@ -64,6 +70,7 @@ func (q *AgentQueue) AddAgent(id, hostname, ip, agentType string) error {
 		CurrentStatus:  "unknown",
 		RetryRemaining: 3,
 		NextCheck:      time.Now(), // eligible immediately
+		InFlight:       false,
 	}
 	utils.Logger.Info(fmt.Sprintf("Successfully queued agent with ID: %s.", id))
 	return nil
@@ -98,68 +105,159 @@ func (q *AgentQueue) RefreshMonitoring() error {
 // Internal worker that handles agent check logic
 func (q *AgentQueue) startWorkers() {
 	for i := 0; i < q.workerCount; i++ {
-		go q.worker()
+		q.wg.Add(1)
+		workerID := i + 1 // 1-indexed for better readability in logs
+		go q.worker(workerID)
 	}
 }
 
 // Retry scheduler that re-enqueues agents based on NextCheck
 func (q *AgentQueue) startRetryScheduler() {
+	q.wg.Add(1)
 	go func() {
+		defer q.wg.Done()
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			now := time.Now()
-			q.mutex.RLock()
-			for id, agent := range q.agents {
-				if agent.NextCheck.Before(now) || agent.NextCheck.Equal(now) {
-					select {
-					case q.checkQueue <- id:
-						// throttle next check
-						agent.NextCheck = now.Add(time.Duration(q.IntervalSecond) * time.Second)
-					default:
-						utils.Logger.Sugar().Errorf("checkQueue full, skipping agent %s", id)
+		for {
+			select {
+			case <-q.stopChan:
+				return
+			case <-ticker.C:
+				now := time.Now()
+
+				// Collect agents to check without holding lock for too long
+				var agentsToCheck []string
+				q.mutex.Lock()
+				for id, agent := range q.agents {
+					// Only enqueue if not already in-flight and check time has arrived
+					if !agent.InFlight && (agent.NextCheck.Before(now) || agent.NextCheck.Equal(now)) {
+						agentsToCheck = append(agentsToCheck, id)
 					}
 				}
+				q.mutex.Unlock()
+
+				// Now enqueue agents without holding the main lock
+				for _, id := range agentsToCheck {
+					q.mutex.Lock()
+					agent, exists := q.agents[id]
+					if exists && !agent.InFlight {
+						select {
+						case q.checkQueue <- id:
+							// Mark as in-flight and schedule next check
+							agent.InFlight = true
+							agent.NextCheck = now.Add(time.Duration(q.IntervalSecond) * time.Second)
+						default:
+							utils.Logger.Sugar().Warnf("checkQueue full, skipping agent %s", id)
+						}
+					}
+					q.mutex.Unlock()
+				}
 			}
-			q.mutex.RUnlock()
 		}
 	}()
 }
 
 // Worker loop
-func (q *AgentQueue) worker() {
-	for agentID := range q.checkQueue {
-		q.mutex.RLock()
-		agent, exists := q.agents[agentID]
-		q.mutex.RUnlock()
+func (q *AgentQueue) worker(workerID int) {
+	defer q.wg.Done()
+	utils.Logger.Sugar().Infof("Worker #%d started", workerID)
 
-		if !exists {
-			continue
-		}
-
-		if err := q.checkAgentStatus(agent); err != nil {
-			q.mutex.Lock()
-			agent.RetryRemaining--
-			if agent.RetryRemaining <= 0 {
-				agent.CurrentStatus = "disconnected"
-			} else {
-				agent.CurrentStatus = "unknown"
+	for {
+		select {
+		case <-q.stopChan:
+			utils.Logger.Sugar().Infof("Worker #%d shutting down", workerID)
+			return
+		case agentID, ok := <-q.checkQueue:
+			if !ok {
+				utils.Logger.Sugar().Infof("Worker #%d: checkQueue closed", workerID)
+				return
 			}
-			_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, agent.CurrentStatus)
-			q.mutex.Unlock()
 
-			utils.Logger.Sugar().Errorf("Error checking status of agent [ID:%s], Attempts remaining: %v", agent.AgentID, agent.RetryRemaining)
-		} else {
-			q.mutex.Lock()
-			agent.RetryRemaining = 3
-			agent.CurrentStatus = "connected"
-			_ = q.QueueRepository.UpdateAgentStatus(agent.AgentID, "connected")
-			q.mutex.Unlock()
-		}
+			// Process agent check with panic recovery
+			func() {
+				startTime := time.Now()
+				utils.Logger.Sugar().Infof("Worker #%d picked up agent [ID:%s]", workerID, agentID)
 
-		if agent.RetryRemaining <= 0 {
-			_ = q.RemoveAgent(agentID)
+				defer func() {
+					if r := recover(); r != nil {
+						utils.Logger.Sugar().Errorf("Worker #%d panic for agent [ID:%s]: %v", workerID, agentID, r)
+						// Clear InFlight flag on panic
+						q.mutex.Lock()
+						if agent, exists := q.agents[agentID]; exists {
+							agent.InFlight = false
+						}
+						q.mutex.Unlock()
+					}
+				}()
+
+				q.mutex.RLock()
+				agent, exists := q.agents[agentID]
+				if !exists {
+					q.mutex.RUnlock()
+					utils.Logger.Sugar().Warnf("Worker #%d: agent [ID:%s] not found in queue", workerID, agentID)
+					return
+				}
+				// Copy what we need for the check
+				agentCopy := *agent
+				q.mutex.RUnlock()
+
+				err := q.checkAgentStatus(&agentCopy)
+
+				// Prepare status update info before acquiring lock
+				var newStatus string
+				var shouldRemove bool
+				var newRetryCount int
+
+				q.mutex.Lock()
+				// Re-check existence after acquiring lock
+				agent, exists = q.agents[agentID]
+				if !exists {
+					q.mutex.Unlock()
+					utils.Logger.Sugar().Warnf("Worker #%d: agent [ID:%s] was removed during check", workerID, agentID)
+					return
+				}
+
+				// Clear the in-flight flag
+				agent.InFlight = false
+
+				if err != nil {
+					agent.RetryRemaining--
+					newRetryCount = agent.RetryRemaining
+					if agent.RetryRemaining <= 0 {
+						newStatus = "disconnected"
+						agent.CurrentStatus = newStatus
+						shouldRemove = true
+						delete(q.agents, agentID) // Remove inline instead of calling RemoveAgent
+					} else {
+						newStatus = "unknown"
+						agent.CurrentStatus = newStatus
+					}
+				} else {
+					agent.RetryRemaining = 3
+					newRetryCount = 3
+					newStatus = "connected"
+					agent.CurrentStatus = newStatus
+				}
+				q.mutex.Unlock()
+
+				// Perform DB operations outside the lock
+				if updateErr := q.QueueRepository.UpdateAgentStatus(agentID, newStatus); updateErr != nil {
+					utils.Logger.Sugar().Errorf("Worker #%d: Failed to update agent status for [ID:%s]: %v", workerID, agentID, updateErr)
+				}
+
+				duration := time.Since(startTime)
+
+				// Log results
+				if err != nil {
+					if shouldRemove {
+						utils.Logger.Sugar().Infof("Worker #%d: Removed agent [ID:%s] after exhausting retries (took %v)", workerID, agentID, duration)
+					}
+					utils.Logger.Sugar().Errorf("Worker #%d: Error checking agent [ID:%s], attempts remaining: %v, error: %v (took %v)", workerID, agentID, newRetryCount, err, duration)
+				} else {
+					utils.Logger.Sugar().Infof("Worker #%d: Successfully checked agent [ID:%s], status: %s (took %v)", workerID, agentID, newStatus, duration)
+				}
+			}()
 		}
 	}
 }
@@ -175,8 +273,6 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		fmt.Sprintf("http://%s:%d/metrics", agent.Hostname, port),
 		fmt.Sprintf("http://%s:%d/metrics", agent.IP, port),
 	}
-
-	utils.Logger.Sugar().Infof("endpoints: %v", endpoints)
 
 	// Fetch metrics from the agent (try hostname first, then IP)
 	var (
@@ -195,9 +291,6 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 
 	// Extract metrics using the strategy
 	metricsData := strategy.ExtractMetrics(metrics, q.Metrics)
-
-	utils.Logger.Sugar().Infof("metricsData: %v", metricsData)
-	utils.Logger.Sugar().Infof("Connected agent: %v", agent.AgentID)
 
 	// Build the aggregated (DB) metrics
 	agg := AggregatedAgentMetrics{
@@ -228,9 +321,39 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 }
 
 // GetAgent returns agent by ID — test helper
+// Returns a copy to prevent external modifications
 func (q *AgentQueue) GetAgent(id string) (*AgentStatus, bool) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
 	agent, exists := q.agents[id]
-	return agent, exists
+	if !exists {
+		return nil, false
+	}
+	// Return a copy to prevent external modifications
+	agentCopy := *agent
+	return &agentCopy, true
+}
+
+// Shutdown gracefully stops all workers and the scheduler
+func (q *AgentQueue) Shutdown(timeout time.Duration) error {
+	utils.Logger.Info("Shutting down AgentQueue...")
+
+	// Signal all goroutines to stop
+	close(q.stopChan)
+
+	// Wait for graceful shutdown with timeout
+	done := make(chan struct{})
+	go func() {
+		q.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		utils.Logger.Info("AgentQueue shutdown completed successfully")
+		return nil
+	case <-time.After(timeout):
+		utils.Logger.Error("AgentQueue shutdown timeout exceeded")
+		return fmt.Errorf("shutdown timeout exceeded")
+	}
 }
