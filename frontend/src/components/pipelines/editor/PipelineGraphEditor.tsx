@@ -1,17 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetTitle,
-	SheetTrigger,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
-import { Edit, Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
 	Background,
@@ -26,8 +16,11 @@ import ReactFlow, {
 } from "reactflow";
 import GenericNode from "@/components/pipelines/editor/GenericNode";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
-import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
+import PipelineEditorHeader from "@/components/pipelines/editor/PipelineEditorHeader";
+import ReviewSheetPanel from "@/components/pipelines/editor/ReviewSheetPanel";
+import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
+import { Drawer } from "@mui/material";
 
 const PipelineEditorSheet = ({
 	pipelineId,
@@ -185,15 +178,19 @@ const PipelineEditorSheet = ({
 	};
 
 	const EditForm = async (change: any) => {
-		setIsReviewSheetOpen(false);
-		setIsEditFormOpen(true);
-		setSelectedChange(change);
-		const schema = await ComponentService.getTransporterForm(change.component_type);
-		const ui = await ComponentService.getTransporterUiSchema(change.component_type);
-		setForm(schema);
-		setUiSchema(ui);
-		setConfig(change.finalConfig);
-	};
+    setIsReviewSheetOpen(false);
+    
+    // Add a small delay before opening the edit form
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    setIsEditFormOpen(true);
+    setSelectedChange(change);
+    const schema = await ComponentService.getTransporterForm(change.component_type);
+    const ui = await ComponentService.getTransporterUiSchema(change.component_type);
+    setForm(schema);
+    setUiSchema(ui);
+    setConfig(change.finalConfig);
+};
 
 	const handleSubmit = useCallback((submittedConfig: any) => {
 		if (selectedChange) {
@@ -220,6 +217,13 @@ const PipelineEditorSheet = ({
 		[selectedChange, setNodeValueDirect, updateNodeConfig]
 	);
 
+	const handleCloseSheet = () => {
+		setIsReviewSheetOpen(false);
+		setIsEditFormOpen(false);
+		setIsEditMode(false);
+		setIsSheetOpen(false);
+	};
+
 	const onPaneClick = useCallback(() => {
 		setSelectedEdge(null);
 	}, []);
@@ -230,83 +234,65 @@ const PipelineEditorSheet = ({
 
 	return (
 		<>
-			<div className="flex justify-between items-center p-4 border-b">
-				<div className="text-xl font-medium">{name}</div>
-				<div className="flex items-center mr-6 space-x-4">
-					<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-					<Label htmlFor="edit-mode">Edit Mode</Label>
-					<Sheet
-						open={isReviewSheetOpen || isEditFormOpen}
-						onOpenChange={open => {
-							setIsReviewSheetOpen(open && !isEditFormOpen);
-							setIsEditFormOpen(open && isEditFormOpen);
-						}}>
-						<SheetTrigger asChild>
-							<Button disabled={!isEditMode}>Review</Button>
-						</SheetTrigger>
-						<SheetContent className="w-[30rem]">
-							{isReviewSheetOpen && (
-								<div>
-									<SheetTitle>Pending Changes</SheetTitle>
-									<SheetDescription>
-										<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-											{changesLog.map((change, index) => (
-												<div key={index} className="flex justify-between items-center">
-													<div className="flex flex-col">
-														<p className="text-lg">{change.type}</p>
-														<p className="text-gray-800">{change.name}</p>
-													</div>
-													<div className="flex items-center gap-3">
-														<p
-															className={`text-lg ${change.status === "deleted" ? "text-red-500" : change.status === "added" ? "text-green-500" : "text-gray-500"}`}>
-															[{change.status}]
-														</p>
-														{change.type !== "Edge" && (
-															<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
-														)}
-													</div>
-												</div>
-											))}
-										</div>
-									</SheetDescription>
-									<div className="mt-4">
-										<Button
-											onClick={handleDeployChanges}
-											className="bg-blue-500 flex items-center gap-2"
-											disabled={isDeploying}
-										>
-											{isDeploying ? (
-											<>
-												<Loader2 className="h-4 w-4 animate-spin" />
-												Deploying…
-											</>
-											) : (
-											"Deploy Changes"
-											)}
-										</Button>
-									</div>
-								</div>
-							)}
-							{isEditFormOpen && selectedChange && (
-								<NodeSidePanel
-									title={selectedChange.name}
-									formSchema={form}
-									uiSchema={uiSchema}
-									config={config}
-									setConfig={setConfig}
-									submitLabel="Apply"
-									onSubmit={handleSubmit}
-									onDiscard={() => setSelectedChange(null)}
-									showDelete={false}
-								/>
-							)}
-						</SheetContent>
-					</Sheet>
-				</div>
-			</div>
+			<PipelineEditorHeader
+				name={name}
+				isEditMode={isEditMode}
+				setIsEditMode={setIsEditMode}
+				isDeploying={isDeploying}
+				onReviewClick={() => {
+					setIsReviewSheetOpen(true);
+					setIsEditFormOpen(false);
+				}}
+				onClose={handleCloseSheet}
+			/>
+			<ReviewSheetPanel
+				open={isReviewSheetOpen}
+				onOpenChange={(open) => {
+					setIsReviewSheetOpen(open && !isEditFormOpen);
+					setIsEditFormOpen(open && isEditFormOpen);
+				}}
+				isReviewOpen={isReviewSheetOpen}
+				changesLog={changesLog}
+				onEdit={EditForm}
+				onDeploy={handleDeployChanges}
+				isDeploying={isDeploying}
+			/>
+			{isEditFormOpen && selectedChange && (
+  <Drawer
+    anchor="right"
+    open
+    onClose={() => setIsEditFormOpen(false)}
+	disableEnforceFocus
+    sx={{
+      '& .MuiDrawer-paper': {
+        width: '30rem',
+        padding: '1.5rem',
+      },
+    }}
+  >
+    <NodeSidePanel
+      title={selectedChange.name}
+      formSchema={form}
+      uiSchema={uiSchema}
+      config={config}
+      setConfig={setConfig}
+      submitLabel="Apply"
+      onSubmit={handleSubmit}
+      onDiscard={() => setIsEditFormOpen(false)}
+      showDelete={false}
+    />
+  </Drawer>
+)}
+
 			<div
 				ref={reactFlowWrapper}
-				style={{ height: "92.5vh", width: "100vw", backgroundColor: "#f9f9f9" }}>
+				style={{
+					height: "92.5vh",
+					width: "100vw",
+					backgroundColor: "#f9f9f9",
+					position: "relative",
+				}}
+			>
 				<ReactFlow
 					nodes={nodeValue}
 					edges={edgeValue}
@@ -322,7 +308,8 @@ const PipelineEditorSheet = ({
 					elementsSelectable={isEditMode}
 					onlyRenderVisibleElements
 					proOptions={{ hideAttribution: true }}
-					fitView>
+					fitView
+  				>
 					<Background />
 					<Controls />
 					<MiniMap />
@@ -344,6 +331,20 @@ const PipelineEditorSheet = ({
 						</Panel>
 					)}
 				</ReactFlow>
+				{(isReviewSheetOpen || isEditFormOpen) && (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "transparent",
+        zIndex: 5, // Below drawers but above ReactFlow
+        pointerEvents: "auto",
+      }}
+    />
+  )}
 				<div
 					style={{
 						position: "absolute",
