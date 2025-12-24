@@ -9,6 +9,8 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
+const fetchTimeout = 10 * time.Second // 10 seconds timeout for fetching metrics
+
 // MetricsHelper defines the interface for Prometheus metrics interactions.
 type MetricsHelper interface {
 	Fetch(url string) (map[string]*io_prometheus_client.MetricFamily, error)
@@ -22,7 +24,7 @@ type DefaultMetricsHelper struct{}
 func (DefaultMetricsHelper) Fetch(url string) (map[string]*io_prometheus_client.MetricFamily, error) {
 	// Create HTTP client with timeout to prevent indefinite hangs
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: fetchTimeout,
 	}
 
 	resp, err := client.Get(url)

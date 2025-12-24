@@ -267,30 +267,45 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 	// Get the appropriate metrics extraction strategy for this agent type
 	strategy := GetMetricsStrategy(agent.Type)
 
-	// Build endpoints using the strategy's port
-	port := strategy.GetPort()
-	endpoints := []string{
-		fmt.Sprintf("http://%s:%d/metrics", agent.Hostname, port),
-		fmt.Sprintf("http://%s:%d/metrics", agent.IP, port),
-	}
+	// Fetch and merge metrics from all sources defined by the strategy
+	allMetrics := make(map[string]*io_prometheus_client.MetricFamily)
+	sources := strategy.GetMetricsSources()
 
-	// Fetch metrics from the agent (try hostname first, then IP)
-	var (
-		metrics map[string]*io_prometheus_client.MetricFamily
-		err     error
-	)
-	for _, url := range endpoints {
-		metrics, err = q.Metrics.Fetch(url)
-		if err == nil {
-			break
+	for _, source := range sources {
+		// Try hostname first, then IP for each source
+		endpoints := []string{
+			fmt.Sprintf("http://%s:%d%s", agent.Hostname, source.Port, source.Path),
+			fmt.Sprintf("http://%s:%d%s", agent.IP, source.Port, source.Path),
 		}
-	}
-	if err != nil {
-		return fmt.Errorf("fetch metrics failed (hostname & IP): %w", err)
+
+		var sourceMetrics map[string]*io_prometheus_client.MetricFamily
+		var err error
+		for _, url := range endpoints {
+			sourceMetrics, err = q.Metrics.Fetch(url)
+			if err == nil {
+				break
+			}
+		}
+
+		if err != nil {
+			// If this is the first/primary source, it's a critical failure
+			if len(allMetrics) == 0 {
+				return fmt.Errorf("failed to fetch primary metrics from port %d: %w", source.Port, err)
+			}
+			// For additional sources, just log a warning
+			utils.Logger.Sugar().Warnf("Failed to fetch metrics for agent [ID:%s] from port %d%s: %v",
+				agent.AgentID, source.Port, source.Path, err)
+			continue
+		}
+
+		// Merge metrics from this source into the combined map
+		for key, value := range sourceMetrics {
+			allMetrics[key] = value
+		}
 	}
 
 	// Extract metrics using the strategy
-	metricsData := strategy.ExtractMetrics(metrics, q.Metrics)
+	metricsData := strategy.ExtractMetrics(allMetrics, q.Metrics)
 
 	// Build the aggregated (DB) metrics
 	agg := AggregatedAgentMetrics{
@@ -316,6 +331,8 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		MemoryUtilization: metricsData.MemoryUtilization,
 		Timestamp:         time.Now().Unix(),
 	}
+
+	utils.Logger.Sugar().Infof("Agent [ID:%s] metrics: %+v", agent.AgentID, metricsData)
 
 	return q.QueueRepository.UpdateAgentMetricsInDB(agg, rt)
 }
