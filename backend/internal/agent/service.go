@@ -58,7 +58,7 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		createDefaultPipelineReq.Name = req.PipelineName
 		createDefaultPipelineReq.AgentIDs = []int{int(response.ID)}
 		createDefaultPipelineReq.CreatedBy = req.StartedBy
-		createDefaultPipelineReq.PipelineGraph = constants.DefaultPipelineGraph
+		createDefaultPipelineReq.PipelineGraph = constants.DefaultOTELPipelineGraph
 		_, err := a.FrontendAgentService.CreatePipeline(createDefaultPipelineReq)
 		if err != nil {
 			return nil, err

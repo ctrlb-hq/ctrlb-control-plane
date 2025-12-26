@@ -49,15 +49,30 @@ var DefaultConfigOTEL = map[string]any{
 	},
 }
 
+var FluentBitService = map[string]any{
+	"flush":       1,
+	"log_level":   "info",
+	"http_server": "on",
+	"http_listen": "0.0.0.0",
+	"http_port":   2020,
+	"hot_reload":  "on",
+}
+
+var FluentBitPrometheusInput = map[string]any{
+	"name":            "process_exporter_metrics",
+	"tag":             "process_metrics",
+	"scrape_interval": 5,
+}
+
+var FluentBitPrometheusOutput = map[string]any{
+	"name":  "prometheus_exporter",
+	"match": "process_metrics",
+	"host":  "0.0.0.0",
+	"port":  2021,
+}
+
 var DefaultConfigFluentBit = map[string]any{
-	"service": map[string]any{
-		"flush":       1,
-		"log_level":   "info",
-		"http_server": "on",
-		"http_listen": "0.0.0.0",
-		"http_port":   2020,
-		"hot_reload":  "on",
-	},
+	"service": FluentBitService,
 	"pipeline": map[string]any{
 		"inputs": []any{
 			map[string]any{
@@ -67,29 +82,20 @@ var DefaultConfigFluentBit = map[string]any{
 				"rate":    5,
 				"samples": 10,
 			},
-			map[string]any{
-				"name":            "process_exporter_metrics",
-				"tag":             "process_metrics",
-				"scrape_interval": 5,
-			},
+			FluentBitPrometheusInput,
 		},
 		"outputs": []any{
 			map[string]any{
 				"name":   "stdout",
-				"match":  "*",
+				"match":  "dummy.log",
 				"format": "json_lines",
 			},
-			map[string]any{
-				"name":  "prometheus_exporter",
-				"match": "process_metrics",
-				"host":  "0.0.0.0",
-				"port":  2021,
-			},
+			FluentBitPrometheusOutput,
 		},
 	},
 }
 
-var DefaultPipelineGraph = models.PipelineGraph{
+var DefaultOTELPipelineGraph = models.PipelineGraph{
 	Nodes: []models.PipelineNodes{
 		{
 			ComponentID:   1,
