@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import pipelineServices from "@/services/pipeline";
-import { toast } from "@/hooks/useToast";
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface Props {
@@ -23,22 +23,19 @@ interface Props {
 
 const DeletePipelineDialog = ({ isOpen, setIsOpen, pipelineOverview }: Props) => {
 	const { resetGraph } = useGraphFlow();
-	const handleDeletePipeline = async () => {
+	const { showSnackbar } = useGlobalSnackbar();
+	const handleDeletePipeline = async () => { 
 		try {
 			if (pipelineOverview?.id) {
 				await pipelineServices.deletePipelineById(pipelineOverview.id);
 			}
-
+			showSnackbar("Pipeline deleted successfully", "success");
 			setIsOpen(false);
 			resetGraph();
 			window.location.reload();
 		} catch (error) {
 			console.error("Error deleting pipeline or collector:", error);
-			toast({
-				title: "Error",
-				description: "Failed to delete pipeline or collector",
-				variant: "destructive",
-			});
+			showSnackbar("Failed to delete pipeline or collector", "error");
 		}
 	};
 
