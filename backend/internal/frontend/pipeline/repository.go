@@ -459,7 +459,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		}
 	}
 
-	jsonConfig, err := configcompiler.CompileGraphToJSON(graph)
+	jsonConfig, err := configcompiler.CompileGraph(graph, configcompiler.AgentTypeOTEL)
 	if err != nil {
 		if shouldCommit {
 			_ = tx.Rollback()

@@ -195,7 +195,7 @@ func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHo
         if agent.Type == "fluent-bit" {
             config, err = configcompiler.CompileGraphToFluentBit(pipelineGraph)
         } else {
-            config, err = configcompiler.CompileGraphToJSON(pipelineGraph)
+            config, err = configcompiler.CompileGraph(pipelineGraph, configcompiler.AgentTypeOTEL)
         }
         
         if err != nil {
