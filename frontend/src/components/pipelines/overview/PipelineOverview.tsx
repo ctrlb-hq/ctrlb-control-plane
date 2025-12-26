@@ -1,13 +1,12 @@
 import { formatTimestampWithDate } from "@/constants";
-import { useToast } from "@/hooks/useToast";
 import agentServices from "@/services/agent";
 import pipelineServices from "@/services/pipeline";
 import { MetricData } from "@/types/pipeline.types";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-
 import { HealthChart } from "./HealthChart";
 import { getRandomChartColor } from "@/constants";
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 
 type Props = {
 	pipelineId: string;
@@ -16,8 +15,7 @@ type Props = {
 const PipelineOverview = ({ pipelineId }: Props) => {
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<any>(null);
 	const [healthMetrics, setHealthMetrics] = useState<MetricData[]>([]);
-
-	const { toast } = useToast();
+	const { showSnackbar } = useGlobalSnackbar();
 
 	const handleGetPipelineOverview = async () => {
 		try {
@@ -25,11 +23,7 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 			setPipelineOverviewData(response);
 		} catch (error) {
 			console.error("Error fetching pipeline overview:", error);
-			toast({
-				title: "Error",
-				description: "Failed to fetch pipeline overview",
-				variant: "destructive",
-			});
+			showSnackbar("Failed to fetch pipeline overview", "error");
 		}
 	};
 
@@ -39,17 +33,10 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 			await agentServices.restartAgentMonitoring(pipelineOverviewData.agent_id);
 			// Refresh the pipeline data using the existing function
 			await handleGetPipelineOverview();
-			toast({
-				title: "Success",
-				description: "Pipeline status refreshed successfully",
-			});
+			showSnackbar("Pipeline status refresh initiated", "success");
 		} catch (error) {
 			console.error("Failed to refresh pipeline status:", error);
-			toast({
-				title: "Error",
-				description: "Failed to refresh pipeline status",
-				variant: "destructive",
-			});
+			showSnackbar("Pipeline status refreshed successfully", "error");
 		}
 	};
 	const fetchHealthMetrics = async () => {
@@ -68,12 +55,10 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 			}
 		} catch (error) {
 			console.error("Error fetching health metrics:", error);
-			toast({
-				title: "Error",
-				description: error instanceof Error ? error.message : "Failed to fetch health metrics",
-				variant: "destructive",
-			});
-			// Set empty array instead of leaving previous state
+			showSnackbar(
+				error instanceof Error ? error.message : "Failed to fetch health metrics",
+				"error"
+			);
 			setHealthMetrics([]);
 		}
 	};
@@ -166,12 +151,12 @@ const PipelineOverview = ({ pipelineId }: Props) => {
 								data={metric.data_points.map(point => ({
 									timestamp: point.timestamp,
 									[metric.metric_name]:
-										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+										metric.metric_name === "memory_utilization" ? point.value/(1024*1024)  : point.value,
 								}))}
 								y_axis_data_key={metric.metric_name}
 								chart_color={getRandomChartColor(metric.metric_name)}
 								yAxisLabel={
-									metric.metric_name === "cpu_utilization" ? "CPU Utilization (%)" : "Memory Utilization (%)"
+									metric.metric_name === "cpu_utilization" ? "CPU Utilization (%)" : "Memory Utilization (MB)"
 								}
 							/>
 						</div>

@@ -5,11 +5,10 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
-
-import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands } from "@/constants";
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 
 type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
 
@@ -37,12 +36,11 @@ const AddPipelineDetails = ({
 	const [showStatus, setShowStatus] = useState(false);
 	const [status, setStatus] = useState<"success" | "failed">("failed");
 	const [_showAgentInfo, setShowAgentInfo] = useState(false);
-	const { toast } = useToast();
 	const [_isApiKeyCopied, setIsApiKeyCopied] = useState(false);
 	const [showConfigureButton, setShowConfigureButton] = useState(false);
 	const [_isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
-
+	const { showSnackbar } = useGlobalSnackbar();
 	const [formData, setFormData] = useState<formData>({
 		name: pipelineName ?? "",
 		platform: platform ?? "",
@@ -93,32 +91,26 @@ const AddPipelineDetails = ({
 	const handleCopy = async (command: string) => {
 		try {
 			await navigator.clipboard.writeText(command);
+			showSnackbar("Install command copied to clipboard", "success", 2000);
 			setIsApiKeyCopied(true);
-			const since = Math.floor(new Date().getTime() / 1000);
-			setShowConfigureButton(true);
-
-			setTimeout(() => {
-				toast({
-					title: "Copied",
-					description: "Install command copied to clipboard",
-					duration: 2000,
-				});
-			}, 1000);
-
-			setTimeout(() => setShowHeartBeat(true), 2000);
-			setTimeout(() => setShowStatus(true), 6000);
-			setTimeout(() => {
-				setShowAgentInfo(true);
-				checkAgentStatus(since);
-			}, 1000);
 		} catch (error) {
 			console.error("Clipboard copy failed:", error);
-			toast({
-				title: "Error",
-				description: "Unable to copy install command to clipboard.",
-				duration: 3000,
-			});
+			showSnackbar(
+				"Clipboard access blocked. Press ⌘ + C (Mac) or Ctrl + C (Windows) to copy manually.",
+				"error",
+				3000
+			);
 		}
+
+		const since = Math.floor(new Date().getTime() / 1000);
+		setShowConfigureButton(true);
+
+		setTimeout(() => setShowHeartBeat(true), 2000);
+		setTimeout(() => setShowStatus(true), 6000);
+		setTimeout(() => {
+			setShowAgentInfo(true);
+			checkAgentStatus(since);
+		}, 1000);
 	};
 
 	const handleTryAgain = () => {
@@ -261,7 +253,6 @@ const AddPipelineDetails = ({
 								<option value="linux">Linux</option>
 								<option value="kubernetes">Kubernetes</option>
 								<option value="macOS">macOS</option>
-								<option value="openShift">openShift</option>
 							</select>
 
 							{errors.platform && touched.platform && (
@@ -303,7 +294,7 @@ const AddPipelineDetails = ({
 													installCommands[formData.platform as keyof typeof installCommands](formData.name),
 												)
 											}
-											className="h-5 w-5 text-orange-400 cursor-pointer"
+											className="h-8 w-8 text-orange-400 cursor-pointer"
 										/>
 									)}
 								</div>
@@ -376,11 +367,11 @@ const AddPipelineDetails = ({
 										setCurrentStep(currentStep + 1);
 									} catch (error) {
 										console.error("Error initializing pipeline:", error);
-										toast({
-											title: "Error",
-											description: "Failed to initialize pipeline data. Please try again.",
-											duration: 3000,
-										});
+										showSnackbar(
+											"Failed to initialize pipeline data. Please try again.",
+											"error",
+											3000
+										);
 									}
 								}}
 								// disabled={!formData.name || !formData.platform || !EDI_API_KEY}

@@ -1,6 +1,5 @@
 import { Boxes } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
-import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -12,11 +11,10 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
-
 import "reactflow/dist/style.css";
 import PipelinYAML from "./YamlViewer";
 import PipelineOverview from "./PipelineOverview";
-
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import DeletePipelineDialog from "./DeletePipelineDialog";
 import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { Button } from "@/components/ui/button";
@@ -25,9 +23,8 @@ import { useGraphFlow } from "@/context/useGraphFlowContext";
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<PipelineOverviewInterface>();
-	const { toast } = useToast();
 	const [tabs, setTabs] = useState<string>("overview");
-
+	const { showSnackbar } = useGlobalSnackbar();
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const { changesLog, clearChangesLog } = useGraphFlow();
@@ -65,13 +62,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 			setPipelineOverviewData(response);
 		} catch (error) {
 			console.error("Error fetching pipeline overview:", error);
-			toast({
-				title: "Error",
-				description: "Failed to fetch pipeline overview",
-				variant: "destructive",
-			});
+			showSnackbar("Failed to fetch pipeline overview", "error");
 		}
-	}, [pipelineId, toast]);
+	}, [pipelineId, showSnackbar]);
 
 
 	useEffect(() => {
