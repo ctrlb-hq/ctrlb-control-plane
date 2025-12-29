@@ -2,11 +2,11 @@ package configcompiler
 
 import (
 	"fmt"
+	"encoding/json"
 	"testing"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Helper function to create a sample pipeline graph
@@ -61,7 +61,11 @@ func createSampleGraph2() models.PipelineGraph {
 				ComponentRole:    "receiver",
 				SupportedSignals: []string{"traces", "logs"},
 				Config: map[string]any{
-					"endpoint": "0.0.0.0:4317",
+					"protocols": map[string]any{
+						"grpc": map[string]any{
+							"endpoint": "0.0.0.0:4317",
+						},
+					},
 				},
 			},
 			{
@@ -81,7 +85,11 @@ func createSampleGraph2() models.PipelineGraph {
 				ComponentRole:    "exporter",
 				SupportedSignals: []string{"traces", "logs"},
 				Config: map[string]any{
-					"endpoint": "example.com:4317",
+					"protocols": map[string]any{
+						"grpc": map[string]any{
+							"endpoint": "example.com:4317",
+						},
+					},
 				},
 			},
 			{
@@ -91,17 +99,21 @@ func createSampleGraph2() models.PipelineGraph {
 				ComponentRole:    "receiver",
 				SupportedSignals: []string{"logs"},
 				Config: map[string]any{
-					"endpoint": "0.0.0.0:4317",
+					"protocols": map[string]any{
+						"grpc": map[string]any{
+							"endpoint": "0.0.0.0:4318",
+						},
+					},
 				},
 			},
 			{
 				ComponentID:      5,
-				Name:             "processor_batch",
+				Name:             "processor_batch_two",
 				ComponentName:    "batch_processor",
 				ComponentRole:    "processor",
 				SupportedSignals: []string{"logs"},
 				Config: map[string]any{
-					"timeout": "10s",
+					"timeout": "5s",
 				},
 			},
 		},
@@ -135,7 +147,7 @@ func createSampleFluentBitGraph() models.PipelineGraph {
 				ComponentRole:    "filter",
 				SupportedSignals: []string{"logs"},
 				Config: map[string]any{
-					"regex": "error",
+					"regex": "log error",
 				},
 			},
 			{
@@ -156,11 +168,17 @@ func createSampleFluentBitGraph() models.PipelineGraph {
 	}
 }
 
-// Test CompileGraph with OTEL agent type
+// =============================================================================
+// CompileGraph Tests
+// =============================================================================
+
 func TestCompileGraph_OTEL(t *testing.T) {
 	graph := createSampleGraph()
 
 	result, err := CompileGraph(graph, AgentTypeOTEL)
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(b))
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -174,11 +192,13 @@ func TestCompileGraph_OTEL(t *testing.T) {
 	assert.Contains(t, service, "telemetry")
 }
 
-// Test CompileGraph with FluentBit agent type
 func TestCompileGraph_FluentBit(t *testing.T) {
 	graph := createSampleFluentBitGraph()
 
 	result, err := CompileGraph(graph, AgentTypeFluentBit)
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(b))
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -190,14 +210,12 @@ func TestCompileGraph_FluentBit(t *testing.T) {
 	assert.Contains(t, pipeline, "filters")
 	assert.Contains(t, pipeline, "outputs")
 
-	// Verify inputs/outputs exist
 	inputs := pipeline["inputs"].([]any)
 	outputs := pipeline["outputs"].([]any)
 	assert.NotEmpty(t, inputs)
 	assert.NotEmpty(t, outputs)
 }
 
-// Test CompileGraph with unsupported agent type
 func TestCompileGraph_UnsupportedAgentType(t *testing.T) {
 	graph := createSampleGraph()
 
@@ -208,11 +226,14 @@ func TestCompileGraph_UnsupportedAgentType(t *testing.T) {
 	assert.Contains(t, err.Error(), "unsupported agent type")
 }
 
-// Test CompileGraphToJSON_Success (existing test)
-func TestCompileGraphToJSON_Success(t *testing.T) {
+// =============================================================================
+// OTEL Compiler Tests
+// =============================================================================
+
+func TestCompileGraphToOTEL_Success(t *testing.T) {
 	graph := createSampleGraph()
 
-	result, err := CompileGraphToJSON(graph)
+	result, err := CompileGraphToOTEL(graph)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Contains(t, *result, "receivers")
@@ -223,13 +244,20 @@ func TestCompileGraphToJSON_Success(t *testing.T) {
 	service := (*result)["service"].(map[string]any)
 	assert.Contains(t, service, "pipelines")
 	assert.Contains(t, service, "telemetry")
+
+	// Verify pipelines were created for both signals (metrics and logs)
+	pipelines := service["pipelines"].(map[string]any)
+	assert.GreaterOrEqual(t, len(pipelines), 1, "Should have at least 1 pipeline")
 }
 
-func TestCompileGraphToJSON_Success2(t *testing.T) {
+func TestCompileGraphToOTEL_MultiPathGraph(t *testing.T) {
 	graph := createSampleGraph2()
 
-	result, err := CompileGraphToJSON(graph)
-	fmt.Println(result)
+	result, err := CompileGraphToOTEL(graph)
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(b))
+
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Contains(t, *result, "receivers")
@@ -240,18 +268,292 @@ func TestCompileGraphToJSON_Success2(t *testing.T) {
 	service := (*result)["service"].(map[string]any)
 	assert.Contains(t, service, "pipelines")
 	assert.Contains(t, service, "telemetry")
+
+	// The graph has two separate paths that share an exporter:
+	// Path 1: R1 -> P1 -> E1 (traces)
+	// Path 2: R2 -> P2 -> E1 (logs)
+	// These should create separate pipelines
+	pipelines := service["pipelines"].(map[string]any)
+	assert.GreaterOrEqual(t, len(pipelines), 2, "Should have at least 2 pipelines for different paths")
 }
 
-// Test CompileGraphToJSON_EmptyGraph (existing test)
-func TestCompileGraphToJSON_EmptyGraph(t *testing.T) {
+func TestCompileGraphToOTEL_EmptyGraph(t *testing.T) {
 	graph := models.PipelineGraph{}
-	result, err := CompileGraphToJSON(graph)
+	result, err := CompileGraphToOTEL(graph)
 	assert.Error(t, err)
 	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "empty pipeline graph")
 }
 
-// Test CompileGraphToFluentBit_Success
+func TestCompileGraphToOTEL_NoReceivers(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "exporter",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "at least one receiver")
+}
+
+func TestCompileGraphToOTEL_NoExporters(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "receiver",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "at least one exporter")
+}
+
+func TestCompileGraphToOTEL_WithCycle(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "receiver",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      2,
+				Name:             "processor",
+				ComponentName:    "batch_processor",
+				ComponentRole:    "processor",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      3,
+				Name:             "exporter",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+			{Source: "2", Target: "3"},
+			{Source: "3", Target: "1"}, // Cycle
+		},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "cycle detected")
+}
+
+func TestCompileGraphToOTEL_FanIn(t *testing.T) {
+	// Two receivers feeding into one processor -> one exporter
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "receiver_one",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"endpoint": "0.0.0.0:4317"},
+			},
+			{
+				ComponentID:      2,
+				Name:             "receiver_two",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"endpoint": "0.0.0.0:4318"},
+			},
+			{
+				ComponentID:      3,
+				Name:             "processor",
+				ComponentName:    "batch_processor",
+				ComponentRole:    "processor",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      4,
+				Name:             "exporter",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "3"},
+			{Source: "2", Target: "3"},
+			{Source: "3", Target: "4"},
+		},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	service := (*result)["service"].(map[string]any)
+	pipelines := service["pipelines"].(map[string]any)
+
+	// Should have one pipeline with multiple receivers
+	assert.GreaterOrEqual(t, len(pipelines), 1)
+
+	// Find a logs pipeline and verify it has 2 receivers
+	for name, p := range pipelines {
+		if name[:4] == "logs" {
+			pipeline := p.(map[string]any)
+			receivers := pipeline["receivers"].([]string)
+			assert.Len(t, receivers, 2, "Fan-in pipeline should have 2 receivers")
+		}
+	}
+}
+
+func TestCompileGraphToOTEL_FanOut(t *testing.T) {
+	// One receiver -> one processor -> two exporters
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "receiver",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      2,
+				Name:             "processor",
+				ComponentName:    "batch_processor",
+				ComponentRole:    "processor",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      3,
+				Name:             "exporter_one",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"endpoint": "backend1:4317"},
+			},
+			{
+				ComponentID:      4,
+				Name:             "exporter_two",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"endpoint": "backend2:4317"},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+			{Source: "2", Target: "3"},
+			{Source: "2", Target: "4"},
+		},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	service := (*result)["service"].(map[string]any)
+	pipelines := service["pipelines"].(map[string]any)
+	assert.GreaterOrEqual(t, len(pipelines), 1)
+
+	// Find a logs pipeline and verify it has 2 exporters
+	for name, p := range pipelines {
+		if name[:4] == "logs" {
+			pipeline := p.(map[string]any)
+			exporters := pipeline["exporters"].([]string)
+			assert.Len(t, exporters, 2, "Fan-out pipeline should have 2 exporters")
+		}
+	}
+}
+
+func TestCompileGraphToOTEL_DisconnectedComponents(t *testing.T) {
+	// Two completely separate pipelines
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			// Pipeline 1
+			{
+				ComponentID:      1,
+				Name:             "receiver_one",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      2,
+				Name:             "exporter_one",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			// Pipeline 2
+			{
+				ComponentID:      3,
+				Name:             "receiver_two",
+				ComponentName:    "otlp_receiver",
+				ComponentRole:    "receiver",
+				SupportedSignals: []string{"metrics"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      4,
+				Name:             "exporter_two",
+				ComponentName:    "otlp_exporter",
+				ComponentRole:    "exporter",
+				SupportedSignals: []string{"metrics"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+			{Source: "3", Target: "4"},
+		},
+	}
+
+	result, err := CompileGraphToOTEL(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	service := (*result)["service"].(map[string]any)
+	pipelines := service["pipelines"].(map[string]any)
+
+	// Should have 2 separate pipelines
+	assert.GreaterOrEqual(t, len(pipelines), 2, "Should have at least 2 pipelines for disconnected components")
+}
+
+// =============================================================================
+// Fluent Bit Compiler Tests
+// =============================================================================
+
 func TestCompileGraphToFluentBit_Success(t *testing.T) {
 	graph := createSampleFluentBitGraph()
 
@@ -283,7 +585,7 @@ func TestCompileGraphToFluentBit_Success(t *testing.T) {
 	assert.Contains(t, firstInput, "tag")
 	assert.Contains(t, firstInput, "alias")
 
-	// Verify outputs have required fields
+	// Verify outputs have required fields (skip prometheus output)
 	outputs := pipeline["outputs"].([]any)
 	assert.NotEmpty(t, outputs)
 	firstOutput := outputs[0].(map[string]any)
@@ -291,7 +593,6 @@ func TestCompileGraphToFluentBit_Success(t *testing.T) {
 	assert.Contains(t, firstOutput, "match")
 }
 
-// Test CompileGraphToFluentBit_EmptyGraph
 func TestCompileGraphToFluentBit_EmptyGraph(t *testing.T) {
 	graph := models.PipelineGraph{}
 
@@ -302,236 +603,14 @@ func TestCompileGraphToFluentBit_EmptyGraph(t *testing.T) {
 	assert.Contains(t, err.Error(), "empty pipeline graph")
 }
 
-// Test analyzeGraphStructure with valid graph
-func TestAnalyzeGraphStructure_Success(t *testing.T) {
-	graph := createSampleGraph()
-
-	components, err := analyzeGraphStructure(graph, "Test")
-
-	assert.NoError(t, err)
-	assert.NotNil(t, components)
-	// BFS follows directed edges, so depending on iteration order,
-	// nodes might be grouped differently. The important thing is all nodes are found.
-	assert.GreaterOrEqual(t, len(components), 1, "Should have at least 1 component")
-
-	// Count total nodes across all components
-	totalNodes := 0
-	for _, component := range components {
-		totalNodes += len(component)
-	}
-	assert.Equal(t, 3, totalNodes, "All 3 nodes should be accounted for")
-}
-
-// Test analyzeGraphStructure with empty graph
-func TestAnalyzeGraphStructure_EmptyGraph(t *testing.T) {
-	graph := models.PipelineGraph{}
-
-	components, err := analyzeGraphStructure(graph, "Test")
-
-	assert.Error(t, err)
-	assert.Nil(t, components)
-	assert.Contains(t, err.Error(), "empty pipeline graph")
-}
-
-// Test analyzeGraphStructure with invalid edge source
-func TestAnalyzeGraphStructure_InvalidEdgeSource(t *testing.T) {
-	graph := models.PipelineGraph{
-		Nodes: []models.PipelineNodes{
-			{
-				ComponentID:      1,
-				Name:             "receiver",
-				ComponentName:    "otlp_receiver",
-				ComponentRole:    "receiver",
-				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
-			},
-		},
-		Edges: []models.PipelineEdges{
-			{Source: "999", Target: "1"}, // Invalid source
-		},
-	}
-
-	components, err := analyzeGraphStructure(graph, "Test")
-
-	assert.Error(t, err)
-	assert.Nil(t, components)
-	assert.Contains(t, err.Error(), "non-existent source node")
-}
-
-// Test analyzeGraphStructure with invalid edge target
-func TestAnalyzeGraphStructure_InvalidEdgeTarget(t *testing.T) {
-	graph := models.PipelineGraph{
-		Nodes: []models.PipelineNodes{
-			{
-				ComponentID:      1,
-				Name:             "receiver",
-				ComponentName:    "otlp_receiver",
-				ComponentRole:    "receiver",
-				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
-			},
-		},
-		Edges: []models.PipelineEdges{
-			{Source: "1", Target: "999"}, // Invalid target
-		},
-	}
-
-	components, err := analyzeGraphStructure(graph, "Test")
-
-	assert.Error(t, err)
-	assert.Nil(t, components)
-	assert.Contains(t, err.Error(), "non-existent target node")
-}
-
-// Test analyzeGraphStructure with multiple disconnected components
-func TestAnalyzeGraphStructure_MultipleComponents(t *testing.T) {
-	graph := models.PipelineGraph{
-		Nodes: []models.PipelineNodes{
-			// Component 1: r1 -> p1 -> e1
-			{ComponentID: 1, Name: "r1", ComponentName: "receiver1", ComponentRole: "receiver", SupportedSignals: []string{"logs"}, Config: map[string]any{}},
-			{ComponentID: 2, Name: "p1", ComponentName: "processor1", ComponentRole: "processor", SupportedSignals: []string{"logs"}, Config: map[string]any{}},
-			{ComponentID: 3, Name: "e1", ComponentName: "exporter1", ComponentRole: "exporter", SupportedSignals: []string{"logs"}, Config: map[string]any{}},
-			// Component 2: r2 -> e2 (completely disconnected from component 1)
-			{ComponentID: 4, Name: "r2", ComponentName: "receiver2", ComponentRole: "receiver", SupportedSignals: []string{"logs"}, Config: map[string]any{}},
-			{ComponentID: 5, Name: "e2", ComponentName: "exporter2", ComponentRole: "exporter", SupportedSignals: []string{"logs"}, Config: map[string]any{}},
-		},
-		Edges: []models.PipelineEdges{
-			{Source: "1", Target: "2"}, // Component 1
-			{Source: "2", Target: "3"}, // Component 1
-			{Source: "4", Target: "5"}, // Component 2
-		},
-	}
-
-	components, err := analyzeGraphStructure(graph, "Test")
-
-	assert.NoError(t, err)
-	// Note: BFS follows directed edges, so depending on iteration order,
-	// we might get different component groupings. The important thing is
-	// that all nodes are accounted for and properly grouped.
-	assert.GreaterOrEqual(t, len(components), 2, "Should have at least 2 components")
-
-	// Count total nodes across all components
-	totalNodes := 0
-	for _, component := range components {
-		totalNodes += len(component)
-	}
-	assert.Equal(t, 5, totalNodes, "All 5 nodes should be accounted for")
-}
-
-// Test buildOTELConfig with valid components
-func TestBuildOTELConfig_Success(t *testing.T) {
-	components := [][]models.PipelineNodes{
-		{
-			{
-				ComponentID:      1,
-				Name:             "receiver_one",
-				ComponentName:    "otlp_receiver",
-				ComponentRole:    "receiver",
-				SupportedSignals: []string{"metrics", "logs"},
-				Config:           map[string]any{"endpoint": "0.0.0.0:4317"},
-			},
-			{
-				ComponentID:      2,
-				Name:             "exporter_one",
-				ComponentName:    "otlp_grpc_exporter",
-				ComponentRole:    "exporter",
-				SupportedSignals: []string{"metrics", "logs"},
-				Config:           map[string]any{"endpoint": "example.com:4317"},
-			},
-		},
-	}
-
-	receivers, processors, exporters, pipelines, err := buildOTELConfig(components)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, receivers)
-	assert.NotNil(t, processors)
-	assert.NotNil(t, exporters)
-	assert.NotNil(t, pipelines)
-	assert.NotEmpty(t, receivers)
-	assert.NotEmpty(t, exporters)
-	assert.NotEmpty(t, pipelines)
-
-	// Verify pipelines were created for both signals
-	assert.Len(t, pipelines, 2) // metrics/pipeline_1 and logs/pipeline_1
-}
-
-// Test buildOTELConfig with no supported signals
-func TestBuildOTELConfig_NoSupportedSignals(t *testing.T) {
-	components := [][]models.PipelineNodes{
-		{
-			{
-				ComponentID:      1,
-				Name:             "receiver",
-				ComponentName:    "receiver",
-				ComponentRole:    "receiver",
-				SupportedSignals: []string{}, // No signals
-				Config:           map[string]any{},
-			},
-		},
-	}
-
-	_, _, _, _, err := buildOTELConfig(components)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no supported signals")
-}
-
-// Test buildFluentBitConfig with valid components
-func TestBuildFluentBitConfig_Success(t *testing.T) {
-	graph := models.PipelineGraph{
-		Nodes: []models.PipelineNodes{
-			{
-				ComponentID:      1,
-				Name:             "tail_input",
-				ComponentName:    "tail",
-				ComponentRole:    "input",
-				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{"path": "/var/log/*.log"},
-			},
-			{
-				ComponentID:      2,
-				Name:             "stdout_output",
-				ComponentName:    "stdout",
-				ComponentRole:    "output",
-				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{"format": "json"},
-			},
-		},
-		Edges: []models.PipelineEdges{
-			{Source: "1", Target: "2"},
-		},
-	}
-
-	inputs, filters, outputs, err := buildFluentBitConfig(graph)
-
-	assert.NoError(t, err)
-	assert.NotEmpty(t, inputs)
-	assert.NotEmpty(t, outputs)
-	assert.Empty(t, filters) // No filters in this test
-	assert.Len(t, inputs, 1)
-	assert.Len(t, outputs, 1)
-
-	// Verify tag was added to input
-	input := inputs[0].(map[string]any)
-	assert.Contains(t, input, "tag")
-	assert.Contains(t, input, "name")
-	assert.Contains(t, input, "alias")
-
-	// Verify match was added to output
-	output := outputs[0].(map[string]any)
-	assert.Contains(t, output, "match")
-}
-
-// Test buildFluentBitConfig missing input
-func TestBuildFluentBitConfig_MissingInput(t *testing.T) {
+func TestCompileGraphToFluentBit_MissingInput(t *testing.T) {
 	graph := models.PipelineGraph{
 		Nodes: []models.PipelineNodes{
 			{
 				ComponentID:      1,
 				Name:             "output",
 				ComponentName:    "stdout",
-				ComponentRole:    "output", // Only output, no input
+				ComponentRole:    "output",
 				SupportedSignals: []string{"logs"},
 				Config:           map[string]any{},
 			},
@@ -539,21 +618,21 @@ func TestBuildFluentBitConfig_MissingInput(t *testing.T) {
 		Edges: []models.PipelineEdges{},
 	}
 
-	_, _, _, err := buildFluentBitConfig(graph)
+	result, err := CompileGraphToFluentBit(graph)
 
 	assert.Error(t, err)
+	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "at least one input")
 }
 
-// Test buildFluentBitConfig missing output
-func TestBuildFluentBitConfig_MissingOutput(t *testing.T) {
+func TestCompileGraphToFluentBit_MissingOutput(t *testing.T) {
 	graph := models.PipelineGraph{
 		Nodes: []models.PipelineNodes{
 			{
 				ComponentID:      1,
 				Name:             "input",
 				ComponentName:    "tail",
-				ComponentRole:    "input", // Only input, no output
+				ComponentRole:    "input",
 				SupportedSignals: []string{"logs"},
 				Config:           map[string]any{},
 			},
@@ -561,14 +640,14 @@ func TestBuildFluentBitConfig_MissingOutput(t *testing.T) {
 		Edges: []models.PipelineEdges{},
 	}
 
-	_, _, _, err := buildFluentBitConfig(graph)
+	result, err := CompileGraphToFluentBit(graph)
 
 	assert.Error(t, err)
+	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "at least one output")
 }
 
-// Test buildFluentBitConfig with filters
-func TestBuildFluentBitConfig_WithFilters(t *testing.T) {
+func TestCompileGraphToFluentBit_WithFilters(t *testing.T) {
 	graph := models.PipelineGraph{
 		Nodes: []models.PipelineNodes{
 			{
@@ -602,64 +681,664 @@ func TestBuildFluentBitConfig_WithFilters(t *testing.T) {
 		},
 	}
 
-	inputs, filters, outputs, err := buildFluentBitConfig(graph)
+	result, err := CompileGraphToFluentBit(graph)
 
 	assert.NoError(t, err)
-	assert.Len(t, inputs, 1)
+	assert.NotNil(t, result)
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	filters := pipeline["filters"].([]any)
+
 	assert.Len(t, filters, 1)
-	assert.Len(t, outputs, 1)
 
 	// Verify match was added to filter
 	filter := filters[0].(map[string]any)
-	require.Contains(t, filter, "match")
-	// The match pattern should include the input tag pattern
+	assert.Contains(t, filter, "match")
 	assert.NotEmpty(t, filter["match"])
 }
 
-// Test intersectSupportedSignals
-func TestIntersectSupportedSignals(t *testing.T) {
-	testCases := []struct {
-		name     string
-		first    []string
-		second   []string
-		expected []string
-	}{
-		{
-			name:     "Common signals",
-			first:    []string{"logs", "metrics", "traces"},
-			second:   []string{"logs", "metrics"},
-			expected: []string{"logs", "metrics"},
+func TestCompileGraphToFluentBit_WithCycle(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "input",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      2,
+				Name:             "filter1",
+				ComponentName:    "grep",
+				ComponentRole:    "filter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      3,
+				Name:             "filter2",
+				ComponentName:    "modify",
+				ComponentRole:    "filter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      4,
+				Name:             "output",
+				ComponentName:    "stdout",
+				ComponentRole:    "output",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
 		},
-		{
-			name:     "No common signals",
-			first:    []string{"logs"},
-			second:   []string{"metrics"},
-			expected: []string{},
-		},
-		{
-			name:     "Identical signals",
-			first:    []string{"logs", "metrics"},
-			second:   []string{"logs", "metrics"},
-			expected: []string{"logs", "metrics"},
-		},
-		{
-			name:     "Empty first",
-			first:    []string{},
-			second:   []string{"logs"},
-			expected: []string{},
-		},
-		{
-			name:     "Empty second",
-			first:    []string{"logs"},
-			second:   []string{},
-			expected: []string{},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+			{Source: "2", Target: "3"},
+			{Source: "3", Target: "2"}, // Cycle
+			{Source: "3", Target: "4"},
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := intersectSupportedSignals(tc.first, tc.second)
-			assert.Equal(t, tc.expected, result)
-		})
+	result, err := CompileGraphToFluentBit(graph)
+
+	// New implementation detects cycles
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "cycle detected")
+}
+
+func TestCompileGraphToFluentBit_MultipleInputsSameOutput_Incompatible(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "tail_input",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"path": "/var/log/app.log"},
+			},
+			{
+				ComponentID:      2,
+				Name:             "stdin_input",
+				ComponentName:    "stdin",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+			{
+				ComponentID:      3,
+				Name:             "grep_filter",
+				ComponentName:    "grep",
+				ComponentRole:    "filter",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"regex": "error"},
+			},
+			{
+				ComponentID:      4,
+				Name:             "stdout_output",
+				ComponentName:    "stdout",
+				ComponentRole:    "output",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"format": "json"},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "3"},
+			{Source: "2", Target: "3"},
+			{Source: "3", Target: "4"},
+		},
 	}
+
+	result, err := CompileGraphToFluentBit(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	inputs := pipeline["inputs"].([]any)
+	filters := pipeline["filters"].([]any)
+	outputs := pipeline["outputs"].([]any)
+
+	// Should have 2 user inputs + 1 prometheus input = 3
+	assert.Len(t, inputs, 3, "Should have 2 user inputs + 1 prometheus input")
+
+	// Since inputs have different plugin prefixes (tail vs stdin),
+	// filter and output should be expanded into 2 instances each
+	assert.Len(t, filters, 2, "Should have 2 filter instances for incompatible inputs")
+
+	// 2 user output instances + 1 prometheus output = 3
+	assert.Len(t, outputs, 3, "Should have 2 user output instances + 1 prometheus output")
+
+	// Verify each filter has a specific match pattern (not wildcard)
+	for _, f := range filters {
+		filterMap := f.(map[string]any)
+		match := filterMap["match"].(string)
+		assert.NotEqual(t, "*", match, "Filter should not use wildcard")
+	}
+
+	// Verify user outputs have specific match patterns
+	userOutputCount := 0
+	for _, o := range outputs {
+		outputMap := o.(map[string]any)
+		if outputMap["name"] == "stdout" {
+			userOutputCount++
+			match := outputMap["match"].(string)
+			assert.NotEqual(t, "*", match, "User output should not use wildcard")
+		}
+	}
+	assert.Equal(t, 2, userOutputCount, "Should have 2 stdout output instances")
+}
+
+func TestCompileGraphToFluentBit_MultipleInputsSameType(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "tail_app",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"path": "/var/log/app.log"},
+			},
+			{
+				ComponentID:      2,
+				Name:             "tail_system",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"path": "/var/log/syslog"},
+			},
+			{
+				ComponentID:      3,
+				Name:             "stdout_output",
+				ComponentName:    "stdout",
+				ComponentRole:    "output",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "3"},
+			{Source: "2", Target: "3"},
+		},
+	}
+
+	result, err := CompileGraphToFluentBit(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	inputs := pipeline["inputs"].([]any)
+	outputs := pipeline["outputs"].([]any)
+
+	// 2 user inputs + 1 prometheus input
+	assert.GreaterOrEqual(t, len(inputs), 2)
+
+	// Since both inputs are "tail" (same plugin), output should NOT be expanded
+	// Output count = 1 user output + 1 prometheus output
+	assert.Len(t, outputs, 2, "Should have 1 user output + 1 prometheus output")
+
+	// Verify output match pattern starts with "tail"
+	firstOutput := outputs[0].(map[string]any)
+	matchPattern := firstOutput["match"].(string)
+	assert.True(t, len(matchPattern) >= 4 && matchPattern[0:4] == "tail",
+		"Expected match pattern to start with 'tail', got: %s", matchPattern)
+}
+
+func TestCompileGraphToFluentBit_DirectInputToOutput(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "tail_input",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"path": "/var/log/*.log"},
+			},
+			{
+				ComponentID:      2,
+				Name:             "stdout_output",
+				ComponentName:    "stdout",
+				ComponentRole:    "output",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{"format": "json"},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+		},
+	}
+
+	result, err := CompileGraphToFluentBit(graph)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	filters := pipeline["filters"].([]any)
+
+	// No filters in this graph
+	assert.Empty(t, filters)
+}
+
+func TestCompileGraphToFluentBit_UserProvidedTag(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{
+				ComponentID:      1,
+				Name:             "tail_input",
+				ComponentName:    "tail",
+				ComponentRole:    "input",
+				SupportedSignals: []string{"logs"},
+				Config: map[string]any{
+					"path": "/var/log/*.log",
+					"tag":  "custom.mytag",
+				},
+			},
+			{
+				ComponentID:      2,
+				Name:             "stdout_output",
+				ComponentName:    "stdout",
+				ComponentRole:    "output",
+				SupportedSignals: []string{"logs"},
+				Config:           map[string]any{},
+			},
+		},
+		Edges: []models.PipelineEdges{
+			{Source: "1", Target: "2"},
+		},
+	}
+
+	result, err := CompileGraphToFluentBit(graph)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	inputs := pipeline["inputs"].([]any)
+
+	// Find the user input (not prometheus)
+	var userInput map[string]any
+	for _, inp := range inputs {
+		input := inp.(map[string]any)
+		if input["name"] == "tail" {
+			userInput = input
+			break
+		}
+	}
+
+	assert.NotNil(t, userInput)
+	assert.Equal(t, "custom.mytag", userInput["tag"], "Should preserve user-provided tag")
+}
+
+// =============================================================================
+// Graph Utility Tests
+// =============================================================================
+
+func TestValidateGraph(t *testing.T) {
+	t.Run("empty graph", func(t *testing.T) {
+		graph := models.PipelineGraph{}
+		err := ValidateGraph(graph)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "empty pipeline graph")
+	})
+
+	t.Run("invalid edge source", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "node1"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "999", Target: "1"},
+			},
+		}
+		err := ValidateGraph(graph)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "non-existent source")
+	})
+
+	t.Run("invalid edge target", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "node1"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "999"},
+			},
+		}
+		err := ValidateGraph(graph)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "non-existent target")
+	})
+
+	t.Run("valid graph", func(t *testing.T) {
+		graph := createSampleGraph()
+		err := ValidateGraph(graph)
+		assert.NoError(t, err)
+	})
+}
+
+func TestBuildGraphState(t *testing.T) {
+	graph := createSampleGraph()
+	state := BuildGraphState(graph)
+
+	assert.Len(t, state.NodesByID, 3)
+	assert.Contains(t, state.OutEdges, "1")
+	assert.Contains(t, state.OutEdges["1"], "2")
+	assert.Contains(t, state.InEdges, "2")
+	assert.Contains(t, state.InEdges["2"], "1")
+}
+
+func TestDetectCycle(t *testing.T) {
+	t.Run("no cycle - linear", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "2", Target: "3"},
+			},
+		}
+		state := BuildGraphState(graph)
+		cycle := DetectCycle(state)
+		assert.Nil(t, cycle)
+	})
+
+	t.Run("no cycle - diamond", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+				{ComponentID: 4, Name: "d"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "1", Target: "3"},
+				{Source: "2", Target: "4"},
+				{Source: "3", Target: "4"},
+			},
+		}
+		state := BuildGraphState(graph)
+		cycle := DetectCycle(state)
+		assert.Nil(t, cycle)
+	})
+
+	t.Run("self loop", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "1"},
+			},
+		}
+		state := BuildGraphState(graph)
+		cycle := DetectCycle(state)
+		assert.NotNil(t, cycle)
+	})
+
+	t.Run("simple cycle", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "2", Target: "3"},
+				{Source: "3", Target: "1"},
+			},
+		}
+		state := BuildGraphState(graph)
+		cycle := DetectCycle(state)
+		assert.NotNil(t, cycle)
+		assert.GreaterOrEqual(t, len(cycle), 2)
+	})
+}
+
+func TestTopologicalSort(t *testing.T) {
+	t.Run("linear graph", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "2", Target: "3"},
+			},
+		}
+		state := BuildGraphState(graph)
+
+		sorted, err := TopologicalSort([]string{"1", "2", "3"}, state)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"1", "2", "3"}, sorted)
+	})
+
+	t.Run("diamond graph", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+				{ComponentID: 4, Name: "d"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "1", Target: "3"},
+				{Source: "2", Target: "4"},
+				{Source: "3", Target: "4"},
+			},
+		}
+		state := BuildGraphState(graph)
+
+		sorted, err := TopologicalSort([]string{"1", "2", "3", "4"}, state)
+		assert.NoError(t, err)
+
+		// 1 must come first, 4 must come last
+		assert.Equal(t, "1", sorted[0])
+		assert.Equal(t, "4", sorted[3])
+	})
+
+	t.Run("subset of nodes", func(t *testing.T) {
+		graph := models.PipelineGraph{
+			Nodes: []models.PipelineNodes{
+				{ComponentID: 1, Name: "a"},
+				{ComponentID: 2, Name: "b"},
+				{ComponentID: 3, Name: "c"},
+			},
+			Edges: []models.PipelineEdges{
+				{Source: "1", Target: "2"},
+				{Source: "2", Target: "3"},
+			},
+		}
+		state := BuildGraphState(graph)
+
+		// Only sort nodes 2 and 3
+		sorted, err := TopologicalSort([]string{"2", "3"}, state)
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"2", "3"}, sorted)
+	})
+}
+
+func TestIntersectSignals(t *testing.T) {
+	t.Run("common signals", func(t *testing.T) {
+		nodes := []models.PipelineNodes{
+			{SupportedSignals: []string{"logs", "metrics", "traces"}},
+			{SupportedSignals: []string{"logs", "metrics"}},
+			{SupportedSignals: []string{"logs"}},
+		}
+
+		result := IntersectSignals(nodes)
+		assert.Equal(t, []string{"logs"}, result)
+	})
+
+	t.Run("no common signals", func(t *testing.T) {
+		nodes := []models.PipelineNodes{
+			{SupportedSignals: []string{"logs"}},
+			{SupportedSignals: []string{"metrics"}},
+		}
+
+		result := IntersectSignals(nodes)
+		assert.Empty(t, result)
+	})
+
+	t.Run("identical signals", func(t *testing.T) {
+		nodes := []models.PipelineNodes{
+			{SupportedSignals: []string{"logs", "metrics"}},
+			{SupportedSignals: []string{"logs", "metrics"}},
+		}
+
+		result := IntersectSignals(nodes)
+		assert.Len(t, result, 2)
+		assert.Contains(t, result, "logs")
+		assert.Contains(t, result, "metrics")
+	})
+
+	t.Run("empty nodes", func(t *testing.T) {
+		result := IntersectSignals([]models.PipelineNodes{})
+		assert.Nil(t, result)
+	})
+
+	t.Run("single node", func(t *testing.T) {
+		nodes := []models.PipelineNodes{
+			{SupportedSignals: []string{"logs", "metrics"}},
+		}
+
+		result := IntersectSignals(nodes)
+		assert.Len(t, result, 2)
+	})
+}
+
+func TestGetNodesByRole(t *testing.T) {
+	graph := models.PipelineGraph{
+		Nodes: []models.PipelineNodes{
+			{ComponentID: 1, ComponentRole: "receiver"},
+			{ComponentID: 2, ComponentRole: "processor"},
+			{ComponentID: 3, ComponentRole: "exporter"},
+			{ComponentID: 4, ComponentRole: "input"},
+			{ComponentID: 5, ComponentRole: "filter"},
+			{ComponentID: 6, ComponentRole: "output"},
+		},
+		Edges: []models.PipelineEdges{},
+	}
+
+	state := BuildGraphState(graph)
+	receivers, processors, exporters, inputs, filters, outputs := GetNodesByRole(state)
+
+	assert.Len(t, receivers, 1)
+	assert.Len(t, processors, 1)
+	assert.Len(t, exporters, 1)
+	assert.Len(t, inputs, 1)
+	assert.Len(t, filters, 1)
+	assert.Len(t, outputs, 1)
+}
+
+// =============================================================================
+// Alias Generation Tests
+// =============================================================================
+
+func TestGenerateOTELAlias(t *testing.T) {
+	node := models.PipelineNodes{
+		Name:          "my_receiver",
+		ComponentName: "otlp_receiver",
+		Config:        map[string]any{"endpoint": "0.0.0.0:4317"},
+	}
+
+	alias := GenerateOTELAlias(node)
+
+	// Verify the alias has the expected format: type/name_hash
+	assert.Contains(t, alias, "otlp/")
+	assert.Contains(t, alias, "my_receiver") // The actual name format
+	assert.Contains(t, alias, "_")           // Should have underscore before hash
+}
+
+func TestGenerateFBAlias(t *testing.T) {
+	node := models.PipelineNodes{
+		Name:          "my_input",
+		ComponentName: "tail",
+		Config:        map[string]any{"path": "/var/log/*.log"},
+	}
+
+	alias := GenerateFBAlias(node)
+
+	// Verify the alias has the expected format: name_hash
+	assert.Contains(t, alias, "my_input") // The actual name format
+	assert.NotContains(t, alias, "/")     // FB aliases don't have type prefix
+	// Should have format: name_hash
+	assert.Regexp(t, `^my_input_[a-f0-9]+$`, alias)
+}
+
+func TestGenerateFBTag(t *testing.T) {
+	node := models.PipelineNodes{
+		ComponentName: "tail",
+	}
+
+	tag := GenerateFBTag(node, "myInput_abc123")
+
+	assert.Equal(t, "tail.myInput_abc123", tag)
+}
+
+func TestExtractTagPrefix(t *testing.T) {
+	tests := []struct {
+		tag      string
+		expected string
+	}{
+		{"tail.myInput_abc", "tail"},
+		{"stdin.input", "stdin"},
+		{"notag", "notag"},
+		{"a.b.c", "a"},
+	}
+
+	for _, tt := range tests {
+		result := ExtractTagPrefix(tt.tag)
+		assert.Equal(t, tt.expected, result)
+	}
+}
+
+// =============================================================================
+// FB Match Pattern Tests
+// =============================================================================
+
+func TestComputeFBMatchPattern(t *testing.T) {
+	t.Run("no tags", func(t *testing.T) {
+		compatible, pattern := computeFBMatchPattern([]FBTagState{})
+		assert.True(t, compatible)
+		assert.Equal(t, "*", pattern)
+	})
+
+	t.Run("single tag", func(t *testing.T) {
+		tags := []FBTagState{{Tag: "tail.myInput_abc123"}}
+		compatible, pattern := computeFBMatchPattern(tags)
+		assert.True(t, compatible)
+		assert.Equal(t, "tail.myInput_abc123*", pattern)
+	})
+
+	t.Run("multiple tags same plugin with common prefix", func(t *testing.T) {
+		tags := []FBTagState{
+			{Tag: "tail.input1_abc"},
+			{Tag: "tail.input2_def"},
+		}
+		compatible, pattern := computeFBMatchPattern(tags)
+		assert.True(t, compatible)
+		assert.True(t, pattern == "tail.input*" || pattern == "tail*")
+	})
+
+	t.Run("multiple tags different plugins", func(t *testing.T) {
+		tags := []FBTagState{
+			{Tag: "tail.input1_abc"},
+			{Tag: "stdin.input2_def"},
+		}
+		compatible, pattern := computeFBMatchPattern(tags)
+		assert.False(t, compatible)
+		assert.Equal(t, "", pattern)
+	})
 }
