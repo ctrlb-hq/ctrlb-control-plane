@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend Service (Golang + SQLite)
+  # ---------------------------------------------------------------------------
+  backend:
+    # Build context points to the backend folder
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ctrlb-backend
+    # Expose port 8096 as defined in your Dockerfile 
+    ports:
+      - "8096:8096"
+    # Mount a volume to persist the SQLite database
+    # NOTE: Ensure your Go app writes the DB to /data or the root / inside the container
+    volumes:
+      - backend-data:/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Frontend Service (React + Nginx)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ctrlb-frontend
+    # Nginx exposes port 80 internally [cite: 2]
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Agent Service (Golang)
+  # ---------------------------------------------------------------------------
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: ctrlb-agent
+    # The agent likely needs to communicate with the backend
+    depends_on:
+      - backend
+    restart: unless-stopped
+    # Mount config if you need to change it without rebuilding
+    # volumes:
+    #   - ./agent/config.yaml:/app/config.yaml
+    networks:
+      - app-network
+
+# ---------------------------------------------------------------------------
+# Volumes & Networks
+# ---------------------------------------------------------------------------
+volumes:
+  backend-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
