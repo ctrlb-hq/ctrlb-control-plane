@@ -53,7 +53,7 @@ export function HomePage() {
 				</div>
 
 				{/* Table */}
-				<div className="p-4">
+				<div className="pt-2">
 					<PipelineTable />
 				</div>
 			</div>
