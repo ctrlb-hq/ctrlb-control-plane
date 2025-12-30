@@ -15,10 +15,6 @@ type MockRepo struct {
 	mock.Mock
 }
 
-type MockQueue struct {
-	mock.Mock
-}
-
 func (m *MockRepo) GetAllAgents() ([]models.AgentInfoHome, error) {
 	args := m.Called()
 	return args.Get(0).([]models.AgentInfoHome), args.Error(1)
@@ -64,27 +60,11 @@ func (m *MockRepo) GetLatestAgentSince(since string) (*frontendagent.LatestAgent
 	return args.Get(0).(*frontendagent.LatestAgentResponse), args.Error(1)
 }
 
-func (mq *MockQueue) AddAgent(id, hostname, ip, agentType string) error {
-	args := mq.Called(id, hostname, ip, agentType)
-	return args.Error(0)
-}
-
-func (mq *MockQueue) RemoveAgent(id string) error {
-	args := mq.Called(id)
-	return args.Error(0)
-}
-
-func (mq *MockQueue) RefreshMonitoring() error {
-	args := mq.Called()
-	return args.Error(0)
-}
-
 // --- Tests ---
 
 func TestGetAllUnmanagedAgents(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	expected := []frontendagent.UnmanagedAgents{{ID: "1"}}
 	repo.On("GetAllUnmanagedAgents").Return(expected, nil)
@@ -96,8 +76,7 @@ func TestGetAllUnmanagedAgents(t *testing.T) {
 
 func TestGetAgent_Success(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	agent := &frontendagent.AgentInfoWithLabels{}
 	repo.On("AgentExists", "1").Return(true)
@@ -110,8 +89,7 @@ func TestGetAgent_Success(t *testing.T) {
 
 func TestGetAgent_NotFound(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	repo.On("AgentExists", "2").Return(false)
 
@@ -122,36 +100,19 @@ func TestGetAgent_NotFound(t *testing.T) {
 
 func TestStopAgent_Success(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	repo.On("AgentExists", "agent-1").Return(true)
-	repo.On("GetAgentNetworkInfoByID", "agent-1").Return("host", "ip", nil)
-	q.On("RemoveAgent", "agent-1").Return(nil)
-	q.On("AddAgent", "agent-1", "host", "ip").Return(nil)
+	repo.On("GetAgentNetworkInfoByID", "agent-1").Return("host", "ip", models.AgentTypeOTEL, nil)
 
 	// Simulate unreachable HTTP (sendAgentCommand returns error)
 	err := svc.StopAgent("agent-1")
-	assert.Error(t, err) // fallback added back to queue should trigger
-}
-
-func TestRestartMonitoring(t *testing.T) {
-	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
-
-	repo.On("AgentExists", "agent-1").Return(true)
-	repo.On("GetAgentNetworkInfoByID", "agent-1").Return("host", "ip", nil)
-	q.On("AddAgent", "agent-1", "host", "ip").Return(nil)
-
-	err := svc.RestartMonitoring("agent-1")
-	assert.NoError(t, err)
+	assert.Error(t, err) // HTTP call will fail since no server is running
 }
 
 func TestGetHealthMetrics(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	mockMetrics := &[]frontendagent.AgentMetrics{{}}
 	repo.On("AgentExists", "a1").Return(true)
@@ -164,8 +125,7 @@ func TestGetHealthMetrics(t *testing.T) {
 
 func TestGetRateMetrics(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	mockMetrics := &[]frontendagent.AgentMetrics{{}}
 	repo.On("AgentExists", "a1").Return(true)
@@ -178,8 +138,7 @@ func TestGetRateMetrics(t *testing.T) {
 
 func TestGetLatestAgentSince(t *testing.T) {
 	repo := new(MockRepo)
-	q := new(MockQueue)
-	svc := frontendagent.NewFrontendAgentService(repo, q)
+	svc := frontendagent.NewFrontendAgentService(repo)
 
 	mockResp := &frontendagent.LatestAgentResponse{ID: "latest"}
 	repo.On("GetLatestAgentSince", "2024-01-01T00:00:00Z").Return(mockResp, nil)
