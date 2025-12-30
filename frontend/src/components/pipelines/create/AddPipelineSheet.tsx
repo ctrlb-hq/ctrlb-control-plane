@@ -105,8 +105,8 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
               variant="contained"
               color="primary"
               onClick={() => {
-                resetGraph(); // ensure clean editor state
-                setIsOpen(false); // close drawer
+                resetGraph();
+                setIsOpen(false);
                 navigate(`/pipelines/${pipelineId}/edit`, {
                   state: { pipelineName },
                 });

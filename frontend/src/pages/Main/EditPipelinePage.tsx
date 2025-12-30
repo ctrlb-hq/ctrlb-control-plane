@@ -131,7 +131,6 @@ const EditPipelinePage = () => {
     fetchGraph();
   }, [pipelineId]);
 
-  /* -------------------- handlers -------------------- */
   const onConnect = useCallback(
     (params: Edge | Connection) => connectNodes(params),
     [connectNodes]
@@ -243,8 +242,24 @@ const EditPipelinePage = () => {
         fetchGraph();
     }, [pipelineId]);
 
+    const handleCloseEditor = useCallback(() => {
+      setNodeValueDirect([]);
+      setEdgeValueDirect([]);
+      clearChangesLog();
 
-  /* -------------------- render -------------------- */
+      setIsEditMode(false);
+      setIsReviewSheetOpen(false);
+      setIsEditFormOpen(false);
+      setSelectedEdge(null);
+
+      navigate("/home");
+    }, [
+      clearChangesLog,
+      navigate,
+      setEdgeValueDirect,
+      setNodeValueDirect,
+    ]);
+
   return (
     <>
       <div className="flex justify-between items-center p-4 border-b">
@@ -259,9 +274,18 @@ const EditPipelinePage = () => {
               setIsEditFormOpen(open && isEditFormOpen);
             }}
           >
-            <SheetTrigger asChild>
-              <Button disabled={!isEditMode}>Review</Button>
-            </SheetTrigger>
+            <div className="flex items-center gap-2">
+              <SheetTrigger asChild>
+                <Button disabled={!isEditMode}>Review</Button>
+              </SheetTrigger>
+
+              <Button
+                variant="outline"
+                onClick={handleCloseEditor}
+              >
+                Close
+              </Button>
+            </div>
             <SheetContent className="w-[30rem]">
               {isReviewSheetOpen && (
                 <>
