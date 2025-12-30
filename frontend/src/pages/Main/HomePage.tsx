@@ -38,28 +38,14 @@ export function HomePage() {
 							variant="contained"
 							startIcon={<Plus size={16} />}
 							onClick={() => setIsAddPipelineOpen(true)}
-							sx={{
-								backgroundColor: "#3b82f6",
-								"&:hover": {
-									backgroundColor: "#2563eb", 
-								},
-								textTransform: "none",
-								boxShadow: "none",
-							}}
+							color="primary"
 						>
 							Add New Pipeline
 						</Button>
 						<Button
 							variant="contained"
 							onClick={handleLogout}
-							sx={{
-								backgroundColor: "#ef4444",
-								"&:hover": {
-									backgroundColor: "#dc2626",
-								},
-								textTransform: "none",
-								boxShadow: "none",
-							}}
+							color="error"
 						>
 							Logout
 						</Button>
