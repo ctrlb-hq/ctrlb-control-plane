@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -47,17 +48,19 @@ func (h *HeartbeatManager) run() {
 	// Wait a bit before first heartbeat to allow registration to complete
 	time.Sleep(5 * time.Second)
 
-	ticker := time.NewTicker(h.interval)
-	defer ticker.Stop()
-
 	// Send first heartbeat immediately
 	h.sendHeartbeat()
 
 	for {
+		// Calculate jitter: ±10% of the interval for each tick
+		jitterFactor := (rand.Float64() * 0.2) - 0.1 // range: -0.1 to +0.1
+		jitter := time.Duration(float64(h.interval) * jitterFactor)
+		nextInterval := h.interval + jitter
+
 		select {
 		case <-h.stopChan:
 			return
-		case <-ticker.C:
+		case <-time.After(nextInterval):
 			h.sendHeartbeat()
 		}
 	}
@@ -244,4 +247,3 @@ func matchLabels(metricLabels []*io_prometheus_client.LabelPair, targetLabels ma
 	}
 	return true
 }
-
