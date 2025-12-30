@@ -6,9 +6,8 @@ import PipelinYAML from "./YamlViewer";
 import PipelineOverview from "./PipelineOverview";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import DeletePipelineDialog from "./DeletePipelineDialog";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
 import CloseIcon from "@mui/icons-material/Close";
-import { IconButton, Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, Drawer, Typography, Box, Tabs, Tab } from "@mui/material";
+import { IconButton, Button, Drawer, Typography, Box, Tabs, Tab } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -25,11 +24,9 @@ const ViewPipelineDetails = ({ pipelineId, open, onClose }: Props) => {
 	const [pipelineOverviewData, setPipelineOverviewData] =
 		useState<PipelineOverviewInterface>();
 	const [tabs, setTabs] = useState("overview");
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 	const navigate = useNavigate();
 	const { showSnackbar } = useGlobalSnackbar();
-	const { changesLog, clearChangesLog } = useGraphFlow();
 	const resizingRef = useRef(false);
 
 	const handleGetPipelineOverview = useCallback(async () => {
@@ -67,19 +64,9 @@ const ViewPipelineDetails = ({ pipelineId, open, onClose }: Props) => {
 	};
 
 	const handleAttemptClose = () => {
-		if (changesLog.length > 0) {
-			setIsDialogOpen(true);
-		} else {
-			onClose();
-		}
-	};
-
-	const handleDiscard = () => {
-		clearChangesLog();
-		setIsDialogOpen(false);
 		onClose();
 	};
-
+	
 	return (
 		<>
 			<Drawer
@@ -183,29 +170,6 @@ const ViewPipelineDetails = ({ pipelineId, open, onClose }: Props) => {
 					</div>
 				</div>
 			</Drawer>
-			<Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-				<DialogTitle>Discard Changes?</DialogTitle>
-				<DialogContent>
-					<DialogContentText>
-					You have unsaved changes. Closing will discard them.
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button
-					variant="outlined"
-					onClick={() => setIsDialogOpen(false)}
-					>
-					Cancel
-					</Button>
-					<Button
-					variant="contained"
-					color="error"
-					onClick={handleDiscard}
-					>
-					Discard
-					</Button>
-				</DialogActions>
-			</Dialog>
 		</>
 	);
 };
