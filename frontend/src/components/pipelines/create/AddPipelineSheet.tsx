@@ -1,127 +1,145 @@
-import { Button } from "../../ui/button";
-import { PlusIcon } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dispatch, SetStateAction, useState } from "react";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogFooter,
-	DialogTitle,
-	DialogDescription,
-} from "@/components/ui/dialog";
+  Drawer,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  Button,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import AddPipelineDetails from "@/components/pipelines/create/AddPipelineDetails";
-import { useState } from "react";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
 import PipelineEditorSheet from "@/components/pipelines/editor/PipelineGraphEditor";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 
-const AddPipelineSheet = () => {
-	const [currentStep, setCurrentStep] = useState<number>(0);
-	const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
-	const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-	const [pipelineId, setPipelineId] = useState<string>("");
-	const [pipelineName, setPipelineName] = useState<string>("");
+interface AddPipelineSheetProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+}
 
-	const { resetGraph, changesLog } = useGraphFlow();
+const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pipelineId, setPipelineId] = useState("");
+  const [pipelineName, setPipelineName] = useState("");
 
-	const handleDialogOkay = () => {
-		if (currentStep === 0) {
-			// step 0: new pipeline → clear and close
-			localStorage.removeItem("Sources");
-			localStorage.removeItem("Destination");
-			localStorage.removeItem("pipelinename");
-			localStorage.removeItem("selectedAgentIds");
-			localStorage.removeItem("changesLog");
-			localStorage.removeItem("platform");
-			resetGraph();
-			setCurrentStep(0);
-			setIsSheetOpen(false);
-		} else {
-			resetGraph();
-			setIsSheetOpen(false);
-		}
-		setIsDialogOpen(false);
-	};
+  const { resetGraph, changesLog } = useGraphFlow();
 
-	const handleDialogCancel = () => {
-		setIsDialogOpen(false);
-	};
+  const shouldShowDialog = () => {
+    return currentStep === 0 || changesLog.length > 0;
+  };
 
-	const getDataFromChild = (id: string, name: string) => {
-		setPipelineId(id);
-		setPipelineName(name);
-	};
+  const handleDrawerClose = () => {
+    if (shouldShowDialog()) {
+      setIsDialogOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
 
-	const shouldShowDialog = () => {
-		return currentStep === 0 || changesLog.length > 0;
-	};
+  const handleDialogOkay = () => {
+    localStorage.removeItem("Sources");
+    localStorage.removeItem("Destination");
+    localStorage.removeItem("pipelinename");
+    localStorage.removeItem("selectedAgentIds");
+    localStorage.removeItem("changesLog");
+    localStorage.removeItem("platform");
 
-	return (
-		<div className="flex flex-col gap-7 justify-center items-center">
-			<Sheet
-				open={isSheetOpen}
-				onOpenChange={open => {
-					if (!open) {
-						if (shouldShowDialog()) {
-							setIsDialogOpen(true);
-						} else {
-							resetGraph();
-							setCurrentStep(0);
-							setIsSheetOpen(false);
-						}
-					} else {
-						setIsSheetOpen(true);
-					}
-				}}>
-				<SheetTrigger asChild>
-					<Button className="flex gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">
-						<PlusIcon className="h-4 w-4" />
-						Add New Pipeline
-					</Button>
-				</SheetTrigger>
-				<SheetContent className={currentStep === 0 ? "" : "w-screen"}>
-					{currentStep === 0 ? (
-						<AddPipelineDetails
-							sendPipelineDataToParent={getDataFromChild}
-							currentStep={currentStep}
-							setCurrentStep={setCurrentStep}
-						/>
-					) : (
-						<PipelineEditorSheet
-							pipelineId={pipelineId}
-							name={pipelineName}
-							setIsSheetOpen={setIsSheetOpen}
-							isEditModeStart={true}
-						/>
-					)}
-				</SheetContent>
-			</Sheet>
+    resetGraph();
+    setCurrentStep(0);
+    setIsDialogOpen(false);
+    setIsOpen(false);
+  };
 
-			{shouldShowDialog() && (
-				<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-					<DialogContent className="w-[50rem]">
-						<DialogHeader>
-							<DialogTitle>
-								{currentStep === 0 ? "Discard New Pipeline?" : "Discard Pipeline Edits?"}
-							</DialogTitle>
-							<DialogDescription>
-								{currentStep === 0
-									? "All your new pipeline details will be lost. Continue?"
-									: "Your graph changes will be lost and you’ll go back to the pipeline details step."}
-							</DialogDescription>
-						</DialogHeader>
-						<DialogFooter>
-							<Button variant="outline" onClick={handleDialogCancel}>
-								Cancel
-							</Button>
-							<Button className="bg-blue-500" onClick={handleDialogOkay}>
-								OK
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			)}
-		</div>
-	);
+  const handleDialogCancel = () => {
+    setIsDialogOpen(false);
+  };
+
+  const getDataFromChild = (id: string, name: string) => {
+    setPipelineId(id);
+    setPipelineName(name);
+  };
+
+  return (
+    <>
+      <Drawer
+        anchor="right"
+        open={isOpen}
+        onClose={handleDrawerClose}
+        PaperProps={{
+          sx: {
+            width: "70vw",
+          },
+        }}
+      >
+        <Button
+			onClick={handleDrawerClose}
+			variant="text"
+			sx={{
+				position: "absolute",
+				top: 8,
+				right: 8,
+				minWidth: "auto",
+				padding: "3px",
+				color: "black",
+				zIndex: 10,
+				borderRadius: "10px",
+			}}
+			className="hover:bg-red-500 hover:text-white"
+		>
+			<CloseIcon  />
+		</Button>
+
+        <Box sx={{ height: "100%", overflow: "auto", pt: 4 }}>
+          {currentStep === 0 ? (
+            <AddPipelineDetails
+              sendPipelineDataToParent={getDataFromChild}
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+            />
+          ) : (
+            <PipelineEditorSheet
+              pipelineId={pipelineId}
+              name={pipelineName}
+              setIsSheetOpen={setIsOpen}
+              isEditModeStart
+            />
+          )}
+        </Box>
+      </Drawer>
+      <Dialog
+        open={isDialogOpen}
+        onClose={handleDialogCancel}
+        aria-labelledby="discard-dialog-title"
+        aria-describedby="discard-dialog-description"
+      >
+        <DialogTitle id="discard-dialog-title">
+          {currentStep === 0
+            ? "Discard New Pipeline?"
+            : "Discard Pipeline Edits?"}
+        </DialogTitle>
+
+        <DialogContent>
+          <DialogContentText id="discard-dialog-description">
+            {currentStep === 0
+              ? "All your new pipeline details will be lost. Continue?"
+              : "Your graph changes will be lost."}
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button variant="contained" color="error" onClick={handleDialogCancel}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="primary" onClick={handleDialogOkay}>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
 };
 
 export default AddPipelineSheet;
