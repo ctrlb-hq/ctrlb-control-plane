@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddPipelineDetails from "@/components/pipelines/create/AddPipelineDetails";
-import PipelineEditorSheet from "@/components/pipelines/editor/PipelineGraphEditor";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
+import { useNavigate } from "react-router-dom";
 
 interface AddPipelineSheetProps {
   isOpen: boolean;
@@ -24,7 +24,8 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pipelineId, setPipelineId] = useState("");
   const [pipelineName, setPipelineName] = useState("");
-
+  const navigate = useNavigate();
+  
   const { resetGraph, changesLog } = useGraphFlow();
 
   const shouldShowDialog = () => {
@@ -100,12 +101,20 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
               setCurrentStep={setCurrentStep}
             />
           ) : (
-            <PipelineEditorSheet
-              pipelineId={pipelineId}
-              name={pipelineName}
-              setIsSheetOpen={setIsOpen}
-              isEditModeStart
-            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                resetGraph(); // ensure clean editor state
+                setIsOpen(false); // close drawer
+                navigate(`/pipelines/${pipelineId}/edit`, {
+                  state: { pipelineName },
+                });
+              }}
+              disabled={!pipelineId}
+            >
+              Open Pipeline Editor
+            </Button>
           )}
         </Box>
       </Drawer>

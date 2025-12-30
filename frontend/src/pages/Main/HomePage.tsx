@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import authService from "../../services/auth";
+import authService from "@/services/auth";
 import PipelineTable from "@/components/pipelines/overview/PipelineTable";
-import { ROUTES } from "../../constants";
+import { ROUTES } from "@/constants";
 import AddPipelineSheet from "@/components/pipelines/create/AddPipelineSheet";
 import { Button } from "@mui/material";
 import { ArrowLeftRight, Plus } from "lucide-react";
