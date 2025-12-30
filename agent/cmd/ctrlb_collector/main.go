@@ -1,10 +1,11 @@
 package main
 
 import (
-	"slices"
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -62,6 +63,13 @@ func main() {
 		constants.AGENT_TYPE = "otel"
 	}
 
+	// Configure heartbeat interval
+	if heartbeatIntervalEnv := os.Getenv("HEARTBEAT_INTERVAL_SEC"); heartbeatIntervalEnv != "" {
+		if interval, err := strconv.Atoi(heartbeatIntervalEnv); err == nil && interval > 0 {
+			constants.HEARTBEAT_INTERVAL_SEC = interval
+		}
+	}
+
 	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
@@ -109,6 +117,10 @@ func main() {
 		}
 	}()
 
+	// Start heartbeat manager to periodically send status/metrics to backend
+	heartbeatManager := client.NewHeartbeatManager(constants.HEARTBEAT_INTERVAL_SEC)
+	heartbeatManager.Start()
+
 	operator_service := *operators.NewOperatorService(adapter)
 
 	handler := api.NewRouter(&operator_service)
@@ -140,6 +152,7 @@ func main() {
 
 	logger.Logger.Info("Received termination signal. Initiating graceful shutdown...")
 
+	heartbeatManager.Stop()
 	adapter.GracefulShutdown()
 
 }
