@@ -10,6 +10,7 @@ import (
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 type AgentRepositoryInterface interface {
@@ -17,23 +18,29 @@ type AgentRepositoryInterface interface {
 	AgentExists(hostname string) (bool, error)
 }
 
+// MetricsRepositoryInterface defines the interface for storing agent metrics
+type MetricsRepositoryInterface interface {
+	UpdateAgentMetricsInDB(agg queue.AggregatedAgentMetrics, rt queue.RealtimeAgentMetrics) error
+}
+
 type AgentServiceInterface interface {
 	RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error)
 	ConfigChangedPing(agentID string) error
+	ProcessHeartbeat(agentID string, req *HeartbeatRequest) error
 }
 
 // AgentService manages agent operations.
 type AgentService struct {
 	AgentRepository      AgentRepositoryInterface
-	AgentQueue           queue.AgentQueueInterface
+	MetricsRepository    MetricsRepositoryInterface
 	FrontendAgentService frontendpipeline.FrontendPipelineServiceInterface
 }
 
 // NewAgentService creates a new AgentService instance.
-func NewAgentService(agentRepository AgentRepositoryInterface, agentQueue queue.AgentQueueInterface, frontendPipelineService frontendpipeline.FrontendPipelineServiceInterface) *AgentService {
+func NewAgentService(agentRepository AgentRepositoryInterface, metricsRepository MetricsRepositoryInterface, frontendPipelineService frontendpipeline.FrontendPipelineServiceInterface) *AgentService {
 	return &AgentService{
 		AgentRepository:      agentRepository,
-		AgentQueue:           agentQueue,
+		MetricsRepository:    metricsRepository,
 		FrontendAgentService: frontendPipelineService,
 	}
 }
@@ -65,10 +72,7 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		}
 	}
 
-	err = a.AgentQueue.AddAgent(fmt.Sprint(response.ID), req.Hostname, req.IP, string(req.Type))
-	if err != nil {
-		return nil, err
-	}
+	utils.Logger.Info(fmt.Sprintf("Agent %d registered successfully", response.ID))
 
 	return response, nil
 }
@@ -80,4 +84,35 @@ func (a *AgentService) ConfigChangedPing(agentID string) error {
 		return err
 	}
 	return nil
+}
+
+// ProcessHeartbeat updates agent metrics from a heartbeat request.
+func (a *AgentService) ProcessHeartbeat(agentID string, req *HeartbeatRequest) error {
+
+	utils.Logger.Info(fmt.Sprintf("Processing heartbeat for agent %s", agentID))
+	utils.Logger.Info(fmt.Sprintf("Heartbeat request: %+v", req))
+	agg := queue.AggregatedAgentMetrics{
+		AgentID:           agentID,
+		LogsRateSent:      req.LogsRateSent,
+		TracesRateSent:    req.TracesRateSent,
+		MetricsRateSent:   req.MetricsRateSent,
+		DataSentBytes:     req.DataSentBytes,
+		DataReceivedBytes: req.DataReceivedBytes,
+		Status:            "connected",
+		UpdatedAt:         time.Now().Unix(),
+	}
+
+	rt := queue.RealtimeAgentMetrics{
+		AgentID:           agentID,
+		LogsRateSent:      req.LogsRateSent,
+		TracesRateSent:    req.TracesRateSent,
+		MetricsRateSent:   req.MetricsRateSent,
+		DataSentBytes:     req.DataSentBytes,
+		DataReceivedBytes: req.DataReceivedBytes,
+		CPUUtilization:    req.CPUUtilization,
+		MemoryUtilization: req.MemoryUtilization,
+		Timestamp:         time.Now().Unix(),
+	}
+
+	return a.MetricsRepository.UpdateAgentMetricsInDB(agg, rt)
 }

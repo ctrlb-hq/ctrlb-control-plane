@@ -39,28 +39,22 @@ func main() {
 		utils.Logger.Fatal("JWT_SECRET is not set in environment")
 	}
 
-	workerCountEnv := os.Getenv("WORKER_COUNT")
-	if workerCountEnv != "" {
-		count, err := strconv.Atoi(workerCountEnv)
-		if err != nil {
-			constants.WORKER_COUNT = 4
-		} else {
-			constants.WORKER_COUNT = count
+	// Configure agent inactive timeout
+	inactiveTimeoutEnv := os.Getenv("AGENT_INACTIVE_TIMEOUT_SEC")
+	if inactiveTimeoutEnv != "" {
+		count, err := strconv.Atoi(inactiveTimeoutEnv)
+		if err == nil {
+			constants.AGENT_INACTIVE_TIMEOUT_SEC = count
 		}
-	} else {
-		constants.WORKER_COUNT = 4
 	}
 
-	checkIntervalMinsEnv := os.Getenv("CHECK_INTERVAL_MINS")
-	if checkIntervalMinsEnv != "" {
-		count, err := strconv.Atoi(checkIntervalMinsEnv)
-		if err != nil {
-			constants.CHECK_INTERVAL_SEC = 10
-		} else {
-			constants.CHECK_INTERVAL_SEC = count
+	// Configure staleness check interval
+	stalenessCheckEnv := os.Getenv("STALENESS_CHECK_SEC")
+	if stalenessCheckEnv != "" {
+		count, err := strconv.Atoi(stalenessCheckEnv)
+		if err == nil {
+			constants.STALENESS_CHECK_SEC = count
 		}
-	} else {
-		constants.CHECK_INTERVAL_SEC = 10
 	}
 
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
@@ -99,15 +93,15 @@ func main() {
 
 	utils.Logger.Info("Component schemas loaded into database")
 
-	agentQueueRepository := queue.NewQueueRepository(db)
+	metricsRepository := queue.NewQueueRepository(db)
 
-	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_SEC, agentQueueRepository)
-	agentQueueWithShutdown := agentQueue.(*queue.AgentQueue)
-
-	if err = agentQueue.RefreshMonitoring(); err != nil {
-		utils.Logger.Fatal("Unable to update existing agent")
-		return
-	}
+	// Start staleness checker for marking inactive agents
+	stalenessChecker := queue.NewStalenessChecker(
+		metricsRepository,
+		constants.STALENESS_CHECK_SEC,
+		constants.AGENT_INACTIVE_TIMEOUT_SEC,
+	)
+	stalenessChecker.Start()
 
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
@@ -116,11 +110,11 @@ func main() {
 	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 	frontendNodeRepository := frontendnode.NewFrontendNodeRepository(db)
 
-	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
+	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository)
 	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
 	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
 
-	agentService := agent.NewAgentService(agentRepository, agentQueue, frontendPipelineService)
+	agentService := agent.NewAgentService(agentRepository, metricsRepository, frontendPipelineService)
 	authService := auth.NewAuthService(authRepository)
 
 	handler := api.NewHandler(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
@@ -160,10 +154,8 @@ func main() {
 		utils.Logger.Info("HTTP server shutdown completed")
 	}
 
-	// Shutdown agent queue
-	if err := agentQueueWithShutdown.Shutdown(5 * time.Second); err != nil {
-		utils.Logger.Sugar().Errorf("AgentQueue shutdown error: %v", err)
-	}
+	// Shutdown staleness checker
+	stalenessChecker.Stop()
 
 	// Close database connection
 	if err := db.Close(); err != nil {

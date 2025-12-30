@@ -112,25 +112,6 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped [ID: " + id + "]."})
 }
 
-// RestartMonitoring restarts monitoring for a specific agent
-func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
-
-	id := mux.Vars(r)["id"]
-
-	utils.Logger.Info(fmt.Sprintf("Got request to restart monitoring for agent [ID: %s]", id))
-	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error occured while restarting monitoring for agent [ID: %s]: %s", id, err.Error()))
-		if err == utils.ErrAgentDoesNotExists {
-			utils.SendJSONError(w, http.StatusOK, "Agent not found")
-		} else {
-			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Monitoring started for agent [ID: " + id + "]."})
-}
-
 // GetHealthMetricsForGraph retrieves metrics for a specific agent
 func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r *http.Request) {
 

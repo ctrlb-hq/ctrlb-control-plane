@@ -65,3 +65,25 @@ func (a *AgentHandler) ConfigChangedPing(w http.ResponseWriter, r *http.Request)
 
 	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }
+
+// Heartbeat handles periodic heartbeat and metrics from an agent.
+func (a *AgentHandler) Heartbeat(w http.ResponseWriter, r *http.Request) {
+	agentID := mux.Vars(r)["id"]
+
+	req := &HeartbeatRequest{}
+	if err := utils.UnmarshalJSONRequest(r, req); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Invalid heartbeat request body from agent %s", agentID))
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := a.AgentService.ProcessHeartbeat(agentID, req); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error processing heartbeat for agent %s: %v", agentID, err))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.Logger.Info(fmt.Sprintf("Heartbeat processed successfully for agent %s", agentID))
+
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"status": "ok"})
+}

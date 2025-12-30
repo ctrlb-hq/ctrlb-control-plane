@@ -64,37 +64,26 @@ func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) error
 	return nil
 }
 
-func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
-	// Join with aggregated_agent_metrics to get agent status
+// GetStaleAgents returns agent IDs that haven't been updated since cutoffTime
+func (q *QueueRepository) GetStaleAgents(cutoffTime int64) ([]string, error) {
 	rows, err := q.db.Query(`
-		SELECT a.id, a.hostname, a.ip, a.type, m.status
-		FROM agents a
-		JOIN aggregated_agent_metrics m ON a.id = m.agent_id
-		WHERE m.status IN ('unknown', 'connected')
-	`)
+		SELECT agent_id FROM aggregated_agent_metrics
+		WHERE status = 'connected' AND updated_at < ?
+	`, cutoffTime)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query agents from DB: %w", err)
+		return nil, fmt.Errorf("failed to query stale agents: %w", err)
 	}
 	defer rows.Close()
 
-	var agents []AgentStatus
+	var staleAgents []string
 	for rows.Next() {
-		var agentID, hostname, ip, agentType, status string
-		if err := rows.Scan(&agentID, &hostname, &ip, &agentType, &status); err != nil {
-			utils.Logger.Sugar().Errorf("Error scanning agent row: %v", err)
+		var agentID string
+		if err := rows.Scan(&agentID); err != nil {
+			utils.Logger.Sugar().Errorf("Error scanning stale agent row: %v", err)
 			continue
 		}
-
-		agents = append(agents, AgentStatus{
-			AgentID:        agentID,
-			Hostname:       hostname,
-			IP:             ip,
-			Type:           agentType,
-			CurrentStatus:  status,
-			RetryRemaining: 3,
-			UpdatedAt:      time.Now(),
-		})
+		staleAgents = append(staleAgents, agentID)
 	}
 
-	return agents, nil
+	return staleAgents, nil
 }
