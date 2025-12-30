@@ -5,12 +5,14 @@ import {
 	Route,
 	Navigate,
 	useLocation,
-	Location,
 } from "react-router-dom";
-import { HomePage } from "./components/pipelines/HomePage";
-import Login from "./components/auth/Login";
-import Register from "./components/auth/Signup";
-import { ROUTES } from "./constants";
+import HomePage from "@/pages/Main/HomePage";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Signup";
+import { ROUTES } from "@/constants";
+import EditPipelinePage from '@/pages/Main/EditPipelinePage';
+import type { Location } from "react-router-dom";
+
 
 interface LocationState {
 	from: Location;
@@ -69,6 +71,14 @@ function App() {
 							<HomePage />
 						</ProtectedRoute>
 					}
+				/>
+				<Route
+				path="/pipelines/:pipelineId/edit"
+				element={
+					<ProtectedRoute>
+					<EditPipelinePage />
+					</ProtectedRoute>
+				}
 				/>
 				{/* Redirects */}
 				<Route

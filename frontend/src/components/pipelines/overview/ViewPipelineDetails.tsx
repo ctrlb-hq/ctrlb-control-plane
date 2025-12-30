@@ -2,59 +2,20 @@ import { Boxes } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import pipelineServices from "@/services/pipeline";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription,
-	DialogFooter,
-} from "@/components/ui/dialog";
 import "reactflow/dist/style.css";
 import PipelinYAML from "./YamlViewer";
 import PipelineOverview from "./PipelineOverview";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import DeletePipelineDialog from "./DeletePipelineDialog";
-import PipelineEditorSheet from "../editor/PipelineGraphEditor";
-import { Button } from "@/components/ui/button";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
+import { Button, Tabs, Tab, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<PipelineOverviewInterface>();
 	const [tabs, setTabs] = useState<string>("overview");
 	const { showSnackbar } = useGlobalSnackbar();
-	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const { changesLog, clearChangesLog } = useGraphFlow();
-
-	// Intercept any attempt to close the Sheet
-	const handleSheetOpenChange = useCallback(
-		(open: boolean) => {
-			if (!open && changesLog.length > 0) {
-				// there are unsaved edits → show discard dialog instead of closing
-				setIsDialogOpen(true);
-			} else {
-				// either opening, or closing cleanly
-				setIsSheetOpen(open);
-			}
-		},
-		[changesLog.length],
-	);
-
-	const handleDialogCancel = () => {
-		// keep sheet open, just close dialog
-		setIsDialogOpen(false);
-		setIsSheetOpen(true);
-	};
-
-	const handleDialogOkay = () => {
-		// user confirmed discard → close both dialog & sheet, clear changes
-		setIsDialogOpen(false);
-		setIsSheetOpen(false);
-		clearChangesLog();
-	};
+	const navigate = useNavigate();;
 
 	const handleGetPipelineOverview = useCallback(async () => {
 		try {
@@ -82,37 +43,18 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full">
 						<div className="flex gap-2">
-							<Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-								<SheetTrigger asChild>
-									<Button className="bg-blue-500">View/Edit Pipeline</Button>
-								</SheetTrigger>
-								<SheetContent className="w-full sm:max-w-full p-0" side="right">
-									<PipelineEditorSheet
-										pipelineId={pipelineId}
-										name={pipelineOverviewData?.name}
-										setIsSheetOpen={setIsOpen}
-										isEditModeStart={false}
-									/>
-								</SheetContent>
-							</Sheet>
-							<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-								<DialogContent className="w-[32rem]">
-									<DialogHeader>
-										<DialogTitle>Discard Changes?</DialogTitle>
-										<DialogDescription>
-											You have unsaved changes in this pipeline. Closing now will lose all edits. Continue?
-										</DialogDescription>
-									</DialogHeader>
-									<DialogFooter>
-										<Button variant="outline" onClick={handleDialogCancel}>
-											Cancel
-										</Button>
-										<Button className="bg-blue-500" onClick={handleDialogOkay}>
-											OK
-										</Button>
-									</DialogFooter>
-								</DialogContent>
-							</Dialog>
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={() => {
+									navigate(`/pipelines/${pipelineId}/edit`, {
+										state: { pipelineName: pipelineOverviewData?.name },
+									});
+								}}
+								sx={{ textTransform: "none" }}
+							>
+								View / Edit Pipeline
+							</Button>
 							<DeletePipelineDialog
 								isOpen={isOpen}
 								setIsOpen={setIsOpen}
@@ -122,20 +64,17 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					</div>
 				</div>
 			</div>
-			<div>
-				<ul className="flex border-b">
-					<li
-						className={`mr-6 cursor-pointer py-2 ${tabs === "overview" ? "border-b-2 border-blue-500" : ""}`}
-						onClick={() => setTabs("overview")}>
-						Overview
-					</li>
-					<li
-						className={`mr-6 cursor-pointer py-2 ${tabs === "yaml" ? "border-b-2 border-blue-500" : ""}`}
-						onClick={() => setTabs("yaml")}>
-						YAML
-					</li>
-				</ul>
-			</div>
+			<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Tabs
+					value={tabs}
+					onChange={(_, newValue) => setTabs(newValue)}
+					textColor="primary"
+					indicatorColor="primary"
+				>
+					<Tab label="Overview" value="overview" />
+					<Tab label="YAML" value="yaml" />
+				</Tabs>
+			</Box>
 			{/* Main Content */}
 			<div className="flex-1 overflow-auto mt-4">
 				{tabs == "overview" && (
