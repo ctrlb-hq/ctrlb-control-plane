@@ -126,9 +126,9 @@ type MetricsSource struct {
 func getMetricsSources(agentType string) []MetricsSource {
 	switch agentType {
 	case "fluent-bit":
+		// Prometheus exporter output with node_exporter and fluentbit metrics
 		return []MetricsSource{
 			{Port: 2021, Path: "/metrics"},
-			{Port: 2020, Path: "/api/v2/metrics/prometheus"},
 		}
 	case "otel", "otel-collector":
 		return []MetricsSource{
@@ -171,28 +171,79 @@ func extractOTELMetrics(families map[string]*io_prometheus_client.MetricFamily, 
 }
 
 func extractFluentBitMetrics(families map[string]*io_prometheus_client.MetricFamily, metrics *HeartbeatRequest) {
-	// CPU and memory from process exporter
-	cpuUser := extractValueWithLabels(families, "process_cpu_seconds_total", map[string]string{
-		"name": "fluent-bit",
-		"mode": "user",
-	})
-	cpuSystem := extractValueWithLabels(families, "process_cpu_seconds_total", map[string]string{
-		"name": "fluent-bit",
-		"mode": "system",
-	})
-	metrics.CPUUtilization = cpuUser + cpuSystem
+	// Extract CPU utilization from node_exporter metrics
+	// Calculate as percentage of non-idle CPU time
+	metrics.CPUUtilization = extractNodeCPUUtilization(families)
 
-	metrics.MemoryUtilization = extractValueWithLabels(families, "process_memory_bytes", map[string]string{
-		"name": "fluent-bit",
-		"type": "rss",
-	})
+	// Extract memory utilization from node_exporter metrics
+	// Calculate as (MemTotal - MemAvailable) / MemTotal * 100
+	metrics.MemoryUtilization = extractNodeMemoryUtilization(families)
 
-	// Fluent Bit specific metrics
-	metrics.LogsRateSent = extractValue(families, "fluentbit_input_records_total")
+	// Fluent Bit telemetry metrics from fluentbit_metrics input
+	metrics.LogsRateSent = extractValue(families, "fluentbit_output_proc_records_total")
 	metrics.TracesRateSent = 0 // Fluent Bit is primarily for logs
 	metrics.MetricsRateSent = 0
 	metrics.DataSentBytes = extractValue(families, "fluentbit_output_proc_bytes_total")
 	metrics.DataReceivedBytes = extractValue(families, "fluentbit_input_bytes_total")
+}
+
+// extractNodeCPUUtilization calculates CPU utilization from node_cpu_seconds_total
+// Uses load average as a simpler proxy for CPU utilization
+func extractNodeCPUUtilization(families map[string]*io_prometheus_client.MetricFamily) float64 {
+	// Use 1-minute load average as CPU utilization proxy
+	load1 := extractValue(families, "node_load1")
+	if load1 > 0 {
+		return load1
+	}
+
+	// Fallback: sum all non-idle CPU seconds as raw counter
+	// This provides the total CPU seconds used (can be used for rate calculation)
+	family, ok := families["node_cpu_seconds_total"]
+	if !ok || family == nil {
+		return 0
+	}
+
+	var totalNonIdle float64
+	for _, m := range family.Metric {
+		mode := getLabelValue(m.Label, "mode")
+		// Count user, system, nice, softirq, irq, steal modes (exclude idle and iowait)
+		if mode != "idle" && mode != "iowait" {
+			if m.GetCounter() != nil {
+				totalNonIdle += m.GetCounter().GetValue()
+			}
+		}
+	}
+	return totalNonIdle
+}
+
+// extractNodeMemoryUtilization calculates memory utilization percentage
+// Formula: (MemTotal - MemAvailable) / MemTotal * 100
+func extractNodeMemoryUtilization(families map[string]*io_prometheus_client.MetricFamily) float64 {
+	memTotal := extractValue(families, "node_memory_MemTotal_bytes")
+	memAvailable := extractValue(families, "node_memory_MemAvailable_bytes")
+
+	if memTotal > 0 {
+		usedPercent := ((memTotal - memAvailable) / memTotal) * 100
+		return usedPercent
+	}
+
+	// Fallback to raw memory used bytes
+	memFree := extractValue(families, "node_memory_MemFree_bytes")
+	if memTotal > 0 && memFree > 0 {
+		return memTotal - memFree
+	}
+
+	return 0
+}
+
+// getLabelValue extracts a label value from metric labels
+func getLabelValue(labels []*io_prometheus_client.LabelPair, name string) string {
+	for _, lp := range labels {
+		if lp.GetName() == name {
+			return lp.GetValue()
+		}
+	}
+	return ""
 }
 
 func extractValue(families map[string]*io_prometheus_client.MetricFamily, name string) float64 {

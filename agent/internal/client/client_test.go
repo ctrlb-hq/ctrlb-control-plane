@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
@@ -73,7 +72,7 @@ func TestInformBackendServerStart_Success(t *testing.T) {
 
 	// Override backend URL for the test
 	originalURL := constants.BACKEND_URL
-	constants.BACKEND_URL = strings.TrimPrefix(testServer.URL, "http://")
+	constants.BACKEND_URL = testServer.URL
 	defer func() { constants.BACKEND_URL = originalURL }()
 
 	client := &http.Client{}

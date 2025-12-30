@@ -257,7 +257,7 @@ func buildFBConfigFromInstances(instances []FBNodeInstance) *map[string]any {
 	}
 
 	// Add prometheus monitoring
-	inputs = append(inputs, constants.FluentBitPrometheusInput)
+	inputs = append(inputs, constants.FluentBitNodeMetricsInput, constants.FluentBitInternalMetricsInput)
 	outputs = append(outputs, constants.FluentBitPrometheusOutput)
 
 	config := map[string]any{

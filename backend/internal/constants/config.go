@@ -58,15 +58,21 @@ var FluentBitService = map[string]any{
 	"hot_reload":  "on",
 }
 
-var FluentBitPrometheusInput = map[string]any{
-	"name":            "process_exporter_metrics",
-	"tag":             "process_metrics",
-	"scrape_interval": 5,
+var FluentBitNodeMetricsInput = map[string]any{
+	"name":            "node_exporter_metrics",
+	"tag":             "ctrlb_agent_node_metrics",
+	"scrape_interval": 2,
+}
+
+var FluentBitInternalMetricsInput = map[string]any{
+	"name":            "fluentbit_metrics",
+	"tag":             "ctrlb_agent_internal_metrics",
+	"scrape_interval": 2,
 }
 
 var FluentBitPrometheusOutput = map[string]any{
 	"name":  "prometheus_exporter",
-	"match": "process_metrics",
+	"match": "ctrlb_agent_*_metrics",
 	"host":  "0.0.0.0",
 	"port":  2021,
 }
@@ -75,23 +81,10 @@ var DefaultConfigFluentBit = map[string]any{
 	"service": FluentBitService,
 	"pipeline": map[string]any{
 		"inputs": []any{
-			map[string]any{
-				"name":    "dummy",
-				"tag":     "dummy.log",
-				"dummy":   `{"message": "custom dummy event"}`,
-				"rate":    5,
-				"samples": 10,
-			},
-			FluentBitPrometheusInput,
+			FluentBitNodeMetricsInput,
+			FluentBitInternalMetricsInput,
 		},
-		"outputs": []any{
-			map[string]any{
-				"name":   "stdout",
-				"match":  "dummy.log",
-				"format": "json_lines",
-			},
-			FluentBitPrometheusOutput,
-		},
+		"outputs": []any{FluentBitPrometheusOutput},
 	},
 }
 
