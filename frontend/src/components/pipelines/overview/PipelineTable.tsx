@@ -1,13 +1,12 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
 	Table,
 	TableBody,
-	TableCaption,
 	TableCell,
+	TableContainer,
 	TableHead,
-	TableHeader,
 	TableRow,
-} from "@/components/ui/table";
+	Paper,
+} from "@mui/material";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import pipelineServices from "@/services/pipeline";
@@ -39,8 +38,10 @@ const formatTimestamp = (timestamp: number) => {
 
 const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
-	const { setPipelineOverview } = usePipelineOverview();
 	const [pipelineId, setPipelineId] = useState<string>("");
+	const [drawerOpen, setDrawerOpen] = useState(false);
+
+	const { setPipelineOverview } = usePipelineOverview();
 	const { resetGraph } = useGraphFlow();
 
 	const handleGetPipelines = async () => {
@@ -63,56 +64,66 @@ const PipelineTable = () => {
 		}
 	}, [pipelineId, handleGetPipeline]);
 
+	const handleRowClick = (id: string) => {
+		setPipelineId(id);
+		setDrawerOpen(true);
+	};
+
+	const handleCloseDrawer = () => {
+		setDrawerOpen(false);
+		setPipelineId("");
+		resetGraph();
+		handleGetPipelines();
+	};
+
+	if (!pipelines || pipelines.length === 0) {
+		return (
+			<div className="flex flex-col gap-2 justify-center items-center">
+				<p className="font-bold text-xl mt-[6rem]">Get started</p>
+				<p className="text-gray-700">Create Your First Pipeline</p>
+				<p className="text-gray-700">
+					Pipelines collect data from the sources in the pipeline and route them to desired destination.
+				</p>
+			</div>
+		);
+	}
+
 	return (
 		<>
-			{pipelines && (
-				<Table className="border border-gray-200">
-					<TableCaption>A list of your recent pipelines.</TableCaption>
-					<TableHeader className="bg-gray-100">
-						<TableRow>
-							<TableHead className="w-[100px]">Name</TableHead>
-							<TableHead className="w-[100px]">Incoming bytes</TableHead>
-							<TableHead className="w-[100px]">Outgoing bytes</TableHead>
-							<TableHead className="w-[100px]">Updated at</TableHead>
+			<TableContainer component={Paper} variant="outlined">
+				<Table>
+					<TableHead>
+						<TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+						<TableCell>Name</TableCell>
+						<TableCell>Incoming bytes</TableCell>
+						<TableCell>Outgoing bytes</TableCell>
+						<TableCell>Updated at</TableCell>
 						</TableRow>
-					</TableHeader>
+					</TableHead>
+
 					<TableBody>
-						{Array.isArray(pipelines) &&
-							pipelines.map(pipeline => (
-								<Sheet
-									key={pipeline.id}
-									onOpenChange={open => {
-										if (open) setPipelineId(pipeline.id);
-										else {
-											resetGraph();
-											handleGetPipelines();
-										}
-									}}>
-									<SheetTrigger asChild>
-										<TableRow className="cursor-pointer">
-											<TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
-											<TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>
-											<TableCell className="text-gray-700">{pipeline.outgoing_bytes}</TableCell>
-											<TableCell className="text-gray-700">{formatTimestamp(pipeline.updatedAt)}</TableCell>
-										</TableRow>
-									</SheetTrigger>
-									<SheetContent>
-										<ViewPipelineDetails pipelineId={pipeline.id} />
-									</SheetContent>
-								</Sheet>
-							))}
+						{pipelines.map(pipeline => (
+						<TableRow
+							key={pipeline.id}
+							hover
+							sx={{ cursor: "pointer" }}
+							onClick={() => handleRowClick(pipeline.id)}
+						>
+							<TableCell>{pipeline.name}</TableCell>
+							<TableCell>{pipeline.incoming_bytes}</TableCell>
+							<TableCell>{pipeline.outgoing_bytes}</TableCell>
+							<TableCell>{formatTimestamp(pipeline.updatedAt)}</TableCell>
+						</TableRow>
+						))}
 					</TableBody>
 				</Table>
-			)}
-			{!pipelines && (
-				<div className="flex flex-col gap-2 justify-center items-center">
-					<p className="font-bold text-xl mt-[6rem]">Get started</p>
-					<p className="text-gray-700">Create Your First Pipeline</p>
-					<p className="text-gray-700">
-						Pipelines collect data from the sources in the pipeline and route them to desired destination.
-					</p>
-				</div>
-			)}
+			</TableContainer>
+
+			<ViewPipelineDetails
+				pipelineId={pipelineId}
+				open={drawerOpen}
+				onClose={handleCloseDrawer}
+			/>
 		</>
 	);
 };
