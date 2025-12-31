@@ -1,0 +1,34 @@
+{
+  "title": "Fluent Bit Stdout Output Configuration",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "title": "Format",
+      "description": "Data format to be printed to standard output.",
+      "enum": ["msgpack", "json", "json_lines", "json_stream"],
+      "default": "msgpack"
+    },
+    "json_date_key": {
+      "type": "string",
+      "title": "JSON Date Key",
+      "description": "Name of the time key in the output record. Set to 'false' to disable.",
+      "default": "date"
+    },
+    "json_date_format": {
+      "type": "string",
+      "title": "JSON Date Format",
+      "description": "Format of the date.",
+      "enum": ["double", "epoch", "epoch_ms", "iso8601", "java_sql_timestamp"],
+      "default": "double"
+    },
+    "workers": {
+      "type": "integer",
+      "title": "Workers",
+      "description": "Number of workers to perform flush operations.",
+      "default": 1
+    }
+  },
+  "required": []
+}
+

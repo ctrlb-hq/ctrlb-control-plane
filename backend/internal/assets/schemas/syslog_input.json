@@ -1,0 +1,82 @@
+{
+  "title": "Fluent Bit Syslog Input Configuration",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "Defines transport protocol mode for receiving syslog messages.",
+      "enum": ["unix_udp", "unix_tcp", "tcp", "udp"],
+      "default": "unix_udp"
+    },
+    "path": {
+      "type": "string",
+      "title": "Path",
+      "description": "Absolute path to the Unix socket file. Required when mode is unix_tcp or unix_udp."
+    },
+    "unix_perm": {
+      "type": "string",
+      "title": "Unix Socket Permissions",
+      "description": "Permission of the Unix socket file. Only applies to unix_tcp or unix_udp modes.",
+      "default": "0644"
+    },
+    "listen": {
+      "type": "string",
+      "title": "Listen Address",
+      "description": "Network interface to bind. Only applies to tcp or udp modes.",
+      "default": "0.0.0.0"
+    },
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "TCP/UDP port to listen for incoming connections. Only applies to tcp or udp modes.",
+      "default": 5140
+    },
+    "format": {
+      "type": "string",
+      "title": "TCP Framing Format",
+      "description": "TCP framing format. octet_counting for RFC 6587 compliant framing. Only applies to TCP modes.",
+      "enum": ["newline", "octet_counting"],
+      "default": "newline"
+    },
+    "buffer_chunk_size": {
+      "type": "string",
+      "title": "Buffer Chunk Size",
+      "description": "Buffer size for incoming syslog messages. For UDP modes, this is the only way to configure receive buffer.",
+      "default": "32KB"
+    },
+    "buffer_max_size": {
+      "type": "string",
+      "title": "Buffer Max Size",
+      "description": "Maximum buffer size to receive a syslog message. Defaults to buffer_chunk_size if not set."
+    },
+    "receive_buffer_size": {
+      "type": "string",
+      "title": "Receive Buffer Size",
+      "description": "Maximum socket receive buffer size. Important for high-volume UDP/unix_udp to prevent message loss. On Linux, capped by sysctl net.core.rmem_max."
+    },
+    "parser": {
+      "type": "string",
+      "title": "Parser",
+      "description": "Alternative parser for the message. Default is syslog-rfc5424 for tcp/udp, syslog-rfc3164-local for unix modes. Use syslog-rfc5424 for fractional seconds."
+    },
+    "raw_message_key": {
+      "type": "string",
+      "title": "Raw Message Key",
+      "description": "Key where the original raw syslog message will be preserved."
+    },
+    "source_address_key": {
+      "type": "string",
+      "title": "Source Address Key",
+      "description": "Key where the source address will be injected."
+    },
+    "threaded": {
+      "type": "boolean",
+      "title": "Threaded",
+      "description": "Run this input plugin in its own thread.",
+      "default": false
+    }
+  },
+  "required": []
+}
+

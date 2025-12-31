@@ -1,0 +1,33 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Filter Rules",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/logical_op",
+          "label": "Logical Operator"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/regex",
+          "label": "Regex Rules (Include)",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/exclude",
+          "label": "Exclude Rules",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    }
+  ]
+}
+
