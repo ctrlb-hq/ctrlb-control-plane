@@ -1,90 +1,85 @@
 import {
 	Dialog,
-	DialogTrigger,
-	DialogContent,
-	DialogHeader,
 	DialogTitle,
-	DialogDescription,
-	DialogFooter,
-	DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
-import { PipelineOverviewInterface } from "@/types/pipeline.types";
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	Button,
+	Alert,
+	Typography,
+} from "@mui/material";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import pipelineServices from "@/services/pipeline";
+import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface Props {
-	isOpen: boolean;
-	setIsOpen: (open: boolean) => void;
+	open: boolean;
+	onClose: () => void;
 	pipelineOverview?: PipelineOverviewInterface;
 }
 
-const DeletePipelineDialog = ({ isOpen, setIsOpen, pipelineOverview }: Props) => {
-	const { resetGraph } = useGraphFlow();
+const DeletePipelineDialog = ({ open, onClose, pipelineOverview }: Props) => {
 	const { showSnackbar } = useGlobalSnackbar();
-	const handleDeletePipeline = async () => { 
+	const { resetGraph } = useGraphFlow();
+
+	const handleDeletePipeline = async () => {
 		try {
-			if (pipelineOverview?.id) {
-				await pipelineServices.deletePipelineById(pipelineOverview.id);
-			}
+			if (!pipelineOverview?.id) return;
+
+			await pipelineServices.deletePipelineById(pipelineOverview.id);
+
 			showSnackbar("Pipeline deleted successfully", "success");
-			setIsOpen(false);
 			resetGraph();
+			onClose();
 			window.location.reload();
 		} catch (error) {
-			console.error("Error deleting pipeline or collector:", error);
-			showSnackbar("Failed to delete pipeline or collector", "error");
+			console.error("Error deleting pipeline:", error);
+			showSnackbar("Failed to delete pipeline", "error");
 		}
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>
-				<Button variant="destructive">Delete Pipeline</Button>
-			</DialogTrigger>
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle sx={{ color: "error.main", fontWeight: 600 }}>
+				Delete Pipeline
+			</DialogTitle>
 
-			<DialogContent className="sm:max-w-[38rem]">
-				<DialogHeader>
-					<DialogTitle className="text-red-600 text-2xl font-semibold">Delete Pipeline</DialogTitle>
-					<DialogDescription className="text-base text-gray-700 mt-1">
-						Are you sure you want to permanently delete this pipeline? This action cannot be undone.
-					</DialogDescription>
-				</DialogHeader>
+			<DialogContent>
+				<DialogContentText sx={{ mb: 2 }}>
+					Are you sure you want to permanently delete this pipeline?
+					This action <strong>cannot be undone</strong>.
+				</DialogContentText>
 
-				<div className="mt-4 space-y-2 text-sm text-gray-800">
-					<p>
-						<span className="font-medium">Pipeline ID:</span> {pipelineOverview?.id}
-					</p>
-					<p>
-						<span className="font-medium">Pipeline Name:</span> {pipelineOverview?.name}
-					</p>
-				</div>
+				<Typography variant="body2">
+					<strong>Pipeline ID:</strong> {pipelineOverview?.id}
+				</Typography>
+				<Typography variant="body2" sx={{ mb: 2 }}>
+					<strong>Pipeline Name:</strong> {pipelineOverview?.name}
+				</Typography>
 
-				<div
-					role="alert"
-					className="mt-4 flex items-start gap-3 bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg shadow-sm">
-					<div className="pt-1">
-						<div className="bg-yellow-100 rounded-full p-1">
-							<AlertTriangle className="w-5 h-5 text-yellow-600" />
-						</div>
-					</div>
-					<p className="text-sm leading-snug">
-						<strong>Warning:</strong> Stopping this pipeline will stop the collector on the associated
-						VM/Kubernetes node.
-					</p>
-				</div>
-
-				<DialogFooter className="mt-6">
-					<DialogClose asChild>
-						<Button variant="outline">Cancel</Button>
-					</DialogClose>
-					<Button onClick={handleDeletePipeline} variant="destructive">
-						Delete
-					</Button>
-				</DialogFooter>
+				<Alert
+					severity="warning"
+					icon={<WarningAmberIcon />}
+				>
+					Deleting this pipeline will stop the collector on the associated
+					VM / Kubernetes node.
+				</Alert>
 			</DialogContent>
+
+			<DialogActions>
+				<Button onClick={onClose} variant="outlined">
+					Cancel
+				</Button>
+				<Button
+					onClick={handleDeletePipeline}
+					variant="contained"
+					color="error"
+				>
+					Delete
+				</Button>
+			</DialogActions>
 		</Dialog>
 	);
 };

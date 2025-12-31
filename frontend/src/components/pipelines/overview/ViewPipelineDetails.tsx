@@ -1,4 +1,4 @@
-import { Boxes } from "lucide-react";
+import { Boxes, Loader2 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import pipelineServices from "@/services/pipeline";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
@@ -25,31 +25,29 @@ const ViewPipelineDetails = ({
 	open,
 	onClose,
 }: ViewPipelineDetailsProps) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [overviewLoading, setOverviewLoading] = useState(false);
+	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [width, setWidth] = useState(900);
 	const resizingRef = useRef(false);
 	const [pipelineOverviewData, setPipelineOverviewData] =
 		useState<PipelineOverviewInterface>();
 	const [tabs, setTabs] = useState<string>("overview");
-
 	const { showSnackbar } = useGlobalSnackbar();
 	const navigate = useNavigate();
 
 	const handleGetPipelineOverview = useCallback(async () => {
 		try {
+			setOverviewLoading(true);
 			const response = await pipelineServices.getPipelineOverviewById(pipelineId);
 			setPipelineOverviewData(response);
 		} catch (error) {
 			console.error("Error fetching pipeline overview:", error);
 			showSnackbar("Failed to fetch pipeline overview", "error");
 		}
-	}, [pipelineId, showSnackbar]);
-
-	useEffect(() => {
-		if (open) {
-			handleGetPipelineOverview();
+		finally {
+			setOverviewLoading(false);
 		}
-	}, [handleGetPipelineOverview, open]);
+	}, [pipelineId, showSnackbar]);
 
 	const startResize = () => {
 		resizingRef.current = true;
@@ -70,6 +68,18 @@ const ViewPipelineDetails = ({
 		document.removeEventListener("mousemove", resize);
 		document.removeEventListener("mouseup", stopResize);
 	};
+	
+	useEffect(() => {
+		if (!open) {
+			setPipelineOverviewData(undefined);
+			setTabs("overview");
+			return;
+		}
+
+		if (pipelineId) {
+			handleGetPipelineOverview();
+		}
+	}, [open, pipelineId, handleGetPipelineOverview]);
 
 	return (
 		<>
@@ -126,11 +136,13 @@ const ViewPipelineDetails = ({
 						>
 							View / Edit Pipeline
 						</Button>
-						<DeletePipelineDialog
-							isOpen={isOpen}
-							setIsOpen={setIsOpen}
-							pipelineOverview={pipelineOverviewData}
-						/>
+						<Button
+							variant="contained"
+							color="error"
+							onClick={() => setDeleteOpen(true)}
+						>
+							Delete Pipeline
+						</Button>
 						</div>
 						<IconButton
 							size="small"
@@ -167,12 +179,30 @@ const ViewPipelineDetails = ({
 					</Box>
 					{/* Body */}
 					<div className="flex-1 overflow-auto p-4">
-						{tabs === "overview" && <PipelineOverview pipelineId={pipelineId} />}
-						{tabs === "yaml" && (
-						<PipelinYAML jsonforms={pipelineOverviewData?.config} />
+						{overviewLoading ? (
+							<div className="flex justify-center items-center h-[200px]">
+								<Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+							</div>
+						) : (
+							<>
+								{tabs === "overview" && pipelineOverviewData && (
+									<PipelineOverview
+										pipelineOverviewData={pipelineOverviewData}
+										onRefresh={handleGetPipelineOverview}
+									/>
+								)}
+								{tabs === "yaml" && (
+									<PipelinYAML jsonforms={pipelineOverviewData?.config} />
+								)}
+							</>
 						)}
 					</div>
 				</div>
+				<DeletePipelineDialog
+					open={deleteOpen}
+					onClose={() => setDeleteOpen(false)}
+					pipelineOverview={pipelineOverviewData}
+				/>
 			</Drawer>
 		</>
 	);

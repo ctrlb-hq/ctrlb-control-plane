@@ -20,7 +20,7 @@ const agentServices = {
 			throw new Error(axiosError.response?.data.message || "Failed to fetch agent list");
 		}
 	},
-	restartAgentMonitoring: async (id: string): Promise<any> => {
+	restartAgentMonitoring: async (id: number): Promise<any> => {
 		try {
 			if (!id) return;
 			const response = await axiosInstance.post(`/agents/${id}/restart-monitoring`);
@@ -38,7 +38,7 @@ const agentServices = {
 		}
 	},
 
-	getAgentHealthMetrics: async (id: string): Promise<any> => {
+	getAgentHealthMetrics: async (id: number): Promise<any> => {
 		try {
 			if (!id) return;
 			const response = await axiosInstance.get(`/agents/${id}/healthmetrics`);
