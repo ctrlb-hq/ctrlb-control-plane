@@ -264,37 +264,3 @@ func extractValue(families map[string]*io_prometheus_client.MetricFamily, name s
 	}
 	return total
 }
-
-func extractValueWithLabels(families map[string]*io_prometheus_client.MetricFamily, name string, labels map[string]string) float64 {
-	family, ok := families[name]
-	if !ok || family == nil {
-		return 0
-	}
-
-	for _, m := range family.Metric {
-		if matchLabels(m.Label, labels) {
-			if m.GetCounter() != nil {
-				return m.GetCounter().GetValue()
-			} else if m.GetGauge() != nil {
-				return m.GetGauge().GetValue()
-			} else if m.GetUntyped() != nil {
-				return m.GetUntyped().GetValue()
-			}
-		}
-	}
-	return 0
-}
-
-func matchLabels(metricLabels []*io_prometheus_client.LabelPair, targetLabels map[string]string) bool {
-	labelMap := make(map[string]string)
-	for _, lp := range metricLabels {
-		labelMap[lp.GetName()] = lp.GetValue()
-	}
-
-	for k, v := range targetLabels {
-		if labelMap[k] != v {
-			return false
-		}
-	}
-	return true
-}
