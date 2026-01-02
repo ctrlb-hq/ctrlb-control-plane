@@ -25,7 +25,7 @@ func (f *FrontendAgentRepository) AgentExists(id string) bool {
 
 func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error) {
 	var agents []models.AgentInfoHome
-	row, err := f.db.Query("SELECT id, name, version, pipeline_name FROM agents")
+	row, err := f.db.Query("SELECT id, name, version, type, pipeline_name FROM agents")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error)
 	for row.Next() {
 		agent := models.AgentInfoHome{}
 		var pipelineName sql.NullString
-		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName)
+		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Type, &pipelineName)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	var pipelineName sql.NullString
 	var pipelineId sql.NullInt64
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.IP, &agent.Platform)
+	err := f.db.QueryRow("SELECT id, name, type, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.IP, &agent.Platform)
 	if err != nil {
 		return nil, err
 	}

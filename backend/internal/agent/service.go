@@ -65,7 +65,14 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		createDefaultPipelineReq.Name = req.PipelineName
 		createDefaultPipelineReq.AgentIDs = []int{int(response.ID)}
 		createDefaultPipelineReq.CreatedBy = req.StartedBy
-		createDefaultPipelineReq.PipelineGraph = constants.DefaultOTELPipelineGraph
+
+		// Use appropriate default pipeline graph based on agent type
+		if req.Type == models.AgentTypeFluentBit {
+			createDefaultPipelineReq.PipelineGraph = constants.DefaultFluentBitPipelineGraph
+		} else {
+			createDefaultPipelineReq.PipelineGraph = constants.DefaultOTELPipelineGraph
+		}
+
 		_, err := a.FrontendAgentService.CreatePipeline(createDefaultPipelineReq)
 		if err != nil {
 			return nil, err

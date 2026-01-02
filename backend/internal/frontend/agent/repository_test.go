@@ -36,14 +36,14 @@ func TestGetAllAgents(t *testing.T) {
 	db, mock, repo := setupMockDB(t)
 	defer db.Close()
 
-	agentRows := sqlmock.NewRows([]string{"id", "name", "version", "pipeline_name"}).
-		AddRow(1, "agent1", "v1.0", sql.NullString{String: "pipeline1", Valid: true})
+	agentRows := sqlmock.NewRows([]string{"id", "name", "version", "type", "pipeline_name"}).
+		AddRow(1, "agent1", "v1.0", "otel", sql.NullString{String: "pipeline1", Valid: true})
 
-	mock.ExpectQuery("SELECT id, name, version, pipeline_name FROM agents").
+	mock.ExpectQuery("SELECT id, name, version, type, pipeline_name FROM agents").
 		WillReturnRows(agentRows)
 
 	mock.ExpectQuery("SELECT logs_rate_sent, traces_rate_sent, metrics_rate_sent, status FROM aggregated_agent_metrics WHERE agent_id = ?").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnRows(sqlmock.NewRows([]string{"logs_rate_sent", "traces_rate_sent", "metrics_rate_sent", "status"}).
 			AddRow(1, 2, 3, "healthy"))
 
@@ -61,10 +61,10 @@ func TestGetAgent(t *testing.T) {
 	db, mock, repo := setupMockDB(t)
 	defer db.Close()
 
-	agentRow := sqlmock.NewRows([]string{"id", "name", "version", "pipeline_id", "pipeline_name", "hostname", "ip", "platform"}).
-		AddRow("1", "agent1", "v1.0", sql.NullInt64{Int64: 123, Valid: true}, sql.NullString{String: "pipeline1", Valid: true}, "host", "1.2.3.4", "linux")
+	agentRow := sqlmock.NewRows([]string{"id", "name", "type", "version", "pipeline_id", "pipeline_name", "hostname", "ip", "platform"}).
+		AddRow("1", "agent1", "otel", "v1.0", sql.NullInt64{Int64: 123, Valid: true}, sql.NullString{String: "pipeline1", Valid: true}, "host", "1.2.3.4", "linux")
 
-	mock.ExpectQuery("SELECT id, name, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?").
+	mock.ExpectQuery("SELECT id, name, type, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?").
 		WithArgs("1").
 		WillReturnRows(agentRow)
 
@@ -159,10 +159,10 @@ func TestGetLatestAgentSince(t *testing.T) {
 	unixTimestamp := time.Now().Unix()
 	unixTimestampStr := strconv.FormatInt(unixTimestamp, 10)
 
-	mock.ExpectQuery("SELECT id, name, registered_at FROM agents WHERE registered_at > ?").
+	mock.ExpectQuery("SELECT id, name, registered_at, pipeline_id FROM agents WHERE registered_at > \\? AND pipeline_id IS NOT NULL ORDER BY registered_at DESC LIMIT 1").
 		WithArgs(unixTimestampStr).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "registered_at"}).
-			AddRow("id1", "agent1", unixTimestamp))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "registered_at", "pipeline_id"}).
+			AddRow("id1", "agent1", unixTimestamp, "123"))
 
 	agent, err := repo.GetLatestAgentSince(unixTimestampStr)
 	if err != nil {

@@ -276,3 +276,26 @@ func TestGetNodesByRole(t *testing.T) {
 	assert.Len(t, outputs, 1)
 }
 
+func TestValidateGraphForAgentType(t *testing.T) {
+	t.Run("valid graph for fluent-bit", func(t *testing.T) {
+		graph := createSampleFluentBitGraph()
+		err := ValidateGraphForAgentType(graph, string(AgentTypeFluentBit))
+		assert.NoError(t, err)
+	})
+	t.Run("valid graph for otel", func(t *testing.T) {
+		graph := createSampleGraph()
+		err := ValidateGraphForAgentType(graph, string(AgentTypeOTEL))
+		assert.NoError(t, err)
+	})
+
+	t.Run("invalid graph for fluent-bit", func(t *testing.T) {
+		graph := createSampleGraph()
+		err := ValidateGraphForAgentType(graph, string(AgentTypeFluentBit))
+		assert.Error(t, err)
+	})
+	t.Run("invalid graph for otel", func(t *testing.T) {
+		graph := createSampleFluentBitGraph()
+		err := ValidateGraphForAgentType(graph, string(AgentTypeOTEL))
+		assert.Error(t, err)
+	})
+}

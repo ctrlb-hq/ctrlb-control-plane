@@ -109,17 +109,25 @@ func (f *FrontendPipelineService) AttachAgentToPipeline(pipelineId int, agentId 
 		return utils.ErrPipelineDoesNotExists
 	}
 
-	err := f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
+	// Get agent info first to check compatibility
+	agent, err := f.FrontendPipelineRepository.GetAgentInfo(agentId)
 	if err != nil {
 		return err
 	}
 
+	// Get pipeline graph
 	graph, err := f.GetPipelineGraph(pipelineId)
 	if err != nil {
 		return err
 	}
 
-	agent, err := f.FrontendPipelineRepository.GetAgentInfo(agentId)
+	// Validate that the pipeline graph is compatible with the agent type
+	if err := configcompiler.ValidateGraphForAgentType(*graph, string(agent.Type)); err != nil {
+		return fmt.Errorf("cannot attach agent to pipeline: %w", err)
+	}
+
+	// Attach agent to pipeline
+	err = f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
 	if err != nil {
 		return err
 	}
@@ -143,17 +151,26 @@ func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGrap
 		return utils.ErrPipelineDoesNotExists
 	}
 
-	err := f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph)
+	// Get all attached agents to validate compatibility
+	attachedAgents, err := f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
 	if err != nil {
 		return err
 	}
 
-	attachedAgent, err := f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
+	// Validate that the new graph is compatible with all attached agent types
+	for _, agent := range attachedAgents {
+		if err := configcompiler.ValidateGraphForAgentType(pipelineGraph, string(agent.Type)); err != nil {
+			return fmt.Errorf("pipeline graph incompatible with attached agent '%s' (ID: %d): %w",
+				agent.Name, agent.ID, err)
+		}
+	}
+
+	err = f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph)
 	if err != nil {
 		return err
 	}
 
-	return f.sendConfigToAgents(attachedAgent, pipelineGraph)
+	return f.sendConfigToAgents(attachedAgents, pipelineGraph)
 }
 
 func (f *FrontendPipelineService) SyncConfig(agentId string) error {
@@ -184,40 +201,40 @@ func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 }
 
 func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
-    var failedAgents []string
-    var lastErr error
+	var failedAgents []string
+	var lastErr error
 
-    for _, agent := range agents {
-        // Compile config based on agent type
-        var config *map[string]any
-        var err error
-        
-        if agent.Type == "fluent-bit" {
-            config, err = configcompiler.CompileGraphToFluentBit(pipelineGraph)
-        } else {
-            config, err = configcompiler.CompileGraph(pipelineGraph, configcompiler.AgentTypeOTEL)
-        }
-        
-        if err != nil {
-            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
-            lastErr = err
-            utils.Logger.Sugar().Errorf("Failed to compile config for agent [ID:%v]: %v", agent.ID, err)
-            continue
-        }
+	for _, agent := range agents {
+		// Compile config based on agent type
+		var config *map[string]any
+		var err error
 
-        jsonData, err := json.Marshal(config)
-        if err != nil {
-            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
-            lastErr = fmt.Errorf("error marshaling config: %v", err)
-            continue
-        }
+		if agent.Type == "fluent-bit" {
+			config, err = configcompiler.CompileGraphToFluentBit(pipelineGraph)
+		} else {
+			config, err = configcompiler.CompileGraph(pipelineGraph, configcompiler.AgentTypeOTEL)
+		}
 
-        if err := f.sendConfigToSingleAgent(agent, jsonData); err != nil {
-            failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
-            lastErr = err
-            utils.Logger.Sugar().Errorf("Failed to send config to agent [ID:%v]: %v", agent.ID, err)
-        }
-    }
+		if err != nil {
+			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+			lastErr = err
+			utils.Logger.Sugar().Errorf("Failed to compile config for agent [ID:%v]: %v", agent.ID, err)
+			continue
+		}
+
+		jsonData, err := json.Marshal(config)
+		if err != nil {
+			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+			lastErr = fmt.Errorf("error marshaling config: %v", err)
+			continue
+		}
+
+		if err := f.sendConfigToSingleAgent(agent, jsonData); err != nil {
+			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))
+			lastErr = err
+			utils.Logger.Sugar().Errorf("Failed to send config to agent [ID:%v]: %v", agent.ID, err)
+		}
+	}
 
 	if len(failedAgents) == len(agents) {
 		return fmt.Errorf("failed to send configuration to all %d agent(s): last error: %v", len(agents), lastErr)

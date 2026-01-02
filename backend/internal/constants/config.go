@@ -130,3 +130,40 @@ var DefaultOTELPipelineGraph = models.PipelineGraph{
 		},
 	},
 }
+
+var DefaultFluentBitPipelineGraph = models.PipelineGraph{
+	Nodes: []models.PipelineNodes{
+		{
+			ComponentID:   1,
+			Name:          "Tail Log Input",
+			ComponentName: "tail_input",
+			ComponentRole: "input",
+			SupportedSignals: []string{
+				"logs",
+			},
+			Config: map[string]any{
+				"path":           "/var/log/syslog",
+				"path_key":       "filename",
+				"read_from_head": true,
+			},
+		},
+		{
+			ComponentID:   2,
+			Name:          "Stdout Output",
+			ComponentName: "stdout_output",
+			ComponentRole: "output",
+			SupportedSignals: []string{
+				"logs",
+			},
+			Config: map[string]any{
+				"format": "json_lines",
+			},
+		},
+	},
+	Edges: []models.PipelineEdges{
+		{
+			Source: "1",
+			Target: "2",
+		},
+	},
+}

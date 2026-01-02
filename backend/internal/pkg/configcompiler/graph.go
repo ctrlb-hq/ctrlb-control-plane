@@ -212,3 +212,64 @@ func IntersectSignals(nodes []models.PipelineNodes) []string {
 
 	return result
 }
+
+// otelComponentRoles are the valid component roles for OTEL agents
+var otelComponentRoles = map[string]bool{
+	"receiver":  true,
+	"processor": true,
+	"exporter":  true,
+}
+
+// fluentBitComponentRoles are the valid component roles for Fluent Bit agents
+var fluentBitComponentRoles = map[string]bool{
+	"input":  true,
+	"filter": true,
+	"output": true,
+}
+
+// ValidateGraphForAgentType checks if a pipeline graph is compatible with a specific agent type
+// Returns nil if compatible, error with details if not
+func ValidateGraphForAgentType(graph models.PipelineGraph, agentType string) error {
+	if len(graph.Nodes) == 0 {
+		return nil // Empty graph is compatible with any agent
+	}
+
+	var expectedRoles map[string]bool
+	var agentTypeName string
+
+	switch agentType {
+	case string(AgentTypeOTEL):
+		expectedRoles = otelComponentRoles
+		agentTypeName = "OTEL"
+	case string(AgentTypeFluentBit):
+		expectedRoles = fluentBitComponentRoles
+		agentTypeName = "Fluent Bit"
+	default:
+		return fmt.Errorf("unknown agent type: %s", agentType)
+	}
+
+	var incompatibleComponents []string
+	for _, node := range graph.Nodes {
+		if !expectedRoles[node.ComponentRole] {
+			incompatibleComponents = append(incompatibleComponents,
+				fmt.Sprintf("%s (role: %s)", node.ComponentName, node.ComponentRole))
+		}
+	}
+
+	if len(incompatibleComponents) > 0 {
+		return fmt.Errorf("pipeline contains components incompatible with %s agent: %v",
+			agentTypeName, incompatibleComponents)
+	}
+
+	return nil
+}
+
+// IsFluentBitCompatibleGraph checks if a graph can be used with a Fluent Bit agent
+func IsFluentBitCompatibleGraph(graph models.PipelineGraph) bool {
+	return ValidateGraphForAgentType(graph, string(AgentTypeFluentBit)) == nil
+}
+
+// IsOTELCompatibleGraph checks if a graph can be used with an OTEL agent
+func IsOTELCompatibleGraph(graph models.PipelineGraph) bool {
+	return ValidateGraphForAgentType(graph, string(AgentTypeOTEL)) == nil
+}
