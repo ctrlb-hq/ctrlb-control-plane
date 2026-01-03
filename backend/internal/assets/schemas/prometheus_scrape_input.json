@@ -1,0 +1,45 @@
+{
+  "title": "Fluent Bit Prometheus Scrape Input Configuration",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "title": "Host",
+      "description": "The host of the Prometheus metric endpoint to scrape.",
+      "minLength": 1
+    },
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "The port of the Prometheus metric endpoint to scrape."
+    },
+    "metrics_path": {
+      "type": "string",
+      "title": "Metrics Path",
+      "description": "The metrics URI endpoint. Must start with /. Parameters can be added using ?",
+      "default": "/metrics"
+    },
+    "scrape_interval": {
+      "type": "string",
+      "title": "Scrape Interval",
+      "description": "The interval to scrape metrics.",
+      "default": "10s"
+    },
+    "tag": {
+      "type": "string",
+      "title": "Tag",
+      "description": "Tag for the scraped metrics."
+    },
+    "threaded": {
+      "type": "boolean",
+      "title": "Threaded",
+      "description": "Run this input plugin in its own thread.",
+      "default": false
+    }
+  },
+  "required": [
+    "host",
+    "port"
+  ]
+}
+

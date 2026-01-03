@@ -27,8 +27,10 @@ func GetComponentTypeMap() map[string]string {
 		"prometheus_exporter": "exporter",
 
 		// Fluent Bit Inputs
-		"tail_input":   "input",
-		"syslog_input": "input",
+		"tail_input":              "input",
+		"syslog_input":            "input",
+		"prometheus_scrape_input": "input",
+		"opentelemetry_input":     "input",
 
 		// Fluent Bit Filters
 		"grep_filter":   "filter",
@@ -69,17 +71,19 @@ func GetSignalSupportMap() map[string][]string {
 		"prometheus_exporter": {"metrics"},
 
 		// Fluent Bit Inputs
-		"tail_input":   {"logs"},
-		"syslog_input": {"logs"},
+		"tail_input":              {"logs"},
+		"syslog_input":            {"logs"},
+		"prometheus_scrape_input": {"metrics"},
+		"opentelemetry_input":     {"traces", "metrics", "logs"},
 
 		// Fluent Bit Filters
 		"grep_filter":   {"logs"},
 		"modify_filter": {"logs"},
 
 		// Fluent Bit Outputs
-		"ctrlb_output":         {"logs"},
-		"http_output":          {"logs"},
-		"stdout_output":        {"logs"},
+		"ctrlb_output":         {"logs", "metrics"},
+		"http_output":          {"logs", "metrics"},
+		"stdout_output":        {"logs", "metrics"},
 		"opentelemetry_output": {"traces", "metrics", "logs"},
 	}
 }
