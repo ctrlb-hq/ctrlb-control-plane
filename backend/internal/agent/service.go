@@ -47,7 +47,7 @@ func NewAgentService(agentRepository AgentRepositoryInterface, metricsRepository
 
 // RegisterAgent processes the registration of a new agent.
 func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
-	if req.Type == "" {
+	if string(req.Type) == "" {
 		req.Type = models.AgentTypeOTEL
 	}
 	req.RegisteredAt = time.Now().Unix()
@@ -65,6 +65,7 @@ func (a *AgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRe
 		createDefaultPipelineReq.Name = req.PipelineName
 		createDefaultPipelineReq.AgentIDs = []int{int(response.ID)}
 		createDefaultPipelineReq.CreatedBy = req.StartedBy
+		createDefaultPipelineReq.Type = req.Type
 
 		// Use appropriate default pipeline graph based on agent type
 		if req.Type == models.AgentTypeFluentBit {

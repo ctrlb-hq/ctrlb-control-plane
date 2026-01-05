@@ -179,7 +179,7 @@ func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models
 
 	// Use the same transaction for everything else
 	// (SyncPipelineGraph would also need to be updated not to require a context)
-	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph); err != nil {
+	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph, createPipelineRequest.Type); err != nil {
 		_ = tx.Rollback()
 		return "", fmt.Errorf("failed to sync pipeline graph: %w", err)
 	}
@@ -334,7 +334,7 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph, agentType models.AgentType) error {
 
 	shouldCommit := false
 	var err error
@@ -459,7 +459,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		}
 	}
 
-	jsonConfig, err := configcompiler.CompileGraph(graph, configcompiler.AgentTypeOTEL)
+	jsonConfig, err := configcompiler.CompileGraph(graph, configcompiler.AgentType(agentType))
 	if err != nil {
 		if shouldCommit {
 			_ = tx.Rollback()

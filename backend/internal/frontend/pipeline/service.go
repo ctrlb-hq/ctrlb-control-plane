@@ -26,7 +26,7 @@ type FrontendPipelineRepositoryInterface interface {
 	DetachAgentFromPipeline(pipelineId int, agentId int) error
 	AttachAgentToPipeline(pipelineId int, agentId int) error
 	GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error)
-	SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error
+	SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph, agentType models.AgentType) error
 	GetAgentInfo(agentId int) (*models.AgentInfoHome, error)
 	GetAgentPipelineId(agentId string) (*int, error)
 }
@@ -165,7 +165,7 @@ func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGrap
 		}
 	}
 
-	err = f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph)
+	err = f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph, attachedAgents[0].Type)
 	if err != nil {
 		return err
 	}
@@ -209,11 +209,7 @@ func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHo
 		var config *map[string]any
 		var err error
 
-		if agent.Type == "fluent-bit" {
-			config, err = configcompiler.CompileGraphToFluentBit(pipelineGraph)
-		} else {
-			config, err = configcompiler.CompileGraph(pipelineGraph, configcompiler.AgentTypeOTEL)
-		}
+		config, err = configcompiler.CompileGraph(pipelineGraph, configcompiler.AgentType(agent.Type))
 
 		if err != nil {
 			failedAgents = append(failedAgents, fmt.Sprintf("Agent[ID:%v]", agent.ID))

@@ -83,8 +83,22 @@ var DefaultConfigFluentBit = map[string]any{
 		"inputs": []any{
 			FluentBitNodeMetricsInput,
 			FluentBitInternalMetricsInput,
+			map[string]any{
+				"name": "tail",
+				"tag": "syslog_tail_input",
+				"path": "/var/log/syslog",
+				"path_key": "filename",
+				"read_from_head": false,
+			},
 		},
-		"outputs": []any{FluentBitPrometheusOutput},
+		"outputs": []any{FluentBitPrometheusOutput,
+			map[string]any{
+				"name": "stdout",
+				"format": "json_lines",
+				"workers": 1,
+				"match": "syslog_tail_input",
+			},
+		},
 	},
 }
 
@@ -144,7 +158,7 @@ var DefaultFluentBitPipelineGraph = models.PipelineGraph{
 			Config: map[string]any{
 				"path":           "/var/log/syslog",
 				"path_key":       "filename",
-				"read_from_head": true,
+				"read_from_head": false,
 			},
 		},
 		{
