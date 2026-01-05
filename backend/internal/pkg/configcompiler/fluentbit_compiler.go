@@ -260,13 +260,18 @@ func buildFBConfigFromInstances(instances []FBNodeInstance) *map[string]any {
 	inputs = append(inputs, constants.FluentBitNodeMetricsInput, constants.FluentBitInternalMetricsInput)
 	outputs = append(outputs, constants.FluentBitPrometheusOutput)
 
+	pipeline := map[string]any{
+		"inputs":  inputs,
+		"outputs": outputs,
+	}
+	// Only add filters if non-empty (omit key entirely rather than null)
+	if len(filters) > 0 {
+		pipeline["filters"] = filters
+	}
+
 	config := map[string]any{
-		"service": constants.FluentBitService,
-		"pipeline": map[string]any{
-			"inputs":  inputs,
-			"filters": filters,
-			"outputs": outputs,
-		},
+		"service":  constants.FluentBitService,
+		"pipeline": pipeline,
 	}
 
 	return &config
