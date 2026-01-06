@@ -5,11 +5,10 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
-
-import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands } from "@/constants";
+import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 
 type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
 
@@ -37,12 +36,11 @@ const AddPipelineDetails = ({
 	const [showStatus, setShowStatus] = useState(false);
 	const [status, setStatus] = useState<"success" | "failed">("failed");
 	const [_showAgentInfo, setShowAgentInfo] = useState(false);
-	const { toast } = useToast();
 	const [_isApiKeyCopied, setIsApiKeyCopied] = useState(false);
 	const [showConfigureButton, setShowConfigureButton] = useState(false);
 	const [_isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
-
+	const { showSnackbar } = useGlobalSnackbar();
 	const [formData, setFormData] = useState<formData>({
 		name: pipelineName ?? "",
 		platform: platform ?? "",
@@ -93,20 +91,15 @@ const AddPipelineDetails = ({
 	const handleCopy = async (command: string) => {
 		try {
 			await navigator.clipboard.writeText(command);
-			toast({
-				title: "Copied",
-				description: "Install command copied to clipboard",
-				duration: 2000,
-			});
+			showSnackbar("Install command copied to clipboard", "success", 2000);
 			setIsApiKeyCopied(true);
 		} catch (error) {
 			console.error("Clipboard copy failed:", error);
-			toast({
-				title: "Failed to Copy",
-				description: "Clipboard access blocked. Press ⌘ + C (Mac) or Ctrl + C (Windows) to copy manually.",
-				duration: 3000,
-				variant: "destructive",
-			});
+			showSnackbar(
+				"Clipboard access blocked. Press ⌘ + C (Mac) or Ctrl + C (Windows) to copy manually.",
+				"error",
+				3000
+			);
 		}
 
 		const since = Math.floor(new Date().getTime() / 1000);
@@ -374,11 +367,11 @@ const AddPipelineDetails = ({
 										setCurrentStep(currentStep + 1);
 									} catch (error) {
 										console.error("Error initializing pipeline:", error);
-										toast({
-											title: "Error",
-											description: "Failed to initialize pipeline data. Please try again.",
-											duration: 3000,
-										});
+										showSnackbar(
+											"Failed to initialize pipeline data. Please try again.",
+											"error",
+											3000
+										);
 									}
 								}}
 								// disabled={!formData.name || !formData.platform || !EDI_API_KEY}
