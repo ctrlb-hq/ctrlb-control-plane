@@ -37,11 +37,14 @@ RUN mkdir -p /opt/fluent-bit/bin
 # Copy Fluent Bit binary and libraries from official image
 COPY --from=fluentbit /fluent-bit /opt/fluent-bit
 
+# Add Fluent Bit to PATH
+ENV PATH="/opt/fluent-bit/bin:${PATH}"
+
 WORKDIR /app
 
 # Copy the binary from the builder stage.
 COPY --from=builder /app/ctrlb-agent .
-COPY --from=builder /app/internal/config/config.yaml .
+COPY --from=builder /app/internal/config/fluentbit-config.yaml ./config.yaml
 
 # Command to run the executable
 CMD ["./ctrlb-agent"]
