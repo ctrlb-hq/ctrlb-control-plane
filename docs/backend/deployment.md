@@ -58,7 +58,7 @@ JWT_SECRET=your-secure-secret
 ### 3. Run the backend
 
 ```bash
-go run main.go
+go run cmd/backend/main.go
 ```
 
 The backend will start at `http://localhost:8096` by default.

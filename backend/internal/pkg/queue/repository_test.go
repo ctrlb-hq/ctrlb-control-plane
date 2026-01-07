@@ -95,22 +95,27 @@ func TestUpdateAgentStatus(t *testing.T) {
 	assert.Equal(t, "connected", status)
 }
 
-func TestRefreshMonitoring(t *testing.T) {
+func TestGetStaleAgents_NoStaleAgents(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewQueueRepository(db)
 
-	// Insert test data
-	_, err := db.Exec(`INSERT INTO agents (id, hostname, ip) VALUES (?, ?, ?)`, "agent-3", "host-3", "127.0.0.1")
+	_, err := db.Exec(`INSERT INTO aggregated_agent_metrics (agent_id, logs_rate_sent, traces_rate_sent, metrics_rate_sent, data_sent_bytes, data_received_bytes, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, "agent-3", 0, 0, 0, 0, 0, "connected", time.Now().Unix())
 	assert.NoError(t, err)
 
-	_, err = db.Exec(`
-		INSERT INTO aggregated_agent_metrics (agent_id, logs_rate_sent, traces_rate_sent, metrics_rate_sent, data_sent_bytes, data_received_bytes, status, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, "agent-3", 0, 0, 0, 0, 0, "connected", time.Now().Unix())
+	agents, err := repo.GetStaleAgents(time.Now().Unix())
+	assert.NoError(t, err)
+	assert.Len(t, agents, 0)
+}
+
+func TestGetStaleAgents_OneStaleAgent(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewQueueRepository(db)
+
+	_, err := db.Exec(`INSERT INTO aggregated_agent_metrics (agent_id, logs_rate_sent, traces_rate_sent, metrics_rate_sent, data_sent_bytes, data_received_bytes, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, "agent-3", 0, 0, 0, 0, 0, "connected", time.Now().Unix() - 121)
 	assert.NoError(t, err)
 
-	agents, err := repo.RefreshMonitoring()
+	agents, err := repo.GetStaleAgents(time.Now().Unix())
 	assert.NoError(t, err)
 	assert.Len(t, agents, 1)
-	assert.Equal(t, "agent-3", agents[0].AgentID)
-	assert.Equal(t, "connected", agents[0].CurrentStatus)
+	assert.Equal(t, "agent-3", agents[0])
 }

@@ -7,6 +7,7 @@ import (
 
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,31 +26,15 @@ func (m *MockAgentRepository) AgentExists(hostname string) (bool, error) {
 	return m.ExistsFunc(hostname)
 }
 
-type MockAgentQueue struct {
-	AddFunc            func(id, hostname, ip string) error
-	RemoveFunc         func(id string) error
-	RefreshFunc        func() error
-	CheckAllAgentsFunc func()
+type MockMetricsRepository struct {
+	UpdateFunc func(agg queue.AggregatedAgentMetrics, rt queue.RealtimeAgentMetrics) error
 }
 
-func (m *MockAgentQueue) AddAgent(id, hostname, ip string) error {
-	return m.AddFunc(id, hostname, ip)
-}
-
-func (m *MockAgentQueue) RemoveAgent(id string) error {
-	return m.RemoveFunc(id)
-}
-
-func (m *MockAgentQueue) RefreshMonitoring() error {
-	return m.RefreshFunc()
-}
-
-func (m *MockAgentQueue) StartStatusCheck() {
-	// No-op for testing
-}
-
-func (m *MockAgentQueue) CheckAllAgents() {
-	// No-op for testing
+func (m *MockMetricsRepository) UpdateAgentMetricsInDB(agg queue.AggregatedAgentMetrics, rt queue.RealtimeAgentMetrics) error {
+	if m.UpdateFunc != nil {
+		return m.UpdateFunc(agg, rt)
+	}
+	return nil
 }
 
 type MockFrontendPipeline struct {
@@ -96,16 +81,10 @@ func TestAgentService_RegisterAgent_Success(t *testing.T) {
 			return &AgentRegisterResponse{ID: 1, Config: map[string]any{"dummy": "value"}}, nil
 		},
 	}
-	mockQueue := &MockAgentQueue{
-		AddFunc: func(agentID string, hostname string, ip string) error {
-			return nil
-		},
-		RemoveFunc:  func(id string) error { return nil },
-		RefreshFunc: func() error { return nil },
-	}
+	mockMetrics := &MockMetricsRepository{}
 	mockFrontend := &MockFrontendPipeline{}
 
-	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+	svc := NewAgentService(mockRepo, mockMetrics, mockFrontend)
 
 	req := &models.AgentRegisterRequest{
 		Platform: "linux",
@@ -129,16 +108,10 @@ func TestAgentService_RegisterAgent_RepoError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	mockQueue := &MockAgentQueue{
-		AddFunc: func(agentID string, hostname string, ip string) error {
-			return nil
-		},
-		RemoveFunc:  func(id string) error { return nil },
-		RefreshFunc: func() error { return nil },
-	}
+	mockMetrics := &MockMetricsRepository{}
 	mockFrontend := &MockFrontendPipeline{}
 
-	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+	svc := NewAgentService(mockRepo, mockMetrics, mockFrontend)
 
 	req := &models.AgentRegisterRequest{
 		Platform: "linux",
@@ -155,18 +128,14 @@ func TestAgentService_RegisterAgent_RepoError(t *testing.T) {
 
 func TestAgentService_ConfigChangedPing_Success(t *testing.T) {
 	mockRepo := &MockAgentRepository{}
-	mockQueue := &MockAgentQueue{
-		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
-		RemoveFunc:  func(id string) error { return nil },
-		RefreshFunc: func() error { return nil },
-	}
+	mockMetrics := &MockMetricsRepository{}
 	mockFrontend := &MockFrontendPipeline{
 		SyncFunc: func(agentId string) error {
 			return nil
 		},
 	}
 
-	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+	svc := NewAgentService(mockRepo, mockMetrics, mockFrontend)
 
 	err := svc.ConfigChangedPing("agent-id-123")
 	assert.NoError(t, err)
@@ -174,18 +143,14 @@ func TestAgentService_ConfigChangedPing_Success(t *testing.T) {
 
 func TestAgentService_ConfigChangedPing_Failure(t *testing.T) {
 	mockRepo := &MockAgentRepository{}
-	mockQueue := &MockAgentQueue{
-		AddFunc:     func(agentID string, hostname string, ip string) error { return nil },
-		RemoveFunc:  func(id string) error { return nil },
-		RefreshFunc: func() error { return nil },
-	}
+	mockMetrics := &MockMetricsRepository{}
 	mockFrontend := &MockFrontendPipeline{
 		SyncFunc: func(agentId string) error {
 			return errors.New("sync failed")
 		},
 	}
 
-	svc := NewAgentService(mockRepo, mockQueue, mockFrontend)
+	svc := NewAgentService(mockRepo, mockMetrics, mockFrontend)
 
 	err := svc.ConfigChangedPing("agent-id-123")
 	assert.Error(t, err)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
@@ -16,7 +15,7 @@ type FrontendAgentRepositoryInterface interface {
 	GetAgent(id string) (*AgentInfoWithLabels, error)
 	AgentExists(id string) bool
 	AgentStatus(id string) string
-	GetAgentNetworkInfoByID(id string) (string, string, error)
+	GetAgentNetworkInfoByID(id string) (string, string, models.AgentType, error)
 	DeleteAgent(id string) error
 	GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error)
 	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
@@ -26,7 +25,6 @@ type FrontendAgentRepositoryInterface interface {
 
 type FrontendAgentService struct {
 	FrontendAgentRepository FrontendAgentRepositoryInterface
-	AgentQueue              queue.AgentQueueInterface
 }
 
 type FrontendAgentServiceInterface interface {
@@ -36,7 +34,6 @@ type FrontendAgentServiceInterface interface {
 	DeleteAgent(id string) error
 	StartAgent(id string) error
 	StopAgent(id string) error
-	RestartMonitoring(id string) error
 	GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error)
 	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
 	AddLabels(id string, labels map[string]string) error
@@ -44,10 +41,9 @@ type FrontendAgentServiceInterface interface {
 }
 
 // NewFrontendAgentService creates a new FrontendAgentService
-func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface, agentQueue queue.AgentQueueInterface) FrontendAgentServiceInterface {
+func NewFrontendAgentService(frontendAgentRepository FrontendAgentRepositoryInterface) FrontendAgentServiceInterface {
 	return &FrontendAgentService{
 		FrontendAgentRepository: frontendAgentRepository,
-		AgentQueue:              agentQueue,
 	}
 }
 
@@ -79,18 +75,15 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, _, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	f.AgentQueue.RemoveAgent(id)
-
 	status := f.FrontendAgentRepository.AgentStatus(id)
 	if status != "disconnected" {
 		if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
-			f.AgentQueue.AddAgent(id, hostname, ip)
-			return fmt.Errorf("failed to shut down agent: %v. The agent remains active and under monitoring", err)
+			return fmt.Errorf("failed to shut down agent: %v", err)
 		}
 	}
 
@@ -107,17 +100,13 @@ func (f *FrontendAgentService) StartAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, _, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
 	if f.sendAgentCommand(hostname, ip, "start") != nil {
 		return fmt.Errorf("error encountered while starting agent")
-	}
-
-	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
-		return fmt.Errorf("error while starting agent monitoring")
 	}
 
 	return nil
@@ -129,38 +118,14 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 		return utils.ErrAgentDoesNotExists
 	}
 
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
+	hostname, ip, _, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
-		return err
-	}
-
-	if err = f.AgentQueue.RemoveAgent(id); err != nil {
 		return err
 	}
 
 	if err := f.sendAgentCommand(hostname, ip, "stop"); err != nil {
-		f.AgentQueue.AddAgent(id, hostname, ip)
 		return fmt.Errorf("error encountered while stopping agent")
 	}
-	return nil
-
-}
-
-// RestartMonitoring restarts monitoring for the agent
-func (f *FrontendAgentService) RestartMonitoring(id string) error {
-	if !f.FrontendAgentRepository.AgentExists(id) {
-		return utils.ErrAgentDoesNotExists
-	}
-
-	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
-	if err != nil {
-		return err
-	}
-
-	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
-		return err
-	}
-
 	return nil
 }
 

@@ -1,0 +1,139 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Conditions",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/condition",
+          "label": "Conditions",
+          "options": {
+            "showSortButtons": true,
+            "placeholder": "e.g., Key_exists mykey, Key_value_equals mykey myvalue"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Add/Set Operations",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/set",
+          "label": "Set (Add/Overwrite)",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/add",
+          "label": "Add (If Not Exists)",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Remove Operations",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/remove",
+          "label": "Remove",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/remove_wildcard",
+          "label": "Remove Wildcard",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/remove_regex",
+          "label": "Remove Regex",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Rename Operations",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/rename",
+          "label": "Rename",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/hard_rename",
+          "label": "Hard Rename (Overwrite)",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Copy Operations",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/copy",
+          "label": "Copy",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/hard_copy",
+          "label": "Hard Copy (Overwrite)",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Reorder Operations",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/move_to_start",
+          "label": "Move to Start",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/move_to_end",
+          "label": "Move to End",
+          "options": {
+            "showSortButtons": true
+          }
+        }
+      ]
+    }
+  ]
+}
+

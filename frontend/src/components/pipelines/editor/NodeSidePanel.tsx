@@ -47,7 +47,6 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	onDiscard,
 	onDelete,
 	showDelete = false,
-	isOpen = true,
 }) => {
 	const [showErrors, setShowErrors] = useState(false);
 	const [draftConfig, setDraftConfig] = useState(() => applySchemaDefaults(formSchema, config));

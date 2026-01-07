@@ -215,7 +215,7 @@ func createPipelineComponentsTable(db *sql.DB) error {
         component_id INTEGER PRIMARY KEY AUTOINCREMENT,
         pipeline_id INTEGER NOT NULL,
         component_role TEXT CHECK (
-            component_role IN ('receiver','processor','exporter')
+            component_role IN ('receiver','processor','exporter','output','input','filter')
         ) NOT NULL,
         component_name TEXT NOT NULL,
         name TEXT,

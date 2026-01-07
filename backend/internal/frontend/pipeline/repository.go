@@ -97,7 +97,8 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 			a.hostname                          AS hostname,
 			a.platform                          AS platform,
 			a.ip                                AS ip_address,
-			a.id                                AS agent_id
+			a.id                                AS agent_id,
+			a.type                              AS type
 		FROM   pipelines                AS p
 		LEFT  JOIN agents               AS a  ON a.pipeline_id = p.pipeline_id
 		LEFT  JOIN aggregated_agent_metrics AS am ON am.agent_id   = a.id
@@ -119,6 +120,7 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 		&pipelineInfo.Platform,
 		&pipelineInfo.IPAddress,
 		&pipelineInfo.AgentID,
+		&pipelineInfo.Type,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -179,7 +181,7 @@ func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models
 
 	// Use the same transaction for everything else
 	// (SyncPipelineGraph would also need to be updated not to require a context)
-	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph); err != nil {
+	if err := f.SyncPipelineGraph(tx, int(id), createPipelineRequest.PipelineGraph, createPipelineRequest.Type); err != nil {
 		_ = tx.Rollback()
 		return "", fmt.Errorf("failed to sync pipeline graph: %w", err)
 	}
@@ -211,7 +213,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	// Optimized query for SQLite
 	query := `
-		SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, 
+		SELECT a.id, a.name, a.version, a.type, a.pipeline_name, a.hostname, a.IP, 
 		       IFNULL(m.logs_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
 		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
 		FROM agents a
@@ -226,7 +228,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	for rows.Next() {
 		agent := models.AgentInfoHome{}
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName, &agent.Hostname, &agent.IP,
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Type, &agent.PipelineName, &agent.Hostname, &agent.IP,
 			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
 		if err != nil {
 			return nil, err
@@ -334,7 +336,7 @@ func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]models.
 	return edges, rows.Err()
 }
 
-func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error {
+func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph, agentType models.AgentType) error {
 
 	shouldCommit := false
 	var err error
@@ -459,7 +461,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 		}
 	}
 
-	jsonConfig, err := configcompiler.CompileGraphToJSON(graph)
+	jsonConfig, err := configcompiler.CompileGraph(graph, configcompiler.AgentType(agentType))
 	if err != nil {
 		if shouldCommit {
 			_ = tx.Rollback()
@@ -502,7 +504,7 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	agent := &models.AgentInfoHome{}
 	var pipelineName sql.NullString
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP)
+	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip, type FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP, &agent.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -525,13 +527,17 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	return agent, nil
 }
 func (f *FrontendPipelineRepository) GetAgentPipelineId(agentId string) (*int, error) {
-	var pipelineId int
+	var pipelineId sql.NullInt64
 	err := f.db.QueryRow("SELECT pipeline_id FROM agents WHERE id = ?", agentId).Scan(&pipelineId)
-	if err != nil { // Handle error
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // No pipeline attached
 		}
 		return nil, err
 	}
-	return &pipelineId, nil
+	if !pipelineId.Valid {
+		return nil, nil // No pipeline attached
+	}
+	id := int(pipelineId.Int64)
+	return &id, nil
 }

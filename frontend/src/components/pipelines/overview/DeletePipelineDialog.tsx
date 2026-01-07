@@ -23,20 +23,20 @@ interface Props {
 const DeletePipelineDialog = ({ open, onClose, pipelineOverview }: Props) => {
 	const { showSnackbar } = useGlobalSnackbar();
 	const { resetGraph } = useGraphFlow();
-
-	const handleDeletePipeline = async () => {
+  
+	const handleDeletePipeline = async () => { 
 		try {
-			if (!pipelineOverview?.id) return;
-
-			await pipelineServices.deletePipelineById(pipelineOverview.id);
-
+			if (pipelineOverview?.id) {
+				await pipelineServices.deletePipelineById(pipelineOverview.id);
+			}
 			showSnackbar("Pipeline deleted successfully", "success");
+			setIsOpen(false);
 			resetGraph();
 			onClose();
 			window.location.reload();
 		} catch (error) {
-			console.error("Error deleting pipeline:", error);
-			showSnackbar("Failed to delete pipeline", "error");
+			console.error("Error deleting pipeline or collector:", error);
+			showSnackbar("Failed to delete pipeline or collector", "error");
 		}
 	};
 

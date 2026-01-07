@@ -1,0 +1,347 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Connection Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/listen",
+          "label": "Listen Address"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/port",
+          "label": "Port"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/host",
+          "label": "Host"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/http2",
+          "label": "HTTP/2"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/successful_response_code",
+          "label": "Success Response Code"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Tag Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/tag",
+          "label": "Tag"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tag_from_uri",
+          "label": "Tag From URI"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tag_key",
+          "label": "Tag Key"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Buffer Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_chunk_size",
+          "label": "Buffer Chunk Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_max_size",
+          "label": "Buffer Max Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/mem_buf_limit",
+          "label": "Memory Buffer Limit"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Logs Configuration",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/logs_body_key",
+          "label": "Logs Body Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/logs_metadata_key",
+          "label": "Logs Metadata Key"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Traces Configuration",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/raw_traces",
+          "label": "Raw Traces"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Profiles Configuration",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/profiles_support",
+          "label": "Profiles Support (Experimental)"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/encode_profiles_as_log",
+          "label": "Encode Profiles as Log",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/profiles_support",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "TLS Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/tls",
+          "label": "TLS"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_verify",
+          "label": "TLS Verify",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_verify_hostname",
+          "label": "TLS Verify Hostname",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_ca_file",
+          "label": "TLS CA File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_ca_path",
+          "label": "TLS CA Path",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_crt_file",
+          "label": "TLS Certificate File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_key_file",
+          "label": "TLS Key File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_key_passwd",
+          "label": "TLS Key Password",
+          "options": {
+            "format": "password"
+          },
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_vhost",
+          "label": "TLS Virtual Host",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Network Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/net_accept_timeout",
+          "label": "Accept Timeout"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/net_io_timeout",
+          "label": "IO Timeout"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/net_keepalive",
+          "label": "Keepalive"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/net_backlog",
+          "label": "Backlog"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/net_share_port",
+          "label": "Share Port"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Advanced Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/storage_type",
+          "label": "Storage Type"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/threaded",
+          "label": "Threaded"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/thread_ring_buffer_capacity",
+          "label": "Ring Buffer Capacity",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/threaded",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/thread_ring_buffer_window",
+          "label": "Ring Buffer Window",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/threaded",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/routable",
+          "label": "Routable"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/log_level",
+          "label": "Log Level"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/alias",
+          "label": "Alias"
+        }
+      ]
+    }
+  ]
+}
+

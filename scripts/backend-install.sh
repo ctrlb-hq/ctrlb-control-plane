@@ -30,46 +30,50 @@ if [ "$EUID" -ne 0 ]; then
   usage
   exit 1
 fi
-
-# Parse arguments
+# Parse arguments (robust)
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --jwt-secret)
-      JWT_SECRET="$2"
-      shift 2
+      if [[ -z "${2:-}" || "$2" == --* ]]; then
+        echo "Error: --jwt-secret requires a value"; usage; exit 1
+      fi
+      JWT_SECRET="$2"; shift 2
       ;;
     --port)
-      PORT="$2"
-      shift 2
+      PORT="${2:-}"; shift 2
       ;;
     --env)
-      ENVIRONMENT="$2"
-      shift 2
+      ENVIRONMENT="${2:-}"; shift 2
       ;;
     --workers)
-      WORKER_COUNT="$2"
-      shift 2
+      WORKER_COUNT="${2:-}"; shift 2
       ;;
     --check-interval)
-      CHECK_INTERVAL_MINS="$2"
-      shift 2
+      CHECK_INTERVAL_MINS="${2:-}"; shift 2
       ;;
     -h|--help)
-      usage
-      exit 0
+      usage; exit 0
       ;;
     *)
-      echo "Unknown option: $1"
-      usage
-      exit 1
+      echo "Unknown option: $1"; usage; exit 1
       ;;
   esac
 done
 
-# Prompt if JWT_SECRET is missing
-if [ -z "$JWT_SECRET" ]; then
-  read -p "Enter JWT secret key: " JWT_SECRET
+# Prompt only if truly missing AND we have a TTY
+if [[ -z "$JWT_SECRET" ]]; then
+  if [[ -t 0 ]]; then
+    read -rs -p "Enter JWT secret key: " JWT_SECRET; echo
+  else
+    echo "Error: JWT secret not provided and no TTY to prompt."; exit 1
+  fi
 fi
+
+# Final sanity check
+if [[ -z "$JWT_SECRET" || "$JWT_SECRET" == --* ]]; then
+  echo "Error: invalid JWT secret."; exit 1
+fi
+
 
 # Detect arch/OS
 ARCH=$(uname -m)

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -48,6 +50,32 @@ func main() {
 	if constants.STARTED_BY == "" {
 		logger.Logger.Info("STARTED_BY environment variable is not set. Using default value: empty string.")
 	}
+
+	constants.PORT = os.Getenv("PORT")
+	if constants.PORT == "" {
+		logger.Logger.Info("PORT environment variable is not set. Using default value: 3421.")
+		constants.PORT = "3421"
+	}
+
+	constants.AGENT_TYPE = os.Getenv("AGENT_TYPE")
+	if constants.AGENT_TYPE == "" {
+		logger.Logger.Info("AGENT_TYPE environment variable is not set. Using default value: otel.")
+		constants.AGENT_TYPE = "otel"
+	}
+
+	isValid := slices.Contains(constants.SUPPORTED_AGENT_TYPES, constants.AGENT_TYPE)
+	if !isValid {
+		logger.Logger.Sugar().Infof("Invalid AGENT_TYPE: %s. Using default value: otel.", constants.AGENT_TYPE)
+		constants.AGENT_TYPE = "otel"
+	}
+
+	// Configure heartbeat interval
+	if heartbeatIntervalEnv := os.Getenv("HEARTBEAT_INTERVAL_SEC"); heartbeatIntervalEnv != "" {
+		if interval, err := strconv.Atoi(heartbeatIntervalEnv); err == nil && interval > 0 {
+			constants.HEARTBEAT_INTERVAL_SEC = interval
+		}
+	}
+
 	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
@@ -70,10 +98,14 @@ func main() {
 
 	version, err := adapter.GetVersion()
 	if err != nil {
-		logger.Logger.Sugar().Fatalf("Error while fetching agent version: %v", err)
-	} else {
-		constants.AGENT_VERSION = version
+		logger.Logger.Sugar().Errorf("Error while fetching agent version: %v", err)
+		adapter.GracefulShutdown()
+		os.Exit(1)
 	}
+	constants.AGENT_VERSION = version
+
+	// Channel to signal fatal errors from goroutines
+	fatalErrChan := make(chan error, 2)
 
 	// Call Backend server which will be informed about agent being started
 	wg.Add(1)
@@ -85,19 +117,26 @@ func main() {
 		}
 		serverStartConfig, err := client.InformBackendServerStart(sys, httpClient)
 		if err != nil {
-			logger.Logger.Sugar().Fatalf("Failed to register with backend server: %v", err)
-		} else {
-			err = config.SaveToYAML(serverStartConfig, constants.AGENT_CONFIG_PATH)
-			if err != nil {
-				logger.Logger.Sugar().Fatalf("Error writing config to file: %v", err)
-			}
-			logger.Logger.Info("Successfully registered with the backend server")
+			logger.Logger.Sugar().Errorf("Failed to register with backend server: %v", err)
+			fatalErrChan <- err
+			return
 		}
+		err = config.SaveToYAML(serverStartConfig, constants.AGENT_CONFIG_PATH)
+		if err != nil {
+			logger.Logger.Sugar().Errorf("Error writing config to file: %v", err)
+			fatalErrChan <- err
+			return
+		}
+		logger.Logger.Info("Successfully registered with the backend server")
 	}()
 
-	operator_service := *operators.NewOperatorService(adapter)
+	// Start heartbeat manager to periodically send status/metrics to backend
+	heartbeatManager := client.NewHeartbeatManager(constants.HEARTBEAT_INTERVAL_SEC)
+	heartbeatManager.Start()
 
-	handler := api.NewRouter(&operator_service)
+	operatorService := operators.NewOperatorService(adapter)
+
+	handler := api.NewRouter(operatorService)
 
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
@@ -113,7 +152,8 @@ func main() {
 		logger.Logger.Sugar().Infof("Client started at port: %s", constants.PORT)
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Logger.Sugar().Fatalf("Failed to start Server: %v", err)
+			logger.Logger.Sugar().Errorf("Failed to start Server: %v", err)
+			fatalErrChan <- err
 		}
 	}()
 
@@ -121,11 +161,16 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Wait for termination signal
-	<-sigChan
+	// Wait for termination signal or fatal error
+	select {
+	case <-sigChan:
+		logger.Logger.Info("Received termination signal. Initiating graceful shutdown...")
+	case err := <-fatalErrChan:
+		logger.Logger.Sugar().Errorf("Fatal error occurred: %v. Initiating graceful shutdown...", err)
+	}
 
-	logger.Logger.Info("Received termination signal. Initiating graceful shutdown...")
-
+	heartbeatManager.Stop()
+	shutdown.ShutdownServer()
 	adapter.GracefulShutdown()
-
+	wg.Wait()
 }

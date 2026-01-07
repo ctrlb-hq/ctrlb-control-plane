@@ -31,6 +31,8 @@ import { ComponentService } from "@/services/component";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
 
 
+type AgentType = "otel" | "fluent-bit";
+
 const EditPipelinePage = () => {
   const { pipelineId } = useParams<{ pipelineId: string }>();
   const location = useLocation();
@@ -39,6 +41,15 @@ const EditPipelinePage = () => {
   const pipelineName = (location.state as any)?.pipelineName ?? "Pipeline Editor";
 
   const [isEditMode, setIsEditMode] = useState<boolean | false>(false);
+  const [agentType, setAgentType] = useState<AgentType>("otel");
+
+  // Load agent type from localStorage on mount
+  useEffect(() => {
+    const storedAgentType = localStorage.getItem("agentType") as AgentType;
+    if (storedAgentType && (storedAgentType === "otel" || storedAgentType === "fluent-bit")) {
+      setAgentType(storedAgentType);
+    }
+  }, []);
   const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [form, setForm] = useState<any>({});

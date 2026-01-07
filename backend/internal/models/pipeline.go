@@ -2,6 +2,7 @@ package models
 
 type CreatePipelineRequest struct {
 	Name          string        `json:"name"`
+	Type          AgentType     `json:"type"`
 	CreatedBy     string        `json:"created_by"`
 	AgentIDs      []int         `json:"agent_ids"`
 	PipelineGraph PipelineGraph `json:"pipeline_graph"`

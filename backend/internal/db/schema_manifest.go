@@ -20,10 +20,27 @@ func GetComponentTypeMap() map[string]string {
 		"tailsampling_processor":         "processor",
 
 		// Exporters
-		"otlp_exporter":       "exporter",
+		"otlp_grpc_exporter":  "exporter",
+		"otlphttp_exporter":   "exporter",
 		"debug_exporter":      "exporter",
 		"kafka_exporter":      "exporter",
 		"prometheus_exporter": "exporter",
+
+		// Fluent Bit Inputs
+		"tail_input":              "input",
+		"syslog_input":            "input",
+		"prometheus_scrape_input": "input",
+		"opentelemetry_input":     "input",
+
+		// Fluent Bit Filters
+		"grep_filter":   "filter",
+		"modify_filter": "filter",
+
+		// Fluent Bit Outputs
+		"ctrlb_output":         "output",
+		"http_output":          "output",
+		"stdout_output":        "output",
+		"opentelemetry_output": "output",
 	}
 }
 
@@ -47,9 +64,26 @@ func GetSignalSupportMap() map[string][]string {
 		"tailsampling_processor":         {"traces"},
 
 		// Exporters
-		"otlp_exporter":       {"traces", "metrics", "logs"},
+		"otlp_grpc_exporter":  {"traces", "metrics", "logs"},
+		"otlphttp_exporter":   {"traces", "metrics", "logs"},
 		"debug_exporter":      {"traces", "metrics", "logs"},
 		"kafka_exporter":      {"traces", "metrics", "logs"},
 		"prometheus_exporter": {"metrics"},
+
+		// Fluent Bit Inputs
+		"tail_input":              {"logs"},
+		"syslog_input":            {"logs"},
+		"prometheus_scrape_input": {"metrics"},
+		"opentelemetry_input":     {"traces", "metrics", "logs"},
+
+		// Fluent Bit Filters
+		"grep_filter":   {"logs"},
+		"modify_filter": {"logs"},
+
+		// Fluent Bit Outputs
+		"ctrlb_output":         {"logs", "metrics"},
+		"http_output":          {"logs", "metrics"},
+		"stdout_output":        {"logs", "metrics"},
+		"opentelemetry_output": {"traces", "metrics", "logs"},
 	}
 }

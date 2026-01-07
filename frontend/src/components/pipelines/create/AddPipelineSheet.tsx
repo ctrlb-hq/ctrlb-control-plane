@@ -47,6 +47,7 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
     localStorage.removeItem("selectedAgentIds");
     localStorage.removeItem("changesLog");
     localStorage.removeItem("platform");
+    localStorage.removeItem("agentType");
 
     resetGraph();
     setCurrentStep(0);

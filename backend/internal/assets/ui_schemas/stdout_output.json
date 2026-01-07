@@ -1,0 +1,32 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Output Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/format",
+          "label": "Format"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/json_date_key",
+          "label": "JSON Date Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/json_date_format",
+          "label": "JSON Date Format"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/workers",
+          "label": "Workers"
+        }
+      ]
+    }
+  ]
+}
+

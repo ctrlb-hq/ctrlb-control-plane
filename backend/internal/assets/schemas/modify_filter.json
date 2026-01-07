@@ -1,0 +1,116 @@
+{
+  "title": "Fluent Bit Modify Filter Configuration",
+  "type": "object",
+  "properties": {
+    "set": {
+      "type": "array",
+      "title": "Set",
+      "description": "Add a key/value pair. If key exists, it will be overwritten. Format: KEY VALUE",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "add": {
+      "type": "array",
+      "title": "Add",
+      "description": "Add a key/value pair only if key doesn't exist. Format: KEY VALUE",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "remove": {
+      "type": "array",
+      "title": "Remove",
+      "description": "Remove a key/value pair if it exists. Format: KEY",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "remove_wildcard": {
+      "type": "array",
+      "title": "Remove Wildcard",
+      "description": "Remove all key/value pairs with key matching wildcard pattern. Format: WILDCARD",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "remove_regex": {
+      "type": "array",
+      "title": "Remove Regex",
+      "description": "Remove all key/value pairs with key matching regular expression. Format: REGEXP",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rename": {
+      "type": "array",
+      "title": "Rename",
+      "description": "Rename a key if it exists and new name doesn't exist. Format: KEY RENAMED_KEY",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "hard_rename": {
+      "type": "array",
+      "title": "Hard Rename",
+      "description": "Rename a key if it exists. Overwrites if new name already exists. Format: KEY RENAMED_KEY",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "copy": {
+      "type": "array",
+      "title": "Copy",
+      "description": "Copy a key if it exists and copy name doesn't exist. Format: KEY COPIED_KEY",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "hard_copy": {
+      "type": "array",
+      "title": "Hard Copy",
+      "description": "Copy a key if it exists. Overwrites if copy name already exists. Format: KEY COPIED_KEY",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "move_to_start": {
+      "type": "array",
+      "title": "Move to Start",
+      "description": "Move key/value pairs matching wildcard to the start of the message. Format: WILDCARD",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "move_to_end": {
+      "type": "array",
+      "title": "Move to End",
+      "description": "Move key/value pairs matching wildcard to the end of the message. Format: WILDCARD",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "condition": {
+      "type": "array",
+      "title": "Conditions",
+      "description": "Conditions that must all be true for rules to apply. Format: CONDITION_TYPE [KEY] [VALUE]",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": []
+}
+

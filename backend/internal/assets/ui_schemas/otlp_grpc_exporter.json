@@ -9,11 +9,6 @@
     },
     {
       "type": "Control",
-      "label": "Disable TLS",
-      "scope": "#/properties/insecure"
-    },
-    {
-      "type": "Control",
       "label": "Compression",
       "scope": "#/properties/compression"
     },
@@ -28,14 +23,14 @@
       "scope": "#/properties/headers"
     },
     {
-      "type": "Control",
-      "label": "Protocol",
-      "scope": "#/properties/protocol"
-    },
-    {
       "type": "Group",
       "label": "TLS Settings",
       "elements": [
+        {
+          "type": "Control",
+          "label": "Insecure",
+          "scope": "#/properties/tls/properties/insecure"
+        },
         {
           "type": "Control",
           "label": "CA File",

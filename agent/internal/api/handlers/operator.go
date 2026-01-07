@@ -16,6 +16,20 @@ func NewOperatorHandler(operatorService *operators.OperatorService) *OperatorHan
 	return operatorHandler
 }
 
+func (o *OperatorHandler) GetAgentInfo(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Request received to get agent info")
+
+	agentInfo, err := o.OperatorService.GetAgentInfo()
+	if err != nil {
+		logger.Logger.Sugar().Errorf("Error getting agent info: %v", err.Error())
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	logger.Logger.Info("Successfully got agent info")
+	utils.WriteJSONResponse(w, http.StatusOK, agentInfo)
+}
+
 func (o *OperatorHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Request received to start agent")
 
@@ -76,4 +90,17 @@ func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Req
 
 	logger.Logger.Info("Successfully updated current config")
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Successfully updated current config"})
+}
+
+func (o *OperatorHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Request received to get metrics")
+
+	metrics, err := o.OperatorService.GetMetrics()
+	if err != nil {
+		logger.Logger.Sugar().Errorf("Error getting metrics: %v", err.Error())
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, metrics)
 }

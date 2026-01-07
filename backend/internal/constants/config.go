@@ -20,12 +20,16 @@ var TelemetryService = map[string]any{
 	},
 }
 
-var DefaultConfig = map[string]any{
+var DefaultConfigOTEL = map[string]any{
 	"receivers": map[string]any{
 		"otlp": map[string]any{
 			"protocols": map[string]any{
-				"http": map[string]any{},
-				"grpc": map[string]any{},
+				"grpc": map[string]any{
+					"endpoint": "0.0.0.0:4317",
+				},
+				"http": map[string]any{
+					"endpoint": "0.0.0.0:4318",
+				},
 			},
 		},
 	},
@@ -45,7 +49,60 @@ var DefaultConfig = map[string]any{
 	},
 }
 
-var DefaultPipelineGraph = models.PipelineGraph{
+var FluentBitService = map[string]any{
+	"flush":       1,
+	"log_level":   "info",
+	"http_server": "on",
+	"http_listen": "0.0.0.0",
+	"http_port":   2020,
+	"hot_reload":  "on",
+}
+
+var FluentBitNodeMetricsInput = map[string]any{
+	"name":            "node_exporter_metrics",
+	"tag":             "ctrlb_agent_node_metrics",
+	"scrape_interval": 2,
+}
+
+var FluentBitInternalMetricsInput = map[string]any{
+	"name":            "fluentbit_metrics",
+	"tag":             "ctrlb_agent_internal_metrics",
+	"scrape_interval": 2,
+}
+
+var FluentBitPrometheusOutput = map[string]any{
+	"name":  "prometheus_exporter",
+	"match": "ctrlb_agent_*_metrics",
+	"host":  "0.0.0.0",
+	"port":  2021,
+}
+
+var DefaultConfigFluentBit = map[string]any{
+	"service": FluentBitService,
+	"pipeline": map[string]any{
+		"inputs": []any{
+			FluentBitNodeMetricsInput,
+			FluentBitInternalMetricsInput,
+			map[string]any{
+				"name": "tail",
+				"tag": "syslog_tail_input",
+				"path": "/var/log/syslog",
+				"path_key": "filename",
+				"read_from_head": false,
+			},
+		},
+		"outputs": []any{FluentBitPrometheusOutput,
+			map[string]any{
+				"name": "stdout",
+				"format": "json_lines",
+				"workers": 1,
+				"match": "syslog_tail_input",
+			},
+		},
+	},
+}
+
+var DefaultOTELPipelineGraph = models.PipelineGraph{
 	Nodes: []models.PipelineNodes{
 		{
 			ComponentID:   1,
@@ -84,6 +141,43 @@ var DefaultPipelineGraph = models.PipelineGraph{
 		{
 			Source: "2",
 			Target: "1",
+		},
+	},
+}
+
+var DefaultFluentBitPipelineGraph = models.PipelineGraph{
+	Nodes: []models.PipelineNodes{
+		{
+			ComponentID:   1,
+			Name:          "Tail Log Input",
+			ComponentName: "tail_input",
+			ComponentRole: "input",
+			SupportedSignals: []string{
+				"logs",
+			},
+			Config: map[string]any{
+				"path":           "/var/log/syslog",
+				"path_key":       "filename",
+				"read_from_head": false,
+			},
+		},
+		{
+			ComponentID:   2,
+			Name:          "Stdout Output",
+			ComponentName: "stdout_output",
+			ComponentRole: "output",
+			SupportedSignals: []string{
+				"logs",
+			},
+			Config: map[string]any{
+				"format": "json_lines",
+			},
+		},
+	},
+	Edges: []models.PipelineEdges{
+		{
+			Source: "1",
+			Target: "2",
 		},
 	},
 }

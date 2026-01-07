@@ -44,6 +44,7 @@ func InformBackendServerStart(sys systeminfo.SystemInfoProvider,
 		Hostname:     hostname,
 		PipelineName: constants.PIPELINE_NAME,
 		StartedBy:    constants.STARTED_BY,
+		Type:         constants.AGENT_TYPE,
 	}
 
 	// Step 4: Marshal the agent request into JSON
@@ -117,6 +118,43 @@ func InformBackendConfigFileChanged(client *http.Client) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("non-2xx response: %d - %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+// SendHeartbeat sends a heartbeat with metrics to the backend
+func SendHeartbeat(httpClient *http.Client, metrics *HeartbeatRequest) error {
+	if httpClient == nil {
+		httpClient = &http.Client{Timeout: 10 * time.Second}
+	}
+
+	if constants.AGENTID == 0 {
+		return fmt.Errorf("agent not yet registered, skipping heartbeat")
+	}
+
+	url := fmt.Sprintf("%s/api/agent/v1/agents/%v/heartbeat", constants.BACKEND_URL, constants.AGENTID)
+
+	jsonPayload, err := json.Marshal(metrics)
+	if err != nil {
+		return fmt.Errorf("error marshaling heartbeat: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return fmt.Errorf("error creating heartbeat request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending heartbeat: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("heartbeat failed with status %d: %s", resp.StatusCode, string(body))
 	}
 
 	return nil

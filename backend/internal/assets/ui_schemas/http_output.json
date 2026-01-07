@@ -1,0 +1,352 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Connection Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/host",
+          "label": "Host"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/port",
+          "label": "Port"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/uri",
+          "label": "URI"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/http_method",
+          "label": "HTTP Method"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/proxy",
+          "label": "Proxy"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "TLS Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/tls",
+          "label": "TLS"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_verify",
+          "label": "TLS Verify",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_ca_file",
+          "label": "TLS CA File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_crt_file",
+          "label": "TLS Certificate File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_key_file",
+          "label": "TLS Key File",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tls_key_passwd",
+          "label": "TLS Key Password",
+          "options": {
+            "format": "password"
+          },
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/tls",
+              "schema": {
+                "const": "on"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Basic Authentication",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/http_user",
+          "label": "HTTP User"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/http_passwd",
+          "label": "HTTP Password",
+          "options": {
+            "format": "password"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Format Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/format",
+          "label": "Format"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/compress",
+          "label": "Compress"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/json_date_key",
+          "label": "JSON Date Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/json_date_format",
+          "label": "JSON Date Format"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Headers",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/header",
+          "label": "Custom Headers",
+          "options": {
+            "showSortButtons": true
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/header_tag",
+          "label": "Header Tag"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/headers_key",
+          "label": "Headers Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/body_key",
+          "label": "Body Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/allow_duplicated_headers",
+          "label": "Allow Duplicated Headers"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "GELF Format Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/gelf_timestamp_key",
+          "label": "GELF Timestamp Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/gelf_host_key",
+          "label": "GELF Host Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/gelf_short_message_key",
+          "label": "GELF Short Message Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/gelf_full_message_key",
+          "label": "GELF Full Message Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/gelf_level_key",
+          "label": "GELF Level Key"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "AWS Authentication",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_auth",
+          "label": "AWS Auth"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_service",
+          "label": "AWS Service",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_region",
+          "label": "AWS Region",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_role_arn",
+          "label": "AWS Role ARN",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_external_id",
+          "label": "AWS External ID",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_profile",
+          "label": "AWS Profile",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/aws_sts_endpoint",
+          "label": "AWS STS Endpoint",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/aws_auth",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Advanced Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/workers",
+          "label": "Workers"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/http_response_timeout",
+          "label": "Response Timeout"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/http_read_idle_timeout",
+          "label": "Read Idle Timeout"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/log_response_payload",
+          "label": "Log Response Payload"
+        }
+      ]
+    }
+  ]
+}
+

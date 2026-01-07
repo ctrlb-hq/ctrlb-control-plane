@@ -17,6 +17,11 @@ type MockOperator struct {
 	mock.Mock
 }
 
+func (m *MockOperator) GetAgentInfo() (map[string]string, error) {
+	args := m.Called()
+	return args.Get(0).(map[string]string), args.Error(1)
+}
+
 func (m *MockOperator) StartAgent() error {
 	args := m.Called()
 	return args.Error(0)
@@ -35,6 +40,26 @@ func (m *MockOperator) GracefulShutdown() error {
 func (m *MockOperator) UpdateCurrentConfig(cfg map[string]any) error {
 	args := m.Called(cfg)
 	return args.Error(0)
+}
+
+func (m *MockOperator) GetMetrics() (map[string]any, error) {
+	args := m.Called()
+	return args.Get(0).(map[string]any), args.Error(1)
+}
+
+func TestGetAgentInfo_Success(t *testing.T) {
+	mockOp := new(MockOperator)
+	mockOp.On("GetAgentInfo").Return(map[string]string{"version": "mock", "agent_type": "mock", "pipeline_name": "mock", "started_by": "mock"}, nil)
+	h := handlers.NewOperatorHandler(&operators.OperatorService{Operator: mockOp})
+
+	r := httptest.NewRequest(http.MethodGet, "/agent/v1/info", nil)
+	w := httptest.NewRecorder()
+
+	h.GetAgentInfo(w, r)
+
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	mockOp.AssertExpectations(t)
 }
 
 func TestStartAgent_Success(t *testing.T) {

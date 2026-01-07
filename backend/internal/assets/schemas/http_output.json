@@ -1,0 +1,225 @@
+{
+  "title": "Fluent Bit HTTP Output Configuration",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "title": "Host",
+      "description": "IP address or hostname of the target HTTP Server.",
+      "default": "127.0.0.1"
+    },
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "TCP port of the target HTTP Server.",
+      "default": 80
+    },
+    "uri": {
+      "type": "string",
+      "title": "URI",
+      "description": "Optional HTTP URI for the target web server.",
+      "default": "/"
+    },
+    "http_method": {
+      "type": "string",
+      "title": "HTTP Method",
+      "description": "HTTP method to use for requests.",
+      "enum": ["POST", "PUT"],
+      "default": "POST"
+    },
+    "proxy": {
+      "type": "string",
+      "title": "Proxy",
+      "description": "HTTP Proxy in format http://HOST:PORT. HTTPS not supported."
+    },
+    "tls": {
+      "type": "string",
+      "title": "TLS",
+      "description": "Enable TLS/SSL for secure connections.",
+      "enum": ["on", "off"],
+      "default": "off"
+    },
+    "tls_verify": {
+      "type": "string",
+      "title": "TLS Verify",
+      "description": "Force certificate validation.",
+      "enum": ["on", "off"],
+      "default": "on"
+    },
+    "tls_ca_file": {
+      "type": "string",
+      "title": "TLS CA File",
+      "description": "Absolute path to CA certificate file."
+    },
+    "tls_crt_file": {
+      "type": "string",
+      "title": "TLS Certificate File",
+      "description": "Absolute path to certificate file."
+    },
+    "tls_key_file": {
+      "type": "string",
+      "title": "TLS Key File",
+      "description": "Absolute path to private key file."
+    },
+    "tls_key_passwd": {
+      "type": "string",
+      "title": "TLS Key Password",
+      "description": "Optional password for TLS private key file."
+    },
+    "http_user": {
+      "type": "string",
+      "title": "HTTP User",
+      "description": "Basic Auth username."
+    },
+    "http_passwd": {
+      "type": "string",
+      "title": "HTTP Password",
+      "description": "Basic Auth password. Requires http_user to be set."
+    },
+    "format": {
+      "type": "string",
+      "title": "Format",
+      "description": "Data format for the HTTP request body.",
+      "enum": ["json", "json_stream", "json_lines", "msgpack", "gelf"],
+      "default": "json"
+    },
+    "compress": {
+      "type": "string",
+      "title": "Compress",
+      "description": "Payload compression mechanism.",
+      "enum": ["gzip", "snappy", "zstd", ""]
+    },
+    "json_date_key": {
+      "type": "string",
+      "title": "JSON Date Key",
+      "description": "Name of the time key in the output record. Set to 'false' to disable.",
+      "default": "date"
+    },
+    "json_date_format": {
+      "type": "string",
+      "title": "JSON Date Format",
+      "description": "Format of the date.",
+      "enum": ["double", "epoch", "epoch_ms", "iso8601", "java_sql_timestamp"],
+      "default": "double"
+    },
+    "header": {
+      "type": "array",
+      "title": "Headers",
+      "description": "HTTP header key/value pairs. Format: Key Value",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "header_tag": {
+      "type": "string",
+      "title": "Header Tag",
+      "description": "Optional HTTP header field for the original message tag."
+    },
+    "headers_key": {
+      "type": "string",
+      "title": "Headers Key",
+      "description": "Key to use as headers (must prefix with $). The key must contain a map."
+    },
+    "body_key": {
+      "type": "string",
+      "title": "Body Key",
+      "description": "Key to use as request body (must prefix with $). Must contain binary or raw string."
+    },
+    "allow_duplicated_headers": {
+      "type": "boolean",
+      "title": "Allow Duplicated Headers",
+      "description": "Allow duplicated headers. Latest key/value is preserved.",
+      "default": true
+    },
+    "log_response_payload": {
+      "type": "boolean",
+      "title": "Log Response Payload",
+      "description": "Log the response payload.",
+      "default": true
+    },
+    "workers": {
+      "type": "integer",
+      "title": "Workers",
+      "description": "Number of workers to perform flush operations.",
+      "default": 2
+    },
+    "http_response_timeout": {
+      "type": "string",
+      "title": "Response Timeout",
+      "description": "Maximum time to wait for a server response.",
+      "default": "60s"
+    },
+    "http_read_idle_timeout": {
+      "type": "string",
+      "title": "Read Idle Timeout",
+      "description": "Maximum time between consecutive reads. 0s uses io_timeout.",
+      "default": "0s"
+    },
+    "gelf_timestamp_key": {
+      "type": "string",
+      "title": "GELF Timestamp Key",
+      "description": "Key for timestamp in GELF format."
+    },
+    "gelf_host_key": {
+      "type": "string",
+      "title": "GELF Host Key",
+      "description": "Key for host in GELF format."
+    },
+    "gelf_short_message_key": {
+      "type": "string",
+      "title": "GELF Short Message Key",
+      "description": "Key for short message in GELF format."
+    },
+    "gelf_full_message_key": {
+      "type": "string",
+      "title": "GELF Full Message Key",
+      "description": "Key for full message in GELF format."
+    },
+    "gelf_level_key": {
+      "type": "string",
+      "title": "GELF Level Key",
+      "description": "Key for level in GELF format."
+    },
+    "aws_auth": {
+      "type": "boolean",
+      "title": "AWS Auth",
+      "description": "Enable AWS SigV4 authentication.",
+      "default": false
+    },
+    "aws_service": {
+      "type": "string",
+      "title": "AWS Service",
+      "description": "AWS service code (e.g., es, xray) for SigV4 authentication."
+    },
+    "aws_region": {
+      "type": "string",
+      "title": "AWS Region",
+      "description": "AWS region of your service for SigV4 authentication."
+    },
+    "aws_role_arn": {
+      "type": "string",
+      "title": "AWS Role ARN",
+      "description": "AWS IAM Role to assume for SigV4 authentication."
+    },
+    "aws_external_id": {
+      "type": "string",
+      "title": "AWS External ID",
+      "description": "External ID for the AWS IAM Role."
+    },
+    "aws_profile": {
+      "type": "string",
+      "title": "AWS Profile",
+      "description": "AWS Profile name from ~/.aws/ directory."
+    },
+    "aws_sts_endpoint": {
+      "type": "string",
+      "title": "AWS STS Endpoint",
+      "description": "Custom STS endpoint for STS API."
+    }
+  },
+  "required": [
+    "host"
+  ]
+}
+

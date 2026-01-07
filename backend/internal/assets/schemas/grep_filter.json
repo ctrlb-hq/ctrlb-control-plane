@@ -1,0 +1,33 @@
+{
+  "title": "Fluent Bit Grep Filter Configuration",
+  "type": "object",
+  "properties": {
+    "regex": {
+      "type": "array",
+      "title": "Regex Rules",
+      "description": "Keep records where the content of KEY matches the regular expression. Format: KEY REGEX. Supports record accessor for nested fields.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "exclude": {
+      "type": "array",
+      "title": "Exclude Rules",
+      "description": "Exclude records where the content of KEY matches the regular expression. Format: KEY REGEX. Supports record accessor for nested fields.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "logical_op": {
+      "type": "string",
+      "title": "Logical Operator",
+      "description": "Logical operator for multiple rules. In legacy mode, behavior is AND for includes, OR for excludes. Cannot mix Regex and Exclude when using AND/OR.",
+      "enum": ["legacy", "and", "or"],
+      "default": "legacy"
+    }
+  },
+  "required": []
+}
+

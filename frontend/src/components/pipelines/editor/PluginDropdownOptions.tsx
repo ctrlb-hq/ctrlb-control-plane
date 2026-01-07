@@ -22,15 +22,18 @@ interface Plugin {
 	supported_signals: string[];
 }
 
+type AgentType = "otel" | "fluent-bit";
+
 interface Props {
-	kind: "receiver" | "processor" | "exporter";
+	kind: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
 	nodeType: "source" | "processor" | "destination";
 	label: string;
-	dataType: "receiver" | "exporter";
+	dataType: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
 	disabled: boolean;
+	agentType?: AgentType;
 }
 
-const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, disabled }: Props) => {
+const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, disabled, agentType = "otel" }: Props) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [optionValue, setOptionValue] = useState("");
 	const [pluginName, setPluginName] = useState<string | undefined>();
@@ -79,12 +82,12 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 
 	const fetchPlugins = React.useCallback(async () => {
 		const res = await ComponentService.getTransporterService(kind);
-		setPlugins(res);
+		setPlugins(res || []);
 	}, [kind]);
 
 	useEffect(() => {
 		fetchPlugins();
-	}, [isSheetOpen, fetchPlugins]);
+	}, [isSheetOpen, fetchPlugins, agentType]);
 
 	return (
 		<>
