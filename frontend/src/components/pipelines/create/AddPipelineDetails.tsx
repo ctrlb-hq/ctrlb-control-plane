@@ -114,7 +114,6 @@ const AddPipelineDetails = ({
 		}
 
 		const since = Math.floor(new Date().getTime() / 1000);
-		setShowConfigureButton(true);
 
 		setTimeout(() => setShowHeartBeat(true), 2000);
 		setTimeout(() => setShowStatus(true), 6000);
@@ -182,6 +181,7 @@ const AddPipelineDetails = ({
 						setShowHeartBeat(false);
 						stopChecking();
 						sendPipelineDataToParent(data?.pipeline_id, formData.name);
+						setShowConfigureButton(true);
 					}
 
 					await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
