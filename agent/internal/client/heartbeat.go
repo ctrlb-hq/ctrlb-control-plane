@@ -171,15 +171,8 @@ func extractOTELMetrics(families map[string]*io_prometheus_client.MetricFamily, 
 }
 
 func extractFluentBitMetrics(families map[string]*io_prometheus_client.MetricFamily, metrics *HeartbeatRequest) {
-	// Extract CPU utilization from node_exporter metrics
-	// Calculate as percentage of non-idle CPU time
 	metrics.CPUUtilization = extractNodeCPUUtilization(families)
-
-	// Extract memory utilization from node_exporter metrics
-	// Calculate as (MemTotal - MemAvailable) / MemTotal * 100
 	metrics.MemoryUtilization = extractNodeMemoryUtilization(families)
-
-	// Fluent Bit telemetry metrics from fluentbit_metrics input
 	metrics.LogsRateSent = extractValue(families, "fluentbit_output_proc_records_total")
 	metrics.TracesRateSent = 0 // Fluent Bit is primarily for logs
 	metrics.MetricsRateSent = 0
@@ -187,8 +180,6 @@ func extractFluentBitMetrics(families map[string]*io_prometheus_client.MetricFam
 	metrics.DataReceivedBytes = extractValue(families, "fluentbit_input_bytes_total")
 }
 
-// extractNodeCPUUtilization calculates CPU utilization from node_cpu_seconds_total
-// Uses load average as a simpler proxy for CPU utilization
 func extractNodeCPUUtilization(families map[string]*io_prometheus_client.MetricFamily) float64 {
 	// Use 1-minute load average as CPU utilization proxy
 	load1 := extractValue(families, "node_load1")
@@ -216,18 +207,14 @@ func extractNodeCPUUtilization(families map[string]*io_prometheus_client.MetricF
 	return totalNonIdle
 }
 
-// extractNodeMemoryUtilization calculates memory utilization percentage
-// Formula: (MemTotal - MemAvailable) / MemTotal * 100
 func extractNodeMemoryUtilization(families map[string]*io_prometheus_client.MetricFamily) float64 {
 	memTotal := extractValue(families, "node_memory_MemTotal_bytes")
 	memAvailable := extractValue(families, "node_memory_MemAvailable_bytes")
 
 	if memTotal > 0 {
-		usedPercent := ((memTotal - memAvailable) / memTotal) * 100
-		return usedPercent
+		return memTotal - memAvailable
 	}
 
-	// Fallback to raw memory used bytes
 	memFree := extractValue(families, "node_memory_MemFree_bytes")
 	if memTotal > 0 && memFree > 0 {
 		return memTotal - memFree
