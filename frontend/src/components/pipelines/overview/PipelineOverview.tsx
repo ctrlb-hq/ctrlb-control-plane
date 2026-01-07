@@ -142,7 +142,7 @@ const PipelineOverview = ({ pipelineOverviewData, onRefresh }: Props) => {
 					</div>
 				</div>
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+			<div className="grid grid-cols-2 gap-4 mt-3">
 				{metricsLoading ? (
 					<div className="col-span-2 flex justify-center items-center min-h-[150px]">
 						<Loader2 className="h-6 w-6 animate-spin text-gray-500" />
