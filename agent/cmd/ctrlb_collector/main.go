@@ -51,6 +51,12 @@ func main() {
 		logger.Logger.Info("STARTED_BY environment variable is not set. Using default value: empty string.")
 	}
 
+	constants.PORT = os.Getenv("PORT")
+	if constants.PORT == "" {
+		logger.Logger.Info("PORT environment variable is not set. Using default value: 3421.")
+		constants.PORT = "3421"
+	}
+
 	constants.AGENT_TYPE = os.Getenv("AGENT_TYPE")
 	if constants.AGENT_TYPE == "" {
 		logger.Logger.Info("AGENT_TYPE environment variable is not set. Using default value: otel.")

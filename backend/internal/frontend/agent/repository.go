@@ -261,7 +261,8 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 	row := f.db.QueryRow(query, since)
 
 	var agent LatestAgentResponse
-	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt, &agent.PipelineID)
+	var pipelineID int64
+	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt, &pipelineID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // no new agent found
@@ -269,5 +270,6 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 		return nil, fmt.Errorf("failed to query latest agent: %w", err)
 	}
 
+	agent.PipelineID = strconv.FormatInt(pipelineID, 10)
 	return &agent, nil
 }

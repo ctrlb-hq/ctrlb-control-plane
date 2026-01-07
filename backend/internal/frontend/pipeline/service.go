@@ -179,6 +179,12 @@ func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 		return err
 	}
 
+	// Agent doesn't have a pipeline attached yet, nothing to sync
+	if pipelineId == nil {
+		utils.Logger.Info(fmt.Sprintf("Agent %s has no pipeline attached, skipping config sync", agentId))
+		return nil
+	}
+
 	graph, err := f.GetPipelineGraph(*pipelineId)
 	if err != nil {
 		return err

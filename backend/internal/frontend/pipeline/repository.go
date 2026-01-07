@@ -525,13 +525,17 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	return agent, nil
 }
 func (f *FrontendPipelineRepository) GetAgentPipelineId(agentId string) (*int, error) {
-	var pipelineId int
+	var pipelineId sql.NullInt64
 	err := f.db.QueryRow("SELECT pipeline_id FROM agents WHERE id = ?", agentId).Scan(&pipelineId)
-	if err != nil { // Handle error
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // No pipeline attached
 		}
 		return nil, err
 	}
-	return &pipelineId, nil
+	if !pipelineId.Valid {
+		return nil, nil // No pipeline attached
+	}
+	id := int(pipelineId.Int64)
+	return &id, nil
 }
