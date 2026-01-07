@@ -97,7 +97,8 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 			a.hostname                          AS hostname,
 			a.platform                          AS platform,
 			a.ip                                AS ip_address,
-			a.id                                AS agent_id
+			a.id                                AS agent_id,
+			a.type                              AS type
 		FROM   pipelines                AS p
 		LEFT  JOIN agents               AS a  ON a.pipeline_id = p.pipeline_id
 		LEFT  JOIN aggregated_agent_metrics AS am ON am.agent_id   = a.id
@@ -119,6 +120,7 @@ func (f *FrontendPipelineRepository) GetPipelineOverview(pipelineId int) (*Pipel
 		&pipelineInfo.Platform,
 		&pipelineInfo.IPAddress,
 		&pipelineInfo.AgentID,
+		&pipelineInfo.Type,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
