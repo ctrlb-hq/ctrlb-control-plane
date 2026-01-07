@@ -31,6 +31,8 @@ import { ComponentService } from "@/services/component";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
 
 
+type AgentType = "otel" | "fluent-bit";
+
 const EditPipelinePage = () => {
   const { pipelineId } = useParams<{ pipelineId: string }>();
   const location = useLocation();
@@ -39,6 +41,15 @@ const EditPipelinePage = () => {
   const pipelineName = (location.state as any)?.pipelineName ?? "Pipeline Editor";
 
   const [isEditMode, setIsEditMode] = useState<boolean | false>(false);
+  const [agentType, setAgentType] = useState<AgentType>("otel");
+
+  // Load agent type from localStorage on mount
+  useEffect(() => {
+    const storedAgentType = localStorage.getItem("agentType") as AgentType;
+    if (storedAgentType && (storedAgentType === "otel" || storedAgentType === "fluent-bit")) {
+      setAgentType(storedAgentType);
+    }
+  }, []);
   const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [form, setForm] = useState<any>({});
@@ -402,25 +413,28 @@ const EditPipelinePage = () => {
 						zIndex: 20,
 					}}>
 					<PluginDropdownOptions
-						kind="receiver"
+						kind={agentType === "fluent-bit" ? "input" : "receiver"}
 						nodeType="source"
 						label="Source"
-						dataType="receiver"
+						dataType={agentType === "fluent-bit" ? "input" : "receiver"}
 						disabled={!isEditMode}
+						agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind="processor"
+						kind={agentType === "fluent-bit" ? "filter" : "processor"}
 						nodeType="processor"
 						label="Processor"
-						dataType="receiver"
+						dataType={agentType === "fluent-bit" ? "filter" : "processor"}
 						disabled={!isEditMode}
+						agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind="exporter"
+						kind={agentType === "fluent-bit" ? "output" : "exporter"}
 						nodeType="destination"
 						label="Destination"
-						dataType="exporter"
+						dataType={agentType === "fluent-bit" ? "output" : "exporter"}
 						disabled={!isEditMode}
+						agentType={agentType}
 					/>
 				</div>
 			</div>
