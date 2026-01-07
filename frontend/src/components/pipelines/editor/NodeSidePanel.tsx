@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Ajv from "ajv";
-import  { Drawer, IconButton, Button } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import  { Drawer, IconButton, Button, createTheme, ThemeProvider } from "@mui/material";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { createAjv } from "@jsonforms/core";

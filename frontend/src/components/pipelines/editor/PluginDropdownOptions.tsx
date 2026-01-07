@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import Button from "@mui/material/Button";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import ListSubheader from "@mui/material/ListSubheader";
+import {Button, Menu, MenuItem, ListSubheader} from "@mui/material";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { ComponentService } from "@/services/component";
 import { JsonSchema } from "@jsonforms/core";

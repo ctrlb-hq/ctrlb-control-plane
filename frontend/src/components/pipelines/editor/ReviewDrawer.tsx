@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Drawer, IconButton, Button }from "@mui/material";
+import { Drawer, IconButton, Button } from "@mui/material";
 import { Edit, Loader2, X } from "lucide-react";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 import { ComponentService } from "@/services/component";
@@ -27,6 +27,9 @@ const ReviewDrawer: React.FC<ReviewDrawerProps> = ({
   const [form, setForm] = useState<any>({});
   const [uiSchema, setUiSchema] = useState<any>({});
   const [config, setConfig] = useState<any>({});
+
+  const nodeChanges = changesLog.filter((change) => change.type !== "Edge");
+  const edgeChanges = changesLog.filter((change) => change.type === "Edge");
 
   const openEditForm = async (change: any) => {
     setSelectedChange(change);
@@ -76,7 +79,7 @@ const ReviewDrawer: React.FC<ReviewDrawerProps> = ({
               backgroundColor: "#EF4444",
               color: "#fff",
             },
-            borderRadius:"10px"
+            borderRadius: "10px",
           }}
         >
           <X className="w-5 h-5" />
@@ -85,25 +88,65 @@ const ReviewDrawer: React.FC<ReviewDrawerProps> = ({
 
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-4">
-        {!isEditFormOpen &&
-          changesLog.map((change, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center mb-4"
-            >
-              <div>
-                <p className="font-medium">{change.type}</p>
-                <p className="text-gray-600">{change.name}</p>
-              </div>
+        {!isEditFormOpen && (
+          <>
+            {/* Node Changes Section */}
+            {nodeChanges.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                  Node Changes ({nodeChanges.length})
+                </h3>
+                <div className="space-y-3">
+                  {nodeChanges.map((change, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium">{change.type}</p>
+                        <p className="text-sm text-gray-600">{change.name}</p>
+                      </div>
 
-              {change.type !== "Edge" && (
-                <Edit
-                  className="cursor-pointer"
-                  onClick={() => openEditForm(change)}
-                />
-              )}
-            </div>
-          ))}
+                      <Edit
+                        className="cursor-pointer text-blue-600 hover:text-blue-800 w-5 h-5"
+                        onClick={() => openEditForm(change)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Edge Changes Section */}
+            {edgeChanges.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                  Edge Changes ({edgeChanges.length})
+                </h3>
+                <div className="space-y-3">
+                  {edgeChanges.map((change, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-3 bg-blue-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{change.type}</p>
+                        <p className="text-sm text-gray-600">{change.name}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {nodeChanges.length === 0 && edgeChanges.length === 0 && (
+              <div className="text-center text-gray-500 mt-8">
+                <p>No pending changes</p>
+              </div>
+            )}
+          </>
+        )}
 
         {isEditFormOpen && selectedChange && (
           <NodeSidePanel
