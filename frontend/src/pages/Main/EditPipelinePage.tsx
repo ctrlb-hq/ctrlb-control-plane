@@ -50,6 +50,7 @@ const EditPipelinePage = () => {
       setAgentType(storedAgentType);
     }
   }, []);
+
   const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [form, setForm] = useState<any>({});
@@ -360,7 +361,7 @@ const EditPipelinePage = () => {
 
       <div
 				ref={reactFlowWrapper}
-				style={{ height: "92.5vh", width: "100vw", backgroundColor: "#f9f9f9" }}>
+				style={{ height:"90vh", width: "100%", backgroundColor: "#f9f9f9" }}>
 				<ReactFlow
 					nodes={nodeValue}
 					edges={edgeValue}
@@ -413,25 +414,28 @@ const EditPipelinePage = () => {
 						zIndex: 20,
 					}}>
 					<PluginDropdownOptions
-						kind="receiver"
-						nodeType="source"
+						kind={agentType === "fluent-bit" ? "input" : "receiver"}
+            nodeType="source"
 						label="Source"
-						dataType="receiver"
-						disabled={!isEditMode}
+						dataType={agentType === "fluent-bit" ? "input" : "receiver"}
+            disabled={!isEditMode}
+            agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind="processor"
-						nodeType="processor"
+						kind={agentType === "fluent-bit" ? "filter" : "processor"}
+            nodeType="processor"
 						label="Processor"
-						dataType="receiver"
+						dataType={agentType === "fluent-bit" ? "filter" : "processor"}
 						disabled={!isEditMode}
+            agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind="exporter"
+						kind={agentType === "fluent-bit" ? "output" : "exporter"}
 						nodeType="destination"
 						label="Destination"
-						dataType="exporter"
+						dataType={agentType === "fluent-bit" ? "output" : "exporter"}
 						disabled={!isEditMode}
+            agentType={agentType}
 					/>
 				</div>
 			</div>

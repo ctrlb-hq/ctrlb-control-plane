@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
-import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands, installCommandsFluentBit } from "@/constants";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
@@ -385,8 +384,8 @@ const AddPipelineDetails = ({
 							</div>
 						) : showStatus && !showHeartBeat ? (
 							<div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
-								<div className="flex justify-start">
-									<Close className="text-red-600" />
+								<div className="flex justify-start items-center gap-1">
+									<AlertCircle className="text-red-600 h-5 w-5" />
 									<p className="text-red-600">Heartbeat not detected</p>
 								</div>
 								<Button variant={"destructive"} onClick={handleTryAgain}>

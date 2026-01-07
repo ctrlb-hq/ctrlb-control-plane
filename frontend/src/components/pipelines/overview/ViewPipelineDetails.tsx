@@ -40,6 +40,7 @@ const ViewPipelineDetails = ({
 			setOverviewLoading(true);
 			const response = await pipelineServices.getPipelineOverviewById(pipelineId);
 			setPipelineOverviewData(response);
+			localStorage.setItem("agentType", response.type);
 		} catch (error) {
 			console.error("Error fetching pipeline overview:", error);
 			showSnackbar("Failed to fetch pipeline overview", "error");
@@ -73,6 +74,7 @@ const ViewPipelineDetails = ({
 		if (!open) {
 			setPipelineOverviewData(undefined);
 			setTabs("overview");
+			localStorage.removeItem("agentType");
 			return;
 		}
 
