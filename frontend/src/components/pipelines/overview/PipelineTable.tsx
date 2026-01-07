@@ -8,9 +8,8 @@ import {
 	Paper,
 } from "@mui/material";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import pipelineServices from "@/services/pipeline";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState} from "react";
 import ViewPipelineDetails from "./ViewPipelineDetails";
 
 interface pipeline {
@@ -40,8 +39,6 @@ const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
 	const [pipelineId, setPipelineId] = useState<string>("");
 	const [drawerOpen, setDrawerOpen] = useState(false);
-
-	const { setPipelineOverview } = usePipelineOverview();
 	const { resetGraph } = useGraphFlow();
 
 	const handleGetPipelines = async () => {
@@ -49,20 +46,33 @@ const PipelineTable = () => {
 		setPipelines(res);
 	};
 
-	const handleGetPipeline = useCallback(async () => {
-		const res = await pipelineServices.getPipelineById(pipelineId);
-		setPipelineOverview(res);
-	}, [pipelineId, setPipelineOverview]);
-
 	useEffect(() => {
 		handleGetPipelines();
 	}, []);
 
-	useEffect(() => {
-		if (pipelineId) {
-			handleGetPipeline();
-		}
-	}, [pipelineId, handleGetPipeline]);
+	const handleRowClick = (id: string) => {
+		setPipelineId(id);
+		setDrawerOpen(true);
+	};
+
+	const handleCloseDrawer = () => {
+		setDrawerOpen(false);
+		setPipelineId("");
+		resetGraph();
+		// handleGetPipelines();
+	};
+
+	if (!pipelines || pipelines.length === 0) {
+		return (
+			<div className="flex flex-col gap-2 justify-center items-center">
+				<p className="font-bold text-xl mt-[6rem]">Get started</p>
+				<p className="text-gray-700">Create Your First Pipeline</p>
+				<p className="text-gray-700">
+					Pipelines collect data from the sources in the pipeline and route them to desired destination.
+				</p>
+			</div>
+		);
+	}
 
 	const handleRowClick = (id: string) => {
 		setPipelineId(id);

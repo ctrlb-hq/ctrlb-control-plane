@@ -112,7 +112,7 @@ export const initialEdges: Edge[] = [
 ];
 
 export const getRandomChartColor = (name: string) => {
-	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
+	const colors = [ "#FF8B3D", "#3B82F6"];
 	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
 	return colors[charSum % colors.length];
 };

@@ -38,6 +38,7 @@ export interface PipelineOverviewInterface {
 	platform: string;
 	created_at: number;
 	created_by: string;
+	updated_at: number;
 	labels: Record<string, string>;
 	config: {
 		exporters: Record<string, ExporterConfig>;

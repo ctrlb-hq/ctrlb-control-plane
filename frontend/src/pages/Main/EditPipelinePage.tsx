@@ -413,28 +413,25 @@ const EditPipelinePage = () => {
 						zIndex: 20,
 					}}>
 					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "input" : "receiver"}
+						kind="receiver"
 						nodeType="source"
 						label="Source"
-						dataType={agentType === "fluent-bit" ? "input" : "receiver"}
+						dataType="receiver"
 						disabled={!isEditMode}
-						agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "filter" : "processor"}
+						kind="processor"
 						nodeType="processor"
 						label="Processor"
-						dataType={agentType === "fluent-bit" ? "filter" : "processor"}
+						dataType="receiver"
 						disabled={!isEditMode}
-						agentType={agentType}
 					/>
 					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "output" : "exporter"}
+						kind="exporter"
 						nodeType="destination"
 						label="Destination"
-						dataType={agentType === "fluent-bit" ? "output" : "exporter"}
+						dataType="exporter"
 						disabled={!isEditMode}
-						agentType={agentType}
 					/>
 				</div>
 			</div>
