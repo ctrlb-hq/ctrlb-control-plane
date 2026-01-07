@@ -113,6 +113,7 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
                 });
               }}
               disabled={!pipelineId}
+              className="pr-4"
             >
               Open Pipeline Editor
             </Button>

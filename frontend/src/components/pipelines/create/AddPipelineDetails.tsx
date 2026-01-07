@@ -159,7 +159,7 @@ const AddPipelineDetails = ({
 		setShowHeartBeat(true);
 		setShowStatus(false);
 
-		const THREE_MINUTES = 3 * 10 * 1000;
+		const THREE_MINUTES = 3 * 60 * 1000;
 		const CHECK_INTERVAL = 3 * 1000;
 		const startTime = Date.now();
 
@@ -203,6 +203,43 @@ const AddPipelineDetails = ({
 			if (abortController === abortControllerRef.current) {
 				stopChecking();
 			}
+		}
+	};
+
+	const handleConfigurePipeline = () => {
+		try {
+			const keysToRemove = [
+				"pipelineData",
+				"latest_agents",
+				"selectedAgentIds",
+				"pipelineNodes",
+				"pipelineEdges",
+			];
+			keysToRemove.forEach(key => localStorage.removeItem(key));
+			const initialPipelineData = {
+				id: Date.now().toString(),
+				name: formData.name,
+				platform: formData.platform,
+				agentType: formData.agentType,
+				nodes: [],
+				edges: [],
+				created_at: new Date().toISOString(),
+			};
+			localStorage.setItem("pipelinename", formData.name);
+			localStorage.setItem("platform", formData.platform);
+			localStorage.setItem("agentType", formData.agentType);
+			localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
+			if (!localStorage.getItem("pipelineData")) {
+				throw new Error("Failed to store pipeline data");
+			}
+			setCurrentStep(prev => prev + 1);
+		} catch (error) {
+			console.error("Error initializing pipeline:", error);
+			showSnackbar(
+				"Failed to initialize pipeline data. Please try again.",
+				"error",
+				3000
+			);
 		}
 	};
 
@@ -432,57 +469,11 @@ const AddPipelineDetails = ({
 					{showConfigureButton && (
 						<div className="flex justify-end mt-3">
 							<Button
-								onClick={() => {
-									try {
-										// First, clear any potentially corrupted data
-										const keysToRemove = [
-											"pipelineData",
-											"latest_agents",
-											"selectedAgentIds",
-											"pipelineNodes",
-											"pipelineEdges",
-										];
-										keysToRemove.forEach(key => localStorage.removeItem(key));
-
-										// Initialize fresh pipeline data
-										const initialPipelineData = {
-											id: Date.now().toString(),
-											name: formData.name,
-											platform: formData.platform,
-											agentType: formData.agentType,
-											nodes: [],
-											edges: [],
-											created_at: new Date().toISOString(),
-										};
-
-										// Store all required data with proper JSON formatting
-										localStorage.setItem("pipelinename", formData.name);
-										localStorage.setItem("platform", formData.platform);
-										localStorage.setItem("agentType", formData.agentType);
-										localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
-
-										// Verify data was stored correctly
-										const verifyData = localStorage.getItem("pipelineData");
-										if (!verifyData) {
-											throw new Error("Failed to store pipeline data");
-										}
-
-										// Move to next step
-										setCurrentStep(currentStep + 1);
-									} catch (error) {
-										console.error("Error initializing pipeline:", error);
-										showSnackbar(
-											"Failed to initialize pipeline data. Please try again.",
-											"error",
-											3000
-										);
-									}
-								}}
-								// disabled={!formData.name || !formData.platform || !EDI_API_KEY}
+								variant="contained"
+								color="primary"
+								onClick={handleConfigurePipeline}
 								disabled={!formData.name || !formData.platform || !formData.agentType}
-								className={`px-6 ${
-									status === "success" ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-400 hover:bg-gray-500"
-								}`}>
+							>
 								Configure Pipeline
 							</Button>
 						</div>
