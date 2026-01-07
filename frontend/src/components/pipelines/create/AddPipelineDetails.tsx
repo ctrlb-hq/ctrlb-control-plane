@@ -1,13 +1,18 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, FormEvent, ChangeEvent } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
 import agentServices from "@/services/agent";
 import { installCommands, installCommandsFluentBit } from "@/constants";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  TextField,
+  InputLabel,
+} from "@mui/material";
 
 type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
 type AgentType = "otel" | "fluent-bit";
@@ -60,7 +65,7 @@ const AddPipelineDetails = ({
 		agentType: false,
 	});
 
-	const handleChange = (e: any) => {
+	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		const { id, value } = e.target;
 		setFormData(prev => ({
 			...prev,
@@ -75,7 +80,7 @@ const AddPipelineDetails = ({
 		}
 	};
 
-	const handleSubmit = (e: any) => {
+	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		// Check required fields
 		const newErrors = {
@@ -154,7 +159,7 @@ const AddPipelineDetails = ({
 		setShowHeartBeat(true);
 		setShowStatus(false);
 
-		const THREE_MINUTES = 3 * 60 * 1000;
+		const THREE_MINUTES = 3 * 10 * 1000;
 		const CHECK_INTERVAL = 3 * 1000;
 		const startTime = Date.now();
 
@@ -207,24 +212,47 @@ const AddPipelineDetails = ({
 				<ProgressFlow currentStep={currentStep} />
 			</div>
 			<Card className="w-3/4 h-full">
-				<CardHeader>
-					<CardTitle className="text-xl font-bold">Let's get started building your Pipeline.</CardTitle>
-
-					<p className="text-gray-600 mt-2">Let's get started building your pipeline configuration.</p>
-				</CardHeader>
-				<CardContent className="h-auto min-h-[37rem]">
+				<CardHeader
+					title={
+					<Typography variant="h6" fontWeight={700}>
+						Let's get started building your Pipeline.
+					</Typography>
+					}
+					subheader={
+					<Typography variant="body2" color="text.secondary">
+						Let's get started building your pipeline configuration.
+					</Typography>
+					}
+				/>
+				<CardContent className="h-full min-h-[37rem]">
 					<form className="space-y-6" onSubmit={handleSubmit}>
 						<div className="space-y-2">
-							<Label htmlFor="name" className="text-base font-medium flex items-center">
+							<InputLabel htmlFor="name" className="text-base font-medium flex items-center">
 								Name <span className="text-red-500 ml-1">*</span>
-							</Label>
-							<Input
-								id="name"
+							</InputLabel>
+							<TextField
+								variant="standard"
+								fullWidth
 								value={formData.name}
 								onChange={handleChange}
-								// onBlur is not supported by Select
-								className={`h-10 ${errors.name && touched.name ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}
+								id="name"
 								required
+								error={errors.name && touched.name}
+								InputProps={{
+									disableUnderline: true,
+								}}
+								sx={{
+									border: "1px solid #d1d5db",
+									borderRadius: "6px",
+									padding: "2px 2px",
+									"&:focus-within": {
+										borderColor: "#2563eb",   
+										borderWidth: "2px",       
+									},
+									"&.Mui-error": {
+										borderColor: "#dc2626",
+									},
+								}}
 							/>
 							{errors.name && touched.name && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
@@ -234,9 +262,9 @@ const AddPipelineDetails = ({
 							)}
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="platform" className="text-base font-medium flex items-center">
+							<InputLabel htmlFor="platform" className="text-base font-medium flex items-center">
 								Platform <span className="text-red-500 ml-1">*</span>
-							</Label>
+							</InputLabel>
 							<select
 								id="platform"
 								value={formData.platform}
@@ -260,7 +288,6 @@ const AddPipelineDetails = ({
 								<option value="kubernetes">Kubernetes</option>
 								<option value="macOS">macOS</option>
 							</select>
-
 							{errors.platform && touched.platform && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
 									<AlertCircle className="w-4 h-4 mr-1" />
@@ -276,9 +303,9 @@ const AddPipelineDetails = ({
 							)}
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="agentType" className="text-base font-medium flex items-center">
+							<InputLabel htmlFor="agentType" className="text-base font-medium flex items-center">
 								Agent Type <span className="text-red-500 ml-1">*</span>
-							</Label>
+							</InputLabel>
 							<div className="flex gap-4">
 								<label
 									className={`flex-1 flex items-center justify-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -334,8 +361,16 @@ const AddPipelineDetails = ({
 						</div>
 
 						<Button
+							type="submit"
+							variant="contained"
 							disabled={!formData.name || !formData.platform || !formData.agentType}
-							className="bg-blue-500 w-full hover:bg-blue-600">
+							sx={{
+								width: "100%",
+								backgroundColor: "#3b82f6",
+								"&:hover": { backgroundColor: "#2563eb" },
+							}}
+							className="py-2"
+						>
 							Generate Config
 						</Button>
 						{showRunCommand && (
@@ -388,7 +423,7 @@ const AddPipelineDetails = ({
 									<AlertCircle className="text-red-600 h-5 w-5" />
 									<p className="text-red-600">Heartbeat not detected</p>
 								</div>
-								<Button variant={"destructive"} onClick={handleTryAgain}>
+								<Button variant="contained" color="error" onClick={handleTryAgain}>
 									Try again
 								</Button>
 							</div>
