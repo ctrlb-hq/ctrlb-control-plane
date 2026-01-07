@@ -1,143 +1,205 @@
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet } from "@/components/ui/sheet";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListSubheader from "@mui/material/ListSubheader";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { ComponentService } from "@/services/component";
 import { JsonSchema } from "@jsonforms/core";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 
 interface Plugin {
-	name: string;
-	display_name: string;
-	type: string;
-	supported_signals: string[];
+  name: string;
+  display_name: string;
+  type: string;
+  supported_signals: string[];
 }
 
 type AgentType = "otel" | "fluent-bit";
 
 interface Props {
-	kind: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
-	nodeType: "source" | "processor" | "destination";
-	label: string;
-	dataType: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
-	disabled: boolean;
-	agentType?: AgentType;
+  kind: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
+  nodeType: "source" | "processor" | "destination";
+  label: string;
+  dataType: "receiver" | "processor" | "exporter" | "input" | "filter" | "output";
+  disabled: boolean;
+  agentType?: AgentType;
 }
 
-const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, disabled, agentType = "otel" }: Props) => {
-	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [optionValue, setOptionValue] = useState("");
-	const [pluginName, setPluginName] = useState<string | undefined>();
-	const [plugins, setPlugins] = useState<Plugin[]>([]);
-	const [form, setForm] = useState<JsonSchema>({});
-	const [config, setConfig] = useState<object>({});
-	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
-		type: "VerticalLayout",
-		elements: [],
-	});
+const PluginDropdownOptions = React.memo(
+  ({
+    kind,
+    nodeType,
+    label,
+    dataType,
+    disabled,
+    agentType = "otel",
+  }: Props) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const menuOpen = Boolean(anchorEl);
 
-	const { addNode } = useGraphFlow();
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const [optionValue, setOptionValue] = useState("");
+    const [pluginName, setPluginName] = useState<string | undefined>();
 
-	const handleSheetOpen = (plugin: string, displayName: string) => {
-		setPluginName(plugin);
-		setOptionValue(displayName);
-		setConfig({});
-		setForm({});
-		setIsSheetOpen(true);
-		fetchForm(plugin);
-	};
+    const [plugins, setPlugins] = useState<Plugin[]>([]);
+    const [form, setForm] = useState<JsonSchema>({});
+    const [config, setConfig] = useState<object>({});
+    const [uiSchema, setUiSchema] = useState({
+      type: "VerticalLayout",
+      elements: [],
+    });
 
-	const fetchForm = async (plugin: string) => {
-		const schema = await ComponentService.getTransporterForm(plugin);
-		const ui = await ComponentService.getTransporterUiSchema(plugin);
-		setForm(schema);
-		setUiSchema(ui);
-	};
+    const { addNode } = useGraphFlow();
 
-	const handleSubmit = (submittedConfig: any) => {
-		const supported_signals = plugins.find(p => p.name === pluginName)?.supported_signals;
-		const newNode = {
-			type: nodeType,
-			position: { x: 0, y: 0 },
-			data: {
-				type: dataType,
-				name: optionValue,
-				supported_signals,
-				component_name: pluginName,
-				config:submittedConfig,
-			},
-		};
-		addNode(newNode);
-		setIsSheetOpen(false);
-	};
+    const fetchPlugins = useCallback(async () => {
+      const res = await ComponentService.getTransporterService(kind);
+      setPlugins(res || []);
+    }, [kind]);
 
-	const fetchPlugins = React.useCallback(async () => {
-		const res = await ComponentService.getTransporterService(kind);
-		setPlugins(res || []);
-	}, [kind]);
+    useEffect(() => {
+      fetchPlugins();
+    }, [fetchPlugins, agentType]);
 
-	useEffect(() => {
-		fetchPlugins();
-	}, [isSheetOpen, fetchPlugins, agentType]);
+    const fetchForm = async (plugin: string) => {
+      const schema = await ComponentService.getTransporterForm(plugin);
+      const ui = await ComponentService.getTransporterUiSchema(plugin);
+      setForm(schema);
+      setUiSchema(ui);
+    };
 
-	return (
-		<>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild disabled={disabled}>
-					<Button
-						variant="outline"
-						className={`flex items-center gap-2 border-2 rounded-md shadow-md px-4 py-2 ${
-							disabled ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
-						}`}>
-						➕ Add {label}
-					</Button>
-				</DropdownMenuTrigger>
+    const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+      setAnchorEl(event.currentTarget);
+    };
 
-				<DropdownMenuContent className="w-64 mt-2 shadow-lg border rounded-md bg-white">
-					<DropdownMenuLabel className="text-md font-semibold text-gray-700">
-						Select a {label}
-					</DropdownMenuLabel>
-					<DropdownMenuSeparator />
-					<DropdownMenuGroup>
-						{plugins.map((plugin, index) => (
-							<DropdownMenuItem
-								key={index}
-								onClick={() => handleSheetOpen(plugin.name, plugin.display_name)}
-								className="hover:bg-gray-100 cursor-pointer px-3 py-2 text-sm text-gray-800">
-								{plugin.display_name}
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuGroup>
-				</DropdownMenuContent>
-			</DropdownMenu>
+    const handleMenuClose = () => {
+      setAnchorEl(null);
+    };
 
-			{isSheetOpen && (
-				<Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-					<NodeSidePanel
-						title={optionValue}
-						formSchema={form}
-						uiSchema={uiSchema}
-						config={config}
-						setConfig={setConfig}
-						submitLabel={`Add ${label}`}
-						submitDisabled={true}
-						onSubmit={handleSubmit}
-						onDiscard={() => setIsSheetOpen(false)}
-						showDelete={false}
-					/>
-				</Sheet>
-			)}
-		</>
-	);
-});
+    const handleSelectPlugin = (plugin: Plugin) => {
+      setPluginName(plugin.name);
+      setOptionValue(plugin.display_name);
+      setConfig({});
+      setForm({});
+      setIsPanelOpen(true);
+      handleMenuClose();
+      fetchForm(plugin.name);
+    };
+
+    const handleSubmit = (submittedConfig: any) => {
+      const supported_signals = plugins.find(
+        (p) => p.name === pluginName,
+      )?.supported_signals;
+
+      addNode({
+        type: nodeType,
+        position: { x: 0, y: 0 },
+        data: {
+          type: dataType,
+          name: optionValue,
+          supported_signals,
+          component_name: pluginName,
+          config: submittedConfig,
+        },
+      });
+
+      setIsPanelOpen(false);
+    };
+
+
+    return (
+      <>
+        <Button
+          variant="outlined"
+          disabled={disabled}
+          onClick={handleMenuOpen}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2,
+            py: 1,
+            borderWidth: 2,
+            borderRadius: "6px",
+            textTransform: "none",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+            fontSize: "13px",
+            "&:hover": {
+              backgroundColor: disabled ? undefined : "#F3F4F6",
+            },
+          }}
+        >
+          ➕ Add {label}
+        </Button>
+        <Menu
+			anchorEl={anchorEl}
+			open={menuOpen}
+			onClose={handleMenuClose}
+			anchorOrigin={{
+				vertical: "top",
+				horizontal: "center",
+			}}
+			transformOrigin={{
+				vertical: "bottom",
+				horizontal: "center",
+			}}
+			PaperProps={{
+				sx: {
+				width: 300,
+				maxHeight: 360,
+				borderRadius: "8px",
+				boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+				},
+			}}
+		>
+          <ListSubheader
+            sx={{
+              fontSize: "13px",
+              fontWeight: 600,
+              lineHeight: 1.4,
+              color: "#374151",
+              backgroundColor: "#fff",
+            }}
+          >
+            Select a {label}
+          </ListSubheader>
+
+          {plugins.map((plugin) => (
+            <MenuItem
+              key={plugin.name}
+              onClick={() => handleSelectPlugin(plugin)}
+              sx={{
+                fontSize: "13px",
+                lineHeight: 1.4,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                px: 1.5,
+                py: 0.75,
+                "&:hover": {
+                  backgroundColor: "#F3F4F6",
+                },
+              }}
+            >
+              {plugin.display_name}
+            </MenuItem>
+          ))}
+        </Menu>
+        <NodeSidePanel
+          title={optionValue}
+          formSchema={form}
+          uiSchema={uiSchema}
+          config={config}
+          setConfig={setConfig}
+          submitLabel={`Add ${label}`}
+          submitDisabled
+          onSubmit={handleSubmit}
+          onDiscard={() => setIsPanelOpen(false)}
+          showDelete={false}
+          isOpen={isPanelOpen}
+        />
+      </>
+    );
+  },
+);
 
 export default PluginDropdownOptions;

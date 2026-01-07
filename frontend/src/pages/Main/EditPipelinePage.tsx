@@ -11,57 +11,57 @@ import ReactFlow, {
   Panel,
   ReactFlowInstance,
 } from "reactflow";
-import { Edit, Loader2, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Trash2 } from "lucide-react";
+import {FormControlLabel, Button, Switch} from "@mui/material";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
 import pipelineServices from "@/services/pipeline";
 import GenericNode from "@/components/pipelines/editor/GenericNode";
-import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
-import { ComponentService } from "@/services/component";
 import PluginDropdownOptions from "@/components/pipelines/editor/PluginDropdownOptions";
-
+import ReviewDrawer from "@/components/pipelines/editor/ReviewDrawer";
 
 type AgentType = "otel" | "fluent-bit";
+type FlowNodeType = "source" | "processor" | "destination";
+type AgentRole =
+  | "input"
+  | "filter"
+  | "output"
+  | "receiver"
+  | "processor"
+  | "exporter";
+
+const FLOW_TO_AGENT_ROLE: Record<AgentType, Record<FlowNodeType, string>> = {
+  "fluent-bit": {
+    source: "input",
+    processor: "filter",
+    destination: "output",
+  },
+  otel: {
+    source: "receiver",
+    processor: "processor",
+    destination: "exporter",
+  },
+};
+
+const AGENT_ROLE_TO_FLOW_TYPE: Record<AgentRole, FlowNodeType> = {
+  input: "source",
+  filter: "processor",
+  output: "destination",
+  receiver: "source",
+  processor: "processor",
+  exporter: "destination",
+};
 
 const EditPipelinePage = () => {
   const { pipelineId } = useParams<{ pipelineId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const pipelineName = (location.state as any)?.pipelineName ?? "Pipeline Editor";
-
-  const [isEditMode, setIsEditMode] = useState<boolean | false>(false);
+  const pipelineName =
+    (location.state as any)?.pipelineName ?? "Pipeline Editor";
+  const [isEditMode, setIsEditMode] = useState(false);
   const [agentType, setAgentType] = useState<AgentType>("otel");
-
-  // Load agent type from localStorage on mount
-  useEffect(() => {
-    const storedAgentType = localStorage.getItem("agentType") as AgentType;
-    if (storedAgentType && (storedAgentType === "otel" || storedAgentType === "fluent-bit")) {
-      setAgentType(storedAgentType);
-    }
-  }, []);
-
-  const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [form, setForm] = useState<any>({});
-  const [config, setConfig] = useState<object>({});
-  const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
-    type: "VerticalLayout",
-    elements: [],
-  });
-  const [selectedChange, setSelectedChange] = useState<any>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
-
   const {
     nodeValue,
     edgeValue,
@@ -77,29 +77,49 @@ const EditPipelinePage = () => {
   } = useGraphFlow();
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [_reactFlowInstance, setReactFlowInstance] =
+  const [_rfInstance, setRFInstance] =
     useState<ReactFlowInstance | null>(null);
+
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
 
   const { showSnackbar } = useGlobalSnackbar();
 
+  useEffect(() => {
+    const stored = localStorage.getItem("agentType") as AgentType;
+    if (stored === "otel" || stored === "fluent-bit") {
+      setAgentType(stored);
+    }
+  }, []);
+
   const nodeTypes = useMemo(
     () => ({
       source: (props: NodeProps) => (
-        <GenericNode {...props} type="source" isEditMode={isEditMode} />
+        <GenericNode
+          {...props}
+          type={agentType === "fluent-bit" ? "input" : "receiver"}
+          isEditMode={isEditMode}
+        />
       ),
       processor: (props: NodeProps) => (
-        <GenericNode {...props} type="processor" isEditMode={isEditMode} />
+        <GenericNode
+          {...props}
+          type={agentType === "fluent-bit" ? "filter" : "processor"}
+          isEditMode={isEditMode}
+        />
       ),
       destination: (props: NodeProps) => (
-        <GenericNode {...props} type="destination" isEditMode={isEditMode} />
+        <GenericNode
+          {...props}
+          type={agentType === "fluent-bit" ? "output" : "exporter"}
+          isEditMode={isEditMode}
+        />
       ),
     }),
-    [isEditMode]
+    [agentType, isEditMode],
   );
 
-  const fetchGraph = async () => {
+  const fetchGraph = useCallback(async () => {
     if (!pipelineId) return;
 
     setNodeValueDirect([]);
@@ -107,338 +127,218 @@ const EditPipelinePage = () => {
     clearChangesLog();
 
     const res = await pipelineServices.getPipelineGraph(pipelineId);
-    const VERTICAL_SPACING = 100;
 
-    const updatedNodes = res.nodes.map((node: any, index: number) => {
-      const nodeType =
-        node.component_role === "receiver"
-          ? "source"
-          : node.component_role === "exporter"
-          ? "destination"
-          : "processor";
+    const updatedNodes = res.nodes
+      .map((node: any, index: number) => {
+        const flowType =
+          AGENT_ROLE_TO_FLOW_TYPE[node.component_role as AgentRole];
+        if (!flowType) return null;
 
-      const x = nodeType === "source" ? 50 : nodeType === "destination" ? 400 : 225;
-      const y = 100 + index * VERTICAL_SPACING;
-
-      return {
-        id: node.component_id.toString(),
-        type: nodeType,
-        position: { x, y },
-        data: node,
-      };
-    });
+        return {
+          id: String(node.component_id),
+          type: flowType,
+          position: {
+            x: flowType === "source" ? 50 : flowType === "processor" ? 225 : 400,
+            y: 100 + index * 100,
+          },
+          data: node,
+        };
+      })
+      .filter(Boolean);
 
     const updatedEdges = res.edges.map((edge: any) => ({
       id: `edge-${edge.source}-${edge.target}`,
-      source: edge.source,
-      target: edge.target,
+      source: String(edge.source),
+      target: String(edge.target),
       animated: true,
     }));
 
     setNodeValueDirect(updatedNodes);
     setEdgeValueDirect(updatedEdges);
-  };
+  }, [pipelineId]);
 
   useEffect(() => {
     fetchGraph();
-  }, [pipelineId]);
+  }, [fetchGraph]);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => connectNodes(params),
-    [connectNodes]
+    [connectNodes],
   );
 
   const onEdgeClick: EdgeMouseHandler = useCallback(
     (event, edge) => {
       if (!isEditMode) return;
       const rect = reactFlowWrapper.current?.getBoundingClientRect();
-      if (rect) {
-        setEdgePopoverPosition({
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top,
-        });
-      }
+      if (!rect) return;
+      setEdgePopoverPosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      });
       setSelectedEdge(edge);
     },
-    [isEditMode]
+    [isEditMode],
   );
-
-  const handleDeleteEdge = useCallback(() => {
-    if (!selectedEdge) return;
-    deleteEdge(selectedEdge);
-    setSelectedEdge(null);
-  }, [selectedEdge, deleteEdge]);
 
   const handleDeployChanges = async () => {
     try {
       setIsDeploying(true);
       showSnackbar("Deploying changes…", "loading");
 
-      const syncPayload = {
+      const roleMap = FLOW_TO_AGENT_ROLE[agentType];
+
+      await pipelineServices.syncPipelineGraph(pipelineId!, {
         nodes: nodeValue.map((node) => ({
-          component_id: parseInt(node.id),
+          component_id: Number(node.id),
           name: node.data.name,
-          component_role:
-            node.type === "destination"
-              ? "exporter"
-              : node.type === "source"
-              ? "receiver"
-              : "processor",
+          component_role: roleMap[node.type as FlowNodeType],
           component_name: node.data.component_name,
           config: node.data.config,
-          supported_signals: node.data.supported_signals || [],
+          supported_signals: node.data.supported_signals ?? [],
         })),
-        edges: edgeValue.map((edge) => ({
-          source: edge.source,
-          target: edge.target,
+        edges: edgeValue.map((e) => ({
+          source: e.source,
+          target: e.target,
         })),
-      };
-
-      await pipelineServices.syncPipelineGraph(pipelineId!, syncPayload);
+      });
 
       showSnackbar("Changes deployed successfully", "success");
       clearChangesLog();
-      setIsEditMode(false);
-
       navigate("/home");
-    } catch (err) {
-      console.error(err);
+    } catch {
       showSnackbar("Failed to deploy changes", "error");
     } finally {
       setIsDeploying(false);
     }
   };
 
-  const EditForm = async (change: any) => {
-    setIsReviewSheetOpen(false);
-    setIsEditFormOpen(true);
-    setSelectedChange(change);
-
-    const schema = await ComponentService.getTransporterForm(change.component_type);
-    const ui = await ComponentService.getTransporterUiSchema(change.component_type);
-
-    setForm(schema);
-    setUiSchema(ui);
-    setConfig(change.finalConfig);
-  };
-  const handleSubmit = useCallback((submittedConfig: any) => {
-        if (selectedChange) {
-            updateNodeConfig(selectedChange.id, submittedConfig);
-            setNodeValueDirect((nodes) =>
-                nodes.map((node) =>
-                node.id === selectedChange.id
-                    ? {
-                        ...node,
-                        data: {
-                        ...node.data,
-                        config: submittedConfig,
-                        },
-                    }
-                    : node
-                )
-            );
-            setSelectedChange((prev) =>
-                prev ? { ...prev, finalConfig: submittedConfig } : prev
-            );
-        }
-        setIsEditFormOpen(false);
-    },
-        [selectedChange, setNodeValueDirect, updateNodeConfig]
-    );
-  
-    const onPaneClick = useCallback(() => {
-        setSelectedEdge(null);
-    }, []);
-  
-    useEffect(() => {
-        fetchGraph();
-    }, [pipelineId]);
-
-    const handleCloseEditor = useCallback(() => {
-      setNodeValueDirect([]);
-      setEdgeValueDirect([]);
-      clearChangesLog();
-
-      setIsEditMode(false);
-      setIsReviewSheetOpen(false);
-      setIsEditFormOpen(false);
-      setSelectedEdge(null);
-
-      navigate("/home");
-    }, [
-      clearChangesLog,
-      navigate,
-      setEdgeValueDirect,
-      setNodeValueDirect,
-    ]);
-
   return (
     <>
       <div className="flex justify-between items-center p-4 border-b">
         <div className="text-xl font-medium">{pipelineName}</div>
-        <div className="flex items-center gap-4">
-          <Switch checked={isEditMode} onCheckedChange={setIsEditMode} />
-          <Label>Edit Mode</Label>
-          <Sheet
-            open={isReviewSheetOpen || isEditFormOpen}
-            onOpenChange={(open) => {
-              setIsReviewSheetOpen(open && !isEditFormOpen);
-              setIsEditFormOpen(open && isEditFormOpen);
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <SheetTrigger asChild>
-                <Button disabled={!isEditMode}>Review</Button>
-              </SheetTrigger>
 
-              <Button
-                variant="outline"
-                onClick={handleCloseEditor}
-              >
-                Close
-              </Button>
-            </div>
-            <SheetContent className="w-[30rem]">
-              {isReviewSheetOpen && (
-                <>
-                  <SheetTitle>Pending Changes</SheetTitle>
-                  <SheetDescription>
-                    <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-											{changesLog.map((change, index) => (
-												<div key={index} className="flex justify-between items-center">
-													<div className="flex flex-col">
-														<p className="text-lg">{change.type}</p>
-														<p className="text-gray-800">{change.name}</p>
-													</div>
-													<div className="flex items-center gap-3">
-														<p
-															className={`text-lg ${change.status === "deleted" ? "text-red-500" : change.status === "added" ? "text-green-500" : "text-gray-500"}`}>
-															[{change.status}]
-														</p>
-														{change.type !== "Edge" && (
-															<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
-														)}
-													</div>
-												</div>
-											))}
-										</div>
-                  </SheetDescription>
-                  <div className="mt-4">
-										<Button
-											onClick={handleDeployChanges}
-											className="bg-blue-500 flex items-center gap-2"
-											disabled={isDeploying}
-										>
-											{isDeploying ? (
-											<>
-												<Loader2 className="h-4 w-4 animate-spin" />
-												Deploying…
-											</>
-											) : (
-											"Deploy Changes"
-											)}
-										</Button>
-									</div>
-                </>
-              )}
-              {isEditFormOpen && selectedChange && (
-                <NodeSidePanel
-                  title={selectedChange.name}
-                  formSchema={form}
-                  uiSchema={uiSchema}
-                  config={config}
-                  setConfig={setConfig}
-                  submitLabel="Apply"
-                  onSubmit={handleSubmit}
-                  onDiscard={() => setSelectedChange(null)}
-                  showDelete={false}
-                />
-              )}
-            </SheetContent>
-          </Sheet>
+        <div className="flex items-center gap-4">
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isEditMode}
+                onChange={(_, v) => setIsEditMode(v)}
+              />
+            }
+            label="Edit Mode"
+          />
+
+          <Button variant="contained" color="primary" disabled={!isEditMode} onClick={() => setIsReviewOpen(true)}>
+            Review
+          </Button>
+
+          <Button variant="outlined" color="error" onClick={() => navigate("/home")}>
+            Close
+          </Button>
         </div>
       </div>
 
+      <ReviewDrawer
+        open={isReviewOpen}
+        changesLog={changesLog}
+        isDeploying={isDeploying}
+        onClose={() => setIsReviewOpen(false)}
+        onDeploy={handleDeployChanges}
+        onApplyConfig={(id, config) => {
+          updateNodeConfig(id, config);
+        }}
+      />
+
       <div
-				ref={reactFlowWrapper}
-				style={{ height:"90vh", width: "100%", backgroundColor: "#f9f9f9" }}>
-				<ReactFlow
-					nodes={nodeValue}
-					edges={edgeValue}
-					onNodesChange={updateNodes}
-					onEdgesChange={updateEdges}
-					onConnect={isEditMode ? onConnect : undefined}
-					nodeTypes={nodeTypes}
-					onInit={setReactFlowInstance}
-					onEdgeClick={onEdgeClick}
-					onPaneClick={onPaneClick}
-					nodesDraggable={isEditMode}
-					nodesConnectable={isEditMode}
-					elementsSelectable={isEditMode}
-					onlyRenderVisibleElements
-					proOptions={{ hideAttribution: true }}
-					fitView>
-					<Background />
-					<Controls />
-					<MiniMap />
-					{selectedEdge && isEditMode && (
-						<Panel
-							position="top-left"
-							style={{
-								position: "absolute",
-								left: edgePopoverPosition.x,
-								top: edgePopoverPosition.y,
-								transform: "translate(-50%, -50%)",
-								background: "white",
-								padding: "8px",
-								borderRadius: "4px",
-								boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-								zIndex: 10,
-							}}>
-							<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
-						</Panel>
-					)}
-				</ReactFlow>
-				<div
-					style={{
-						position: "absolute",
-						bottom: "5rem", // distance from bottom
-						left: "50%",
-						transform: "translateX(-50%)",
-						backgroundColor: "#f1f5f9",
-						padding: "12px 24px",
-						borderRadius: "8px",
-						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-						display: "flex",
-						gap: "12px",
-						zIndex: 20,
-					}}>
-					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "input" : "receiver"}
+        ref={reactFlowWrapper}
+        style={{ height: "92vh", width: "100%", backgroundColor: "#f9f9f9" }}
+      >
+        <ReactFlow
+          nodes={nodeValue}
+          edges={edgeValue}
+          onNodesChange={updateNodes}
+          onEdgesChange={updateEdges}
+          onConnect={isEditMode ? onConnect : undefined}
+          nodeTypes={nodeTypes}
+          onInit={setRFInstance}
+          onEdgeClick={onEdgeClick}
+          nodesDraggable={isEditMode}
+          nodesConnectable={isEditMode}
+          elementsSelectable={isEditMode}
+          fitView
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+
+          {selectedEdge && isEditMode && (
+            <Panel
+              position="top-left"
+              style={{
+                position: "absolute",
+                left: edgePopoverPosition.x,
+                top: edgePopoverPosition.y,
+                transform: "translate(-50%, -50%)",
+                background: "white",
+                padding: "8px",
+                borderRadius: "4px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                zIndex: 10,
+              }}
+            >
+              <Trash2
+                onClick={() => {
+                  deleteEdge(selectedEdge);
+                  setSelectedEdge(null);
+                }}
+                className="text-red-500 cursor-pointer"
+                size={16}
+              />
+            </Panel>
+          )}
+        </ReactFlow>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: "5rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#f1f5f9",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            display: "flex",
+            gap: "12px",
+            zIndex: 20,
+          }}
+        >
+          <PluginDropdownOptions
+            kind={agentType === "fluent-bit" ? "input" : "receiver"}
             nodeType="source"
-						label="Source"
-						dataType={agentType === "fluent-bit" ? "input" : "receiver"}
+            label="Source"
+            dataType={agentType === "fluent-bit" ? "input" : "receiver"}
             disabled={!isEditMode}
             agentType={agentType}
-					/>
-					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "filter" : "processor"}
+          />
+          <PluginDropdownOptions
+            kind={agentType === "fluent-bit" ? "filter" : "processor"}
             nodeType="processor"
-						label="Processor"
-						dataType={agentType === "fluent-bit" ? "filter" : "processor"}
-						disabled={!isEditMode}
+            label="Processor"
+            dataType={agentType === "fluent-bit" ? "filter" : "processor"}
+            disabled={!isEditMode}
             agentType={agentType}
-					/>
-					<PluginDropdownOptions
-						kind={agentType === "fluent-bit" ? "output" : "exporter"}
-						nodeType="destination"
-						label="Destination"
-						dataType={agentType === "fluent-bit" ? "output" : "exporter"}
-						disabled={!isEditMode}
+          />
+          <PluginDropdownOptions
+            kind={agentType === "fluent-bit" ? "output" : "exporter"}
+            nodeType="destination"
+            label="Destination"
+            dataType={agentType === "fluent-bit" ? "output" : "exporter"}
+            disabled={!isEditMode}
             agentType={agentType}
-					/>
-				</div>
-			</div>
+          />
+        </div>
+      </div>
     </>
   );
 };
