@@ -37,7 +37,7 @@ func GetComponentTypeMap() map[string]string {
 		"modify_filter": "filter",
 
 		// Fluent Bit Outputs
-		"ctrlb_output":         "output",
+		"http_ctrlb_output":         "output",
 		"http_output":          "output",
 		"stdout_output":        "output",
 		"opentelemetry_output": "output",
@@ -81,7 +81,7 @@ func GetSignalSupportMap() map[string][]string {
 		"modify_filter": {"logs"},
 
 		// Fluent Bit Outputs
-		"ctrlb_output":         {"logs", "metrics"},
+		"http_ctrlb_output":         {"logs", "metrics"},
 		"http_output":          {"logs", "metrics"},
 		"stdout_output":        {"logs", "metrics"},
 		"opentelemetry_output": {"traces", "metrics", "logs"},
