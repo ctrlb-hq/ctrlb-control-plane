@@ -314,6 +314,7 @@ const EditPipelinePage = () => {
           }}
         >
           <PluginDropdownOptions
+            key={`source-${agentType}`}
             kind={agentType === "fluent-bit" ? "input" : "receiver"}
             nodeType="source"
             label="Source"
@@ -321,7 +322,9 @@ const EditPipelinePage = () => {
             disabled={!isEditMode}
             agentType={agentType}
           />
+
           <PluginDropdownOptions
+            key={`processor-${agentType}`}
             kind={agentType === "fluent-bit" ? "filter" : "processor"}
             nodeType="processor"
             label="Processor"
@@ -329,7 +332,9 @@ const EditPipelinePage = () => {
             disabled={!isEditMode}
             agentType={agentType}
           />
+
           <PluginDropdownOptions
+            key={`destination-${agentType}`}
             kind={agentType === "fluent-bit" ? "output" : "exporter"}
             nodeType="destination"
             label="Destination"
