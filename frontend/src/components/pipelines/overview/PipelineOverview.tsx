@@ -81,9 +81,9 @@ const PipelineOverview = ({ pipelineOverviewData, onRefresh }: Props) => {
 						<p className="font-medium">{pipelineOverviewData.id}</p>
 					</div>
 					<div>
-						<p className="text-gray-500">Created At</p>
+						<p className="text-gray-500">Last Updated At</p>
 						<p className="font-medium">
-							{formatTimestampWithDate(pipelineOverviewData.created_at)}
+							{formatTimestampWithDate(pipelineOverviewData.updated_at)}
 						</p>
 					</div>
 					<div>
@@ -93,9 +93,9 @@ const PipelineOverview = ({ pipelineOverviewData, onRefresh }: Props) => {
 						</p>
 					</div>
 					<div>
-						<p className="text-gray-500">Updated At</p>
+						<p className="text-gray-500">Collector Type</p>
 						<p className="font-medium">
-							{formatTimestampWithDate(pipelineOverviewData.updated_at)}
+							{pipelineOverviewData.type}
 						</p>
 					</div>
 					<div>

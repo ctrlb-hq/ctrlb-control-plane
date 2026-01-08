@@ -12,7 +12,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import AddPipelineDetails from "@/components/pipelines/create/AddPipelineDetails";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import { useNavigate } from "react-router-dom";
 
 interface AddPipelineSheetProps {
   isOpen: boolean;
@@ -20,16 +19,12 @@ interface AddPipelineSheetProps {
 }
 
 const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [pipelineId, setPipelineId] = useState("");
-  const [pipelineName, setPipelineName] = useState("");
-  const navigate = useNavigate();
-  
+
   const { resetGraph, changesLog } = useGraphFlow();
 
   const shouldShowDialog = () => {
-    return currentStep === 0 || changesLog.length > 0;
+    return changesLog.length > 0;
   };
 
   const handleDrawerClose = () => {
@@ -50,18 +45,12 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
     localStorage.removeItem("agentType");
 
     resetGraph();
-    setCurrentStep(0);
     setIsDialogOpen(false);
     setIsOpen(false);
   };
 
   const handleDialogCancel = () => {
     setIsDialogOpen(false);
-  };
-
-  const getDataFromChild = (id: string, name: string) => {
-    setPipelineId(id);
-    setPipelineName(name);
   };
 
   return (
@@ -71,55 +60,32 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
         open={isOpen}
         onClose={handleDrawerClose}
         PaperProps={{
-          sx: {
-            width: "70vw",
-          },
+          sx: { width: "70vw" },
         }}
       >
         <Button
-			onClick={handleDrawerClose}
-			variant="text"
-			sx={{
-				position: "absolute",
-				top: 8,
-				right: 8,
-				minWidth: "auto",
-				padding: "3px",
-				color: "black",
-				zIndex: 10,
-				borderRadius: "10px",
-			}}
-			className="hover:bg-red-500 hover:text-white"
-		>
-			<CloseIcon  />
-		</Button>
+          onClick={handleDrawerClose}
+          variant="text"
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            minWidth: "auto",
+            padding: "3px",
+            color: "black",
+            zIndex: 10,
+            borderRadius: "10px",
+          }}
+          className="hover:bg-red-500 hover:text-white"
+        >
+          <CloseIcon />
+        </Button>
 
         <Box sx={{ height: "100%", overflow: "auto", pt: 4 }}>
-          {currentStep === 0 ? (
-            <AddPipelineDetails
-              sendPipelineDataToParent={getDataFromChild}
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-            />
-          ) : (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                resetGraph();
-                setIsOpen(false);
-                navigate(`/pipelines/${pipelineId}/edit`, {
-                  state: { pipelineName },
-                });
-              }}
-              disabled={!pipelineId}
-              className="pr-4"
-            >
-              Open Pipeline Editor
-            </Button>
-          )}
+          <AddPipelineDetails />
         </Box>
       </Drawer>
+
       <Dialog
         open={isDialogOpen}
         onClose={handleDialogCancel}
@@ -127,16 +93,12 @@ const AddPipelineSheet = ({ isOpen, setIsOpen }: AddPipelineSheetProps) => {
         aria-describedby="discard-dialog-description"
       >
         <DialogTitle id="discard-dialog-title">
-          {currentStep === 0
-            ? "Discard New Pipeline?"
-            : "Discard Pipeline Edits?"}
+          Discard Pipeline?
         </DialogTitle>
 
         <DialogContent>
           <DialogContentText id="discard-dialog-description">
-            {currentStep === 0
-              ? "All your new pipeline details will be lost. Continue?"
-              : "Your graph changes will be lost."}
+            Your changes will be lost. Continue?
           </DialogContentText>
         </DialogContent>
 

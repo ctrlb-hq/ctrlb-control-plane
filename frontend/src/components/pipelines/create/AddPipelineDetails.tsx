@@ -13,6 +13,7 @@ import {
   TextField,
   InputLabel,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
 type AgentType = "otel" | "fluent-bit";
@@ -23,17 +24,8 @@ interface formData {
 	agentType: AgentType;
 }
 
-interface AddPipelineDetailsProps {
-	sendPipelineDataToParent: (id: string, name: string) => void;
-	currentStep: number;
-	setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
-}
 
-const AddPipelineDetails = ({
-	sendPipelineDataToParent,
-	currentStep,
-	setCurrentStep,
-}: AddPipelineDetailsProps) => {
+const AddPipelineDetails = () => {
 	const pipelineName = "";
 	const platform = null;
 
@@ -52,13 +44,14 @@ const AddPipelineDetails = ({
 		platform: platform ?? "",
 		agentType: "otel",
 	});
-
+	const [currentStep, setCurrentStep] = useState(0);
+	const [pipelineId, setPipelineID] = useState<string>("");
 	const [errors, setErrors] = useState({
 		name: false,
 		platform: false,
 		agentType: false,
 	});
-
+	const navigate = useNavigate();
 	const [touched, setTouched] = useState({
 		name: false,
 		platform: false,
@@ -149,9 +142,7 @@ const AddPipelineDetails = ({
 	}, [stopChecking]);
 
 	const checkAgentStatus = async (since: number) => {
-		// Stop any existing check
 		stopChecking();
-		// Create new abort controller
 		const abortController = new AbortController();
 		abortControllerRef.current = abortController;
 		setIsChecking(true);
@@ -180,7 +171,8 @@ const AddPipelineDetails = ({
 						setShowStatus(true);
 						setShowHeartBeat(false);
 						stopChecking();
-						sendPipelineDataToParent(data?.pipeline_id, formData.name);
+						setCurrentStep(prev => prev + 1);
+						setPipelineID(data?.pipeline_id);
 						setShowConfigureButton(true);
 					}
 
@@ -232,7 +224,9 @@ const AddPipelineDetails = ({
 			if (!localStorage.getItem("pipelineData")) {
 				throw new Error("Failed to store pipeline data");
 			}
-			setCurrentStep(prev => prev + 1);
+			navigate(`/pipelines/${pipelineId}/edit`, {
+                state: { pipelineName: formData.name },
+            });
 		} catch (error) {
 			console.error("Error initializing pipeline:", error);
 			showSnackbar(
