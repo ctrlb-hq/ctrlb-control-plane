@@ -8,6 +8,19 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
+var FluentBitComponentNameMap = map[string]string{
+	"tail_input":              "tail",
+	"syslog_input":            "syslog",
+	"prometheus_scrape_input": "prometheus_scrape",
+	"opentelemetry_input":     "opentelemetry",
+	"grep_filter":             "grep",
+	"modify_filter":           "modify",
+	"http_ctrlb_output":       "http",
+	"http_output":             "http",
+	"stdout_output":           "stdout",
+	"opentelemetry_output":    "opentelemetry",
+}
+
 // GenerateOTELAlias creates a unique OTEL component alias
 // Format: componentType/nodeName_configHash
 func GenerateOTELAlias(node models.PipelineNodes) string {
@@ -36,7 +49,11 @@ func GenerateFBTag(node models.PipelineNodes, alias string) string {
 
 // GetPluginName extracts the plugin name from a component name
 func GetPluginName(node models.PipelineNodes) string {
-	return utils.TrimAfterUnderscore(node.ComponentName)
+	pluginName, ok := FluentBitComponentNameMap[node.ComponentName]
+	if !ok {
+		pluginName = utils.TrimAfterUnderscore(node.ComponentName)
+	}
+	return pluginName
 }
 
 // ExtractTagPrefix extracts the plugin prefix from a tag

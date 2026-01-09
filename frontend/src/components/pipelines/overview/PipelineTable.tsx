@@ -8,9 +8,8 @@ import {
 	Paper,
 } from "@mui/material";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
-import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import pipelineServices from "@/services/pipeline";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState} from "react";
 import ViewPipelineDetails from "./ViewPipelineDetails";
 
 interface pipeline {
@@ -40,8 +39,6 @@ const PipelineTable = () => {
 	const [pipelines, setPipelines] = useState<pipeline[]>([]);
 	const [pipelineId, setPipelineId] = useState<string>("");
 	const [drawerOpen, setDrawerOpen] = useState(false);
-
-	const { setPipelineOverview } = usePipelineOverview();
 	const { resetGraph } = useGraphFlow();
 
 	const handleGetPipelines = async () => {
@@ -49,20 +46,9 @@ const PipelineTable = () => {
 		setPipelines(res);
 	};
 
-	const handleGetPipeline = useCallback(async () => {
-		const res = await pipelineServices.getPipelineById(pipelineId);
-		setPipelineOverview(res);
-	}, [pipelineId, setPipelineOverview]);
-
 	useEffect(() => {
 		handleGetPipelines();
 	}, []);
-
-	useEffect(() => {
-		if (pipelineId) {
-			handleGetPipeline();
-		}
-	}, [pipelineId, handleGetPipeline]);
 
 	const handleRowClick = (id: string) => {
 		setPipelineId(id);
@@ -73,9 +59,7 @@ const PipelineTable = () => {
 		setDrawerOpen(false);
 		setPipelineId("");
 		resetGraph();
-		handleGetPipelines();
 	};
-
 	if (!pipelines || pipelines.length === 0) {
 		return (
 			<div className="flex flex-col gap-2 justify-center items-center">

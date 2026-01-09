@@ -112,7 +112,7 @@ export const initialEdges: Edge[] = [
 ];
 
 export const getRandomChartColor = (name: string) => {
-	const colors = ["brown", "gold", "green", "red", "purple", "orange", "blue", "pink", "gray"];
+	const colors = [ "#FF8B3D", "#3B82F6"];
 	const charSum = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
 	return colors[charSum % colors.length];
 };
@@ -129,7 +129,7 @@ export const formatTimestampWithDate = (timestamp: number | undefined) => {
 	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
-// helpers.ts
+// helpers.ts - OTEL install commands
 export const installCommands = {
   linux: (pipelineName: string) => {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
@@ -156,6 +156,37 @@ export const installCommands = {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
     const startedBy  = localStorage.getItem("userEmail") ?? "";
     return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-daemonset.yaml.template \
+| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | oc apply -f -`;
+  },
+};
+
+// Fluent Bit install commands
+export const installCommandsFluentBit = {
+  linux: (pipelineName: string) => {
+    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
+    const startedBy  = localStorage.getItem("userEmail") ?? "";
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install-fluentbit.sh \
+| sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
+  },
+
+  macOS: (pipelineName: string) => {
+    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
+    const startedBy  = localStorage.getItem("userEmail") ?? "";
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install-fluentbit.sh \
+| sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
+  },
+
+  kubernetes: (pipelineName: string) => {
+    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
+    const startedBy  = localStorage.getItem("userEmail") ?? "";
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/fluent-bit-daemonset.yaml.template \
+| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | kubectl apply -f -`;
+  },
+
+  openShift: (pipelineName: string) => {
+    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
+    const startedBy  = localStorage.getItem("userEmail") ?? "";
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/fluent-bit-daemonset.yaml.template \
 | BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | oc apply -f -`;
   },
 };

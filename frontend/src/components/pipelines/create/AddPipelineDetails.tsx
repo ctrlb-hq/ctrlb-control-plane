@@ -1,33 +1,31 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, FormEvent, ChangeEvent } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
-import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
-import { installCommands } from "@/constants";
+import { installCommands, installCommandsFluentBit } from "@/constants";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  TextField,
+  InputLabel,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
+type AgentType = "otel" | "fluent-bit";
 
 interface formData {
 	name: string;
 	platform: Platform | "";
+	agentType: AgentType;
 }
 
-interface AddPipelineDetailsProps {
-	sendPipelineDataToParent: (id: string, name: string) => void;
-	currentStep: number;
-	setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
-}
 
-const AddPipelineDetails = ({
-	sendPipelineDataToParent,
-	currentStep,
-	setCurrentStep,
-}: AddPipelineDetailsProps) => {
+const AddPipelineDetails = () => {
 	const pipelineName = "";
 	const platform = null;
 
@@ -44,19 +42,23 @@ const AddPipelineDetails = ({
 	const [formData, setFormData] = useState<formData>({
 		name: pipelineName ?? "",
 		platform: platform ?? "",
+		agentType: "otel",
 	});
-
+	const [currentStep, setCurrentStep] = useState(0);
+	const [pipelineId, setPipelineID] = useState<string>("");
 	const [errors, setErrors] = useState({
 		name: false,
 		platform: false,
+		agentType: false,
 	});
-
+	const navigate = useNavigate();
 	const [touched, setTouched] = useState({
 		name: false,
 		platform: false,
+		agentType: false,
 	});
 
-	const handleChange = (e: any) => {
+	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		const { id, value } = e.target;
 		setFormData(prev => ({
 			...prev,
@@ -71,18 +73,20 @@ const AddPipelineDetails = ({
 		}
 	};
 
-	const handleSubmit = (e: any) => {
+	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		// Check required fields
 		const newErrors = {
 			name: !formData.name.trim(),
 			platform: !formData.platform,
+			agentType: !formData.agentType,
 		};
 
 		setErrors(newErrors);
 		setTouched({
 			name: true,
 			platform: true,
+			agentType: true,
 		});
 
 		setShowRunCommand(true);
@@ -103,7 +107,6 @@ const AddPipelineDetails = ({
 		}
 
 		const since = Math.floor(new Date().getTime() / 1000);
-		setShowConfigureButton(true);
 
 		setTimeout(() => setShowHeartBeat(true), 2000);
 		setTimeout(() => setShowStatus(true), 6000);
@@ -139,9 +142,7 @@ const AddPipelineDetails = ({
 	}, [stopChecking]);
 
 	const checkAgentStatus = async (since: number) => {
-		// Stop any existing check
 		stopChecking();
-		// Create new abort controller
 		const abortController = new AbortController();
 		abortControllerRef.current = abortController;
 		setIsChecking(true);
@@ -170,7 +171,9 @@ const AddPipelineDetails = ({
 						setShowStatus(true);
 						setShowHeartBeat(false);
 						stopChecking();
-						sendPipelineDataToParent(data?.pipeline_id, formData.name);
+						setCurrentStep(prev => prev + 1);
+						setPipelineID(data?.pipeline_id);
+						setShowConfigureButton(true);
 					}
 
 					await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
@@ -195,30 +198,92 @@ const AddPipelineDetails = ({
 		}
 	};
 
+	const handleConfigurePipeline = () => {
+		try {
+			const keysToRemove = [
+				"pipelineData",
+				"latest_agents",
+				"selectedAgentIds",
+				"pipelineNodes",
+				"pipelineEdges",
+			];
+			keysToRemove.forEach(key => localStorage.removeItem(key));
+			const initialPipelineData = {
+				id: Date.now().toString(),
+				name: formData.name,
+				platform: formData.platform,
+				agentType: formData.agentType,
+				nodes: [],
+				edges: [],
+				created_at: new Date().toISOString(),
+			};
+			localStorage.setItem("pipelinename", formData.name);
+			localStorage.setItem("platform", formData.platform);
+			localStorage.setItem("agentType", formData.agentType);
+			localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
+			if (!localStorage.getItem("pipelineData")) {
+				throw new Error("Failed to store pipeline data");
+			}
+			navigate(`/pipelines/${pipelineId}/edit`, {
+                state: { pipelineName: formData.name },
+            });
+		} catch (error) {
+			console.error("Error initializing pipeline:", error);
+			showSnackbar(
+				"Failed to initialize pipeline data. Please try again.",
+				"error",
+				3000
+			);
+		}
+	};
+
 	return (
 		<div className="flex flex-row gap-5 mt-4">
 			<div className="w-1/4 h-full">
 				<ProgressFlow currentStep={currentStep} />
 			</div>
 			<Card className="w-3/4 h-full">
-				<CardHeader>
-					<CardTitle className="text-xl font-bold">Let's get started building your Pipeline.</CardTitle>
-
-					<p className="text-gray-600 mt-2">Let's get started building your pipeline configuration.</p>
-				</CardHeader>
-				<CardContent className="h-auto min-h-[37rem]">
+				<CardHeader
+					title={
+					<Typography variant="h6" fontWeight={700}>
+						Let's get started building your Pipeline.
+					</Typography>
+					}
+					subheader={
+					<Typography variant="body2" color="text.secondary">
+						Let's get started building your pipeline configuration.
+					</Typography>
+					}
+				/>
+				<CardContent className="h-full min-h-[37rem]">
 					<form className="space-y-6" onSubmit={handleSubmit}>
 						<div className="space-y-2">
-							<Label htmlFor="name" className="text-base font-medium flex items-center">
+							<InputLabel htmlFor="name" className="text-base font-medium flex items-center">
 								Name <span className="text-red-500 ml-1">*</span>
-							</Label>
-							<Input
-								id="name"
+							</InputLabel>
+							<TextField
+								variant="standard"
+								fullWidth
 								value={formData.name}
 								onChange={handleChange}
-								// onBlur is not supported by Select
-								className={`h-10 ${errors.name && touched.name ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}
+								id="name"
 								required
+								error={errors.name && touched.name}
+								InputProps={{
+									disableUnderline: true,
+								}}
+								sx={{
+									border: "1px solid #d1d5db",
+									borderRadius: "6px",
+									padding: "2px 2px",
+									"&:focus-within": {
+										borderColor: "#2563eb",   
+										borderWidth: "2px",       
+									},
+									"&.Mui-error": {
+										borderColor: "#dc2626",
+									},
+								}}
 							/>
 							{errors.name && touched.name && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
@@ -228,9 +293,9 @@ const AddPipelineDetails = ({
 							)}
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="platform" className="text-base font-medium flex items-center">
+							<InputLabel htmlFor="platform" className="text-base font-medium flex items-center">
 								Platform <span className="text-red-500 ml-1">*</span>
-							</Label>
+							</InputLabel>
 							<select
 								id="platform"
 								value={formData.platform}
@@ -254,7 +319,6 @@ const AddPipelineDetails = ({
 								<option value="kubernetes">Kubernetes</option>
 								<option value="macOS">macOS</option>
 							</select>
-
 							{errors.platform && touched.platform && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
 									<AlertCircle className="w-4 h-4 mr-1" />
@@ -269,29 +333,98 @@ const AddPipelineDetails = ({
 								</div>
 							)}
 						</div>
+						<div className="space-y-2">
+							<InputLabel htmlFor="agentType" className="text-base font-medium flex items-center">
+								Agent Type <span className="text-red-500 ml-1">*</span>
+							</InputLabel>
+							<div className="flex gap-4">
+								<label
+									className={`flex-1 flex items-center justify-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+										formData.agentType === "otel"
+											? "border-blue-500 bg-blue-50"
+											: "border-gray-200 hover:border-gray-300"
+									}`}>
+									<input
+										type="radio"
+										name="agentType"
+										value="otel"
+										checked={formData.agentType === "otel"}
+										onChange={() => {
+											setFormData(prev => ({ ...prev, agentType: "otel" }));
+											setErrors(prev => ({ ...prev, agentType: false }));
+										}}
+										className="sr-only"
+									/>
+									<div className="text-center">
+										<div className="font-semibold text-gray-800">OpenTelemetry</div>
+										<div className="text-xs text-gray-500">OTEL Collector</div>
+									</div>
+								</label>
+								<label
+									className={`flex-1 flex items-center justify-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+										formData.agentType === "fluent-bit"
+											? "border-blue-500 bg-blue-50"
+											: "border-gray-200 hover:border-gray-300"
+									}`}>
+									<input
+										type="radio"
+										name="agentType"
+										value="fluent-bit"
+										checked={formData.agentType === "fluent-bit"}
+										onChange={() => {
+											setFormData(prev => ({ ...prev, agentType: "fluent-bit" }));
+											setErrors(prev => ({ ...prev, agentType: false }));
+										}}
+										className="sr-only"
+									/>
+									<div className="text-center">
+										<div className="font-semibold text-gray-800">Fluent Bit</div>
+										<div className="text-xs text-gray-500">Log processor</div>
+									</div>
+								</label>
+							</div>
+							{errors.agentType && touched.agentType && (
+								<div className="flex items-center mt-1 text-red-500 text-sm">
+									<AlertCircle className="w-4 h-4 mr-1" />
+									<span>Agent type is required</span>
+								</div>
+							)}
+						</div>
 
 						<Button
-							disabled={!formData.name || !formData.platform}
-							className="bg-blue-500 w-full hover:bg-blue-600">
+							type="submit"
+							variant="contained"
+							disabled={!formData.name || !formData.platform || !formData.agentType}
+							sx={{
+								width: "100%",
+								backgroundColor: "#3b82f6",
+								"&:hover": { backgroundColor: "#2563eb" },
+							}}
+							className="py-2"
+						>
 							Generate Config
 						</Button>
 						{showRunCommand && (
 							<div className="mt-2 flex flex-col gap-2 mb-4">
 								<p className="text-lg font-bold text-black">Run Command</p>
 								<p className="text-gray-500">
-									Running this command in your selected envoirment will deploy the pipeline
+									Running this command in your selected envoirment will deploy the {formData.agentType === "fluent-bit" ? "Fluent Bit" : "OpenTelemetry"} pipeline
 								</p>
 								<div className="flex justify-between border-2 border-orange-300 p-3 rounded-lg text-orange-400">
 									<p>
 										{formData.platform
-											? installCommands[formData.platform as keyof typeof installCommands](formData.name)
+											? (formData.agentType === "fluent-bit"
+												? installCommandsFluentBit[formData.platform as keyof typeof installCommandsFluentBit](formData.name)
+												: installCommands[formData.platform as keyof typeof installCommands](formData.name))
 											: "Select a platform to see the command"}
 									</p>
 									{formData.platform && (
 										<CopyIcon
 											onClick={() =>
 												handleCopy(
-													installCommands[formData.platform as keyof typeof installCommands](formData.name),
+													formData.agentType === "fluent-bit"
+														? installCommandsFluentBit[formData.platform as keyof typeof installCommandsFluentBit](formData.name)
+														: installCommands[formData.platform as keyof typeof installCommands](formData.name),
 												)
 											}
 											className="h-8 w-8 text-orange-400 cursor-pointer"
@@ -317,11 +450,11 @@ const AddPipelineDetails = ({
 							</div>
 						) : showStatus && !showHeartBeat ? (
 							<div className="mt-3 bg-red-200 flex p-3 gap-2 items-center justify-between rounded-md">
-								<div className="flex justify-start">
-									<Close className="text-red-600" />
+								<div className="flex justify-start items-center gap-1">
+									<AlertCircle className="text-red-600 h-5 w-5" />
 									<p className="text-red-600">Heartbeat not detected</p>
 								</div>
-								<Button variant={"destructive"} onClick={handleTryAgain}>
+								<Button variant="contained" color="error" onClick={handleTryAgain}>
 									Try again
 								</Button>
 							</div>
@@ -330,55 +463,11 @@ const AddPipelineDetails = ({
 					{showConfigureButton && (
 						<div className="flex justify-end mt-3">
 							<Button
-								onClick={() => {
-									try {
-										// First, clear any potentially corrupted data
-										const keysToRemove = [
-											"pipelineData",
-											"latest_agents",
-											"selectedAgentIds",
-											"pipelineNodes",
-											"pipelineEdges",
-										];
-										keysToRemove.forEach(key => localStorage.removeItem(key));
-
-										// Initialize fresh pipeline data
-										const initialPipelineData = {
-											id: Date.now().toString(),
-											name: formData.name,
-											platform: formData.platform,
-											nodes: [],
-											edges: [],
-											created_at: new Date().toISOString(),
-										};
-
-										// Store all required data with proper JSON formatting
-										localStorage.setItem("pipelinename", formData.name);
-										localStorage.setItem("platform", formData.platform);
-										localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
-
-										// Verify data was stored correctly
-										const verifyData = localStorage.getItem("pipelineData");
-										if (!verifyData) {
-											throw new Error("Failed to store pipeline data");
-										}
-
-										// Move to next step
-										setCurrentStep(currentStep + 1);
-									} catch (error) {
-										console.error("Error initializing pipeline:", error);
-										showSnackbar(
-											"Failed to initialize pipeline data. Please try again.",
-											"error",
-											3000
-										);
-									}
-								}}
-								// disabled={!formData.name || !formData.platform || !EDI_API_KEY}
-								disabled={!formData.name || !formData.platform}
-								className={`px-6 ${
-									status === "success" ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-400 hover:bg-gray-500"
-								}`}>
+								variant="contained"
+								color="primary"
+								onClick={handleConfigurePipeline}
+								disabled={!formData.name || !formData.platform || !formData.agentType}
+							>
 								Configure Pipeline
 							</Button>
 						</div>

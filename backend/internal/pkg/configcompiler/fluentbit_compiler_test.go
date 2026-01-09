@@ -377,10 +377,13 @@ func TestCompileGraphToFluentBit_DirectInputToOutput(t *testing.T) {
 	assert.NotNil(t, result)
 
 	pipeline := (*result)["pipeline"].(map[string]any)
-	filters := pipeline["filters"].([]any)
-
-	// No filters in this graph
-	assert.Empty(t, filters)
+	// No filters in this graph: key may be omitted entirely.
+	if raw, ok := pipeline["filters"]; ok {
+		filters := raw.([]any)
+		assert.Empty(t, filters)
+	} else {
+		assert.False(t, ok)
+	}
 }
 
 func TestCompileGraphToFluentBit_UserProvidedTag(t *testing.T) {
@@ -860,4 +863,3 @@ func TestFBOutputExpansion(t *testing.T) {
 	}
 	assert.Equal(t, 2, esOutputCount, "Should have 2 ES output instances for incompatible inputs")
 }
-
