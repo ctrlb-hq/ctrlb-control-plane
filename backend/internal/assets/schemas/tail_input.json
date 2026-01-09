@@ -95,26 +95,26 @@
       "title": "Database File",
       "description": "SQLite database file to track file offsets. Enables state persistence across restarts."
     },
-    "db_compare_filename": {
+    "db.compare_filename": {
       "type": "boolean",
       "title": "DB Compare Filename",
       "description": "Review both inode and filename when retrieving stored file info from database.",
       "default": false
     },
-    "db_journal_mode": {
+    "db.journal_mode": {
       "type": "string",
       "title": "DB Journal Mode",
       "description": "SQLite journal mode. WAL provides higher performance but isn't compatible with network filesystems.",
       "enum": ["wal", "delete", "truncate", "persist", "memory", "off"],
       "default": "wal"
     },
-    "db_locking": {
+    "db.locking": {
       "type": "boolean",
       "title": "DB Locking",
       "description": "Restrict database access to Fluent Bit only for improved performance.",
       "default": false
     },
-    "db_sync": {
+    "db.sync": {
       "type": "string",
       "title": "DB Sync Mode",
       "description": "SQLite synchronization method. Full mode has high I/O cost.",
@@ -164,7 +164,7 @@
       "title": "Docker Mode Parser",
       "description": "Optional parser for the first line in Docker multiline mode."
     },
-    "multiline_parser": {
+    "multiline.parser": {
       "type": "string",
       "title": "Multiline Parser",
       "description": "Multiline parser definitions (comma-separated). Use 'docker, cri' for container logs."
@@ -246,13 +246,13 @@
       "description": "Truncate lines exceeding buffer capacity after UTF-8 conversion.",
       "default": false
     },
-    "unicode_encoding": {
+    "unicode.encoding": {
       "type": "string",
       "title": "Unicode Encoding",
       "description": "Unicode encoding for file data. Requires simdutf library with C++11+.",
       "enum": ["UTF-16LE", "UTF-16BE", "auto"]
     },
-    "generic_encoding": {
+    "generic.encoding": {
       "type": "string",
       "title": "Generic Encoding",
       "description": "Non-Unicode encoding for file data conversion to UTF-8.",

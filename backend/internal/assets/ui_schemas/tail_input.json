@@ -115,7 +115,7 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/db_compare_filename",
+          "scope": "#/properties/db.compare_filename",
           "label": "DB Compare Filename",
           "rule": {
             "effect": "SHOW",
@@ -129,7 +129,7 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/db_journal_mode",
+          "scope": "#/properties/db.journal_mode",
           "label": "DB Journal Mode",
           "rule": {
             "effect": "SHOW",
@@ -143,7 +143,7 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/db_locking",
+          "scope": "#/properties/db.locking",
           "label": "DB Locking",
           "rule": {
             "effect": "SHOW",
@@ -157,7 +157,7 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/db_sync",
+          "scope": "#/properties/db.sync",
           "label": "DB Sync Mode",
           "rule": {
             "effect": "SHOW",
@@ -237,7 +237,7 @@
       "elements": [
         {
           "type": "Control",
-          "scope": "#/properties/multiline_parser",
+          "scope": "#/properties/multiline.parser",
           "label": "Multiline Parser (Recommended)"
         },
         {
@@ -309,12 +309,12 @@
       "elements": [
         {
           "type": "Control",
-          "scope": "#/properties/unicode_encoding",
+          "scope": "#/properties/unicode.encoding",
           "label": "Unicode Encoding"
         },
         {
           "type": "Control",
-          "scope": "#/properties/generic_encoding",
+          "scope": "#/properties/generic.encoding",
           "label": "Generic Encoding"
         }
       ]
