@@ -64,11 +64,6 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/read_newly_discovered_files_from_head",
-          "label": "Read Newly Discovered Files From Head"
-        },
-        {
-          "type": "Control",
           "scope": "#/properties/refresh_interval",
           "label": "Refresh Interval (seconds)"
         },
@@ -357,11 +352,6 @@
           "type": "Control",
           "scope": "#/properties/watcher_interval",
           "label": "Watcher Interval"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/truncate_long_lines",
-          "label": "Truncate Long Lines"
         },
         {
           "type": "Control",

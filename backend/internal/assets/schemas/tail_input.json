@@ -41,12 +41,6 @@
       "description": "For new files at startup, read from the beginning instead of the end.",
       "default": false
     },
-    "read_newly_discovered_files_from_head": {
-      "type": "boolean",
-      "title": "Read Newly Discovered Files From Head",
-      "description": "For newly discovered files after startup, read from the beginning.",
-      "default": true
-    },
     "refresh_interval": {
       "type": "integer",
       "title": "Refresh Interval",
@@ -239,12 +233,6 @@
       "title": "Watcher Interval",
       "description": "Interval for symbolic link rotation monitoring.",
       "default": "2s"
-    },
-    "truncate_long_lines": {
-      "type": "boolean",
-      "title": "Truncate Long Lines",
-      "description": "Truncate lines exceeding buffer capacity after UTF-8 conversion.",
-      "default": false
     },
     "unicode.encoding": {
       "type": "string",
