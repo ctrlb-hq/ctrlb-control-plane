@@ -30,7 +30,7 @@ const (
 
 	// Process management timeouts
 	startupTimeout      = 30 * time.Second
-	shutdownTimeout     = 20 * time.Second
+	shutdownTimeout     = 10 * time.Second
 	reloadTimeout       = 10 * time.Second
 	healthCheckRetry    = 5
 	healthCheckInterval = 2 * time.Second
@@ -190,7 +190,10 @@ func (a *FluentBitAdapter) UpdateConfig() error {
 	reloadURL := a.baseURL + apiV2Reload
 	reqBody := []byte("{}")
 
-	req, err := http.NewRequestWithContext(a.ctx, "POST", reloadURL, bytes.NewBuffer(reqBody))
+	reloadCtx, cancel := context.WithTimeout(a.ctx, reloadTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reloadCtx, "POST", reloadURL, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return fmt.Errorf("failed to create reload request: %w", err)
 	}
