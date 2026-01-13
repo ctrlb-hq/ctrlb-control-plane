@@ -71,31 +71,6 @@
           "label": "JSON Date Format"
         }
       ]
-    },
-    {
-      "type": "Group",
-      "label": "Tag Settings",
-      "elements": [
-        {
-          "type": "Control",
-          "scope": "#/properties/include_tag_key",
-          "label": "Include Tag Key"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/tag_key",
-          "label": "Tag Key",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/include_tag_key",
-              "schema": {
-                "const": true
-              }
-            }
-          }
-        }
-      ]
     }
   ]
 }

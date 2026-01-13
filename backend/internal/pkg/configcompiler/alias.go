@@ -11,6 +11,7 @@ import (
 var FluentBitComponentNameMap = map[string]string{
 	"tail_input":              "tail",
 	"syslog_input":            "syslog",
+	"syslog_network_input":    "syslog",
 	"prometheus_scrape_input": "prometheus_scrape",
 	"opentelemetry_input":     "opentelemetry",
 	"grep_filter":             "grep",

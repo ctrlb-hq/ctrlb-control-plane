@@ -12,22 +12,13 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/path",
-          "label": "Unix Socket Path"
+          "scope": "#/properties/listen",
+          "label": "Listen Address"
         },
         {
           "type": "Control",
-          "scope": "#/properties/unix_perm",
-          "label": "Unix Socket Permissions",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/mode",
-              "schema": {
-                "enum": ["unix_udp", "unix_tcp"]
-              }
-            }
-          }
+          "scope": "#/properties/port",
+          "label": "Port"
         }
       ]
     },

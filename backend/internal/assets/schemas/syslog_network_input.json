@@ -1,30 +1,30 @@
 {
-  "title": "Fluent Bit Syslog (Local) Input Configuration",
+  "title": "Fluent Bit Syslog (Network) Input Configuration",
   "type": "object",
   "properties": {
     "mode": {
       "type": "string",
       "title": "Mode",
-      "description": "Defines Unix-socket protocol mode for receiving syslog messages locally.",
-      "enum": ["unix_udp", "unix_tcp"],
-      "default": "unix_udp"
+      "description": "Defines network transport protocol mode for receiving syslog messages.",
+      "enum": ["tcp", "udp"],
+      "default": "tcp"
     },
-    "path": {
+    "listen": {
       "type": "string",
-      "title": "Path",
-      "description": "Absolute path to the Unix socket file (e.g. /tmp/in_syslog). Required for unix_tcp/unix_udp."
+      "title": "Listen Address",
+      "description": "Network interface to bind.",
+      "default": "0.0.0.0"
     },
-    "unix_perm": {
-      "type": "string",
-      "title": "Unix Socket Permissions",
-      "description": "Permission of the Unix socket file. Only applies to unix_tcp or unix_udp modes.",
-      "default": "0644"
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "TCP/UDP port to listen for incoming connections.",
+      "default": 5140
     },
-
     "buffer_chunk_size": {
       "type": "string",
       "title": "Buffer Chunk Size",
-      "description": "Buffer size for incoming syslog messages. For UDP modes, this is the only way to configure receive buffer.",
+      "description": "Buffer size for incoming syslog messages. For UDP mode, this is the only way to configure receive buffer.",
       "default": "32KB"
     },
     "buffer_max_size": {
@@ -35,12 +35,12 @@
     "receive_buffer_size": {
       "type": "string",
       "title": "Receive Buffer Size",
-      "description": "Maximum socket receive buffer size. Important for high-volume UDP/unix_udp to prevent message loss. On Linux, capped by sysctl net.core.rmem_max."
+      "description": "Maximum socket receive buffer size. Important for high-volume UDP to prevent message loss. On Linux, capped by sysctl net.core.rmem_max."
     },
     "parser": {
       "type": "string",
       "title": "Parser",
-      "description": "Alternative parser for the message. Default is syslog-rfc5424 for tcp/udp, syslog-rfc3164-local for unix modes. Use syslog-rfc5424 for fractional seconds."
+      "description": "Alternative parser for the message. Default is syslog-rfc5424 for tcp/udp. Use syslog-rfc5424 for fractional seconds."
     },
     "raw_message_key": {
       "type": "string",
@@ -59,6 +59,6 @@
       "default": false
     }
   },
-  "required": ["path"]
+  "required": []
 }
 

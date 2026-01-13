@@ -29,6 +29,7 @@ func GetComponentTypeMap() map[string]string {
 		// Fluent Bit Inputs
 		"tail_input":              "input",
 		"syslog_input":            "input",
+		"syslog_network_input":    "input",
 		"prometheus_scrape_input": "input",
 		"opentelemetry_input":     "input",
 
@@ -73,6 +74,7 @@ func GetSignalSupportMap() map[string][]string {
 		// Fluent Bit Inputs
 		"tail_input":              {"logs"},
 		"syslog_input":            {"logs"},
+		"syslog_network_input":    {"logs"},
 		"prometheus_scrape_input": {"metrics"},
 		"opentelemetry_input":     {"traces", "metrics", "logs"},
 

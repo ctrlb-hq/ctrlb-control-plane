@@ -1,24 +1,24 @@
 {
-  "title": "Fluent Bit ctrlb Output Configuration",
+  "title": "Fluent Bit CtrlB Output Configuration",
   "type": "object",
   "properties": {
     "host": {
       "type": "string",
       "title": "Host",
-      "description": "The ctrlb server where you are sending logs.",
+      "description": "The CtrlB server where you are sending logs.",
       "default": "localhost"
     },
     "port": {
       "type": "integer",
       "title": "Port",
-      "description": "The port on the ctrlb server.",
+      "description": "The port on the CtrlB server.",
       "default": 5080
     },
     "uri": {
       "type": "string",
       "title": "URI",
       "description": "The API path used to send logs.",
-      "default": "/api/default/default/_json"
+      "default": "/api/default/default/_json_evolving"
     },
     "tls": {
       "type": "string",
@@ -55,7 +55,7 @@
       "type": "string",
       "title": "JSON Date Key",
       "description": "The JSON key used for timestamps in the logs.",
-      "default": "timestamp"
+      "default": "time"
     },
     "json_date_format": {
       "type": "string",
@@ -63,18 +63,6 @@
       "description": "The format of the date in logs.",
       "enum": ["iso8601", "epoch", "java_sql_timestamp"],
       "default": "iso8601"
-    },
-    "include_tag_key": {
-      "type": "boolean",
-      "title": "Include Tag Key",
-      "description": "If true, a tag is appended to the output using the tag_key property.",
-      "default": false
-    },
-    "tag_key": {
-      "type": "string",
-      "title": "Tag Key",
-      "description": "The key name for the tag when include_tag_key is enabled.",
-      "default": "tag"
     }
   },
   "required": [
