@@ -2,6 +2,7 @@ package configcompiler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -70,6 +71,8 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 		config["name"] = GetPluginName(node)
 		config["alias"] = alias
 		config["tag"] = tag
+
+		compactConfig(config)
 
 		instances = append(instances, FBNodeInstance{
 			OriginalNodeID: nodeID,
@@ -271,6 +274,7 @@ func buildFBConfigFromInstances(instances []FBNodeInstance) *map[string]any {
 
 	config := map[string]any{
 		"service":  constants.FluentBitService,
+		"parsers":  constants.FluentBitDefaultParsers,
 		"pipeline": pipeline,
 	}
 
@@ -285,6 +289,31 @@ func copyConfig(src map[string]any) map[string]any {
 		dst[k] = v
 	}
 	return dst
+}
+
+// compactConfig removes empty values that should not be emitted into Fluent Bit configs.
+// This makes UI hide/show behave like "not configured" in the resulting config.
+func compactConfig(config map[string]any) {
+	for k, v := range config {
+		if v == nil {
+			delete(config, k)
+			continue
+		}
+		switch vv := v.(type) {
+		case string:
+			if strings.TrimSpace(vv) == "" {
+				delete(config, k)
+			}
+		case []any:
+			if len(vv) == 0 {
+				delete(config, k)
+			}
+		case []string:
+			if len(vv) == 0 {
+				delete(config, k)
+			}
+		}
+	}
 }
 
 func getConfigString(config map[string]any, key string) string {

@@ -155,7 +155,7 @@ func (f *FrontendAgentService) AddLabels(id string, labels map[string]string) er
 
 func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) error {
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 
 	// First try using hostname
