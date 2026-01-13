@@ -25,11 +25,6 @@
       "description": "The interval to scrape metrics.",
       "default": "10s"
     },
-    "tag": {
-      "type": "string",
-      "title": "Tag",
-      "description": "Tag for the scraped metrics."
-    },
     "threaded": {
       "type": "boolean",
       "title": "Threaded",

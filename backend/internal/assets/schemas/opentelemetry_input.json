@@ -84,90 +84,6 @@
       "description": "Key name to store OpenTelemetry logs metadata in the record.",
       "default": "otlp"
     },
-    "profiles_support": {
-      "type": "boolean",
-      "title": "Profiles Support",
-      "description": "Experimental feature for profiles support. Not for production use.",
-      "default": false
-    },
-    "encode_profiles_as_log": {
-      "type": "boolean",
-      "title": "Encode Profiles as Log",
-      "description": "Encode profiles as text and ingest in the logging pipeline.",
-      "default": true
-    },
-    "tls": {
-      "type": "string",
-      "title": "TLS",
-      "description": "Enable or disable TLS/SSL support.",
-      "enum": ["on", "off"],
-      "default": "off"
-    },
-    "tls_verify": {
-      "type": "string",
-      "title": "TLS Verify",
-      "description": "Force certificate validation.",
-      "enum": ["on", "off"],
-      "default": "on"
-    },
-    "tls_verify_hostname": {
-      "type": "string",
-      "title": "TLS Verify Hostname",
-      "description": "Enable or disable hostname verification.",
-      "enum": ["on", "off"],
-      "default": "off"
-    },
-    "tls_ca_file": {
-      "type": "string",
-      "title": "TLS CA File",
-      "description": "Absolute path to CA certificate file."
-    },
-    "tls_ca_path": {
-      "type": "string",
-      "title": "TLS CA Path",
-      "description": "Absolute path to scan for certificate files."
-    },
-    "tls_crt_file": {
-      "type": "string",
-      "title": "TLS Certificate File",
-      "description": "Absolute path to certificate file."
-    },
-    "tls_key_file": {
-      "type": "string",
-      "title": "TLS Key File",
-      "description": "Absolute path to private key file."
-    },
-    "tls_key_passwd": {
-      "type": "string",
-      "title": "TLS Key Password",
-      "description": "Password for TLS private key file."
-    },
-    "tls_vhost": {
-      "type": "string",
-      "title": "TLS Virtual Host",
-      "description": "Hostname for TLS SNI extension."
-    },
-    "tls_debug": {
-      "type": "integer",
-      "title": "TLS Debug",
-      "description": "TLS debug level: 0=None, 1=Error, 2=State, 3=Info, 4=Verbose.",
-      "default": 1
-    },
-    "tls_min_version": {
-      "type": "string",
-      "title": "TLS Min Version",
-      "description": "Minimum TLS version."
-    },
-    "tls_max_version": {
-      "type": "string",
-      "title": "TLS Max Version",
-      "description": "Maximum TLS version."
-    },
-    "tls_ciphers": {
-      "type": "string",
-      "title": "TLS Ciphers",
-      "description": "TLS ciphers for up to TLSv1.2."
-    },
     "net_accept_timeout": {
       "type": "string",
       "title": "Accept Timeout",
@@ -223,17 +139,11 @@
       "description": "Percentage threshold (1-100) for flush trigger in threaded mode.",
       "default": 5
     },
-    "routable": {
-      "type": "boolean",
-      "title": "Routable",
-      "description": "If true, data can be forwarded to other plugins or outputs.",
-      "default": true
-    },
     "log_level": {
       "type": "string",
       "title": "Log Level",
       "description": "Log level for this plugin.",
-      "enum": ["off", "error", "warn", "info", "debug", "trace"],
+      "enum": ["error", "warn", "info", "debug", "trace"],
       "default": "info"
     },
     "alias": {
