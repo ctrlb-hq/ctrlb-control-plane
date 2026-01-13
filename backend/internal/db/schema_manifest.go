@@ -41,7 +41,6 @@ func GetComponentTypeMap() map[string]string {
 		"http_ctrlb_output":         "output",
 		"http_output":          "output",
 		"stdout_output":        "output",
-		"opentelemetry_output": "output",
 	}
 }
 

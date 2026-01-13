@@ -19,7 +19,6 @@ var FluentBitComponentNameMap = map[string]string{
 	"http_ctrlb_output":       "http",
 	"http_output":             "http",
 	"stdout_output":           "stdout",
-	"opentelemetry_output":    "opentelemetry",
 }
 
 // GenerateOTELAlias creates a unique OTEL component alias
