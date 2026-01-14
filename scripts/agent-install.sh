@@ -49,7 +49,9 @@ DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/down
 BINARY_URL="${DOWNLOAD_BASE_URL}/V2.0.0/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
-echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "🔍 Downloading binary from: $BINARY_URL"
+
+echo "📥 Downloading ${COLLECTOR_NAME} V2.0.0 for ${OS}/${ARCH}..."
 mkdir -p "$INSTALL_DIR"
 curl -L "$BINARY_URL" -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"
