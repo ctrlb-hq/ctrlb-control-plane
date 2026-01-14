@@ -3,6 +3,7 @@
 set -e
 
 COLLECTOR_NAME="ctrlb-collector"
+COLLECTOR_VERSION="V2.0.0"
 VERSION="V2.0.0"
 INSTALL_DIR="/opt/ctrlb/${COLLECTOR_NAME}"
 ENV_FILE="${INSTALL_DIR}/.env"
@@ -180,10 +181,10 @@ echo "✅ Fluent Bit installed successfully"
 # ========================
 # Download CtrlB Collector Binary
 # ========================
-echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "📥 Downloading ${COLLECTOR_NAME} ${COLLECTOR_VERSION} for ${OS}/${ARCH}..."
 
 DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download"
-BINARY_URL="${DOWNLOAD_BASE_URL}/${VERSION}/${COLLECTOR_NAME}-${OS}-${ARCH}"
+BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_VERSION}/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
 echo "🔍 Downloading binary from: $BINARY_URL"
