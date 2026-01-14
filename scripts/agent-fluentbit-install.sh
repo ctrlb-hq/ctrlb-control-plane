@@ -182,9 +182,11 @@ echo "✅ Fluent Bit installed successfully"
 # ========================
 echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
 
-DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/${VERSION}/download"
-BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_NAME}-${OS}-${ARCH}"
+DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download"
+BINARY_URL="${DOWNLOAD_BASE_URL}/${VERSION}/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
+
+echo "🔍 Downloading binary from: $BINARY_URL"
 
 mkdir -p "$INSTALL_DIR"
 curl -L "$BINARY_URL" -o "$BINARY_PATH" || {
