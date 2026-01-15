@@ -21,6 +21,7 @@ type FrontendAgentRepositoryInterface interface {
 	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
 	AddLabels(id string, labels map[string]string) error
 	GetLatestAgentSince(since string) (*LatestAgentResponse, error)
+	UpdateAgentIP(id string, ip string) error
 }
 
 type FrontendAgentService struct {
@@ -38,6 +39,7 @@ type FrontendAgentServiceInterface interface {
 	GetRateMetricsForGraph(id string) (*[]AgentMetrics, error)
 	AddLabels(id string, labels map[string]string) error
 	GetLatestAgentSince(since string) (*LatestAgentResponse, error)
+	UpdateAgentIP(id string, ip string) error
 }
 
 // NewFrontendAgentService creates a new FrontendAgentService
@@ -151,6 +153,14 @@ func (f *FrontendAgentService) AddLabels(id string, labels map[string]string) er
 	}
 
 	return f.FrontendAgentRepository.AddLabels(id, labels)
+}
+
+func (f *FrontendAgentService) UpdateAgentIP(id string, ip string) error {
+	if !f.FrontendAgentRepository.AgentExists(id) {
+		return utils.ErrAgentDoesNotExists
+	}
+
+	return f.FrontendAgentRepository.UpdateAgentIP(id, ip)
 }
 
 func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) error {

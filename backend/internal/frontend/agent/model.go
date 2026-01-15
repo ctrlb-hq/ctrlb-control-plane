@@ -23,6 +23,10 @@ type AgentInfoWithLabels struct {
 	Labels       map[string]string `json:"labels"`        // Labels associated with the agent
 }
 
+type UpdateAgentIPRequest struct {
+	IP string `json:"ip"` // IP where the agent is running
+}
+
 type AgentMetrics struct {
 	MetricName string      `json:"metric_name"`
 	DataPoints []DataPoint `json:"data_points"`

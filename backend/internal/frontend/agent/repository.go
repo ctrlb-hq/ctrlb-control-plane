@@ -249,6 +249,14 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 	return nil
 }
 
+func (f *FrontendAgentRepository) UpdateAgentIP(id string, ip string) error {
+	_, err := f.db.Exec("UPDATE agents SET ip = ? WHERE id = ?", ip, id)
+	if err != nil {
+		return fmt.Errorf("failed to update agent ip: %w", err)
+	}
+	return nil
+}
+
 func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgentResponse, error) {
 	query := `
 	SELECT id, name, registered_at, pipeline_id

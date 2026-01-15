@@ -59,6 +59,10 @@ func (m *MockRepo) GetLatestAgentSince(since string) (*frontendagent.LatestAgent
 	args := m.Called(since)
 	return args.Get(0).(*frontendagent.LatestAgentResponse), args.Error(1)
 }
+func (m *MockRepo) UpdateAgentIP(id string, ip string) error {
+	args := m.Called(id, ip)
+	return args.Error(0)
+}
 
 // --- Tests ---
 
@@ -146,4 +150,25 @@ func TestGetLatestAgentSince(t *testing.T) {
 	resp, err := svc.GetLatestAgentSince("2024-01-01T00:00:00Z")
 	assert.NoError(t, err)
 	assert.Equal(t, mockResp, resp)
+}
+
+func TestUpdateAgentIP_Success(t *testing.T) {
+	repo := new(MockRepo)
+	svc := frontendagent.NewFrontendAgentService(repo)
+
+	repo.On("AgentExists", "agent-1").Return(true)
+	repo.On("UpdateAgentIP", "agent-1", "10.0.0.5").Return(nil)
+
+	err := svc.UpdateAgentIP("agent-1", "10.0.0.5")
+	assert.NoError(t, err)
+}
+
+func TestUpdateAgentIP_NotFound(t *testing.T) {
+	repo := new(MockRepo)
+	svc := frontendagent.NewFrontendAgentService(repo)
+
+	repo.On("AgentExists", "missing").Return(false)
+
+	err := svc.UpdateAgentIP("missing", "10.0.0.6")
+	assert.ErrorIs(t, err, utils.ErrAgentDoesNotExists)
 }

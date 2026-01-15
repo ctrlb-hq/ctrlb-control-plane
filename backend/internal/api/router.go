@@ -26,6 +26,7 @@ func NewRouter(handler *Handler) *mux.Router {
 	frontendAgentAPIsV2.HandleFunc("/agents", handler.FrontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", handler.FrontendAgentHandler.GetAgent).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", handler.FrontendAgentHandler.DeleteAgent).Methods("DELETE")
+	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ip", handler.FrontendAgentHandler.UpdateAgentIP).Methods("PUT")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/start", handler.FrontendAgentHandler.StartAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/stop", handler.FrontendAgentHandler.StopAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/healthmetrics", handler.FrontendAgentHandler.GetHealthMetricsForGraph).Methods("GET")

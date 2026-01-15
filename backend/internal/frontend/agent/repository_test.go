@@ -173,3 +173,17 @@ func TestGetLatestAgentSince(t *testing.T) {
 		t.Errorf("expected agent1, got %s", agent.Name)
 	}
 }
+
+func TestUpdateAgentIP(t *testing.T) {
+	db, mock, repo := setupMockDB(t)
+	defer db.Close()
+
+	mock.ExpectExec("UPDATE agents SET ip = ? WHERE id = ?").
+		WithArgs("10.0.0.9", "agent-9").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := repo.UpdateAgentIP("agent-9", "10.0.0.9")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
