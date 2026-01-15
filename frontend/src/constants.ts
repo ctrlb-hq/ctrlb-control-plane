@@ -165,28 +165,28 @@ export const installCommandsFluentBit = {
   linux: (pipelineName: string) => {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
     const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install-fluentbit.sh \
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-fluentbit-install.sh \
 | sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
   },
 
   macOS: (pipelineName: string) => {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
     const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install-fluentbit.sh \
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-fluentbit-install.sh \
 | sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
   },
 
   kubernetes: (pipelineName: string) => {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
     const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/fluent-bit-daemonset.yaml.template \
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-fluent-bit-daemonset.yaml.template \
 | BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | kubectl apply -f -`;
   },
 
   openShift: (pipelineName: string) => {
     const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
     const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/fluent-bit-daemonset.yaml.template \
+    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-fluent-bit-daemonset.yaml.template \
 | BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | oc apply -f -`;
   },
 };

@@ -41,7 +41,7 @@
       "type": "string",
       "title": "Format",
       "description": "The format of the log payload.",
-      "enum": ["json", "json_stream", "json_lines", "msgpack"],
+      "enum": ["json"],
       "default": "json"
     },
     "compress": {
@@ -55,14 +55,14 @@
       "type": "string",
       "title": "JSON Date Key",
       "description": "The JSON key used for timestamps in the logs.",
-      "default": "time"
+      "default": "_timestamp"
     },
     "json_date_format": {
       "type": "string",
       "title": "JSON Date Format",
       "description": "The format of the date in logs.",
-      "enum": ["iso8601", "epoch", "java_sql_timestamp"],
-      "default": "iso8601"
+      "enum": ["iso8601", "epoch_ms"],
+      "default": "epoch_ms"
     }
   },
   "required": [
