@@ -60,6 +60,11 @@ const PipelineTable = () => {
 		setPipelineId("");
 		resetGraph();
 	};
+
+	const handlePipelineDeleted = async () => {
+		handleCloseDrawer();
+		await handleGetPipelines();
+	};
 	if (!pipelines || pipelines.length === 0) {
 		return (
 			<div className="flex flex-col gap-2 justify-center items-center">
@@ -107,6 +112,7 @@ const PipelineTable = () => {
 				pipelineId={pipelineId}
 				open={drawerOpen}
 				onClose={handleCloseDrawer}
+				onPipelineDeleted={handlePipelineDeleted}
 			/>
 		</>
 	);

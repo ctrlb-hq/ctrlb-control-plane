@@ -15,6 +15,7 @@ interface ViewPipelineDetailsProps {
 	pipelineId: string;
 	open: boolean;
 	onClose: () => void;
+	onPipelineDeleted: () => void | Promise<void>;
 }
 
 const MIN_WIDTH = 800;
@@ -24,6 +25,7 @@ const ViewPipelineDetails = ({
 	pipelineId,
 	open,
 	onClose,
+	onPipelineDeleted,
 }: ViewPipelineDetailsProps) => {
 	const [overviewLoading, setOverviewLoading] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
@@ -203,6 +205,7 @@ const ViewPipelineDetails = ({
 				<DeletePipelineDialog
 					open={deleteOpen}
 					onClose={() => setDeleteOpen(false)}
+					onPipelineDeleted={onPipelineDeleted}
 					pipelineOverview={pipelineOverviewData}
 				/>
 			</Drawer>

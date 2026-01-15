@@ -12,17 +12,20 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import pipelineServices from "@/services/pipeline";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
 import { useGlobalSnackbar } from "@/context/useGlobalSnackbar";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
-
 interface Props {
 	open: boolean;
 	onClose: () => void;
+	onPipelineDeleted: () => void | Promise<void>;
 	pipelineOverview?: PipelineOverviewInterface;
 }
 
-const DeletePipelineDialog = ({ open, onClose, pipelineOverview }: Props) => {
+const DeletePipelineDialog = ({
+	open,
+	onClose,
+	onPipelineDeleted,
+	pipelineOverview,
+}: Props) => {
 	const { showSnackbar } = useGlobalSnackbar();
-	const { resetGraph } = useGraphFlow();
   
 	const handleDeletePipeline = async () => { 
 		try {
@@ -30,10 +33,8 @@ const DeletePipelineDialog = ({ open, onClose, pipelineOverview }: Props) => {
 				await pipelineServices.deletePipelineById(pipelineOverview.id);
 			}
 			showSnackbar("Pipeline deleted successfully", "success");
-			setIsOpen(false);
-			resetGraph();
 			onClose();
-			window.location.reload();
+			await onPipelineDeleted();
 		} catch (error) {
 			console.error("Error deleting pipeline or collector:", error);
 			showSnackbar("Failed to delete pipeline or collector", "error");
