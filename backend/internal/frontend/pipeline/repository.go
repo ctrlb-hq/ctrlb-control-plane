@@ -250,6 +250,16 @@ func (f *FrontendPipelineRepository) DetachAgentFromPipeline(pipelineId int, age
 	return nil
 }
 
+func (f *FrontendPipelineRepository) DetachAllAgentsFromPipeline(pipelineId int) error {
+	setQuery := `UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE pipeline_id = ?`
+
+	_, err := f.db.Exec(setQuery, pipelineId)
+	if err != nil {
+		return fmt.Errorf("failed to detach all agents from pipeline: %w", err)
+	}
+	return nil
+}
+
 func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agentId int) error {
 	setQuery := `UPDATE agents SET pipeline_id = ?, pipeline_name = (SELECT name FROM pipelines WHERE pipeline_id = ?) WHERE id = ?`
 

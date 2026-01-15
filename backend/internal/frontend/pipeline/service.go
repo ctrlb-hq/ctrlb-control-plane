@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -29,6 +30,7 @@ type FrontendPipelineRepositoryInterface interface {
 	SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph, agentType models.AgentType) error
 	GetAgentInfo(agentId int) (*models.AgentInfoHome, error)
 	GetAgentPipelineId(agentId string) (*int, error)
+	DetachAllAgentsFromPipeline(pipelineId int) error
 }
 
 type FrontendPipelineServiceInterface interface {
@@ -45,14 +47,20 @@ type FrontendPipelineServiceInterface interface {
 	SyncConfig(agentId string) error
 }
 
+type FrontendPipelineAgentServiceInterface interface {
+	StopAgent(id string) error
+}
+
 type FrontendPipelineService struct {
 	FrontendPipelineRepository FrontendPipelineRepositoryInterface
+	FrontendAgentService       FrontendPipelineAgentServiceInterface
 }
 
 // NewFrontendPipelineService creates a new FrontendPipelineService
-func NewFrontendPipelineService(frontendPipelineRepository FrontendPipelineRepositoryInterface) FrontendPipelineServiceInterface {
+func NewFrontendPipelineService(frontendPipelineRepository FrontendPipelineRepositoryInterface, frontendAgentService FrontendPipelineAgentServiceInterface) FrontendPipelineServiceInterface {
 	return &FrontendPipelineService{
 		FrontendPipelineRepository: frontendPipelineRepository,
+		FrontendAgentService:       frontendAgentService,
 	}
 }
 
@@ -83,6 +91,31 @@ func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest models.Cr
 func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
 	if !f.FrontendPipelineRepository.PipelineExists(pipelineId) {
 		return utils.ErrPipelineDoesNotExists
+	}
+
+	attachedAgents, err := f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
+	if err != nil {
+		return err
+	}
+
+	var stopErrors []string
+
+	for _, agent := range attachedAgents {
+		if f.FrontendAgentService == nil {
+			stopErrors = append(stopErrors, fmt.Sprintf("agent %d: agent service is unavailable", agent.ID))
+			continue
+		}
+		if err := f.FrontendAgentService.StopAgent(strconv.FormatInt(agent.ID, 10)); err != nil {
+			stopErrors = append(stopErrors, fmt.Sprintf("agent %d: %v", agent.ID, err))
+		}
+	}
+
+	if err := f.FrontendPipelineRepository.DetachAllAgentsFromPipeline(pipelineId); err != nil {
+		return err
+	}
+
+	if len(stopErrors) > 0 {
+		return fmt.Errorf("failed to clean up agents before deleting pipeline: stop errors: %s", strings.Join(stopErrors, "; "))
 	}
 
 	return f.FrontendPipelineRepository.DeletePipeline(pipelineId)

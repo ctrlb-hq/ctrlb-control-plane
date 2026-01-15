@@ -111,7 +111,7 @@ func main() {
 	frontendNodeRepository := frontendnode.NewFrontendNodeRepository(db)
 
 	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository)
-	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
+	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, frontendAgentService)
 	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
 
 	agentService := agent.NewAgentService(agentRepository, metricsRepository, frontendPipelineService)
