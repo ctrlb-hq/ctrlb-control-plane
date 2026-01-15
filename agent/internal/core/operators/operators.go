@@ -19,7 +19,7 @@ type OperatorService struct {
 
 func NewOperatorService(adapter adapters.Adapter, agentType string) *OperatorService {
 	var operator Operator
-	if agentType == "fluentbit" {
+	if agentType == "fluent-bit" {
 		operator = NewFluentBitOperator(adapter)
 	} else {
 		operator = NewOtelOperator(adapter)
