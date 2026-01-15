@@ -14,6 +14,7 @@ type Adapter interface {
 	GracefulShutdown() error
 	GetVersion() (string, error)
 	ValidateConfigInMemory(data *map[string]any) error
+	ValidateConfigOnDisk(data *map[string]any) error
 	GetMetrics() (map[string]any, error)
 }
 

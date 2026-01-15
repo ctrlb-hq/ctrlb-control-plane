@@ -134,7 +134,7 @@ func main() {
 	heartbeatManager := client.NewHeartbeatManager(constants.HEARTBEAT_INTERVAL_SEC)
 	heartbeatManager.Start()
 
-	operatorService := operators.NewOperatorService(adapter)
+	operatorService := operators.NewOperatorService(adapter, constants.AGENT_TYPE)
 
 	handler := api.NewRouter(operatorService)
 

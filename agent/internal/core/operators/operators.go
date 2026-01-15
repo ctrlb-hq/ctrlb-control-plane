@@ -17,8 +17,13 @@ type OperatorService struct {
 	Operator Operator
 }
 
-func NewOperatorService(adapter adapters.Adapter) *OperatorService {
-	operator := NewOtelOperator(adapter)
+func NewOperatorService(adapter adapters.Adapter, agentType string) *OperatorService {
+	var operator Operator
+	if agentType == "fluentbit" {
+		operator = NewFluentBitOperator(adapter)
+	} else {
+		operator = NewOtelOperator(adapter)
+	}
 
 	return &OperatorService{Operator: operator}
 }

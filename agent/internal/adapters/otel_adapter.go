@@ -212,3 +212,8 @@ func (a *OTELAdapter) GetMetrics() (map[string]any, error) {
 	//not implemented yet
 	return nil, nil
 }
+
+func (a *OTELAdapter) ValidateConfigOnDisk(data *map[string]any) error {
+	//not implemented yet
+	return nil
+}

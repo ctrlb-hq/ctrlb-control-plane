@@ -19,11 +19,12 @@ func (m *mockAdapter) UpdateConfig() error                               { retur
 func (m *mockAdapter) GracefulShutdown() error                           { return nil }
 func (m *mockAdapter) GetVersion() (string, error)                       { return "mock", nil }
 func (m *mockAdapter) ValidateConfigInMemory(data *map[string]any) error { return nil }
+func (m *mockAdapter) ValidateConfigOnDisk(data *map[string]any) error   { return nil }
 func (m *mockAdapter) GetMetrics() (map[string]any, error) { return map[string]any{"metrics": "mock"}, nil }
 
 func TestNewOperatorService_ReturnsOtelOperator(t *testing.T) {
 	adapter := &mockAdapter{}
-	service := operators.NewOperatorService(adapter)
+	service := operators.NewOperatorService(adapter, "otel")
 
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Operator)

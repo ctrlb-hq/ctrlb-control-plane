@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/config"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 )
@@ -353,7 +355,7 @@ func (a *FluentBitAdapter) ValidateConfigInMemory(data *map[string]any) error {
 		}
 	}
 
-	logger.Logger.Info("Fluent Bit configuration validation successful")
+	logger.Logger.Info("Basic Fluent Bit configuration validation successful")
 	return nil
 }
 
@@ -421,4 +423,66 @@ func (a *FluentBitAdapter) GetUptime() (*FluentBitUptimeInfo, error) {
 	}
 
 	return &uptime, nil
+}
+
+func (a *FluentBitAdapter) ValidateConfigOnDisk(data *map[string]any) error {
+	if data == nil || *data == nil {
+		return fmt.Errorf("configuration data is nil")
+	}
+
+	tempFile, err := os.CreateTemp("", "fluent-bit-config-*.yaml")
+	if err != nil {
+		return fmt.Errorf("failed to create temp config file: %w", err)
+	}
+	tempPath := tempFile.Name()
+	if err := tempFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp config file: %w", err)
+	}
+	defer func() {
+		if err := os.Remove(tempPath); err != nil && !os.IsNotExist(err) {
+			logger.Logger.Sugar().Warnf("Failed to remove temp config file %s: %v", tempPath, err)
+		}
+	}()
+
+	if err := config.SaveToYAML(*data, tempPath); err != nil {
+		return fmt.Errorf("failed to write temp config for validation: %w", err)
+	}
+
+	fluentBitPath, err := exec.LookPath("fluent-bit")
+	if err != nil {
+		possiblePaths := []string{
+			"/opt/fluent-bit/bin/fluent-bit",
+			"/usr/local/bin/fluent-bit",
+			"/usr/bin/fluent-bit",
+			"./fluent-bit",
+		}
+		for _, path := range possiblePaths {
+			if _, statErr := os.Stat(path); statErr == nil {
+				fluentBitPath = path
+				break
+			}
+		}
+		if fluentBitPath == "" {
+			return fmt.Errorf("fluent-bit executable not found in PATH or common locations")
+		}
+	}
+
+	cmd := exec.Command(fluentBitPath, "-c", tempPath, "--dry-run")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("fluent-bit config validation failed: %w: %s", err, string(output))
+	}
+
+	outputStr := strings.ToLower(string(output))
+	if strings.Contains(outputStr, "configuration test is successful") {
+		logger.Logger.Info("On-disk Fluent Bit configuration validation successful")
+		return nil
+	}
+	if strings.Contains(outputStr, "[error]") ||
+		strings.Contains(outputStr, "configuration file contains errors") ||
+		strings.Contains(outputStr, "could not open configuration file") {
+		return fmt.Errorf("fluent-bit config validation failed: %s", string(output))
+	}
+
+	return fmt.Errorf("fluent-bit config validation failed: output did not indicate success: %s", string(output))
 }
