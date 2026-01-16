@@ -19,8 +19,8 @@
       "type": "string",
       "title": "JSON Date Format",
       "description": "Format of the date.",
-      "enum": ["double", "epoch", "epoch_ms", "iso8601", "java_sql_timestamp"],
-      "default": "double"
+      "enum": ["","double", "epoch", "epoch_ms", "iso8601", "java_sql_timestamp"],
+      "default": ""
     },
     "workers": {
       "type": "integer",

@@ -18,7 +18,16 @@
         {
           "type": "Control",
           "scope": "#/properties/json_date_format",
-          "label": "JSON Date Format"
+          "label": "JSON Date Format",
+          "rule": {
+            "effect": "HIDE",
+            "condition": {
+              "scope": "#/properties/json_date_key",
+              "schema": {
+                "const": "false"
+              }
+            }
+          }
         },
         {
           "type": "Control",
