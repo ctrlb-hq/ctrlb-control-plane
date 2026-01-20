@@ -6,6 +6,7 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	validators "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler/fluentbit_validators"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
@@ -54,6 +55,10 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 	for _, nodeID := range inputs {
 		node := state.NodesByID[nodeID]
 		alias := GenerateFBAlias(node)
+
+		if err := validateFluentBitNodeConfig(node); err != nil {
+			return nil, err
+		}
 
 		// Check if user provided a tag in config
 		tag := getConfigString(node.Config, "tag")
@@ -105,6 +110,10 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 	// Step 3: Process each non-input node
 	for _, nodeID := range sortedNonInputs {
 		node := state.NodesByID[nodeID]
+
+		if err := validateFluentBitNodeConfig(node); err != nil {
+			return nil, err
+		}
 
 		// Find all upstream tags
 		upstreamTags := findUpstreamTags(nodeID, state, nodeEmittedTags)
@@ -323,6 +332,38 @@ func getConfigString(config map[string]any, key string) string {
 		}
 	}
 	return ""
+}
+
+func validateFluentBitNodeConfig(node models.PipelineNodes) error {
+	pluginName := GetPluginName(node)
+
+	switch node.ComponentRole {
+	case "input":
+		if pluginName == "tail" {
+			if errs := validators.ValidateTailInputConfig(node.Config); errs.HasErrors() {
+				return fmt.Errorf("invalid tail input config for node %q: %w", node.Name, errs)
+			}
+		}
+	case "filter":
+		switch pluginName {
+		case "grep":
+			if errs := validators.ValidateGrepFilterConfig(node.Config); errs.HasErrors() {
+				return fmt.Errorf("invalid grep filter config for node %q: %w", node.Name, errs)
+			}
+		case "modify":
+			if errs := validators.ValidateModifyFilterConfig(node.Config); errs.HasErrors() {
+				return fmt.Errorf("invalid modify filter config for node %q: %w", node.Name, errs)
+			}
+		}
+	case "output":
+		if pluginName == "http" {
+			if errs := validators.ValidateHTTPOutputConfig(node.Config); errs.HasErrors() {
+				return fmt.Errorf("invalid http output config for node %q: %w", node.Name, errs)
+			}
+		}
+	}
+
+	return nil
 }
 
 func longestCommonPrefix(strs []string) string {

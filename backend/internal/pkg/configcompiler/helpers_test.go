@@ -560,7 +560,6 @@ func createRealisticFBKubernetesLogsPipeline() models.PipelineGraph {
 					"db":                 "/var/log/flb_kube.db",
 					"db.sync":            "normal",
 					"mem_buf_limit":      "5MB",
-					"parser":             "docker",
 					"docker_mode":        "on",
 					"docker_mode_flush":  4,
 					"docker_mode_parser": "firstline",
@@ -612,7 +611,6 @@ func createRealisticFBKubernetesLogsPipeline() models.PipelineGraph {
 					"json_date_format": "iso8601",
 					"header":           "Content-Type application/json",
 					"tls":              "off",
-					"retry_limit":      5,
 				},
 			},
 		},
@@ -780,4 +778,3 @@ func createRealisticFBMultiInputPipeline() models.PipelineGraph {
 		},
 	}
 }
-

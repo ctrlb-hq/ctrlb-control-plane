@@ -16,6 +16,7 @@ PACKAGES=(
     "./internal/frontend/agent/..."
     "./internal/frontend/node/..."
     "./internal/frontend/pipeline/..."
+    "./internal/pkg/configcompiler/fluentbit_validators/..."
     "./internal/middleware/..."
     "./internal/pkg/configcompiler/..."
     "./internal/pkg/queue/..."

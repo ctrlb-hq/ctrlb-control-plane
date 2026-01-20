@@ -93,7 +93,7 @@ func TestCompileGraphToFluentBit_MissingOutput(t *testing.T) {
 				ComponentName:    "tail",
 				ComponentRole:    "input",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
+				Config:           map[string]any{"path": "/var/log/*.log"},
 			},
 		},
 		Edges: []models.PipelineEdges{},
@@ -123,7 +123,7 @@ func TestCompileGraphToFluentBit_WithFilters(t *testing.T) {
 				ComponentName:    "grep",
 				ComponentRole:    "filter",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{"regex": "error"},
+				Config:           map[string]any{"regex": "message error"},
 			},
 			{
 				ComponentID:      3,
@@ -165,7 +165,7 @@ func TestCompileGraphToFluentBit_WithCycle(t *testing.T) {
 				ComponentName:    "tail",
 				ComponentRole:    "input",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
+				Config:           map[string]any{"path": "/var/log/*.log"},
 			},
 			{
 				ComponentID:      2,
@@ -173,7 +173,7 @@ func TestCompileGraphToFluentBit_WithCycle(t *testing.T) {
 				ComponentName:    "grep",
 				ComponentRole:    "filter",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
+				Config:           map[string]any{"regex": "message error"},
 			},
 			{
 				ComponentID:      3,
@@ -181,7 +181,7 @@ func TestCompileGraphToFluentBit_WithCycle(t *testing.T) {
 				ComponentName:    "modify",
 				ComponentRole:    "filter",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{},
+				Config:           map[string]any{"add": "processed true"},
 			},
 			{
 				ComponentID:      4,
@@ -233,7 +233,7 @@ func TestCompileGraphToFluentBit_MultipleInputsSameOutput_Incompatible(t *testin
 				ComponentName:    "grep",
 				ComponentRole:    "filter",
 				SupportedSignals: []string{"logs"},
-				Config:           map[string]any{"regex": "error"},
+				Config:           map[string]any{"regex": "message error"},
 			},
 			{
 				ComponentID:      4,
@@ -487,7 +487,6 @@ func TestFBKubernetesLogsConfigValidation(t *testing.T) {
 	assert.Contains(t, userInput, "path", "Tail input must have path")
 	assert.Contains(t, userInput, "tag", "Tail input must have tag")
 	assert.Contains(t, userInput, "alias", "Tail input must have alias")
-	assert.Contains(t, userInput, "parser", "Tail input must have parser")
 	assert.Equal(t, "/var/log/containers/*.log", userInput["path"], "Path should match config")
 
 	// Validate filters
