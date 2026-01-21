@@ -217,8 +217,8 @@ var DefaultConfigFluentBit = map[string]any{
 			FluentBitInternalMetricsInput,
 			map[string]any{
 				"name":           "tail",
-				"tag":            "syslog_tail_input",
-				"path":           "/var/log/syslog",
+				"tag":            "auth_tail_input",
+				"path":           "/var/log/auth.log",
 				"path_key":       "filename",
 				"read_from_head": false,
 			},
@@ -228,7 +228,7 @@ var DefaultConfigFluentBit = map[string]any{
 				"name":    "stdout",
 				"format":  "json_lines",
 				"workers": 1,
-				"match":   "syslog_tail_input",
+				"match":   "auth_tail_input",
 			},
 		},
 	},
@@ -281,21 +281,21 @@ var DefaultFluentBitPipelineGraph = models.PipelineGraph{
 	Nodes: []models.PipelineNodes{
 		{
 			ComponentID:   1,
-			Name:          "Tail Log Input",
+			Name:          "Fluent Bit Tail Input Configuration",
 			ComponentName: "tail_input",
 			ComponentRole: "input",
 			SupportedSignals: []string{
 				"logs",
 			},
 			Config: map[string]any{
-				"path":           "/var/log/syslog",
+				"path":           "/var/log/auth.log",
 				"path_key":       "filename",
 				"read_from_head": false,
 			},
 		},
 		{
 			ComponentID:   2,
-			Name:          "Stdout Output",
+			Name:          "Fluent Bit Stdout Output Configuration",
 			ComponentName: "stdout_output",
 			ComponentRole: "output",
 			SupportedSignals: []string{
