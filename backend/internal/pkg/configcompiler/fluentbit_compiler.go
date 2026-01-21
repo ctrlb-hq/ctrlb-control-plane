@@ -2,6 +2,7 @@ package configcompiler
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
@@ -73,6 +74,8 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 
 		// Build config for input
 		config := copyConfig(node.Config)
+		// Flatten nested objects for Fluent Bit compatibility
+		config = flattenNestedConfig(config)
 		config["name"] = GetPluginName(node)
 		config["alias"] = alias
 		config["tag"] = tag
@@ -132,6 +135,8 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 			alias := GenerateFBAlias(node)
 
 			config := copyConfig(node.Config)
+			// Flatten nested objects for Fluent Bit compatibility
+			config = flattenNestedConfig(config)
 			config["name"] = GetPluginName(node)
 			config["alias"] = alias
 			if _, hasMatch := config["match"]; !hasMatch {
@@ -162,6 +167,8 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 				pattern := tagState.Tag + "*"
 
 				config := copyConfig(node.Config)
+				// Flatten nested objects for Fluent Bit compatibility
+				config = flattenNestedConfig(config)
 				config["name"] = GetPluginName(node)
 				config["alias"] = alias
 				if _, hasMatch := config["match"]; !hasMatch {
@@ -300,9 +307,38 @@ func copyConfig(src map[string]any) map[string]any {
 	return dst
 }
 
+// flattenNestedConfig flattens nested objects into dotted keys for Fluent Bit compatibility.
+// JSON Forms interprets schema properties with dots (e.g., "unicode.encoding") as nested paths,
+// creating { unicode: { encoding: "value" } } instead of { "unicode.encoding": "value" }.
+// This function converts nested structures back to the flat dotted-key format that Fluent Bit expects.
+func flattenNestedConfig(config map[string]any) map[string]any {
+	result := make(map[string]any)
+	flattenRecursive(config, "", result)
+	return result
+}
+
+func flattenRecursive(config map[string]any, prefix string, result map[string]any) {
+	for k, v := range config {
+		newKey := k
+		if prefix != "" {
+			newKey = prefix + "." + k
+		}
+
+		if nested, ok := v.(map[string]any); ok {
+			// Recursively flatten nested maps
+			flattenRecursive(nested, newKey, result)
+		} else {
+			result[newKey] = v
+		}
+	}
+}
+
 // compactConfig removes empty values that should not be emitted into Fluent Bit configs.
 // This makes UI hide/show behave like "not configured" in the resulting config.
 func compactConfig(config map[string]any) {
+	// First, clean up conditional fields that don't apply
+	cleanupConditionalFields(config)
+
 	for k, v := range config {
 		if v == nil {
 			delete(config, k)
@@ -325,6 +361,86 @@ func compactConfig(config map[string]any) {
 	}
 }
 
+// cleanupConditionalFields removes fields that depend on other fields being set.
+// For example, db.* fields should only be present if "db" is set.
+// This handles cases where the frontend sends default values for hidden fields.
+func cleanupConditionalFields(config map[string]any) {
+	// db.* fields require "db" to be set
+	dbPath, _ := config["db"].(string)
+	if strings.TrimSpace(dbPath) == "" {
+		delete(config, "db")
+		delete(config, "db.sync")
+		delete(config, "db.locking")
+		delete(config, "db.journal_mode")
+		delete(config, "db.compare_filename")
+	}
+
+	// docker_mode_* fields require "docker_mode" to be true
+	dockerMode := getBoolFromConfig(config, "docker_mode")
+	if !dockerMode {
+		delete(config, "docker_mode")
+		delete(config, "docker_mode_flush")
+		delete(config, "docker_mode_parser")
+	}
+
+	// multiline_flush, parser_firstline, parser_N require "multiline" to be "on" or true
+	multilineEnabled := isMultilineEnabled(config)
+	if !multilineEnabled {
+		delete(config, "multiline")
+		delete(config, "multiline_flush")
+		delete(config, "parser_firstline")
+		// Remove parser_N fields
+		for k := range config {
+			if strings.HasPrefix(strings.ToLower(k), "parser_") && k != "parser" {
+				// Check if it's parser_N pattern (not parser_firstline)
+				if matched, _ := regexp.MatchString(`^parser_\d+$`, strings.ToLower(k)); matched {
+					delete(config, k)
+				}
+			}
+		}
+	}
+
+	// thread.ring_buffer.* require "threaded" to be true
+	threaded := getBoolFromConfig(config, "threaded")
+	if !threaded {
+		delete(config, "threaded")
+		delete(config, "thread.ring_buffer.capacity")
+		delete(config, "thread.ring_buffer.window")
+	}
+}
+
+func getBoolFromConfig(config map[string]any, key string) bool {
+	val, exists := config[key]
+	if !exists {
+		return false
+	}
+
+	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		lower := strings.ToLower(v)
+		return lower == "true" || lower == "on" || lower == "yes" || lower == "1"
+	}
+	return false
+}
+
+func isMultilineEnabled(config map[string]any) bool {
+	val, exists := config["multiline"]
+	if !exists {
+		return false
+	}
+
+	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		lower := strings.ToLower(v)
+		return lower == "on" || lower == "true" || lower == "yes" || lower == "1"
+	}
+	return false
+}
+
 func getConfigString(config map[string]any, key string) string {
 	if v, ok := config[key]; ok {
 		if s, ok := v.(string); ok {
@@ -336,28 +452,32 @@ func getConfigString(config map[string]any, key string) string {
 
 func validateFluentBitNodeConfig(node models.PipelineNodes) error {
 	pluginName := GetPluginName(node)
+	configCopy := copyConfig(node.Config)
+	// Flatten nested objects (e.g., { unicode: { encoding: "..." } } -> { "unicode.encoding": "..." })
+	configCopy = flattenNestedConfig(configCopy)
+	compactConfig(configCopy)
 
 	switch node.ComponentRole {
 	case "input":
 		if pluginName == "tail" {
-			if errs := validators.ValidateTailInputConfig(node.Config); errs.HasErrors() {
+			if errs := validators.ValidateTailInputConfig(configCopy); errs.HasErrors() {
 				return fmt.Errorf("invalid tail input config for node %q: %w", node.Name, errs)
 			}
 		}
 	case "filter":
 		switch pluginName {
 		case "grep":
-			if errs := validators.ValidateGrepFilterConfig(node.Config); errs.HasErrors() {
+			if errs := validators.ValidateGrepFilterConfig(configCopy); errs.HasErrors() {
 				return fmt.Errorf("invalid grep filter config for node %q: %w", node.Name, errs)
 			}
 		case "modify":
-			if errs := validators.ValidateModifyFilterConfig(node.Config); errs.HasErrors() {
+			if errs := validators.ValidateModifyFilterConfig(configCopy); errs.HasErrors() {
 				return fmt.Errorf("invalid modify filter config for node %q: %w", node.Name, errs)
 			}
 		}
 	case "output":
 		if pluginName == "http" {
-			if errs := validators.ValidateHTTPOutputConfig(node.Config); errs.HasErrors() {
+			if errs := validators.ValidateHTTPOutputConfig(configCopy); errs.HasErrors() {
 				return fmt.Errorf("invalid http output config for node %q: %w", node.Name, errs)
 			}
 		}
