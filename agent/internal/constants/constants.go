@@ -10,6 +10,7 @@ var (
 	PIPELINE_NAME          = ""
 	STARTED_BY             = "Admin"
 	HEARTBEAT_INTERVAL_SEC = 30
+	SKIP_CONFIG_VALIDATION = false
 )
 
 var AGENTID int64

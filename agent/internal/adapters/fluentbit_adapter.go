@@ -435,6 +435,7 @@ func (a *FluentBitAdapter) ValidateConfigOnDisk(data *map[string]any) error {
 		return fmt.Errorf("failed to create temp config file: %w", err)
 	}
 	tempPath := tempFile.Name()
+	logger.Logger.Info(fmt.Sprintf("Created temp config file: %s", tempPath))
 	if err := tempFile.Close(); err != nil {
 		return fmt.Errorf("failed to close temp config file: %w", err)
 	}
@@ -462,12 +463,14 @@ func (a *FluentBitAdapter) ValidateConfigOnDisk(data *map[string]any) error {
 				break
 			}
 		}
+		logger.Logger.Info(fmt.Sprintf("Fluent Bit path: %s", fluentBitPath))
 		if fluentBitPath == "" {
 			return fmt.Errorf("fluent-bit executable not found in PATH or common locations")
 		}
 	}
 
 	cmd := exec.Command(fluentBitPath, "-c", tempPath, "--dry-run")
+	logger.Logger.Info(fmt.Sprintf("Running command: %s", cmd.String()))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("fluent-bit config validation failed: %w: %s", err, string(output))

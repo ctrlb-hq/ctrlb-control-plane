@@ -90,8 +90,11 @@ func (otc *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest map[string
 	}
 
 	// Validate configuration against Fluent Bit binary using a temp file
-	if err := otc.Adapter.ValidateConfigOnDisk(&updateConfigRequest); err != nil {
-		return fmt.Errorf("fluent-bit config validation with binary failed: %w", err)
+	if !constants.SKIP_CONFIG_VALIDATION {
+		logger.Logger.Info("Validating configuration against Fluent Bit binary using a temp file")
+		if err := otc.Adapter.ValidateConfigOnDisk(&updateConfigRequest); err != nil {
+			return fmt.Errorf("fluent-bit config validation with binary failed: %w", err)
+		}
 	}
 
 	// If validation passes, save to the actual config path

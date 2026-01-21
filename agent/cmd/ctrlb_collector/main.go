@@ -76,6 +76,12 @@ func main() {
 		}
 	}
 
+	// SKIP_CONFIG_VALIDATION: Optional, skip fluent-bit binary config validation
+	if skipValidation := os.Getenv("SKIP_CONFIG_VALIDATION"); skipValidation == "true" || skipValidation == "1" {
+		constants.SKIP_CONFIG_VALIDATION = true
+		logger.Logger.Info("SKIP_CONFIG_VALIDATION is enabled. Skipping fluent-bit binary config validation.")
+	}
+
 	// Check if config file exists
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
 		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
