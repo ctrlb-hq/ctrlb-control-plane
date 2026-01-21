@@ -73,6 +73,11 @@ func (m *MockFrontendAgentService) GetLatestAgentSince(since string) (*frontenda
 	return args.Get(0).(*frontendagent.LatestAgentResponse), args.Error(1)
 }
 
+func (m *MockFrontendAgentService) UpdateAgentIP(id string, ip string) error {
+	args := m.Called(id, ip)
+	return args.Error(0)
+}
+
 func TestGetAllAgentsHandler(t *testing.T) {
 	mockService := new(MockFrontendAgentService)
 	handler := frontendagent.NewFrontendAgentHandler(mockService)
@@ -103,6 +108,23 @@ func TestAddLabelsHandler(t *testing.T) {
 	mockService.On("AddLabels", "agent-1", body).Return(nil)
 
 	handler.AddLabels(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestUpdateAgentIPHandler(t *testing.T) {
+	mockService := new(MockFrontendAgentService)
+	handler := frontendagent.NewFrontendAgentHandler(mockService)
+
+	body := map[string]string{"ip": "10.0.0.1"}
+	jsonBody, _ := json.Marshal(body)
+	req := httptest.NewRequest(http.MethodPut, "/agent/ip", bytes.NewBuffer(jsonBody))
+	req = muxSetVars(req, map[string]string{"id": "agent-1"})
+
+	w := httptest.NewRecorder()
+	mockService.On("UpdateAgentIP", "agent-1", "10.0.0.1").Return(nil)
+
+	handler.UpdateAgentIP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
 }

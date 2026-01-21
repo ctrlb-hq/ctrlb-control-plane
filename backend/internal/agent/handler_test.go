@@ -17,6 +17,7 @@ import (
 type MockAgentService struct {
 	RegisterAgentFunc     func(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error)
 	ConfigChangedPingFunc func(agentID string) error
+	ProcessHeartbeatFunc  func(agentID string, req *HeartbeatRequest) error
 }
 
 func (m *MockAgentService) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
@@ -25,6 +26,9 @@ func (m *MockAgentService) RegisterAgent(req *models.AgentRegisterRequest) (*Age
 
 func (m *MockAgentService) ConfigChangedPing(agentID string) error {
 	return m.ConfigChangedPingFunc(agentID)
+}
+func (m *MockAgentService) ProcessHeartbeat(agentID string, req *HeartbeatRequest) error {
+	return m.ProcessHeartbeatFunc(agentID, req)
 }
 
 func TestAgentHandler_RegisterAgent_Success(t *testing.T) {

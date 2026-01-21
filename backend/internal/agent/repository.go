@@ -46,10 +46,14 @@ func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*Age
 		return nil, errors.New("error getting last insert ID: " + err.Error())
 	}
 	response.ID = id
-	
 
 	// Setting default config
-	response.Config = constants.DefaultConfig
+	switch req.Type {
+	case "fluent-bit":
+		response.Config = constants.DefaultConfigFluentBit
+	default:
+		response.Config = constants.DefaultConfigOTEL
+	}
 
 	return response, nil
 }

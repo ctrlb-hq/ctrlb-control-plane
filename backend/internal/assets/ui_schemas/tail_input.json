@@ -1,0 +1,258 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Basic Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/path",
+          "label": "Path"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/exclude_path",
+          "label": "Exclude Path"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/parser",
+          "label": "Parser"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/key",
+          "label": "Key"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Buffer Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_chunk_size",
+          "label": "Buffer Chunk Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_max_size",
+          "label": "Buffer Max Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/mem_buf_limit",
+          "label": "Memory Buffer Limit"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "File Reading Behavior",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/read_from_head",
+          "label": "Read From Head"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/refresh_interval",
+          "label": "Refresh Interval (seconds)"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/rotate_wait",
+          "label": "Rotate Wait (seconds)"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/skip_empty_lines",
+          "label": "Skip Empty Lines"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/skip_long_lines",
+          "label": "Skip Long Lines"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Database (State Persistence)",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/db",
+          "label": "Database File"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/db.compare_filename",
+          "label": "DB Compare Filename",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/db",
+              "schema": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/db.journal_mode",
+          "label": "DB Journal Mode",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/db",
+              "schema": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/db.locking",
+          "label": "DB Locking",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/db",
+              "schema": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/db.sync",
+          "label": "DB Sync Mode",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/db",
+              "schema": {
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Record Enrichment",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/path_key",
+          "label": "Path Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/offset_key",
+          "label": "Offset Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/tag_regex",
+          "label": "Tag Regex"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Docker Mode",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/docker_mode",
+          "label": "Docker Mode"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/docker_mode_flush",
+          "label": "Docker Mode Flush (seconds)",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/docker_mode",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/docker_mode_parser",
+          "label": "Docker Mode Parser",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/docker_mode",
+              "schema": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Character Encoding",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/unicode.encoding",
+          "label": "Unicode Encoding"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/generic.encoding",
+          "label": "Generic Encoding"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Advanced Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/inotify_watcher",
+          "label": "Inotify Watcher"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/static_batch_size",
+          "label": "Static Batch Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/event_batch_size",
+          "label": "Event Batch Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/watcher_interval",
+          "label": "Watcher Interval"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/threaded",
+          "label": "Threaded"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,86 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Connection Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/mode",
+          "label": "Mode"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/listen",
+          "label": "Listen Address"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/port",
+          "label": "Port"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Buffer Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_chunk_size",
+          "label": "Buffer Chunk Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/buffer_max_size",
+          "label": "Buffer Max Size"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/receive_buffer_size",
+          "label": "Receive Buffer Size"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Parser Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/parser",
+          "label": "Parser"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Record Enrichment",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/raw_message_key",
+          "label": "Raw Message Key"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/source_address_key",
+          "label": "Source Address Key"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Advanced Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/threaded",
+          "label": "Threaded"
+        }
+      ]
+    }
+  ]
+}
+

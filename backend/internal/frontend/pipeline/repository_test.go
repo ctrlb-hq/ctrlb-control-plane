@@ -121,12 +121,12 @@ func TestGetAllAgentsAttachedToPipeline(t *testing.T) {
 	repo, mock, cleanup := setupTestRepo(t)
 	defer cleanup()
 
-	mock.ExpectQuery("SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, (.+) FROM agents a").
+	mock.ExpectQuery("SELECT a.id, a.name, a.version, a.type, a.pipeline_name, a.hostname, a.IP, (.+) FROM agents a").
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{
-			"id", "name", "version", "pipeline_name", "hostname", "IP",
+			"id", "name", "version", "type", "pipeline_name", "hostname", "IP",
 			"logs_rate_sent", "traces_rate_sent", "metrics_rate_sent", "status",
-		}).AddRow(1, "agent-1", "v1", "p1", "host1", "10.0.0.1", 1, 2, 3, "active"))
+		}).AddRow(1, "agent-1", "v1", "otel", "p1", "host1", "10.0.0.1", 1, 2, 3, "active"))
 
 	agents, err := repo.GetAllAgentsAttachedToPipeline(1)
 	assert.NoError(t, err)
@@ -138,10 +138,10 @@ func TestGetAgentInfo(t *testing.T) {
 	repo, mock, cleanup := setupTestRepo(t)
 	defer cleanup()
 
-	mock.ExpectQuery("SELECT id, name, version, pipeline_name, hostname, ip FROM agents WHERE id = \\?").
+	mock.ExpectQuery("SELECT id, name, version, pipeline_name, hostname, ip, type FROM agents WHERE id = \\?").
 		WithArgs(123).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "version", "pipeline_name", "hostname", "ip"}).
-			AddRow(123, "agentX", "v2", "PipeY", "hostY", "192.168.1.1"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "version", "pipeline_name", "hostname", "ip", "type"}).
+			AddRow(123, "agentX", "v2", "PipeY", "hostY", "192.168.1.1", "otel"))
 
 	mock.ExpectQuery("SELECT status FROM aggregated_agent_metrics WHERE agent_id = \\?").
 		WithArgs(123).

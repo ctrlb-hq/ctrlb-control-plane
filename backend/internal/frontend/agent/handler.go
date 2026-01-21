@@ -3,6 +3,7 @@ package frontendagent
 import (
 	"fmt"
 	"net/http"
+	"net/netip"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
@@ -112,25 +113,6 @@ func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request)
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped [ID: " + id + "]."})
 }
 
-// RestartMonitoring restarts monitoring for a specific agent
-func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
-
-	id := mux.Vars(r)["id"]
-
-	utils.Logger.Info(fmt.Sprintf("Got request to restart monitoring for agent [ID: %s]", id))
-	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
-		utils.Logger.Error(fmt.Sprintf("Error occured while restarting monitoring for agent [ID: %s]: %s", id, err.Error()))
-		if err == utils.ErrAgentDoesNotExists {
-			utils.SendJSONError(w, http.StatusOK, "Agent not found")
-		} else {
-			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Monitoring started for agent [ID: " + id + "]."})
-}
-
 // GetHealthMetricsForGraph retrieves metrics for a specific agent
 func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r *http.Request) {
 
@@ -201,6 +183,40 @@ func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request)
 	}
 
 	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Labels added to agent [ID: " + id + "]."})
+}
+
+func (f *FrontendAgentHandler) UpdateAgentIP(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Updating IP for agent with ID: %s", id))
+
+	var request UpdateAgentIPRequest
+	if err := utils.UnmarshalJSONRequest(r, &request); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to decode request body: %s", err.Error()))
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if request.IP == "" {
+		utils.SendJSONError(w, http.StatusBadRequest, "IP is required")
+		return
+	}
+
+	if _, err := netip.ParseAddr(request.IP); err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid IP format")
+		return
+	}
+
+	if err := f.FrontendAgentService.UpdateAgentIP(id, request.IP); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to update IP for agent [ID: %s]: %s", id, err.Error()))
+		if err == utils.ErrAgentDoesNotExists {
+			utils.SendJSONError(w, http.StatusOK, "Agent not found")
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent IP updated [ID: " + id + "]."})
 }
 
 func (f *FrontendAgentHandler) GetLatestAgentSince(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,7 @@
 set -e
 
 COLLECTOR_NAME="ctrlb-collector"
-VERSION="v1.0.0"
+COLLECTOR_VERSION="v0.2.1"
 INSTALL_DIR="/opt/ctrlb/${COLLECTOR_NAME}"
 ENV_FILE="${INSTALL_DIR}/.env"
 CONFIG_FILE="${INSTALL_DIR}/config.yaml"
@@ -45,11 +45,13 @@ case "$ARCH" in
 esac
 
 # Download binary
-DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/latest/download/"
-BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_NAME}-${OS}-${ARCH}"
+DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/download"
+BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_VERSION}/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
-echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "🔍 Downloading binary from: $BINARY_URL"
+
+echo "📥 Downloading ${COLLECTOR_NAME} ${COLLECTOR_VERSION} for ${OS}/${ARCH}..."
 mkdir -p "$INSTALL_DIR"
 curl -L "$BINARY_URL" -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"

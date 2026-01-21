@@ -24,15 +24,18 @@ func NewFrontendNodeHandler(frontendAgentServiceInterface FrontendNodeServiceInt
 func (f *FrontendNodeHandler) GetComponent(w http.ResponseWriter, r *http.Request) {
 	componentType := r.URL.Query().Get("type")
 
-	validTypes := map[string]bool{
+	validComponentTypes := map[string]bool{
 		"receiver":  true,
 		"processor": true,
 		"exporter":  true,
+		"input":     true, // Fluent Bit input
+		"filter":    true, // Fluent Bit filter
+		"output":    true, // Fluent Bit output
 		"":          true, // allow empty string
 	}
 
-	if !validTypes[componentType] {
-		utils.SendJSONError(w, http.StatusBadRequest, "Invalid component type. Must be 'receiver', 'processor', 'destination', or empty.")
+	if !validComponentTypes[componentType] {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid component type. Must be 'receiver', 'processor', 'exporter', 'input', 'filter', 'output', or empty.")
 		return
 	}
 

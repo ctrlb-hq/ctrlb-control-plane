@@ -23,6 +23,19 @@ func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
 	}
 }
 
+func (otc *OtelOperator) GetAgentInfo() (map[string]string, error) {
+	version, err := otc.Adapter.GetVersion()
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{
+		"version":      version,
+		"agent_type":   constants.AGENT_TYPE,
+		"pipeline_name": constants.PIPELINE_NAME,
+		"started_by":   constants.STARTED_BY,
+	}, nil
+}
+
 func (otc *OtelOperator) Initialize() (map[string]string, error) {
 	go func() {
 		logger.Logger.Info("Started process of initializing otel agent context")
@@ -83,4 +96,13 @@ func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest map[string]any)
 
 	logger.Logger.Info("Configuration updated and validated successfully")
 	return nil
+}
+
+
+func (otc *OtelOperator) GetMetrics() (map[string]any, error) {
+	metrics, err := otc.Adapter.GetMetrics()
+	if err != nil {
+		return nil, err
+	}
+	return metrics, nil
 }

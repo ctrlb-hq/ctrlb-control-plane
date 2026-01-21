@@ -1,0 +1,64 @@
+{
+  "title": "Fluent Bit Syslog (Network) Input Configuration",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "Defines network transport protocol mode for receiving syslog messages.",
+      "enum": ["tcp", "udp"],
+      "default": "tcp"
+    },
+    "listen": {
+      "type": "string",
+      "title": "Listen Address",
+      "description": "Network interface to bind.",
+      "default": "0.0.0.0"
+    },
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "TCP/UDP port to listen for incoming connections.",
+      "default": 5140
+    },
+    "buffer_chunk_size": {
+      "type": "string",
+      "title": "Buffer Chunk Size",
+      "description": "Buffer size for incoming syslog messages. For UDP mode, this is the only way to configure receive buffer.",
+      "default": "32KB"
+    },
+    "buffer_max_size": {
+      "type": "string",
+      "title": "Buffer Max Size",
+      "description": "Maximum buffer size to receive a syslog message. Defaults to buffer_chunk_size if not set."
+    },
+    "receive_buffer_size": {
+      "type": "string",
+      "title": "Receive Buffer Size",
+      "description": "Maximum socket receive buffer size. Important for high-volume UDP to prevent message loss. On Linux, capped by sysctl net.core.rmem_max."
+    },
+    "parser": {
+      "type": "string",
+      "title": "Parser",
+      "description": "Alternative parser for the message. Default is syslog-rfc5424 for tcp/udp. Use syslog-rfc5424 for fractional seconds."
+    },
+    "raw_message_key": {
+      "type": "string",
+      "title": "Raw Message Key",
+      "description": "Key where the original raw syslog message will be preserved."
+    },
+    "source_address_key": {
+      "type": "string",
+      "title": "Source Address Key",
+      "description": "Key where the source address will be injected."
+    },
+    "threaded": {
+      "type": "boolean",
+      "title": "Threaded",
+      "description": "Run this input plugin in its own thread.",
+      "default": false
+    }
+  },
+  "required": []
+}
+

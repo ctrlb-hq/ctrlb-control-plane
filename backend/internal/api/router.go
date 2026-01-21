@@ -18,6 +18,7 @@ func NewRouter(handler *Handler) *mux.Router {
 
 	agentAPIsV1.HandleFunc("/agents", handler.AgentHandler.RegisterAgent).Methods("POST")
 	agentAPIsV1.HandleFunc("/agents/{id}/config-changed", handler.AgentHandler.ConfigChangedPing).Methods("POST")
+	agentAPIsV1.HandleFunc("/agents/{id}/heartbeat", handler.AgentHandler.Heartbeat).Methods("POST")
 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
 	frontendAgentAPIsV2.Use(middleware.AuthMiddleware())
@@ -25,9 +26,9 @@ func NewRouter(handler *Handler) *mux.Router {
 	frontendAgentAPIsV2.HandleFunc("/agents", handler.FrontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", handler.FrontendAgentHandler.GetAgent).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", handler.FrontendAgentHandler.DeleteAgent).Methods("DELETE")
+	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ip", handler.FrontendAgentHandler.UpdateAgentIP).Methods("PUT")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/start", handler.FrontendAgentHandler.StartAgent).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/stop", handler.FrontendAgentHandler.StopAgent).Methods("POST")
-	frontendAgentAPIsV2.HandleFunc("/agents/{id}/restart-monitoring", handler.FrontendAgentHandler.RestartMonitoring).Methods("POST")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/healthmetrics", handler.FrontendAgentHandler.GetHealthMetricsForGraph).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/ratemetrics", handler.FrontendAgentHandler.GetRateMetricsForGraph).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}/labels", handler.FrontendAgentHandler.AddLabels).Methods("POST")

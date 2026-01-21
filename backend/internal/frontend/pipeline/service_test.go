@@ -2,6 +2,7 @@ package frontendpipeline_test
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
@@ -57,7 +58,7 @@ func (m *MockRepo) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, erro
 	args := m.Called(pipelineId)
 	return args.Get(0).(*models.PipelineGraph), args.Error(1)
 }
-func (m *MockRepo) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph) error {
+func (m *MockRepo) SyncPipelineGraph(tx *sql.Tx, pipelineID int, graph models.PipelineGraph, agentType models.AgentType) error {
 	args := m.Called(tx, pipelineID, graph)
 	return args.Error(0)
 }
@@ -69,12 +70,26 @@ func (m *MockRepo) GetAgentPipelineId(agentId string) (*int, error) {
 	args := m.Called(agentId)
 	return args.Get(0).(*int), args.Error(1)
 }
+func (m *MockRepo) DetachAllAgentsFromPipeline(pipelineId int) error {
+	args := m.Called(pipelineId)
+	return args.Error(0)
+}
+
+type MockAgentService struct {
+	mock.Mock
+}
+
+func (m *MockAgentService) StopAgent(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
 
 // --- Tests ---
 
 func TestGetAllPipelines_Service(t *testing.T) {
 	mockRepo := new(MockRepo)
-	service := frontendpipeline.NewFrontendPipelineService(mockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
 
 	expected := []*frontendpipeline.Pipeline{{ID: 1, Name: "TestPipeline"}}
 	mockRepo.On("GetAllPipelines").Return(expected, nil)
@@ -86,7 +101,8 @@ func TestGetAllPipelines_Service(t *testing.T) {
 
 func TestGetPipelineInfo_Service_Exists(t *testing.T) {
 	mockRepo := new(MockRepo)
-	service := frontendpipeline.NewFrontendPipelineService(mockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
 
 	mockRepo.On("PipelineExists", 1).Return(true)
 	expected := &frontendpipeline.PipelineInfo{ID: 1, Name: "TestPipeline"}
@@ -99,7 +115,8 @@ func TestGetPipelineInfo_Service_Exists(t *testing.T) {
 
 func TestGetPipelineInfo_Service_NotExists(t *testing.T) {
 	mockRepo := new(MockRepo)
-	service := frontendpipeline.NewFrontendPipelineService(mockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
 
 	mockRepo.On("PipelineExists", 404).Return(false)
 
@@ -107,4 +124,72 @@ func TestGetPipelineInfo_Service_NotExists(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, info)
 	assert.Equal(t, utils.ErrPipelineDoesNotExists, err)
+}
+
+func TestDeletePipeline_Service_StopsAndDetachesAgents(t *testing.T) {
+	mockRepo := new(MockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
+
+	pipelineID := 10
+	agents := []models.AgentInfoHome{
+		{ID: 1, Name: "agent-1"},
+		{ID: 2, Name: "agent-2"},
+	}
+
+	mockRepo.On("PipelineExists", pipelineID).Return(true)
+	mockRepo.On("GetAllAgentsAttachedToPipeline", pipelineID).Return(agents, nil)
+	mockAgentService.On("StopAgent", "1").Return(nil)
+	mockAgentService.On("StopAgent", "2").Return(nil)
+	mockRepo.On("DetachAllAgentsFromPipeline", pipelineID).Return(nil)
+	mockRepo.On("DeletePipeline", pipelineID).Return(nil)
+
+	err := service.DeletePipeline(pipelineID)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+	mockAgentService.AssertExpectations(t)
+}
+
+func TestDeletePipeline_Service_StopFailure(t *testing.T) {
+	mockRepo := new(MockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
+
+	pipelineID := 11
+	agents := []models.AgentInfoHome{
+		{ID: 3, Name: "agent-3"},
+	}
+
+	mockRepo.On("PipelineExists", pipelineID).Return(true)
+	mockRepo.On("GetAllAgentsAttachedToPipeline", pipelineID).Return(agents, nil)
+	mockAgentService.On("StopAgent", "3").Return(errors.New("stop failed"))
+	mockRepo.On("DetachAllAgentsFromPipeline", pipelineID).Return(nil)
+
+	err := service.DeletePipeline(pipelineID)
+	assert.Error(t, err)
+	mockRepo.AssertNotCalled(t, "DeletePipeline", pipelineID)
+	mockRepo.AssertExpectations(t)
+	mockAgentService.AssertExpectations(t)
+}
+
+func TestDeletePipeline_Service_DetachFailure(t *testing.T) {
+	mockRepo := new(MockRepo)
+	mockAgentService := new(MockAgentService)
+	service := frontendpipeline.NewFrontendPipelineService(mockRepo, mockAgentService)
+
+	pipelineID := 12
+	agents := []models.AgentInfoHome{
+		{ID: 4, Name: "agent-4"},
+	}
+
+	mockRepo.On("PipelineExists", pipelineID).Return(true)
+	mockRepo.On("GetAllAgentsAttachedToPipeline", pipelineID).Return(agents, nil)
+	mockAgentService.On("StopAgent", "4").Return(nil)
+	mockRepo.On("DetachAllAgentsFromPipeline", pipelineID).Return(errors.New("detach failed"))
+
+	err := service.DeletePipeline(pipelineID)
+	assert.Error(t, err)
+	mockRepo.AssertNotCalled(t, "DeletePipeline", pipelineID)
+	mockRepo.AssertExpectations(t)
+	mockAgentService.AssertExpectations(t)
 }

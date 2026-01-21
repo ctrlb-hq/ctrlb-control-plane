@@ -1,0 +1,43 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Group",
+      "label": "Endpoint Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/host",
+          "label": "Host"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/port",
+          "label": "Port"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/metrics_path",
+          "label": "Metrics Path"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/scrape_interval",
+          "label": "Scrape Interval"
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Additional Settings",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/threaded",
+          "label": "Threaded"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,201 @@
+{
+  "title": "Fluent Bit Tail Input Configuration",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "title": "Path",
+      "description": "Pattern specifying log files to monitor. Supports wildcards and multiple patterns separated by commas.",
+      "minLength": 1
+    },
+    "exclude_path": {
+      "type": "string",
+      "title": "Exclude Path",
+      "description": "Shell patterns separated by commas to exclude files (e.g., *.gz,*.zip)."
+    },
+    "buffer_chunk_size": {
+      "type": "string",
+      "title": "Buffer Chunk Size",
+      "description": "Initial buffer size to read file data.",
+      "default": "32k"
+    },
+    "buffer_max_size": {
+      "type": "string",
+      "title": "Buffer Max Size",
+      "description": "Maximum buffer size per monitored file. Files exceeding this are removed from monitoring.",
+      "default": "32k"
+    },
+    "mem_buf_limit": {
+      "type": "string",
+      "title": "Memory Buffer Limit",
+      "description": "Memory limit for appending data to the engine. Plugin pauses when limit is reached."
+    },
+    "read_from_head": {
+      "type": "boolean",
+      "title": "Read From Head",
+      "description": "For new files at startup, read from the beginning instead of the end.",
+      "default": false
+    },
+    "refresh_interval": {
+      "type": "integer",
+      "title": "Refresh Interval",
+      "description": "Interval in seconds for refreshing the list of watched files.",
+      "default": 60
+    },
+    "rotate_wait": {
+      "type": "integer",
+      "title": "Rotate Wait",
+      "description": "Extra seconds to monitor a rotated file for pending data.",
+      "default": 5
+    },
+    "skip_empty_lines": {
+      "type": "string",
+      "title": "Skip Empty Lines",
+      "description": "Skip empty lines from processing.",
+      "enum": ["on", "off"],
+      "default": "off"
+    },
+    "skip_long_lines": {
+      "type": "string",
+      "title": "Skip Long Lines",
+      "description": "Skip lines exceeding buffer capacity instead of stopping file monitoring.",
+      "enum": ["on", "off"],
+      "default": "off"
+    },
+    "db": {
+      "type": "string",
+      "title": "Database File",
+      "description": "SQLite database file to track file offsets. Enables state persistence across restarts."
+    },
+    "db.compare_filename": {
+      "type": "boolean",
+      "title": "DB Compare Filename",
+      "description": "Review both inode and filename when retrieving stored file info from database.",
+      "default": false
+    },
+    "db.journal_mode": {
+      "type": "string",
+      "title": "DB Journal Mode",
+      "description": "SQLite journal mode. WAL provides higher performance but isn't compatible with network filesystems.",
+      "enum": ["wal", "delete", "truncate", "persist", "memory", "off"],
+      "default": "wal"
+    },
+    "db.locking": {
+      "type": "boolean",
+      "title": "DB Locking",
+      "description": "Restrict database access to Fluent Bit only for improved performance.",
+      "default": false
+    },
+    "db.sync": {
+      "type": "string",
+      "title": "DB Sync Mode",
+      "description": "SQLite synchronization method. Full mode has high I/O cost.",
+      "enum": ["extra", "full", "normal", "off"],
+      "default": "normal"
+    },
+    "parser": {
+      "type": "string",
+      "title": "Parser",
+      "description": "Parser name to interpret log entries as structured messages."
+    },
+    "key": {
+      "type": "string",
+      "title": "Key",
+      "description": "Key name for unstructured messages (when no parser applied).",
+      "default": "log"
+    },
+    "path_key": {
+      "type": "string",
+      "title": "Path Key",
+      "description": "If set, appends monitored file path to records using this key name."
+    },
+    "offset_key": {
+      "type": "string",
+      "title": "Offset Key",
+      "description": "If set, appends file offset to records using this key name."
+    },
+    "tag_regex": {
+      "type": "string",
+      "title": "Tag Regex",
+      "description": "Regular expression to extract fields from filename for tag construction."
+    },
+    "docker_mode": {
+      "type": "boolean",
+      "title": "Docker Mode",
+      "description": "Recombine split Docker log lines. Cannot be used with Multiline.",
+      "default": false
+    },
+    "docker_mode_flush": {
+      "type": "integer",
+      "title": "Docker Mode Flush",
+      "description": "Seconds to wait before flushing queued split Docker lines.",
+      "default": 4
+    },
+    "docker_mode_parser": {
+      "type": "string",
+      "title": "Docker Mode Parser",
+      "description": "Optional parser for the first line in Docker multiline mode."
+    },
+    "inotify_watcher": {
+      "type": "boolean",
+      "title": "Inotify Watcher",
+      "description": "Use inotify for file watching. Set false to use file stat watcher instead.",
+      "default": true
+    },
+    "static_batch_size": {
+      "type": "string",
+      "title": "Static Batch Size",
+      "description": "Maximum bytes to process per iteration for static files (existing at startup).",
+      "default": "50M"
+    },
+    "event_batch_size": {
+      "type": "string",
+      "title": "Event Batch Size",
+      "description": "Maximum bytes to process per iteration for event-monitored files.",
+      "default": "50M"
+    },
+    "watcher_interval": {
+      "type": "string",
+      "title": "Watcher Interval",
+      "description": "Interval for symbolic link rotation monitoring.",
+      "default": "2s"
+    },
+    "unicode.encoding": {
+      "type": "string",
+      "title": "Unicode Encoding",
+      "description": "Unicode encoding for file data. Requires simdutf library with C++11+.",
+      "enum": ["UTF-16LE", "UTF-16BE", "auto"]
+    },
+    "generic.encoding": {
+      "type": "string",
+      "title": "Generic Encoding",
+      "description": "Non-Unicode encoding for file data conversion to UTF-8.",
+      "enum": [
+        "ShiftJIS", "SJIS", "CP932",
+        "UHC", "CP949",
+        "GBK", "CP936",
+        "GB18030",
+        "Big5", "CP950",
+        "Win866", "CP866",
+        "Win874", "CP874",
+        "Win1250", "CP1250",
+        "Win1251", "CP1251",
+        "Win1252", "CP1252",
+        "Win1253", "CP1253",
+        "Win1254", "CP1254",
+        "Win1255", "CP1255",
+        "Win1256", "CP1256"
+      ]
+    },
+    "threaded": {
+      "type": "boolean",
+      "title": "Threaded",
+      "description": "Run this input plugin in its own thread.",
+      "default": false
+    }
+  },
+  "required": [
+    "path"
+  ]
+}
+

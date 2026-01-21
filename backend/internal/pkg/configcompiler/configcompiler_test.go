@@ -1,53 +1,25 @@
 package configcompiler
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCompileGraphToJSON_Success(t *testing.T) {
-	graph := models.PipelineGraph{
-		Nodes: []models.PipelineNodes{
-			{
-				ComponentID:      1,
-				Name:             "receiver_one",
-				ComponentName:    "otlp_receiver",
-				ComponentRole:    "receiver",
-				SupportedSignals: []string{"metrics", "logs"},
-				Config: map[string]any{
-					"endpoint": "0.0.0.0:4317",
-				},
-			},
-			{
-				ComponentID:      2,
-				Name:             "processor_batch",
-				ComponentName:    "batch_processor",
-				ComponentRole:    "processor",
-				SupportedSignals: []string{"metrics", "logs"},
-				Config: map[string]any{
-					"timeout": "10s",
-				},
-			},
-			{
-				ComponentID:      3,
-				Name:             "exporter_otlp",
-				ComponentName:    "otlp_grpc_exporter",
-				ComponentRole:    "exporter",
-				SupportedSignals: []string{"metrics", "logs"},
-				Config: map[string]any{
-					"endpoint": "example.com:4317",
-				},
-			},
-		},
-		Edges: []models.PipelineEdges{
-			{Source: "1", Target: "2"},
-			{Source: "2", Target: "3"},
-		},
-	}
+// =============================================================================
+// CompileGraph Tests - Main Entry Point
+// =============================================================================
 
-	result, err := CompileGraphToJSON(graph)
+func TestCompileGraph_OTEL(t *testing.T) {
+	graph := createSampleGraph()
+
+	result, err := CompileGraph(graph, AgentTypeOTEL)
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(b))
+
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Contains(t, *result, "receivers")
@@ -60,9 +32,36 @@ func TestCompileGraphToJSON_Success(t *testing.T) {
 	assert.Contains(t, service, "telemetry")
 }
 
-func TestCompileGraphToJSON_EmptyGraph(t *testing.T) {
-	graph := models.PipelineGraph{}
-	result, err := CompileGraphToJSON(graph)
+func TestCompileGraph_FluentBit(t *testing.T) {
+	graph := createSampleFluentBitGraph()
+
+	result, err := CompileGraph(graph, AgentTypeFluentBit)
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(b))
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Contains(t, *result, "service")
+	assert.Contains(t, *result, "pipeline")
+
+	pipeline := (*result)["pipeline"].(map[string]any)
+	assert.Contains(t, pipeline, "inputs")
+	assert.Contains(t, pipeline, "filters")
+	assert.Contains(t, pipeline, "outputs")
+
+	inputs := pipeline["inputs"].([]any)
+	outputs := pipeline["outputs"].([]any)
+	assert.NotEmpty(t, inputs)
+	assert.NotEmpty(t, outputs)
+}
+
+func TestCompileGraph_UnsupportedAgentType(t *testing.T) {
+	graph := createSampleGraph()
+
+	result, err := CompileGraph(graph, AgentType("unknown"))
+
 	assert.Error(t, err)
 	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "unsupported agent type")
 }

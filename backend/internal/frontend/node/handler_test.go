@@ -47,7 +47,14 @@ func TestFrontendNodeHandler_GetComponent(t *testing.T) {
 			expectedStatus:    http.StatusOK,
 		},
 		{
-			name:              "Invalid type",
+			name:              "Valid input type for fluent-bit",
+			componentType:     "input",
+			mockServiceOutput: &[]ComponentInfo{{Name: "tail_input", Type: "input"}},
+			mockServiceError:  nil,
+			expectedStatus:    http.StatusOK,
+		},
+		{
+			name:              "Invalid component type",
 			componentType:     "invalid",
 			mockServiceOutput: nil,
 			mockServiceError:  nil,
@@ -72,7 +79,8 @@ func TestFrontendNodeHandler_GetComponent(t *testing.T) {
 
 			handler := NewFrontendNodeHandler(mockService)
 
-			req := httptest.NewRequest(http.MethodGet, "/components?type="+tt.componentType, nil)
+			url := "/components?type=" + tt.componentType
+			req := httptest.NewRequest(http.MethodGet, url, nil)
 			w := httptest.NewRecorder()
 
 			handler.GetComponent(w, req)

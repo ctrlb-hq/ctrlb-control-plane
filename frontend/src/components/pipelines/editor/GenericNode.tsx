@@ -1,148 +1,192 @@
 import React, { useEffect, useState } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { ComponentService } from "@/services/component";
 import { ArrowBigRightDash } from "lucide-react";
 import NodeSidePanel from "@/components/pipelines/editor/NodeSidePanel";
 
 interface FormSchema {
-	title?: string;
-	type?: string;
-	properties?: Record<string, any>;
-	required?: string[];
-	[key: string]: any;
+  title?: string;
+  type?: string;
+  properties?: Record<string, any>;
+  required?: string[];
+  [key: string]: any;
 }
 
 interface GenericNodeProps extends NodeProps {
-	type: "source" | "processor" | "destination";
-	triggerPosition?: "left" | "right";
-	labelComponent?: React.ReactNode;
-	isEditMode?:boolean
+  type: "receiver" | "processor" | "exporter" | "input" | "output" | "filter";
+  triggerPosition?: "left" | "right";
+  labelComponent?: React.ReactNode;
+  isEditMode?: boolean;
 }
 
-const GenericNode = React.memo(({ data: Data, type,isEditMode = false }: GenericNodeProps) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const { deleteNode, updateNodeConfig } = useGraphFlow();
-	const [form, setForm] = useState<FormSchema>({});
-	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
-		type: "VerticalLayout",
-		elements: [],
-	});
-	const [config, setConfig] = useState<object>(Data.config);
-	const nodeId = Data.component_id.toString();
-	
-	useEffect(() => {
-		setConfig(Data.config || {});
-	}, [Data.config]);
+const GenericNode = React.memo(
+  ({ data: Data, type, isEditMode = false }: GenericNodeProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { deleteNode, updateNodeConfig } = useGraphFlow();
 
-	const handleDeleteNode = () => {
-		deleteNode(nodeId);
-		setIsOpen(false);
-	};
+    const [form, setForm] = useState<FormSchema>({});
+    const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
+      type: "VerticalLayout",
+      elements: [],
+    });
+    const [config, setConfig] = useState<object>(Data.config);
 
-	const handleSubmit = (submittedConfig: any) => {
-		updateNodeConfig(nodeId, submittedConfig);
-		setIsOpen(false);
-	};
+    const nodeId = Data.component_id.toString();
 
-	const getForm = async () => {
-		const res = await ComponentService.getTransporterForm(Data.component_name);
-		const ui = await ComponentService.getTransporterUiSchema(Data.component_name);
-		setForm(res);
-		setUiSchema(ui);
-	};
+    useEffect(() => {
+      setConfig(Data.config || {});
+    }, [Data.config]);
 
-	useEffect(() => {
-		if (isOpen) getForm();
-	}, [isOpen]);
+    const handleDeleteNode = () => {
+      deleteNode(nodeId);
+      setIsOpen(false);
+    };
 
-	return (
-		<Sheet open={isOpen} onOpenChange={setIsOpen}>
-			<SheetTrigger asChild>
-				<div onClick={() => setIsOpen(true)} className="flex items-center gap-0">
-					{type === "source" && (
-						<>
-							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-l-md flex items-center justify-center">
-								<ArrowBigRightDash className="text-white w-6 h-6" />
-							</div>
-							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-r-md relative">
-								<Handle
-									type="source"
-									position={Position.Right}
-									className="bg-green-600 w-1.5 h-3.5 rounded-full"
-									style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
-									isConnectable={isEditMode}
-								/>
-								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
-								<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
-									{Data.supported_signals?.map((sig: string, idx: number) => <p key={idx}>{sig}</p>)}
-								</div>
-							</div>
-						</>
-					)}
+    const handleSubmit = (submittedConfig: any) => {
+      updateNodeConfig(nodeId, submittedConfig);
+      setIsOpen(false);
+    };
 
-					{type === "processor" && (
-						<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-md relative">
-							<Handle
-								type="target"
-								position={Position.Left}
-								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
-								style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
-								isConnectable={isEditMode}
-							/>
-							<Handle
-								type="source"
-								position={Position.Right}
-								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
-								style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
-								isConnectable={isEditMode}
-							/>
-							<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
-							<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
-								{Data.supported_signals?.map((sig: string, idx: number) => <p key={idx}>{sig}</p>)}
-							</div>
-						</div>
-					)}
+    const getForm = async () => {
+      const res = await ComponentService.getTransporterForm(
+        Data.component_name,
+      );
+      const ui = await ComponentService.getTransporterUiSchema(
+        Data.component_name,
+      );
+      setForm(res);
+      setUiSchema(ui);
+    };
 
-					{type === "destination" && (
-						<>
-							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-l-md relative">
-								<Handle
-									type="target"
-									position={Position.Left}
-									className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
-									style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
-									isConnectable={isEditMode}
-								/>
-								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
-								<div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
-									{Data.supported_signals?.map((sig: string, idx: number) => <p key={idx}>{sig}</p>)}
-								</div>
-							</div>
-							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-r-md flex items-center justify-center">
-								<ArrowBigRightDash className="text-white w-6 h-6" />
-							</div>
-						</>
-					)}
-				</div>
-			</SheetTrigger>
+    useEffect(() => {
+      if (isOpen) getForm();
+    }, [isOpen]);
 
-			<NodeSidePanel
-				title={Data.name}
-				formSchema={form}
-				uiSchema={uiSchema}
-				config={config}
-				setConfig={setConfig}
-				submitLabel="Apply"
-				onSubmit={handleSubmit}
-				onDiscard={() => setIsOpen(false)}
-				onDelete={handleDeleteNode}
-				showDelete={true}
-				isOpen={isOpen}
-			/>
-		</Sheet>
-	);
-});
+    return (
+      <>
+        <div
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-0 cursor-pointer"
+        >
+          {(type === "receiver" || type === "input") && (
+            <>
+              <div className="bg-gray-500 h-[4rem] w-[2rem] rounded-l-md flex items-center justify-center">
+                <ArrowBigRightDash className="text-white w-6 h-6" />
+              </div>
+
+              <div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-r-md relative">
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  className="bg-green-600 w-1.5 h-3.5 rounded-full"
+                  style={{
+                    right: "-6px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                  isConnectable={isEditMode}
+                />
+                <div className="text-[9px] font-medium text-center break-words">
+                  {Data.name}
+                </div>
+                <div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
+                  {Data.supported_signals?.map(
+                    (sig: string, idx: number) => (
+                      <p key={idx}>{sig}</p>
+                    ),
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {(type === "processor" || type === "filter") && (
+            <div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-md relative">
+              <Handle
+                type="target"
+                position={Position.Left}
+                className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
+                style={{
+                  left: "-6px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+                isConnectable={isEditMode}
+              />
+              <Handle
+                type="source"
+                position={Position.Right}
+                className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
+                style={{
+                  right: "-6px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+                isConnectable={isEditMode}
+              />
+              <div className="text-[9px] font-medium text-center break-words">
+                {Data.name}
+              </div>
+              <div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
+                {Data.supported_signals?.map(
+                  (sig: string, idx: number) => (
+                    <p key={idx}>{sig}</p>
+                  ),
+                )}
+              </div>
+            </div>
+          )}
+
+          {(type === "exporter" || type === "output") && (
+            <>
+              <div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-l-md relative">
+                <Handle
+                  type="target"
+                  position={Position.Left}
+                  className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
+                  style={{
+                    left: "-6px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                  isConnectable={isEditMode}
+                />
+                <div className="text-[9px] font-medium text-center break-words">
+                  {Data.name}
+                </div>
+                <div className="flex flex-wrap justify-center gap-1 text-[8px] mt-1 text-gray-700">
+                  {Data.supported_signals?.map(
+                    (sig: string, idx: number) => (
+                      <p key={idx}>{sig}</p>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-gray-500 h-[4rem] w-[2rem] rounded-r-md flex items-center justify-center">
+                <ArrowBigRightDash className="text-white w-6 h-6" />
+              </div>
+            </>
+          )}
+        </div>
+
+        <NodeSidePanel
+          title={Data.name}
+          formSchema={form}
+          uiSchema={uiSchema}
+          config={config}
+          setConfig={setConfig}
+          submitLabel="Apply"
+          onSubmit={handleSubmit}
+          onDiscard={() => setIsOpen(false)}
+          onDelete={handleDeleteNode}
+          showDelete
+          isOpen={isOpen}
+        />
+      </>
+    );
+  },
+);
 
 export default GenericNode;

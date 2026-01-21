@@ -1,0 +1,72 @@
+{
+  "title": "Fluent Bit CtrlB Output Configuration",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "title": "Host",
+      "description": "The CtrlB server where you are sending logs.",
+      "default": "localhost"
+    },
+    "port": {
+      "type": "integer",
+      "title": "Port",
+      "description": "The port on the CtrlB server.",
+      "default": 5080
+    },
+    "uri": {
+      "type": "string",
+      "title": "URI",
+      "description": "The API path used to send logs.",
+      "default": "/api/default/default/_json_evolving"
+    },
+    "tls": {
+      "type": "string",
+      "title": "TLS",
+      "description": "Enable end-to-end security using TLS.",
+      "enum": ["on", "off"],
+      "default": "on"
+    },
+    "http_user": {
+      "type": "string",
+      "title": "HTTP User",
+      "description": "Username for HTTP authentication."
+    },
+    "http_passwd": {
+      "type": "string",
+      "title": "HTTP Password",
+      "description": "Password for HTTP authentication."
+    },
+    "format": {
+      "type": "string",
+      "title": "Format",
+      "description": "The format of the log payload.",
+      "enum": ["json"],
+      "default": "json"
+    },
+    "compress": {
+      "type": "string",
+      "title": "Compress",
+      "description": "Compresses the payload. Recommended to set to gzip for optimized log ingestion.",
+      "enum": ["gzip", ""],
+      "default": "gzip"
+    },
+    "json_date_key": {
+      "type": "string",
+      "title": "JSON Date Key",
+      "description": "The JSON key used for timestamps in the logs.",
+      "default": "_timestamp"
+    },
+    "json_date_format": {
+      "type": "string",
+      "title": "JSON Date Format",
+      "description": "The format of the date in logs.",
+      "enum": ["iso8601", "epoch_ms"],
+      "default": "epoch_ms"
+    }
+  },
+  "required": [
+    "host"
+  ]
+}
+

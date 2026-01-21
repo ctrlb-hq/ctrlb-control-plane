@@ -23,6 +23,7 @@ type PipelineInfoWithAgent struct {
 	CreatedBy    string            `json:"created_by"`
 	CreatedAt    int               `json:"created_at"`
 	UpdatedAt    int               `json:"updated_at"`
+	Type         string            `json:"type"`
 	AgentVersion string            `json:"agent_version"`
 	Status       string            `json:"status"`
 	Hostname     string            `json:"hostname"`

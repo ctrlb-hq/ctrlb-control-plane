@@ -1,0 +1,51 @@
+# Use the official Golang image to build the binary.
+FROM golang:1.23-alpine AS builder
+
+# Set the Current Working Directory inside the container
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code.
+COPY . .
+
+# Build the Go app. Replace "myapp" with your binary name.
+RUN go build -o ctrlb-agent ./cmd/ctrlb_collector/main.go
+
+# Get Fluent Bit binary
+FROM fluent/fluent-bit:3.2 AS fluentbit
+
+# Use Debian slim as base for compatibility with Fluent Bit
+FROM debian:bookworm-slim
+
+# Install required runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libyaml-0-2 \
+    libsystemd0 \
+    libcurl4 \
+    libsasl2-2 \
+    libpq5 \
+    libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create directory structure
+RUN mkdir -p /opt/fluent-bit/bin
+
+# Copy Fluent Bit binary and libraries from official image
+COPY --from=fluentbit /fluent-bit /opt/fluent-bit
+
+# Add Fluent Bit to PATH
+ENV PATH="/opt/fluent-bit/bin:${PATH}"
+
+WORKDIR /app
+
+# Copy the binary from the builder stage.
+COPY --from=builder /app/ctrlb-agent .
+COPY --from=builder /app/internal/config/fluentbit-config.yaml ./config.yaml
+
+# Command to run the executable
+CMD ["./ctrlb-agent"]
+

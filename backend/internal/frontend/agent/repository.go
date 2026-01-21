@@ -25,7 +25,7 @@ func (f *FrontendAgentRepository) AgentExists(id string) bool {
 
 func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error) {
 	var agents []models.AgentInfoHome
-	row, err := f.db.Query("SELECT id, name, version, pipeline_name FROM agents")
+	row, err := f.db.Query("SELECT id, name, version, type, pipeline_name FROM agents")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]models.AgentInfoHome, error)
 	for row.Next() {
 		agent := models.AgentInfoHome{}
 		var pipelineName sql.NullString
-		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName)
+		err := row.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Type, &pipelineName)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	var pipelineName sql.NullString
 	var pipelineId sql.NullInt64
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.IP, &agent.Platform)
+	err := f.db.QueryRow("SELECT id, name, type, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.IP, &agent.Platform)
 	if err != nil {
 		return nil, err
 	}
@@ -137,15 +137,15 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	return agent, nil
 }
 
-func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, err error) {
-	query := `SELECT hostname, ip FROM agents WHERE id = ?`
+func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, agentType models.AgentType, err error) {
+	query := `SELECT hostname, ip, type FROM agents WHERE id = ?`
 
-	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip)
+	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip, &agentType)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to fetch network info for agent ID %s: %w", agentID, err)
+		return "", "", "", fmt.Errorf("failed to fetch network info for agent ID %s: %w", agentID, err)
 	}
 
-	return hostname, ip, nil
+	return hostname, ip, agentType, nil
 }
 
 // DeleteAgent removes an agent by ID
@@ -168,7 +168,17 @@ func (f *FrontendAgentRepository) AgentStatus(id string) string {
 
 // GetHealthMetricsForGraph retrieves metrics for a specific agent
 func (f *FrontendAgentRepository) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
-	rows, err := f.db.Query("SELECT cpu_utilization, memory_utilization, timestamp FROM realtime_agent_metrics WHERE agent_id = ? LIMIT 20", id)
+	rows, err := f.db.Query(`
+		SELECT cpu_utilization, memory_utilization, timestamp
+		FROM (
+			SELECT cpu_utilization, memory_utilization, timestamp
+			FROM realtime_agent_metrics
+			WHERE agent_id = ?
+			ORDER BY timestamp DESC
+			LIMIT 20
+		) AS recent
+		ORDER BY timestamp ASC
+	`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +207,17 @@ func (f *FrontendAgentRepository) GetHealthMetricsForGraph(id string) (*[]AgentM
 }
 
 func (f *FrontendAgentRepository) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
-	rows, err := f.db.Query("SELECT traces_rate_sent, metrics_rate_sent, logs_rate_sent, timestamp FROM realtime_agent_metrics WHERE agent_id = ?", id)
+	rows, err := f.db.Query(`
+		SELECT traces_rate_sent, metrics_rate_sent, logs_rate_sent, timestamp
+		FROM (
+			SELECT traces_rate_sent, metrics_rate_sent, logs_rate_sent, timestamp
+			FROM realtime_agent_metrics
+			WHERE agent_id = ?
+			ORDER BY timestamp DESC
+			LIMIT 20
+		) AS recent
+		ORDER BY timestamp ASC
+	`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -249,6 +269,14 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 	return nil
 }
 
+func (f *FrontendAgentRepository) UpdateAgentIP(id string, ip string) error {
+	_, err := f.db.Exec("UPDATE agents SET ip = ? WHERE id = ?", ip, id)
+	if err != nil {
+		return fmt.Errorf("failed to update agent ip: %w", err)
+	}
+	return nil
+}
+
 func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgentResponse, error) {
 	query := `
 	SELECT id, name, registered_at, pipeline_id
@@ -261,7 +289,8 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 	row := f.db.QueryRow(query, since)
 
 	var agent LatestAgentResponse
-	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt, &agent.PipelineID)
+	var pipelineID int64
+	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt, &pipelineID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // no new agent found
@@ -269,5 +298,6 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 		return nil, fmt.Errorf("failed to query latest agent: %w", err)
 	}
 
+	agent.PipelineID = strconv.FormatInt(pipelineID, 10)
 	return &agent, nil
 }

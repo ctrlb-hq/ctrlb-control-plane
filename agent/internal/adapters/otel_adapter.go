@@ -207,3 +207,13 @@ func (a *OTELAdapter) ValidateConfigInMemory(data *map[string]any) error {
 	logger.Logger.Info("In-memory configuration validation successful")
 	return nil
 }
+
+func (a *OTELAdapter) GetMetrics() (map[string]any, error) {
+	//not implemented yet
+	return nil, nil
+}
+
+func (a *OTELAdapter) ValidateConfigOnDisk(data *map[string]any) error {
+	//not implemented yet
+	return nil
+}
