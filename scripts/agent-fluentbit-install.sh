@@ -9,6 +9,7 @@ ENV_FILE="${INSTALL_DIR}/.env"
 CONFIG_FILE="${INSTALL_DIR}/config.yaml"
 SERVICE_FILE="/etc/systemd/system/${COLLECTOR_NAME}.service"
 
+SKIP_CONFIG_VALIDATION="${SKIP_CONFIG_VALIDATION:-false}"
 # Fluent Bit configuration (will be installed via package manager)
 FLUENTBIT_BIN="/opt/fluent-bit/bin/fluent-bit"
 
@@ -265,6 +266,7 @@ PIPELINE_NAME=${PIPELINE_NAME}
 STARTED_BY=${STARTED_BY}
 AGENT_CONFIG_PATH=${CONFIG_FILE}
 AGENT_TYPE=fluent-bit
+SKIP_CONFIG_VALIDATION=${SKIP_CONFIG_VALIDATION}
 EOF
 
 chmod 600 "$ENV_FILE"
