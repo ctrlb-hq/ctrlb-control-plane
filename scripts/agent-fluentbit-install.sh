@@ -3,7 +3,7 @@
 set -e
 
 COLLECTOR_NAME="ctrlb-collector"
-COLLECTOR_VERSION="v2.0.1"
+COLLECTOR_VERSION="v0.2.1"
 INSTALL_DIR="/opt/ctrlb/${COLLECTOR_NAME}"
 ENV_FILE="${INSTALL_DIR}/.env"
 CONFIG_FILE="${INSTALL_DIR}/config.yaml"
