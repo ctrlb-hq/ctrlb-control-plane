@@ -62,23 +62,6 @@
       "enum": ["on", "off"],
       "default": "off"
     },
-    "exit_on_eof": {
-      "type": "boolean",
-      "title": "Exit On EOF",
-      "description": "Exit when reaching end of file. Used for bulk load and tests.",
-      "default": false
-    },
-    "ignore_older": {
-      "type": "string",
-      "title": "Ignore Older",
-      "description": "Ignore files older than this value. Supports m, h, d syntax (e.g., 5m, 1h, 2d)."
-    },
-    "ignore_active_older_files": {
-      "type": "boolean",
-      "title": "Ignore Active Older Files",
-      "description": "Ignore files older than ignore_older even if being ingested.",
-      "default": false
-    },
     "db": {
       "type": "string",
       "title": "Database File",

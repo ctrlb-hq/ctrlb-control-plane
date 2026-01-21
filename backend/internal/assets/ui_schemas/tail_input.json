@@ -76,21 +76,6 @@
           "type": "Control",
           "scope": "#/properties/skip_long_lines",
           "label": "Skip Long Lines"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/exit_on_eof",
-          "label": "Exit On EOF"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/ignore_older",
-          "label": "Ignore Older"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/ignore_active_older_files",
-          "label": "Ignore Active Older Files"
         }
       ]
     },
