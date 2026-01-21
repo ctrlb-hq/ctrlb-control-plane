@@ -12,11 +12,6 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/tag",
-          "label": "Tag"
-        },
-        {
-          "type": "Control",
           "scope": "#/properties/exclude_path",
           "label": "Exclude Path"
         },
@@ -228,78 +223,6 @@
     },
     {
       "type": "Group",
-      "label": "Multiline Parsing",
-      "elements": [
-        {
-          "type": "Control",
-          "scope": "#/properties/multiline.parser",
-          "label": "Multiline Parser (Recommended)"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/multiline",
-          "label": "Multiline (Legacy)"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/multiline_flush",
-          "label": "Multiline Flush (seconds)",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/multiline",
-              "schema": {
-                "const": "on"
-              }
-            }
-          }
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/parser_firstline",
-          "label": "Parser Firstline",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/multiline",
-              "schema": {
-                "const": "on"
-              }
-            }
-          }
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/parser_1",
-          "label": "Parser 1",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/multiline",
-              "schema": {
-                "const": "on"
-              }
-            }
-          }
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/parser_2",
-          "label": "Parser 2",
-          "rule": {
-            "effect": "SHOW",
-            "condition": {
-              "scope": "#/properties/multiline",
-              "schema": {
-                "const": "on"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "type": "Group",
       "label": "Character Encoding",
       "elements": [
         {
@@ -325,11 +248,6 @@
         },
         {
           "type": "Control",
-          "scope": "#/properties/file_cache_advise",
-          "label": "File Cache Advise"
-        },
-        {
-          "type": "Control",
           "scope": "#/properties/static_batch_size",
           "label": "Static Batch Size"
         },
@@ -337,16 +255,6 @@
           "type": "Control",
           "scope": "#/properties/event_batch_size",
           "label": "Event Batch Size"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/progress_check_interval",
-          "label": "Progress Check Interval"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/progress_check_interval_nsec",
-          "label": "Progress Check Interval (nanoseconds)"
         },
         {
           "type": "Control",

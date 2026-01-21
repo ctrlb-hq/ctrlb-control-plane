@@ -8,11 +8,6 @@
       "description": "Pattern specifying log files to monitor. Supports wildcards and multiple patterns separated by commas.",
       "minLength": 1
     },
-    "tag": {
-      "type": "string",
-      "title": "Tag",
-      "description": "Tag for log records. Supports regex extract fields and asterisk expansion (replaced with file path)."
-    },
     "exclude_path": {
       "type": "string",
       "title": "Exclude Path",
@@ -158,51 +153,11 @@
       "title": "Docker Mode Parser",
       "description": "Optional parser for the first line in Docker multiline mode."
     },
-    "multiline.parser": {
-      "type": "string",
-      "title": "Multiline Parser",
-      "description": "Multiline parser definitions (comma-separated). Use 'docker, cri' for container logs."
-    },
-    "multiline": {
-      "type": "string",
-      "title": "Multiline (Legacy)",
-      "description": "Enable legacy multiline mode. Cannot be used with docker_mode.",
-      "enum": ["on", "off"],
-      "default": "off"
-    },
-    "multiline_flush": {
-      "type": "integer",
-      "title": "Multiline Flush",
-      "description": "Seconds to wait before processing queued multiline messages.",
-      "default": 4
-    },
-    "parser_firstline": {
-      "type": "string",
-      "title": "Parser Firstline",
-      "description": "Parser matching the beginning of multiline messages. Required when multiline is on."
-    },
-    "parser_1": {
-      "type": "string",
-      "title": "Parser 1",
-      "description": "Additional parser for multiline entries."
-    },
-    "parser_2": {
-      "type": "string",
-      "title": "Parser 2",
-      "description": "Additional parser for multiline entries."
-    },
     "inotify_watcher": {
       "type": "boolean",
       "title": "Inotify Watcher",
       "description": "Use inotify for file watching. Set false to use file stat watcher instead.",
       "default": true
-    },
-    "file_cache_advise": {
-      "type": "string",
-      "title": "File Cache Advise",
-      "description": "Use posix_fadvise to reduce kernel file cache usage (Linux only).",
-      "enum": ["on", "off"],
-      "default": "on"
     },
     "static_batch_size": {
       "type": "string",
@@ -215,18 +170,6 @@
       "title": "Event Batch Size",
       "description": "Maximum bytes to process per iteration for event-monitored files.",
       "default": "50M"
-    },
-    "progress_check_interval": {
-      "type": "string",
-      "title": "Progress Check Interval",
-      "description": "Interval for checking file progress.",
-      "default": "2s"
-    },
-    "progress_check_interval_nsec": {
-      "type": "integer",
-      "title": "Progress Check Interval Nanoseconds",
-      "description": "Nanosecond component for sub-second precision on progress checks.",
-      "default": 0
     },
     "watcher_interval": {
       "type": "string",

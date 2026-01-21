@@ -60,6 +60,7 @@ func buildFBNodeInstances(state *GraphState, inputs, filters, outputs []string) 
 		if err := validateFluentBitNodeConfig(node); err != nil {
 			return nil, err
 		}
+		utils.Logger.Info(fmt.Sprintf("Validated Fluent Bit node config for node %q", node.Name))
 
 		// Check if user provided a tag in config
 		tag := getConfigString(node.Config, "tag")
