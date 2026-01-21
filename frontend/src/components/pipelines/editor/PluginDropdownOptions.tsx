@@ -92,7 +92,7 @@ const PluginDropdownOptions = React.memo(
         type: nodeType,
         position: { x: 0, y: 0 },
         data: {
-          type: dataType,
+          component_role: dataType,
           name: optionValue,
           supported_signals,
           component_name: pluginName,

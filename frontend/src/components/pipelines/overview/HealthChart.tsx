@@ -17,7 +17,7 @@ import {
 
 export interface HealthMetricPoint {
   timestamp: number; 
-  value: number;
+  [key: string]: number;
 }
 
 interface HealthChartProps {
