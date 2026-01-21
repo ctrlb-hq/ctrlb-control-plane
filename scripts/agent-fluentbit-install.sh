@@ -63,87 +63,83 @@ echo "   Log Files → Fluent Bit (embedded) → CtrlB Collector → Backend"
 echo "   Single systemd service manages both components"
 echo ""
 
-# Check if Fluent Bit is already installed
+# ========================
+# Install Fluent Bit from Official Repository (if not already installed)
+# ========================
 if [ -f "$FLUENTBIT_BIN" ]; then
-  echo "✅ Fluent Bit is already installed"
+  echo "✅ Fluent Bit is already installed at ${FLUENTBIT_BIN}, skipping installation..."
 else
-  echo "❌ Fluent Bit is not installed"
-fi
+  echo "📦 Installing Fluent Bit from official repository..."
 
-# ========================
-# Install Fluent Bit from Official Repository
-# ========================
-echo "📦 Installing Fluent Bit from official repository..."
+  # Detect distribution
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO=$ID
+    DISTRO_VERSION=$VERSION_ID
+    echo "   Detected: ${PRETTY_NAME:-$ID $VERSION_ID}"
+  else
+    echo "❌ Cannot detect OS distribution"
+    exit 1
+  fi
 
-# Detect distribution
-if [ -f /etc/os-release ]; then
-  . /etc/os-release
-  DISTRO=$ID
-  DISTRO_VERSION=$VERSION_ID
-  echo "   Detected: ${PRETTY_NAME:-$ID $VERSION_ID}"
-else
-  echo "❌ Cannot detect OS distribution"
-  exit 1
-fi
-
-case "$DISTRO" in
-  ubuntu)
-    echo "   Installing on Ubuntu..."
-    
-    # Add Fluent Bit GPG key
-    curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor | sudo tee /usr/share/keyrings/fluentbit-keyring.gpg > /dev/null
-    
-    # Get codename
-    codename=$(grep -oP '(?<=VERSION_CODENAME=).*' /etc/os-release 2>/dev/null || lsb_release -cs 2>/dev/null)
-    
-    # Add Fluent Bit repository
-    echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/ubuntu/$codename $codename main" | sudo tee /etc/apt/sources.list.d/fluent-bit.list > /dev/null
-    
-    # Update and install
-    sudo apt-get update -qq
-    sudo apt-get install -y fluent-bit
-    
-    # Stop the default service (we'll manage it through our collector)
-    sudo systemctl stop fluent-bit 2>/dev/null || true
-    sudo systemctl disable fluent-bit 2>/dev/null || true
-    ;;
-    
-  debian)
-    echo "   Installing on Debian..."
-    
-    # Add Fluent Bit GPG key
-    curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor | sudo tee /usr/share/keyrings/fluentbit-keyring.gpg > /dev/null
-    
-    # Get codename
-    codename=$(grep -oP '(?<=VERSION_CODENAME=).*' /etc/os-release 2>/dev/null || lsb_release -cs 2>/dev/null)
-    
-    # Add Fluent Bit repository
-    echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/debian/$codename $codename main" | sudo tee /etc/apt/sources.list.d/fluent-bit.list > /dev/null
-    
-    # Update and install
-    sudo apt-get update -qq
-    sudo apt-get install -y fluent-bit
-    
-    # Stop the default service (we'll manage it through our collector)
-    sudo systemctl stop fluent-bit 2>/dev/null || true
-    sudo systemctl disable fluent-bit 2>/dev/null || true
-    ;;
-    
-  centos|rhel|rocky|almalinux|fedora)
-    echo "   Installing on RHEL/CentOS/Rocky/Alma..."
-    
-    # Determine the major version
-    MAJOR_VERSION=$(echo "$DISTRO_VERSION" | cut -d. -f1)
-    
-    # Handle CentOS 8 EOL
-    if [ "$DISTRO" = "centos" ] && [ "$MAJOR_VERSION" = "8" ]; then
-      echo "   Configuring CentOS 8 vault mirrors..."
-      sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* 2>/dev/null || true
-      sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* 2>/dev/null || true
-    fi
-    
-    # Create Fluent Bit repo file
-    cat <<EOF | sudo tee /etc/yum.repos.d/fluent-bit.repo > /dev/null
+  case "$DISTRO" in
+    ubuntu)
+      echo "   Installing on Ubuntu..."
+      
+      # Add Fluent Bit GPG key
+      curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor | sudo tee /usr/share/keyrings/fluentbit-keyring.gpg > /dev/null
+      
+      # Get codename
+      codename=$(grep -oP '(?<=VERSION_CODENAME=).*' /etc/os-release 2>/dev/null || lsb_release -cs 2>/dev/null)
+      
+      # Add Fluent Bit repository
+      echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/ubuntu/$codename $codename main" | sudo tee /etc/apt/sources.list.d/fluent-bit.list > /dev/null
+      
+      # Update and install
+      sudo apt-get update -qq
+      sudo apt-get install -y fluent-bit
+      
+      # Stop the default service (we'll manage it through our collector)
+      sudo systemctl stop fluent-bit 2>/dev/null || true
+      sudo systemctl disable fluent-bit 2>/dev/null || true
+      ;;
+      
+    debian)
+      echo "   Installing on Debian..."
+      
+      # Add Fluent Bit GPG key
+      curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor | sudo tee /usr/share/keyrings/fluentbit-keyring.gpg > /dev/null
+      
+      # Get codename
+      codename=$(grep -oP '(?<=VERSION_CODENAME=).*' /etc/os-release 2>/dev/null || lsb_release -cs 2>/dev/null)
+      
+      # Add Fluent Bit repository
+      echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/debian/$codename $codename main" | sudo tee /etc/apt/sources.list.d/fluent-bit.list > /dev/null
+      
+      # Update and install
+      sudo apt-get update -qq
+      sudo apt-get install -y fluent-bit
+      
+      # Stop the default service (we'll manage it through our collector)
+      sudo systemctl stop fluent-bit 2>/dev/null || true
+      sudo systemctl disable fluent-bit 2>/dev/null || true
+      ;;
+      
+    centos|rhel|rocky|almalinux|fedora)
+      echo "   Installing on RHEL/CentOS/Rocky/Alma..."
+      
+      # Determine the major version
+      MAJOR_VERSION=$(echo "$DISTRO_VERSION" | cut -d. -f1)
+      
+      # Handle CentOS 8 EOL
+      if [ "$DISTRO" = "centos" ] && [ "$MAJOR_VERSION" = "8" ]; then
+        echo "   Configuring CentOS 8 vault mirrors..."
+        sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* 2>/dev/null || true
+        sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* 2>/dev/null || true
+      fi
+      
+      # Create Fluent Bit repo file
+      cat <<EOF | sudo tee /etc/yum.repos.d/fluent-bit.repo > /dev/null
 [fluent-bit]
 name = Fluent Bit
 baseurl = https://packages.fluentbit.io/centos/\$releasever/\$basearch/
@@ -152,30 +148,31 @@ gpgkey=https://packages.fluentbit.io/fluentbit.key
 repo_gpgcheck=1
 enabled=1
 EOF
-    
-    # Install Fluent Bit
-    sudo yum install -y fluent-bit
-    
-    # Stop the default service (we'll manage it through our collector)
-    sudo systemctl stop fluent-bit 2>/dev/null || true
-    sudo systemctl disable fluent-bit 2>/dev/null || true
-    ;;
-    
-  *)
-    echo "❌ Unsupported distribution: $DISTRO"
-    echo "   Supported: Ubuntu, Debian, CentOS, RHEL, Rocky Linux, AlmaLinux, Fedora"
+      
+      # Install Fluent Bit
+      sudo yum install -y fluent-bit
+      
+      # Stop the default service (we'll manage it through our collector)
+      sudo systemctl stop fluent-bit 2>/dev/null || true
+      sudo systemctl disable fluent-bit 2>/dev/null || true
+      ;;
+      
+    *)
+      echo "❌ Unsupported distribution: $DISTRO"
+      echo "   Supported: Ubuntu, Debian, CentOS, RHEL, Rocky Linux, AlmaLinux, Fedora"
+      exit 1
+      ;;
+  esac
+
+  # Verify Fluent Bit binary exists
+  if [ ! -f "$FLUENTBIT_BIN" ]; then
+    echo "❌ Fluent Bit binary not found at ${FLUENTBIT_BIN}"
+    echo "   Installation may have failed. Check the logs above."
     exit 1
-    ;;
-esac
+  fi
 
-# Verify Fluent Bit binary exists
-if [ ! -f "$FLUENTBIT_BIN" ]; then
-  echo "❌ Fluent Bit binary not found at ${FLUENTBIT_BIN}"
-  echo "   Installation may have failed. Check the logs above."
-  exit 1
+  echo "✅ Fluent Bit installed successfully"
 fi
-
-echo "✅ Fluent Bit installed successfully"
 
 # ========================
 # Download CtrlB Collector Binary
