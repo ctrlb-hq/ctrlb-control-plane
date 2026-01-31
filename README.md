@@ -84,7 +84,7 @@ More details in [docs/architecture.md](docs/architecture.md)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding guidelines, and more.
+We welcome contributions! Please read [CONTRIBUTION.md](CONTRIBUTION.md) for setup instructions, coding guidelines, and more.
 
 ---
 
