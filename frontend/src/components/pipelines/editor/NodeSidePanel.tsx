@@ -5,7 +5,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { createAjv } from "@jsonforms/core";
 import { Button } from "@/components/ui/button";
-import { SheetFooter, SheetClose, SheetContent } from "@/components/ui/sheet";
+import { SheetFooter, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "@/components/pipelines/editor/custom_renderers/CustomEnumControl";
 import { customKeyValueRenderer } from "@/components/pipelines/editor/custom_renderers/CustomKeyValueControl";
@@ -142,7 +142,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 			<div className="flex flex-col h-full p-4 gap-4">
 				<div className="flex gap-3 items-center">
 					<ArrowBigRightDash className="w-6 h-6" />
-					<h2 className="text-2xl font-bold">{title}</h2>
+					<SheetTitle className="text-2xl font-bold">{title}</SheetTitle>
 				</div>
 
 				<p className="text-gray-500 text-sm">

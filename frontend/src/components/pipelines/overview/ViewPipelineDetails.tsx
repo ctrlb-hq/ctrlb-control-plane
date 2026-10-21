@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/useToast";
 import pipelineServices from "@/services/pipeline";
 import { PipelineOverviewInterface } from "@/types/pipeline.types";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import {
 	Dialog,
 	DialogContent,
@@ -94,6 +94,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<Button className="bg-blue-500">View/Edit Pipeline</Button>
 								</SheetTrigger>
 								<SheetContent className="w-full sm:max-w-full p-0" side="right">
+									<SheetTitle className="sr-only">Edit VM pipeline</SheetTitle>
 									<PipelineEditorSheet
 										pipelineId={pipelineId}
 										name={pipelineOverviewData?.name}

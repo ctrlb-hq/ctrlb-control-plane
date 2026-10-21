@@ -292,8 +292,8 @@ const PipelineEditorSheet = ({
 											))}
 										</div>
 									</SheetDescription>
-									<SheetClose className="mt-4">
-										<Button onClick={handleDeployChanges} className="bg-blue-500">
+									<SheetClose asChild>
+										<Button onClick={handleDeployChanges} className="mt-4 bg-blue-500">
 												{isKubernetes ? "Save configuration" : "Deploy Changes"}
 										</Button>
 									</SheetClose>
