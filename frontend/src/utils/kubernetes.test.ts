@@ -4,6 +4,7 @@ import {
 	buildManifestRequest,
 	formatMetric,
 	installationCommands,
+	isPreviousConfigurationError,
 	summarizeInstallations,
 } from "./kubernetes.ts";
 import { convertToYaml } from "./yaml.ts";
@@ -97,6 +98,26 @@ test("normalized metrics preserve measured zero and distinguish unavailable valu
 	assert.equal(formatMetric(250, "%"), "250 %");
 	for (const value of [undefined, null, Number.NaN, Number.POSITIVE_INFINITY, -1])
 		assert.equal(formatMetric(value, "%"), "Unavailable");
+});
+
+test("only a rejected older revision is historical after successful recovery", () => {
+	const recovered = collector({
+		applied_revision: "desired",
+		attempted_revision: "rejected-candidate",
+		config_error: "invalid candidate; retained working configuration",
+		rollout_status: "applied",
+	});
+	assert.equal(isPreviousConfigurationError(recovered, "desired"), true);
+	for (const current of [
+		{ ...recovered, attempted_revision: "desired", rollout_status: "failed" as const },
+		{ ...recovered, attempted_revision: "desired" },
+		{ ...recovered, attempted_revision: "" },
+		{ ...recovered, applied_revision: "older" },
+		{ ...recovered, engine_status: "failed" as const },
+		{ ...recovered, rollout_status: "pending" as const },
+	]) {
+		assert.equal(isPreviousConfigurationError(current, "desired"), false);
+	}
 });
 
 test("manifest request sends its token only in the POST body", () => {

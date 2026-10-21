@@ -1,5 +1,10 @@
 import type { KubernetesInstallation } from "@/types/kubernetes.types";
-import { formatMetric, shortRevision, summarizeInstallations } from "@/utils/kubernetes";
+import {
+	formatMetric,
+	isPreviousConfigurationError,
+	shortRevision,
+	summarizeInstallations,
+} from "@/utils/kubernetes";
 
 const time = (seconds?: number | null) =>
 	seconds ? new Date(seconds * 1000).toLocaleString() : "Unavailable";
@@ -114,11 +119,22 @@ export function InstallationStatus({ installation }: { installation: KubernetesI
 												))}
 											</dl>
 										</details>
-										{collector.config_error && (
-											<p className="max-w-[320px] whitespace-pre-wrap break-words rounded bg-red-50 p-2 text-xs text-red-800">
-												{collector.config_error}
-											</p>
-										)}
+										{collector.config_error &&
+											(isPreviousConfigurationError(collector, installation.desired_revision) ? (
+												<details className="text-xs text-gray-600">
+													<summary className="cursor-pointer">Previous configuration error</summary>
+													<p className="mt-2 max-w-[320px] whitespace-pre-wrap break-words rounded bg-gray-50 p-2">
+														{collector.config_error}
+													</p>
+												</details>
+											) : (
+												<p
+													role="alert"
+													className="max-w-[320px] whitespace-pre-wrap break-words rounded bg-red-50 p-2 text-xs text-red-800"
+												>
+													{collector.config_error}
+												</p>
+											))}
 									</td>
 									<td className="space-y-2 p-3">
 										<dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">

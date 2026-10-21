@@ -1,4 +1,8 @@
-import type { KubernetesInstallation, RolloutSummary } from "../types/kubernetes.types.ts";
+import type {
+	KubernetesCollector,
+	KubernetesInstallation,
+	RolloutSummary,
+} from "../types/kubernetes.types.ts";
 
 export const kubernetesDefaults = {
 	endpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default",
@@ -36,6 +40,20 @@ export function formatMetric(value: number | null | undefined, unit: string, div
 
 export function shortRevision(value: string) {
 	return value ? value.replace(/^sha256:/, "").slice(0, 12) : "Unavailable";
+}
+
+export function isPreviousConfigurationError(
+	collector: KubernetesCollector,
+	desiredRevision: string,
+) {
+	return Boolean(
+		collector.config_error &&
+			collector.engine_status === "running" &&
+			collector.rollout_status === "applied" &&
+			collector.applied_revision === desiredRevision &&
+			collector.attempted_revision &&
+			collector.attempted_revision !== desiredRevision,
+	);
 }
 
 export function validateHTTPURL(value: string, label: string) {
