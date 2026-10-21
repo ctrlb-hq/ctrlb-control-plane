@@ -1,29 +1,16 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS build
-
-# Set the working directory
+FROM node:24-alpine AS build
 WORKDIR /app
-
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install --legacy-peer-deps
-
-# Copy the rest of the application code
+COPY package.json package-lock.json ./
+# The existing UI dependencies require npm's legacy peer resolution.
+RUN npm ci --legacy-peer-deps
 COPY . .
-
-# Build the React application
+ARG VITE_API_URL=http://localhost:8096
+ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
-# Stage 2: Serve the build using a lightweight web server
 FROM nginx:alpine
-
-# Copy the build output to Nginx's html directory
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Expose port 80
+# BrowserRouter routes must survive a page refresh.
+RUN printf 'server {\n  listen 80;\n  root /usr/share/nginx/html;\n  location / { try_files $uri $uri/ /index.html; }\n}\n' > /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
-# Start Nginx server
 CMD ["nginx", "-g", "daemon off;"]

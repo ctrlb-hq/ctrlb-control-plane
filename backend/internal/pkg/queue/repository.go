@@ -70,7 +70,7 @@ func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
 		SELECT a.id, a.hostname, a.ip, m.status
 		FROM agents a
 		JOIN aggregated_agent_metrics m ON a.id = m.agent_id
-		WHERE m.status IN ('unknown', 'connected')
+		WHERE m.status IN ('unknown', 'connected') AND a.management_mode = 'push'
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query agents from DB: %w", err)

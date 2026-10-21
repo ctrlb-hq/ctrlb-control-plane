@@ -6,6 +6,7 @@ import (
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	frontendnode "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/node"
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/kubernetes"
 )
 
 type Handler struct {
@@ -14,6 +15,7 @@ type Handler struct {
 	FrontendAgentHandler    *frontendagent.FrontendAgentHandler
 	FrontendPipelineHandler *frontendpipeline.FrontendPipelineHandler
 	FrontendNodeHandler     *frontendnode.FrontendNodeHandler
+	KubernetesHandler       *kubernetes.Handler
 }
 
 func NewHandler(

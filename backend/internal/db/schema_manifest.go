@@ -9,6 +9,7 @@ func GetComponentTypeMap() map[string]string {
 		"awscloudwatch_receiver":         "receiver",
 		"azuremonitor_receiver":          "receiver",
 		"filelog_receiver":               "receiver",
+		"kubeletstats_receiver":          "receiver",
 		"googlecloudmonitoring_receiver": "receiver",
 
 		// Processors
@@ -18,6 +19,8 @@ func GetComponentTypeMap() map[string]string {
 		"attributes_processor":           "processor",
 		"filter_processor":               "processor",
 		"tailsampling_processor":         "processor",
+		"k8sattributes_processor":        "processor",
+		"resource_processor":             "processor",
 
 		// Exporters
 		"otlp_grpc_exporter":  "exporter",
@@ -37,6 +40,7 @@ func GetSignalSupportMap() map[string][]string {
 		"awscloudwatch_receiver":         {"logs"},
 		"azuremonitor_receiver":          {"metrics"},
 		"filelog_receiver":               {"logs"},
+		"kubeletstats_receiver":          {"metrics"},
 		"googlecloudmonitoring_receiver": {"metrics"},
 
 		// Processors
@@ -46,6 +50,8 @@ func GetSignalSupportMap() map[string][]string {
 		"attributes_processor":           {"traces", "metrics", "logs"},
 		"filter_processor":               {"traces", "metrics", "logs"},
 		"tailsampling_processor":         {"traces"},
+		"k8sattributes_processor":        {"traces", "metrics", "logs"},
+		"resource_processor":             {"traces", "metrics", "logs"},
 
 		// Exporters
 		"otlp_grpc_exporter":  {"traces", "metrics", "logs"},

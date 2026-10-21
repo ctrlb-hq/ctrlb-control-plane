@@ -145,18 +145,4 @@ export const installCommands = {
 | sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
   },
 
-  kubernetes: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-daemonset.yaml.template \
-| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | kubectl apply -f -`;
-  },
-
-  openShift: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-daemonset.yaml.template \
-| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | oc apply -f -`;
-  },
 };
-

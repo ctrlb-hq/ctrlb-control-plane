@@ -1,0 +1,25 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/auth_type"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/passthrough"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/filter"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/extract"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/pod_association"
+    }
+  ]
+}

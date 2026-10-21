@@ -10,6 +10,16 @@ import (
 // Global Logger variable
 var Logger *zap.Logger
 
+func InitConsoleLogger() error {
+	log, err := zap.NewProduction()
+	if err != nil {
+		return err
+	}
+	Logger = log
+	zap.ReplaceGlobals(log)
+	return nil
+}
+
 func InitLogger() {
 	// Define encoder for better readability
 	encoderConfig := zapcore.EncoderConfig{

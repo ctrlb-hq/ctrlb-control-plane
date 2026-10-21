@@ -26,14 +26,15 @@ type AgentMetrics struct {
 
 // AgentInfoHome represents an agent with relevant details like type, version, and platform.
 type AgentInfoHome struct {
-	ID           int64  `json:"id"`            // Unique ID for the agent
-	Name         string `json:"name"`          // Descriptive name for the agent
-	Status       string `json:"status"`        // Current status of the agent (e.g., Disconnected, Connected)
-	PipelineName string `json:"pipeline_name"` // Pipeline the agent is associated with
-	Version      string `json:"version"`       // Version of the agent
-	LogRate      int    `json:"log_rate"`      // Log rate of the agent
-	MetricsRate  int    `json:"metrics_rate"`  // Metrics rate of the agent
-	TraceRate    int    `json:"trace_rate"`    // Trace rate of the agent
-	Hostname     string `json:"-"`
-	IP           string `json:"_"`
+	ID             int64  `json:"id"`            // Unique ID for the agent
+	Name           string `json:"name"`          // Descriptive name for the agent
+	Status         string `json:"status"`        // Current status of the agent (e.g., Disconnected, Connected)
+	PipelineName   string `json:"pipeline_name"` // Pipeline the agent is associated with
+	Version        string `json:"version"`       // Version of the agent
+	LogRate        int    `json:"log_rate"`      // Log rate of the agent
+	MetricsRate    int    `json:"metrics_rate"`  // Metrics rate of the agent
+	TraceRate      int    `json:"trace_rate"`    // Trace rate of the agent
+	Hostname       string `json:"-"`
+	IP             string `json:"_"`
+	ManagementMode string `json:"management_mode,omitempty"`
 }

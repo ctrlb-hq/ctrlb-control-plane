@@ -15,6 +15,7 @@ This monorepo is organized into three primary components:
 - 🧹 Centralized management of distributed OpenTelemetry Collectors
 - ⚙️ Declarative, graph-based configuration interface
 - ⌚ Real-time health and status monitoring of connected collectors
+- Kubernetes node collectors with pod logs, node/pod/container metrics, shared pipelines, and per-node rollout status
 
 ---
 
@@ -35,8 +36,8 @@ ctrlb-control-plane/
 
 > 📘️ Prerequisites:
 >
-> - Go 1.23+
-> - Node.js 18+
+> - Go 1.26+
+> - Node.js 24
 > - Docker (for local development)
 
 Clone the repository:
@@ -75,6 +76,8 @@ More details in [docs/architecture.md](docs/architecture.md)
 
 ## 📖 Documentation
 
+- [Kubernetes v1 demo and installation](docs/kubernetes-v1-demo.md)
+- [Kubernetes management API](docs/kubernetes-v1-api.md)
 - [Collector Configuration](docs/collector/configuration.md)
 - [API Reference](docs/backend/api-reference.md)
 - [Deployment Guide](docs/deployment.md)

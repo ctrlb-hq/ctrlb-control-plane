@@ -40,6 +40,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 			id TEXT PRIMARY KEY,
 			hostname TEXT,
 			ip TEXT
+			, management_mode TEXT NOT NULL DEFAULT 'push'
 		);
 	`)
 	assert.NoError(t, err)

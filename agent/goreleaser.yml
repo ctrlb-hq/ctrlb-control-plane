@@ -1,5 +1,8 @@
 version: 2
 project_name: ctrlb-collector
+# Optional binary/package builds. The agent release workflow owns GHCR images.
+env:
+  - CGO_ENABLED=0
 builds:
   - id: ctrlb
     main: ./cmd/ctrlb_collector/main.go
@@ -22,25 +25,7 @@ nfpms:
     description: "Monitoring agent for Linux/macOS/Kubernetes/Docker"
     homepage: "https://github.com/ctrlb-hq/ctrlb-control-plane"
     license: AGPL-3.0
-    contents:
-      - src: "{{ .Env.PWD }}/dist/ctrlb_{{ .Os }}_{{ .Arch }}_v{{ if eq .Arch \"arm64\" }}8.0{{ else }}1{{ end }}/{{ .Binary }}"
-        dst: /usr/local/bin/ctrlb-collector
-        type: file
-dockers:
-  - image_templates:
-      - "ghcr.io/{{ .Github.RepoOwner }}/ctrlb-agent:{{ .Version }}"
-      - "ghcr.io/{{ .Github.RepoOwner }}/ctrlb-agent:latest"
-    dockerfile: "./Dockerfile"
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64,linux/arm64"
-      - "--push=true"
-      - "--builder=default"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-    extra_files:
-      - LICENSE
-      - README.md
+    bindir: /usr/local/bin
 release:
   github:
     owner: ctrlb-hq

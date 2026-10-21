@@ -1,0 +1,9 @@
+# Context contains a statically linked Linux collector, its bootstrap config,
+# and the host CA bundle. build-image.sh prepares this small context.
+FROM scratch
+WORKDIR /app
+COPY collector /usr/local/bin/ctrlb-agent
+COPY config.yaml /app/config.yaml
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+EXPOSE 3421
+ENTRYPOINT ["/usr/local/bin/ctrlb-agent"]

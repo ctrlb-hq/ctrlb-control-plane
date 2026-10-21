@@ -169,9 +169,13 @@ func (a *OTELAdapter) GracefulShutdown() error {
 }
 
 func (a *OTELAdapter) GetVersion() (string, error) {
+	return CollectorVersion()
+}
+
+func CollectorVersion() (string, error) {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, dep := range info.Deps {
-			if strings.HasPrefix(dep.Path, "go.opentelemetry.io/collector") {
+			if dep.Path == "go.opentelemetry.io/collector/otelcol" {
 				return strings.TrimPrefix(dep.Version, "v"), nil
 			}
 		}

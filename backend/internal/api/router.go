@@ -21,6 +21,16 @@ func NewRouter(handler *Handler) *mux.Router {
 
 	frontendAgentAPIsV2 := router.PathPrefix("/api/frontend/v2").Subrouter()
 	frontendAgentAPIsV2.Use(middleware.AuthMiddleware())
+	if handler.KubernetesHandler != nil {
+		frontendAgentAPIsV2.HandleFunc("/kubernetes-pipelines", handler.KubernetesHandler.CreatePipeline).Methods("POST")
+		checkIns := router.PathPrefix("/api/agent/v2").Subrouter()
+		checkIns.HandleFunc("/installations/{installation_id}/check-in", handler.KubernetesHandler.CheckIn).Methods("POST")
+		frontendAgentAPIsV2.HandleFunc("/installations", handler.KubernetesHandler.CreateInstallation).Methods("POST")
+		frontendAgentAPIsV2.HandleFunc("/installations", handler.KubernetesHandler.ListInstallations).Methods("GET")
+		frontendAgentAPIsV2.HandleFunc("/installations/{installation_id}", handler.KubernetesHandler.GetInstallation).Methods("GET")
+		frontendAgentAPIsV2.HandleFunc("/installations/{installation_id}/manifest", handler.KubernetesHandler.Manifest).Methods("POST")
+		frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/installations", handler.KubernetesHandler.GetPipelineInstallations).Methods("GET")
+	}
 
 	frontendAgentAPIsV2.HandleFunc("/agents", handler.FrontendAgentHandler.GetAllAgents).Methods("GET")
 	frontendAgentAPIsV2.HandleFunc("/agents/{id}", handler.FrontendAgentHandler.GetAgent).Methods("GET")

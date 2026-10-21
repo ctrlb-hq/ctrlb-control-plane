@@ -2,10 +2,11 @@ package operators_test
 
 import (
 	"errors"
-	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/operators"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -102,7 +103,11 @@ func TestGracefulShutdown_Success(t *testing.T) {
 }
 
 func TestUpdateCurrentConfig_Success(t *testing.T) {
+	previousPath := constants.AGENT_CONFIG_PATH
+	constants.AGENT_CONFIG_PATH = filepath.Join(t.TempDir(), "config.yaml")
+	t.Cleanup(func() { constants.AGENT_CONFIG_PATH = previousPath })
 	mockAdapter := new(MockAdapter)
+	mockAdapter.On("ValidateConfigInMemory").Return(nil)
 	op := operators.NewOtelOperator(mockAdapter)
 
 	cfg := map[string]any{
@@ -111,7 +116,7 @@ func TestUpdateCurrentConfig_Success(t *testing.T) {
 	err := op.UpdateCurrentConfig(cfg)
 	assert.NoError(t, err)
 
-	_ = os.Remove("config.yaml")
+	mockAdapter.AssertExpectations(t)
 }
 
 func TestStartAgent_Failure(t *testing.T) {

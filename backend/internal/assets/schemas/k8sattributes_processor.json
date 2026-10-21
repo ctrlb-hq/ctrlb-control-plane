@@ -1,0 +1,76 @@
+{
+  "title": "Kubernetes metadata",
+  "type": "object",
+  "properties": {
+    "auth_type": {
+      "type": "string",
+      "enum": [
+        "serviceAccount"
+      ],
+      "default": "serviceAccount"
+    },
+    "passthrough": {
+      "type": "boolean",
+      "default": false
+    },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "node_from_env_var": {
+          "type": "string",
+          "title": "Node environment variable",
+          "default": "K8S_NODE_NAME"
+        }
+      }
+    },
+    "extract": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "array",
+          "title": "Resource metadata",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "k8s.namespace.name",
+            "k8s.pod.name",
+            "k8s.pod.uid",
+            "k8s.node.name",
+            "k8s.container.name"
+          ]
+        }
+      }
+    },
+    "pod_association": {
+      "type": "array",
+      "title": "Pod association rules",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "enum": [
+                    "resource_attribute",
+                    "connection"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
