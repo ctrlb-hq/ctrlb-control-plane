@@ -151,7 +151,7 @@ class Demo:
         self.directory.mkdir(mode=0o700, parents=True, exist_ok=False)
         self.state = {"cluster": cluster, "backend_port": args.backend_port, "receiver_port": args.receiver_port,
                       "backend_local": f"http://127.0.0.1:{args.backend_port}", "jwt_secret": secrets.token_urlsafe(32),
-                      "image": os.environ.get("COLLECTOR_IMAGE", "ctrlb-agent:k8s-v1"), "real_destination": args.real}
+                      "image": os.environ.get("COLLECTOR_IMAGE", "ctrlb-otel-collector:k8s-v1"), "real_destination": args.real}
         self.save()
         source_backend = os.environ.get("BACKEND_BINARY")
         if source_backend:

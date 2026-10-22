@@ -4,7 +4,7 @@ Build both images from the repository root:
 
 ```bash
 docker build -t ctrlb-control-plane-backend:local backend
-docker build -t ctrlb-agent:local agent
+docker build -t ctrlb-otel-collector:local agent
 ```
 
 The collector build includes the OpenTelemetry components used by both VM and Kubernetes collectors. It uses a BuildKit compilation cache and defaults to two concurrent Go builds with a 4 GiB Go memory target. On a smaller build host, pass `--build-arg GO_BUILD_PARALLELISM=1 --build-arg GO_MEMORY_LIMIT=2GiB`.
@@ -13,18 +13,18 @@ The collector build includes the OpenTelemetry components used by both VM and Ku
 
 The container publication workflow builds Linux AMD64 images and pushes:
 
-- `ghcr.io/ctrlb-hq/ctrlb-control-plane-backend:<tag>`
-- `ghcr.io/ctrlb-hq/ctrlb-agent:<tag>`
+- `ghcr.io/ctrlb-hq/ctrlb-control-plane-backend:<short-commit>`
+- `ghcr.io/ctrlb-hq/ctrlb-otel-collector:<short-commit>`
 
 Commit the source and Docker changes, then push a tag beginning with `containers/`:
 
 ```bash
-image_tag="hosting-$(git rev-parse --short HEAD)"
+image_tag="$(git rev-parse --short=7 HEAD)"
 git tag "containers/${image_tag}"
 git push origin "refs/tags/containers/${image_tag}"
 ```
 
-The workflow uses its repository `GITHUB_TOKEN` with `packages: write`, so a separate registry secret is not required. It also publishes a `sha-<full commit>` image tag and records the immutable image digest in the Actions summary. It does not update `latest`. A manual workflow dispatch is available after the workflow is present on the default branch.
+The workflow uses its repository `GITHUB_TOKEN` with `packages: write`, so a separate registry secret is not required. Each image gets only its short Git commit hash as the version tag, for example `f4b1855`. The full commit remains in the image's revision label, and the Actions summary records the immutable image digest. A manual workflow dispatch is available after the workflow is present on the default branch.
 
 GitHub makes new GHCR packages private by default, even when the linked repository is public. A package administrator must open each package's settings and change its visibility to **Public** once. Publishing subsequent versions preserves that setting. See [GitHub's package visibility documentation](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility#configuring-visibility-of-packages-for-an-organization).
 
@@ -32,7 +32,7 @@ Verify the images from a machine with no GHCR credentials:
 
 ```bash
 docker pull "ghcr.io/ctrlb-hq/ctrlb-control-plane-backend:${image_tag}"
-docker pull "ghcr.io/ctrlb-hq/ctrlb-agent:${image_tag}"
+docker pull "ghcr.io/ctrlb-hq/ctrlb-otel-collector:${image_tag}"
 ```
 
 ## Run the backend
@@ -55,6 +55,6 @@ Use the [hosted deployment guide](deployment.md#frontend-deployment-under-contro
 
 ## Install collectors
 
-In Kubernetes setup, set **Collector image** to `ghcr.io/ctrlb-hq/ctrlb-agent:<tag>` and leave the control-plane URL set to `https://ctrlb.explore.ctrlb.ai/control-plane/api`. Copy or download the generated manifest and apply it to the intended cluster. Public images do not require an image pull secret.
+In Kubernetes setup, set **Collector image** to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:<short-commit>` and leave the control-plane URL set to `https://ctrlb.explore.ctrlb.ai/control-plane/api`. Copy or download the generated manifest and apply it to the intended cluster. Public images do not require an image pull secret.
 
 Kubernetes collectors use persistent node storage and the installation Secret configured in that manifest. The same image also supports legacy VM registration when no installation ID is supplied. See the [Kubernetes API contract](kubernetes-v1-api.md) for check-in and manifest behavior.

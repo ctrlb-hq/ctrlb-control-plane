@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const DefaultCollectorImage = "ctrlb-agent:k8s-v1"
+const DefaultCollectorImage = "ctrlb-otel-collector:k8s-v1"
 
 type ManifestRequest struct {
 	Token      string `json:"token"`

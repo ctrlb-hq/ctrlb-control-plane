@@ -2,7 +2,7 @@
 set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_dir=$(cd -- "$script_dir/../.." && pwd)
-image=${COLLECTOR_IMAGE:-ctrlb-agent:k8s-v1}
+image=${COLLECTOR_IMAGE:-ctrlb-otel-collector:k8s-v1}
 build_dir=$(mktemp -d "${TMPDIR:-/tmp}/ctrlb-image.XXXXXX")
 trap 'rm -rf -- "$build_dir"' EXIT
 if [[ -n ${COLLECTOR_BINARY:-} ]]; then

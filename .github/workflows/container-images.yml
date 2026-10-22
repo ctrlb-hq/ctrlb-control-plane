@@ -4,11 +4,6 @@ on:
   push:
     tags: ['containers/*']
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Optional image tag; defaults to manual-<commit>. Never publishes latest.'
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -30,9 +25,12 @@ jobs:
         include:
           - image: ctrlb-control-plane-backend
             context: backend
+            cache_scope: ctrlb-control-plane-backend-linux-amd64
             license: AGPL-3.0-only
-          - image: ctrlb-agent
+          - image: ctrlb-otel-collector
             context: agent
+            # Keep the warmed compilation layers when renaming the registry package.
+            cache_scope: ctrlb-agent-linux-amd64
             license: AGPL-3.0-or-later
     steps:
       - name: Check out the exact source commit
@@ -40,25 +38,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Select explicit image tags
+      - name: Select short commit image tag
         id: image
         env:
           IMAGE_NAME: ${{ matrix.image }}
-          MANUAL_TAG: ${{ inputs.image_tag }}
         shell: bash
         run: |
           set -euo pipefail
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           sha="$(git rev-parse HEAD)"
-          if [[ "$GITHUB_REF" == refs/tags/containers/* ]]; then
-            tag="${GITHUB_REF_NAME#containers/}"
-          else
-            tag="${MANUAL_TAG:-manual-${sha:0:12}}"
-          fi
-          if [[ ! "$tag" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ || "$tag" == latest ]]; then
-            echo 'Use an explicit Docker tag of at most 128 characters; latest is reserved.' >&2
-            exit 1
-          fi
+          tag="$(git rev-parse --short=7 HEAD)"
           image="ghcr.io/${owner}/${IMAGE_NAME}"
           {
             printf 'name=%s\n' "$image"
@@ -68,7 +57,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Free space for collector dependencies
-        if: matrix.image == 'ctrlb-agent'
+        if: matrix.image == 'ctrlb-otel-collector'
         shell: bash
         run: |
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
@@ -99,9 +88,7 @@ jobs:
           file: ${{ matrix.context }}/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: |
-            ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
-            ${{ steps.image.outputs.name }}:sha-${{ steps.image.outputs.sha }}
+          tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ steps.image.outputs.sha }}
@@ -111,8 +98,8 @@ jobs:
           build-args: |
             GO_BUILD_PARALLELISM=1
             GO_MEMORY_LIMIT=2GiB
-          cache-from: type=gha,scope=${{ matrix.image }}-linux-amd64
-          cache-to: type=gha,scope=${{ matrix.image }}-linux-amd64,mode=max,ignore-error=true
+          cache-from: type=gha,scope=${{ matrix.cache_scope }}
+          cache-to: type=gha,scope=${{ matrix.cache_scope }},mode=max,ignore-error=true
 
       - name: Record immutable pull reference
         env:

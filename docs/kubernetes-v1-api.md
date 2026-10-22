@@ -62,13 +62,13 @@ The token is returned only at creation. Store it in a Kubernetes Secret. The ser
 {
   "token":"<installation-bearer-token>",
   "backend_url":"https://control-plane.example.com",
-  "image":"ctrlb-agent:k8s-v1"
+  "image":"ctrlb-otel-collector:k8s-v1"
 }
 ```
 
 Return the installation's resources as `application/yaml`, with `Cache-Control: no-store` and a download filename of `ctrlb-collector-<first 12 installation ID characters>.yaml`. Resource names use the same prefix and ID suffix, in namespace `observability`. The manifest includes the token in a Kubernetes Secret; the API validates it against the stored hash before rendering. Token values are never placed in URLs.
 
-`backend_url` is the collector-reachable management URL, separate from telemetry ingestion. HTTPS is the default; an explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation; the local demo builds and loads `ctrlb-agent:k8s-v1` rather than assuming an unpublished registry tag exists.
+`backend_url` is the collector-reachable management URL, separate from telemetry ingestion. HTTPS is the default; an explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation; the local demo builds and loads `ctrlb-otel-collector:k8s-v1` rather than assuming an unpublished registry tag exists.
 
 `POST /api/agent/v2/installations/{installation_id}/manifest` accepts the same JSON body for terminal downloads. It authenticates with the installation token in `token` and does not require a user access token. Missing, incorrect, or cross-installation tokens return HTTP 401. The frontend route above continues to require both tokens. Setup displays copyable YAML and authenticated `curl` and `wget` commands alongside the browser download.
 

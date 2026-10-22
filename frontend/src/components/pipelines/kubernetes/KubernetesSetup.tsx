@@ -306,8 +306,8 @@ export default function KubernetesSetup({
 						required
 					/>
 					<p className="text-xs text-gray-500">
-						Build and load ctrlb-agent:k8s-v1 onto the cluster nodes, or enter an image your cluster can
-						pull.
+						Build and load ctrlb-otel-collector:k8s-v1 onto the cluster nodes, or enter an image your
+						cluster can pull.
 					</p>
 				</div>
 				<div className="space-y-1 md:col-span-2">

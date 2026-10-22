@@ -129,7 +129,7 @@ test("manifest request sends its token only in the POST body", () => {
 		id,
 		token,
 		"https://management.example.com/",
-		"ctrlb-agent:k8s-v1",
+		"ctrlb-otel-collector:k8s-v1",
 	);
 	assert.equal(request.method, "POST");
 	assert.equal(request.url, `/installations/${id}/manifest`);
@@ -137,7 +137,7 @@ test("manifest request sends its token only in the POST body", () => {
 	assert.deepEqual(request.data, {
 		token,
 		backend_url: "https://management.example.com",
-		image: "ctrlb-agent:k8s-v1",
+		image: "ctrlb-otel-collector:k8s-v1",
 	});
 	assert.ok(!request.url.includes(token));
 	assert.equal(
