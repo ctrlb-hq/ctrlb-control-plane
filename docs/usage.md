@@ -4,7 +4,7 @@ Use CtrlB Control Plane to connect collectors, configure telemetry pipelines, an
 
 This guide covers the browser UI. For installation prerequisites and startup commands, use [getting started](getting-started.md) or the [deployment guide](deployment.md).
 
-The screenshots show a local demonstration with example endpoints and an example image tag. Collector status and measurements are synthetic. They illustrate the UI and do not demonstrate a live Kubernetes cluster. See [screenshot notes](images/usage/README.md) for their provenance.
+The setup, batch-editing, and status screenshots show a local demonstration with example endpoints and an example image tag. Their collector status and measurements are synthetic. The add-field walkthrough uses stills from the supplied demo video, including its resulting log record in CtrlB. See [screenshot notes](images/usage/README.md) for their provenance.
 
 ## Contents
 
@@ -14,6 +14,7 @@ The screenshots show a local demonstration with example endpoints and an example
 - [Install Kubernetes collectors](#install-kubernetes-collectors)
 - [Connect a VM collector](#connect-a-vm-collector)
 - [Edit a pipeline](#edit-a-pipeline)
+- [Add a field to logs](#add-a-field-to-logs)
 - [Check collector status](#check-collector-status)
 - [Delete a pipeline](#delete-a-pipeline)
 - [Resolve common problems](#resolve-common-problems)
@@ -174,6 +175,49 @@ For example, change an existing batch timeout to `5s`:
 *Apply updates the draft. Review and save to send the configuration to the control plane.*
 
 The Kubernetes preset already uses `5s`. If that value is unchanged, the compiled configuration keeps its existing revision. Use this walkthrough when changing a different current value, or choose another intended setting.
+
+### Add a field to logs
+
+This example follows the recorded demo. Add `log_source=ctrlb_otel_collector` to new log records, save the configuration, then check a record in CtrlB Logs. The three screenshots below come from that demo.
+
+1. Open the Kubernetes preset pipeline and enable **Edit Mode**.
+2. Select **Add Processor**, then **Attributes Processor Configuration**.
+3. Expand the first entry under **Actions** and enter these settings:
+
+| Field | Value |
+| --- | --- |
+| Attribute Key | `log_source` |
+| Value type | **Text** |
+| Value | `ctrlb_otel_collector` |
+| Action | `insert` |
+
+Leave **From Attribute** empty and leave **Include Filter** and **Exclude Filter** unset. Select **Add Processor** to add the configured node to the draft.
+
+To add more fields in the same processor, use **+** beside **Actions** and configure another key, value, and action for each field. The processor affects telemetry routed through it.
+
+![Attributes processor configured to insert log_source with the text value ctrlb_otel_collector](images/usage/add-log-field.png)
+
+*The insert action adds the field when it is missing. It preserves an existing value for the same key.*
+
+4. Select the existing edge from **Batch** to **CtrlB ingestion**, then select its trash icon to remove that connection.
+5. Connect **Batch** to the new **Attributes Processor Configuration** node, then connect that node to **CtrlB ingestion**. Keep the existing source connections and earlier processors in place.
+
+The end of the path should now be `Batch → Attributes Processor Configuration → CtrlB ingestion`. Remove the original direct edge so logs pass through the new processor before export.
+
+![Pipeline with the attributes processor connected between Batch and CtrlB ingestion](images/usage/log-field-pipeline.png)
+
+*The new processor sits in the existing path before the destination.*
+
+6. Select **Review**. Check that **Pending Changes** includes the new processor, the removed direct edge, and the two replacement edges, then select **Save configuration**.
+7. Return to the installation's collector table and wait for each node's configuration to show **applied**. Use **Refresh** to check progress.
+8. Generate a fresh workload log, open **Logs** in CtrlB, and select the dataset configured as your destination. The demo uses `control_plane`.
+9. Run a query covering the time after rollout, open a new log record, and confirm that its fields include `log_source` with the value `ctrlb_otel_collector`.
+
+![New log record in CtrlB Logs with log_source set to ctrlb_otel_collector](images/usage/log-field-result.png)
+
+*The destination confirms that a new log passed through the updated pipeline.*
+
+Previously ingested records keep their original fields. If the new field is missing, confirm that every collector applied the revision and inspect a log generated after rollout.
 
 ### Add or reconnect components
 
