@@ -4,7 +4,7 @@ Use CtrlB Control Plane to connect collectors, configure telemetry pipelines, an
 
 This guide covers the browser UI. For installation prerequisites and startup commands, use [getting started](getting-started.md) or the [deployment guide](deployment.md).
 
-The setup, batch-editing, and status screenshots show a local demonstration with example endpoints and an example image tag. Their collector status and measurements are synthetic. The add-field walkthrough uses stills from the supplied demo video, including its resulting log record in CtrlB. See [screenshot notes](images/usage/README.md) for their provenance.
+The setup, batch-editing, and status screenshots use example endpoints, an example image tag, and synthetic collector status and measurements. See [screenshot notes](images/usage/README.md) for capture details.
 
 ## Contents
 
@@ -178,7 +178,7 @@ The Kubernetes preset already uses `5s`. If that value is unchanged, the compile
 
 ### Add a field to logs
 
-This example follows the recorded demo. Add `log_source=ctrlb_otel_collector` to new log records, save the configuration, then check a record in CtrlB Logs. The three screenshots below come from that demo.
+Add `log_source=ctrlb_otel_collector` to new log records, save the configuration, then check a record in CtrlB Logs.
 
 1. Open the Kubernetes preset pipeline and enable **Edit Mode**.
 2. Select **Add Processor**, then **Attributes Processor Configuration**.
@@ -210,7 +210,7 @@ The end of the path should now be `Batch → Attributes Processor Configuration 
 
 6. Select **Review**. Check that **Pending Changes** includes the new processor, the removed direct edge, and the two replacement edges, then select **Save configuration**.
 7. Return to the installation's collector table and wait for each node's configuration to show **applied**. Use **Refresh** to check progress.
-8. Generate a fresh workload log, open **Logs** in CtrlB, and select the dataset configured as your destination. The demo uses `control_plane`.
+8. Generate a fresh workload log, open **Logs** in CtrlB, and select the dataset configured as your destination, such as `control_plane`.
 9. Run a query covering the time after rollout, open a new log record, and confirm that its fields include `log_source` with the value `ctrlb_otel_collector`.
 
 ![New log record in CtrlB Logs with log_source set to ctrlb_otel_collector](images/usage/log-field-result.png)
