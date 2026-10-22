@@ -22,8 +22,15 @@ import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { Button } from "@/components/ui/button";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 
-const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
-	const [isOpen, setIsOpen] = useState(false);
+const ViewPipelineDetails = ({
+	pipelineId,
+	name,
+	onDeleted,
+}: {
+	pipelineId: string;
+	name: string;
+	onDeleted: () => void;
+}) => {
 	const [pipelineOverviewData, setPipelineOverviewData] = useState<PipelineOverviewInterface>();
 	const { toast } = useToast();
 	const [tabs, setTabs] = useState<string>("overview");
@@ -73,7 +80,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	}, [pipelineId, toast]);
 
-
 	useEffect(() => {
 		handleGetPipelineOverview();
 	}, [handleGetPipelineOverview]);
@@ -98,7 +104,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 									<PipelineEditorSheet
 										pipelineId={pipelineId}
 										name={pipelineOverviewData?.name}
-										setIsSheetOpen={setIsOpen}
+										setIsSheetOpen={setIsSheetOpen}
 										isEditModeStart={false}
 									/>
 								</SheetContent>
@@ -122,9 +128,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 								</DialogContent>
 							</Dialog>
 							<DeletePipelineDialog
-								isOpen={isOpen}
-								setIsOpen={setIsOpen}
-								pipelineOverview={pipelineOverviewData}
+								pipelineId={pipelineId}
+								pipelineName={pipelineOverviewData?.name ?? name}
+								onDeleted={onDeleted}
 							/>
 						</div>
 					</div>
@@ -134,12 +140,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<ul className="flex border-b">
 					<li
 						className={`mr-6 cursor-pointer py-2 ${tabs === "overview" ? "border-b-2 border-blue-500" : ""}`}
-						onClick={() => setTabs("overview")}>
+						onClick={() => setTabs("overview")}
+					>
 						Overview
 					</li>
 					<li
 						className={`mr-6 cursor-pointer py-2 ${tabs === "yaml" ? "border-b-2 border-blue-500" : ""}`}
-						onClick={() => setTabs("yaml")}>
+						onClick={() => setTabs("yaml")}
+					>
 						YAML
 					</li>
 				</ul>

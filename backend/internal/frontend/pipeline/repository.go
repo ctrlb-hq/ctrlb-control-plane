@@ -199,9 +199,43 @@ func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models
 }
 
 func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
-	_, err := f.db.Exec("DELETE FROM pipelines WHERE pipeline_id = ?", pipelineId)
+	tx, err := f.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("begin pipeline deletion: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Collector agents own metrics and other records that must be removed with
+	// their installations. The foreign keys cascade those dependent records.
+	_, err = tx.Exec(`DELETE FROM agents WHERE id IN (
+		SELECT c.agent_id FROM kubernetes_collectors c
+		JOIN kubernetes_installations i ON i.id = c.installation_id
+		WHERE i.pipeline_id = ?
+	)`, pipelineId)
+	if err != nil {
+		return fmt.Errorf("delete pipeline collectors: %w", err)
+	}
+	if _, err := tx.Exec("DELETE FROM kubernetes_installations WHERE pipeline_id = ?", pipelineId); err != nil {
+		return fmt.Errorf("delete pipeline installations: %w", err)
+	}
+	// VM agents remain available for another pipeline. Clear both assignment
+	// fields so the agents list cannot display the deleted pipeline's name.
+	if _, err := tx.Exec("UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE pipeline_id = ?", pipelineId); err != nil {
+		return fmt.Errorf("detach pipeline agents: %w", err)
+	}
+	result, err := tx.Exec("DELETE FROM pipelines WHERE pipeline_id = ?", pipelineId)
+	if err != nil {
+		return fmt.Errorf("delete pipeline: %w", err)
+	}
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read deleted pipeline count: %w", err)
+	}
+	if deleted == 0 {
+		return utils.ErrPipelineDoesNotExists
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit pipeline deletion: %w", err)
 	}
 	return nil
 }

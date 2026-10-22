@@ -110,11 +110,20 @@ func TestDeletePipeline(t *testing.T) {
 	repo, mock, cleanup := setupTestRepo(t)
 	defer cleanup()
 
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM agents WHERE id IN").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("DELETE FROM kubernetes_installations WHERE pipeline_id = \\?").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE pipeline_id = \\?").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec("DELETE FROM pipelines WHERE pipeline_id = \\?").
 		WithArgs(101).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
 
 	err := repo.DeletePipeline(101)
 	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetAllAgentsAttachedToPipeline(t *testing.T) {

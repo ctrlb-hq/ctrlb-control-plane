@@ -166,4 +166,10 @@ Each installation has the shape in the creation response, without the token. Eac
 
 Connectivity and rollout are independent. `connection_status` is `connected` when the latest server-received check-in is no more than 35 seconds old, otherwise `disconnected`. `rollout_status` is `applied` when the engine is running the desired revision; `failed` when the attempted revision equals the desired revision and `config_error` is nonempty or the engine is failed; otherwise `pending`. A disconnected collector still reports its last known rollout state. Rollout totals count these states separately from disconnected count. Server times are Unix seconds.
 
-Kubernetes collectors have `management_mode = pull` in the existing agent inventory. Their desired configuration is never pushed to pod/node addresses, and the backend's VM metrics queue does not scrape them. Legacy VM lifecycle and assignment APIs reject pull collectors. Pipeline deletion fails while an installation references it. Use the documented Kubernetes uninstall command for deployed resources.
+Kubernetes collectors have `management_mode = pull` in the existing agent inventory. Their desired configuration is never pushed to pod/node addresses, and the backend's VM metrics queue does not scrape them. Legacy VM lifecycle and assignment APIs reject pull collectors.
+
+## Pipeline deletion
+
+`DELETE /api/frontend/v2/pipelines/{pipeline_id}` uses the existing user access token. It deletes the pipeline configuration and graph, its Kubernetes installations and collector records, and their installation credentials in one transaction. VM agents remain enrolled with their pipeline assignment cleared. Other pipelines and installations are preserved. Success returns HTTP 200; a missing pipeline returns HTTP 404. A failed deletion rolls back all changes.
+
+Deletion does not stop running collectors or remove Kubernetes resources. Collectors may continue using their last working configuration, but deleted installation credentials can no longer check in or download manifests. To stop Kubernetes collectors, run the installation's uninstall commands in the appropriate cluster before deleting the pipeline. The delete confirmation in the pipeline list and detail view provides copyable commands for each installation. These commands preserve the shared observability namespace.

@@ -9,6 +9,7 @@ import (
 
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -90,18 +91,18 @@ func TestCreatePipelineHandler_Valid(t *testing.T) {
 		AgentIDs:  []int{1},
 		PipelineGraph: models.PipelineGraph{
 			Nodes: []models.PipelineNodes{{
-				ComponentID:   1,
-				Name:          "receiver_otlp",
-				ComponentRole: "receiver",
-				ComponentName: "otlp",
-				Config:        map[string]any{"endpoint": "localhost:4317"},
+				ComponentID:      1,
+				Name:             "receiver_otlp",
+				ComponentRole:    "receiver",
+				ComponentName:    "otlp",
+				Config:           map[string]any{"endpoint": "localhost:4317"},
 				SupportedSignals: []string{"traces"},
 			}, {
-				ComponentID:   2,
-				Name:          "exporter_debug",
-				ComponentRole: "exporter",
-				ComponentName: "debug",
-				Config:        map[string]any{},
+				ComponentID:      2,
+				Name:             "exporter_debug",
+				ComponentRole:    "exporter",
+				ComponentName:    "debug",
+				Config:           map[string]any{},
 				SupportedSignals: []string{"traces"},
 			}},
 			Edges: []models.PipelineEdges{{
@@ -123,7 +124,6 @@ func TestCreatePipelineHandler_Valid(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockSvc.AssertExpectations(t)
 }
-
 
 func TestCreatePipelineHandler_InvalidJSON(t *testing.T) {
 	mockSvc := new(MockService)
@@ -175,6 +175,22 @@ func TestDeletePipelineHandler(t *testing.T) {
 
 	handler.DeletePipeline(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestDeletePipelineHandler_NotFound(t *testing.T) {
+	mockSvc := new(MockService)
+	handler := frontendpipeline.NewFrontendPipelineHandler(mockSvc)
+	mockSvc.On("DeletePipeline", 999).Return(utils.ErrPipelineDoesNotExists)
+
+	req := httptest.NewRequest(http.MethodDelete, "/pipelines/999", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "999"})
+	w := httptest.NewRecorder()
+
+	handler.DeletePipeline(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.JSONEq(t, `{"error":"Pipeline not found"}`, w.Body.String())
+	mockSvc.AssertExpectations(t)
 }
 
 func TestGetAllAgentsAttachedToPipelineHandler(t *testing.T) {

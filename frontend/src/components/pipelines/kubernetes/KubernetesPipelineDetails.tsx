@@ -16,13 +16,16 @@ import {
 import { installationCommands } from "@/utils/kubernetes";
 import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { InstallationStatus } from "./InstallationStatus";
+import DeletePipelineDialog from "../overview/DeletePipelineDialog";
 
 export default function KubernetesPipelineDetails({
 	pipelineId,
 	name,
+	onDeleted,
 }: {
 	pipelineId: string;
 	name: string;
+	onDeleted: () => void;
 }) {
 	const { installations, error, loading, lastUpdated } = useKubernetesInstallations({ pipelineId });
 	const [editing, setEditing] = useState(false);
@@ -41,11 +44,12 @@ export default function KubernetesPipelineDetails({
 						Kubernetes collector installations · Pipeline {pipelineId}
 					</p>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
 					<Button variant="outline" onClick={refreshKubernetesStatus}>
 						Refresh
 					</Button>
 					<Button onClick={() => setEditing(true)}>View/edit configuration</Button>
+					<DeletePipelineDialog pipelineId={pipelineId} pipelineName={name} onDeleted={onDeleted} />
 				</div>
 			</div>
 			<p className="text-sm text-gray-600">
