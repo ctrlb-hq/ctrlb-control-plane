@@ -29,7 +29,7 @@ Key components:
 Create a `.env` file or export the following in your shell:
 
 ```env
-BACKEND_PORT=8096
+PORT=8096
 JWT_SECRET=your-secure-secret
 ```
 
@@ -51,7 +51,7 @@ cd ctrlb-control-plane/backend
 Create a `.env` file or export them in your shell session:
 
 ```env
-BACKEND_PORT=8096
+PORT=8096
 JWT_SECRET=your-secure-secret
 ```
 
@@ -75,16 +75,19 @@ No migration steps are needed at the moment.
 
 ## 📦 Docker Support
 
-_(Optional)_
-
-Use the existing `Dockerfile` to build and run the backend container.
-
-Then run:
+From the repository root, build the backend and run it with a persistent data volume. Set `JWT_SECRET` in your shell before running the container:
 
 ```bash
-docker build -t control-plane-backend .
-docker run -p 8096:8096 --env JWT_SECRET=xxx control-plane-backend
+docker build -t ctrlb-control-plane-backend:local backend
+docker volume create ctrlb-backend-data
+docker run -d --name ctrlb-backend \
+  -p 127.0.0.1:8096:8096 \
+  --env JWT_SECRET \
+  --mount type=volume,source=ctrlb-backend-data,target=/data \
+  ctrlb-control-plane-backend:local
 ```
+
+The container runs as UID/GID `10001:10001` and writes its database and log to `/data`. Keep that volume when replacing the container. See [Backend and collector images](../container-images.md) for GHCR publication and image tags.
 
 ---
 

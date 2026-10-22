@@ -2,6 +2,8 @@
 
 This guide walks you through deploying the CtrlB Control Plane components in a production or staging environment.
 
+For backend and collector container builds, GHCR publication, and persistent backend storage, see [Backend and collector images](container-images.md).
+
 ---
 
 ## 🧱 Deployment Modes
