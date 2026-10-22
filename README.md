@@ -40,7 +40,7 @@ npm run dev
 
 Open [http://localhost:3030](http://localhost:3030), create an account, and sign in. The frontend uses `http://localhost:8096/api` during development without an environment file. The backend creates `backend.db` and `app.log` in its working directory. Keep `JWT_SECRET` stable across restarts to preserve existing sessions.
 
-Continue with [getting started](docs/getting-started.md) to register a VM collector, or follow the [Kubernetes setup guide](docs/kubernetes-setup.md) to install collectors in a cluster.
+Continue with [getting started](docs/getting-started.md) to register a VM collector, or follow the [Kubernetes setup guide](docs/kubernetes-setup.md) to install collectors in a cluster. The [usage guide](docs/usage.md) walks through the UI with screenshots.
 
 ## Repository layout
 
@@ -56,6 +56,7 @@ The backend and collector are separate Go modules. Run Go commands from the rele
 
 ## Documentation
 
+- [Usage guide with screenshots](docs/usage.md)
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Deployment](docs/deployment.md) and [container images](docs/container-images.md)

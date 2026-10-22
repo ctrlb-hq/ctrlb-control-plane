@@ -3,6 +3,7 @@
 The React 18 and TypeScript application manages VM collectors and Kubernetes collector installations. Vite builds the app, React Flow provides the pipeline editor, and the backend supplies component schemas and collector status.
 
 For the cluster installation workflow, see [Kubernetes setup](../docs/kubernetes-setup.md).
+For a walkthrough of the UI, see the [usage guide with screenshots](../docs/usage.md).
 
 ## Run locally
 
