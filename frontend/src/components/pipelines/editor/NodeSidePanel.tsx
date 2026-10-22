@@ -9,6 +9,7 @@ import { SheetFooter, SheetClose, SheetContent, SheetTitle } from "@/components/
 import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "@/components/pipelines/editor/custom_renderers/CustomEnumControl";
 import { customKeyValueRenderer } from "@/components/pipelines/editor/custom_renderers/CustomKeyValueControl";
+import { scalarValueRenderer } from "@/components/pipelines/editor/custom_renderers/ScalarValueControl";
 
 interface NodeSidePanelProps {
 	title: string;
@@ -51,6 +52,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	const [showErrors, setShowErrors] = useState(false);
 	const [draftConfig, setDraftConfig] = useState(() => applySchemaDefaults(formSchema, config));
 	const [formErrors, setFormErrors] = useState<any[]>([]);
+	const sheetContentRef = useRef<HTMLDivElement>(null);
 
 	const lastConfigRef = useRef<string>("");
 
@@ -77,6 +79,8 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		() =>
 			createTheme({
 				components: {
+					// Keep confirmation dialogs inside the sheet's focus trap.
+					MuiDialog: { defaultProps: { container: () => sheetContentRef.current } },
 					MuiFormControl: { styleOverrides: { root: { marginBottom: "0.5rem" } } },
 					MuiInputBase: {
 						styleOverrides: {
@@ -115,7 +119,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	);
 
 	const renderers = useMemo(
-		() => [...materialRenderers, customEnumRenderer, customKeyValueRenderer],
+		() => [...materialRenderers, customEnumRenderer, customKeyValueRenderer, scalarValueRenderer],
 		[],
 	);
 
@@ -138,7 +142,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	};
 
 	return (
-		<SheetContent className="w-[36rem] h-full">
+		<SheetContent ref={sheetContentRef} className="w-[36rem] h-full">
 			<div className="flex flex-col h-full p-4 gap-4">
 				<div className="flex gap-3 items-center">
 					<ArrowBigRightDash className="w-6 h-6" />

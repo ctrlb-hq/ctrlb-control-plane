@@ -8,7 +8,7 @@ export const kubernetesDefaults = {
 	endpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default",
 	logsEndpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default/control_plane/_otel/v1/logs",
 	metricsEndpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default/v1/metrics",
-	image: "ctrlb-otel-collector:k8s-v1",
+	image: "ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest",
 };
 
 export function summarizeInstallations(installations: KubernetesInstallation[]) {

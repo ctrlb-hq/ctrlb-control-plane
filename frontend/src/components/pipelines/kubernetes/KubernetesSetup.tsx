@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ export default function KubernetesSetup({
 	const [logsEndpoint, setLogsEndpoint] = useState(kubernetesDefaults.logsEndpoint);
 	const [metricsEndpoint, setMetricsEndpoint] = useState(kubernetesDefaults.metricsEndpoint);
 	const [authorization, setAuthorization] = useState("");
+	const [showAuthorization, setShowAuthorization] = useState(false);
 	const [image, setImage] = useState(kubernetesDefaults.image);
 	const [skipVerify, setSkipVerify] = useState(false);
 	const [pipelineId, setPipelineId] = useState<number>();
@@ -99,6 +101,7 @@ export default function KubernetesSetup({
 				id = pipeline.pipeline_id;
 				setPipelineId(id);
 				setAuthorization("");
+				setShowAuthorization(false);
 			}
 			const result = await kubernetesService.createInstallation({
 				name: name.trim(),
@@ -306,8 +309,7 @@ export default function KubernetesSetup({
 						required
 					/>
 					<p className="text-xs text-gray-500">
-						Build and load ctrlb-otel-collector:k8s-v1 onto the cluster nodes, or enter an image your
-						cluster can pull.
+						Use the default image or enter another image your cluster can pull.
 					</p>
 				</div>
 				<div className="space-y-1 md:col-span-2">
@@ -340,15 +342,32 @@ export default function KubernetesSetup({
 				</div>
 				<div className="space-y-1 md:col-span-2">
 					<Label htmlFor="k8s-auth">CtrlB Authorization header value</Label>
-					<Input
-						id="k8s-auth"
-						type="password"
-						autoComplete="off"
-						spellCheck={false}
-						placeholder="Enter the required authorization value"
-						value={authorization}
-						onChange={event => setAuthorization(event.target.value)}
-					/>
+					<div className="relative">
+						<Input
+							id="k8s-auth"
+							type={showAuthorization ? "text" : "password"}
+							autoComplete="off"
+							spellCheck={false}
+							className="pr-10"
+							placeholder="Enter the required authorization value"
+							value={authorization}
+							onChange={event => setAuthorization(event.target.value)}
+						/>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							className="absolute right-0 top-0 text-gray-500"
+							aria-label={
+								showAuthorization ? "Hide Authorization header value" : "Show Authorization header value"
+							}
+							aria-pressed={showAuthorization}
+							aria-controls="k8s-auth"
+							onClick={() => setShowAuthorization(visible => !visible)}
+						>
+							{showAuthorization ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+						</Button>
+					</div>
 					<p className="text-xs text-gray-500">
 						Saved with the pipeline on the control plane. It is never saved in this browser's local
 						storage.
