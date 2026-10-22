@@ -81,7 +81,7 @@ Base path: `/api/frontend/v2`. Every route requires an access JWT.
 
 For example, labels use `{"environment":"staging","team":"platform"}`. Metric results contain `metric_name` and `data_points`, where each point has a Unix `timestamp` and numeric `value`.
 
-VM monitoring currently stores the scraped exporter counters directly. Fields whose names contain `rate` are not calculated per-second rates. Health fields also depend on the available source metrics: `cpu_utilization` uses `system_cpu_utilization`, falling back to cumulative process CPU seconds when that gauge is missing or zero; `memory_utilization` uses `system_memory_utilization`, falling back to process RSS bytes. These fields do not have consistent percentage units. Kubernetes installation metrics use a separate sampler and explicit units described in the [Kubernetes API contract](../kubernetes-v1-api.md).
+VM monitoring currently stores the scraped exporter counters directly. Fields whose names contain `rate` are not calculated per-second rates. Health fields also depend on the available source metrics: `cpu_utilization` uses `system_cpu_utilization`, falling back to cumulative process CPU seconds when that gauge is missing or zero; `memory_utilization` uses `system_memory_utilization`, falling back to process RSS bytes. These fields do not have consistent percentage units. Kubernetes installation metrics use a separate sampler and explicit units described in the [Kubernetes API contract](../kubernetes-api.md).
 
 Deleting a collector recorded as `disconnected` skips its shutdown request. A successful deletion therefore does not confirm that its process stopped. Stop and disable its service on the host when retiring it. For other recorded states, a failed shutdown request prevents inventory deletion.
 
@@ -166,7 +166,7 @@ Both creation routes return `201` on success. Installation reads, lists, check-i
 
 Manifest creation takes `token`, `backend_url`, and optional `image`. It returns `application/yaml` as an attachment. Set `image` to a published commit tag or digest; the server's fallback is `:latest`, which the image publication workflow does not publish.
 
-Follow the [Kubernetes setup guide](../kubernetes-setup.md) for deployment steps. See the [Kubernetes API contract](../kubernetes-v1-api.md) for complete request and response examples, token handling, revision acknowledgement, metrics units, and manifest generation.
+Follow the [Kubernetes setup guide](../kubernetes-setup.md) for deployment steps. See the [Kubernetes API contract](../kubernetes-api.md) for complete request and response examples, token handling, revision acknowledgement, metrics units, and manifest generation.
 
 ## Managed collector API
 

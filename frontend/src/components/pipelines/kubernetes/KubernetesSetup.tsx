@@ -297,7 +297,7 @@ export default function KubernetesSetup({
 					/>
 					<p className="text-xs text-gray-500">
 						Every node must reach this management URL. It is separate from the telemetry destination
-						below. Use HTTPS, or HTTP for a local demo.
+						below. Use HTTPS, or HTTP for local development.
 					</p>
 				</div>
 				<div className="space-y-1 md:col-span-2">

@@ -88,13 +88,13 @@ Frontend configuration is applied at build time:
 
 Create a Kubernetes pipeline and installation in the UI. Set a control-plane URL the cluster can reach and select an available collector image tag or digest. Setup currently defaults to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`; the publication workflows tag images with short Git commits, so replace `latest` with an available tag. See [container images](container-images.md).
 
-For a hosted deployment, the control-plane URL can include the API root, such as `https://your-host/control-plane/api`. Managed collectors accept both backend roots and API roots ending in `/api`. They use HTTPS unless HTTP is explicitly enabled for a demo. The telemetry destination URL and its Authorization header are separate settings.
+For a hosted deployment, the control-plane URL can include the API root, such as `https://your-host/control-plane/api`. Managed collectors accept both backend roots and API roots ending in `/api`. They use HTTPS unless HTTP is explicitly enabled for local development. The telemetry destination URL and its Authorization header are separate settings.
 
 Setup displays the manifest YAML, a browser download, terminal `curl` and `wget` download commands, and apply, rollout, and uninstall commands. Run them on a machine with kubectl access to the target cluster.
 
 Terminal downloads POST the installation token in a JSON body to `/api/agent/v2/installations/<id>/manifest`. The token is not placed in the URL, and the response has `Cache-Control: no-store`. The creation response returns the token once; retain the manifest and uninstall command before closing setup. The manifest and terminal download commands contain the token.
 
-The generated DaemonSet uses host storage for collector state and log offsets. Collectors initiate check-ins approximately every ten seconds and continue with their last working configuration during a control-plane outage. See [Kubernetes setup](kubernetes-setup.md) and the [API contract](kubernetes-v1-api.md) for installation steps, RBAC, host mounts, rollout behavior, and status details.
+The generated DaemonSet uses host storage for collector state and log offsets. Collectors initiate check-ins approximately every ten seconds and continue with their last working configuration during a control-plane outage. See [Kubernetes setup](kubernetes-setup.md) and the [API contract](kubernetes-api.md) for installation steps, RBAC, host mounts, rollout behavior, and status details.
 
 Uninstall with the saved command before deleting the pipeline. Pipeline deletion removes installation credentials and collector records but leaves Kubernetes resources running. The uninstall command preserves the shared namespace and the node's hostPath state.
 

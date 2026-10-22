@@ -1,6 +1,6 @@
 # Install collectors in an existing Kubernetes cluster
 
-This guide installs one CtrlB collector per eligible Linux node and connects the installation to a shared pipeline. The control plane runs outside the cluster. To create an isolated test cluster instead, use the [local kind demo](kubernetes-v1-demo.md).
+This guide installs one CtrlB collector per eligible Linux node and connects the installation to a shared pipeline. The control plane runs outside the cluster. See [Kubernetes collector management](kubernetes.md) for collection defaults and runtime behavior, or the [management API guide](kubernetes-api.md) to automate setup.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ Use a management URL that collector pods can reach. A browser-local address such
 
 For another control plane, replace the management URL with its public root or API base. For another OTLP destination, change the base endpoint and both signal endpoints. The setup form prepopulates CtrlB's signal endpoints; leaving them unchanged continues to send those signals to CtrlB even if you change only the base endpoint. Clear optional signal overrides when the destination should derive them from its base endpoint.
 
-Use HTTPS for management. Selecting HTTP causes the generated manifest to set `ALLOW_INSECURE_HTTP=true` for a local demonstration. URLs must be absolute and cannot contain embedded credentials, query parameters, or fragments. The telemetry exporter sends protobuf without compression. CtrlB's JSON ingestion route does not accept these OTLP payloads.
+Use HTTPS for management. Selecting HTTP causes the generated manifest to set `ALLOW_INSECURE_HTTP=true` for local development. URLs must be absolute and cannot contain embedded credentials, query parameters, or fragments. The telemetry exporter sends protobuf without compression. CtrlB's JSON ingestion route does not accept these OTLP payloads.
 
 Choose a collector image from this repository that supports every eligible node's architecture. Setup and the manifest API currently default to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, but the checked-in publication workflows do not publish `latest`. Enter a published short commit tag or digest explicitly:
 
@@ -143,7 +143,7 @@ kubectl --context "$collector_context" -n observability get events --sort-by=.la
 | Logs are missing | Generate new logs, check `/var/log/pods` access, and confirm the configured OTLP logs endpoint |
 | Node/pod/container metrics are missing | Kubelet access on port `10250`, service-account authorization, kubelet certificate trust, and metrics destination |
 
-If the container restarted, add `--previous` to the logs command to inspect its preceding run. See [troubleshooting](troubleshooting.md) and the [management API contract](kubernetes-v1-api.md) for status and error details.
+If the container restarted, add `--previous` to the logs command to inspect its preceding run. See [troubleshooting](troubleshooting.md) and the [management API guide](kubernetes-api.md) for status and error details.
 
 ## Uninstall this installation
 

@@ -15,7 +15,7 @@ VM and Kubernetes collectors use different communication models. VM management r
 
 ## Run locally
 
-Install Go 1.26 or later for both Go modules, a C compiler for the backend's SQLite driver, and Node.js 24 with npm. Docker, kind, kubectl, and Python 3 are needed only for the Kubernetes demo.
+Install Go 1.26 or later for both Go modules, a C compiler for the backend's SQLite driver, and Node.js 24 with npm. Kubernetes installation also requires kubectl and access to a Linux cluster. Docker is optional for container builds.
 
 ```bash
 git clone https://github.com/ctrlb-hq/ctrlb-control-plane.git
@@ -40,7 +40,7 @@ npm run dev
 
 Open [http://localhost:3030](http://localhost:3030), create an account, and sign in. The frontend uses `http://localhost:8096/api` during development without an environment file. The backend creates `backend.db` and `app.log` in its working directory. Keep `JWT_SECRET` stable across restarts to preserve existing sessions.
 
-Continue with [getting started](docs/getting-started.md) to register a VM collector. For Kubernetes, follow the [existing-cluster setup guide](docs/kubernetes-setup.md) or run the [local two-node demo](docs/kubernetes-v1-demo.md).
+Continue with [getting started](docs/getting-started.md) to register a VM collector, or follow the [Kubernetes setup guide](docs/kubernetes-setup.md) to install collectors in a cluster.
 
 ## Repository layout
 
@@ -49,7 +49,7 @@ Continue with [getting started](docs/getting-started.md) to register a VM collec
 | `frontend/` | React, TypeScript, and Vite UI |
 | `backend/` | Go API, SQLite storage, graph compiler, and VM monitoring workers |
 | `agent/` | OpenTelemetry Collector wrapper with VM and Kubernetes modes |
-| `scripts/` | Linux installers and the Kubernetes demo |
+| `scripts/` | Linux installation scripts |
 | `docs/` | Setup, architecture, API, deployment, and troubleshooting guides |
 
 The backend and collector are separate Go modules. Run Go commands from the relevant directory.
@@ -57,12 +57,12 @@ The backend and collector are separate Go modules. Run Go commands from the rele
 ## Documentation
 
 - [Getting started](docs/getting-started.md)
-- [Architecture](docs/architecture.md) and [collector glossary](CONTEXT.md)
+- [Architecture](docs/architecture.md)
 - [Deployment](docs/deployment.md) and [container images](docs/container-images.md)
 - [Backend API reference](docs/backend/api-reference.md), [backend setup](docs/backend/deployment.md), and [testing](docs/backend/testing.md)
 - [Frontend overview](docs/frontend/overview.md)
 - [Collector modes and configuration](docs/collector/overview.md)
-- [Kubernetes setup](docs/kubernetes-setup.md), [collector behavior](docs/kubernetes-v1.md), [local demo](docs/kubernetes-v1-demo.md), and [management API](docs/kubernetes-v1-api.md)
+- [Kubernetes setup](docs/kubernetes-setup.md), [collector management](docs/kubernetes.md), and [management API](docs/kubernetes-api.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Implemented capabilities and future work](docs/roadmap.md)
 

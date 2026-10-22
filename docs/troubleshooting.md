@@ -96,7 +96,7 @@ The backend uses `8096` by default and accepts a `PORT` environment variable. Th
 Start with the installation's collector details in the UI. `connection_status`, `engine_status`, `applied_revision`, `attempted_revision`, and `config_error` describe different failures. The backend marks a collector disconnected after 35 seconds without a check-in.
 
 - For no enrollment or `401`, confirm the installation ID and installation token match. A user JWT cannot authenticate collector check-ins.
-- For startup validation errors, confirm `BACKEND_URL`, `K8S_NODE_NAME`, and the installation token or token file. Managed mode requires HTTPS except for loopback URLs or an explicit `ALLOW_INSECURE_HTTP=true` demo setting.
+- For startup validation errors, confirm `BACKEND_URL`, `K8S_NODE_NAME`, and the installation token or token file. Managed mode requires HTTPS except for loopback URLs or an explicit `ALLOW_INSECURE_HTTP=true` setting for local development.
 - For image pull errors, use a published commit tag or digest. The manifest API's default `:latest` is not published by the current image workflow. Private GHCR packages also need image pull credentials or public package visibility.
 - For a failed rollout, inspect `config_error`. The collector keeps its last working configuration and attempts to restore it if a replacement fails to start. A rejected revision is not retried on every check-in. Save a corrected configuration that produces a new desired revision; saving the same compiled configuration does not create a new revision.
 - For readiness failures, inspect pod logs and check whether the telemetry engine is running. Readiness reports local engine state; it does not prove that exported telemetry reached its destination.
@@ -109,4 +109,4 @@ kubectl -n observability get pods -l app.kubernetes.io/name=ctrlb-collector
 kubectl -n observability logs -l app.kubernetes.io/name=ctrlb-collector --all-containers --tail=100
 ```
 
-Use the [Kubernetes setup guide](kubernetes-setup.md), [API contract](kubernetes-v1-api.md), and [local demo](kubernetes-v1-demo.md) for detailed checks. Uninstall each installation with its saved resource-specific commands before deleting the pipeline. Those commands preserve the shared namespace. Pipeline deletion removes its installation records and tokens from the backend but leaves Kubernetes resources running.
+Use the [Kubernetes setup guide](kubernetes-setup.md) and [API contract](kubernetes-api.md) for detailed checks. Follow the [uninstall instructions](kubernetes-setup.md#uninstall-this-installation) before deleting the pipeline. The installation-specific commands preserve the shared namespace. Pipeline deletion removes its installation records and tokens from the backend but leaves Kubernetes resources running.

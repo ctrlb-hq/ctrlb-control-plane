@@ -1,5 +1,0 @@
-# Deprecated: this static template cannot enroll Kubernetes v1 collectors.
-# Create a Kubernetes installation in the UI and download its manifest, or use
-# POST /api/frontend/v2/installations/{installation_id}/manifest as documented in
-# docs/kubernetes-v1-api.md. The response contains installation-specific resources
-# and credentials. No unpublished registry image is assumed.

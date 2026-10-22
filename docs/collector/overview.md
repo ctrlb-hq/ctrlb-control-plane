@@ -21,7 +21,7 @@ docker build -t ctrlb-otel-collector:local agent
 
 The image includes the same binary and a VM bootstrap configuration at `/app/config.yaml`. See [container images](../container-images.md) for publication, platform support, and image references.
 
-For Kubernetes, follow the [setup guide](../kubernetes-setup.md) and use the installation manifest generated during pipeline setup. The old `scripts/control-plane-collector-daemonset.yaml.template` is deprecated and cannot enroll managed collectors. The [local demo](../kubernetes-v1-demo.md) builds and loads its own image, creates a two-node kind cluster, and verifies rollout and recovery.
+For Kubernetes, follow the [setup guide](../kubernetes-setup.md) and use the installation manifest generated during pipeline setup.
 
 The VM installer downloads `ctrlb-collector-<os>-<arch>` from the latest GitHub release. Current release workflows emit `ctrlb-agent-linux-<arch>` for `v*` tags and `ctrlb_collector-<os>-<arch>` for `agent/v*` tags. Check asset compatibility before using the installer; a source build avoids that naming mismatch.
 
@@ -60,7 +60,7 @@ Generated manifests set these variables. You normally do not need to assemble th
 | `INSTALLATION_TOKEN_FILE` or `INSTALLATION_TOKEN` | Yes | Installation bearer token; the file takes precedence and is reread on each check-in |
 | `K8S_NODE_NAME` | Yes | Stable collector identity within the installation |
 | `STATE_DIR` | No | Defaults to `/var/lib/ctrlb`; stores the working configuration, revisions, and log offsets |
-| `ALLOW_INSECURE_HTTP` | No | Set exactly `true` to permit non-loopback HTTP management for a demo |
+| `ALLOW_INSECURE_HTTP` | No | Set exactly `true` to permit non-loopback HTTP management during local development |
 | `K8S_NODE_UID` | No | Optional descriptive node UID |
 | `POD_NAMESPACE`, `POD_NAME`, `POD_UID`, `POD_IP` | No | Pod metadata for check-ins; namespace, name, and UID also exclude the collector's logs |
 | `K8S_NODE_IP`, `K8S_CLUSTER_NAME` | No | Used by the generated kubelet metrics and resource-metadata configuration |
@@ -90,7 +90,7 @@ A collector running cached configuration stays ready during a control-plane outa
 
 The managed runtime samples `http://127.0.0.1:8888/metrics` and includes CPU percent, memory bytes, and available per-second sent log, metric, and span counts in its check-ins. These are Collector process and export metrics, not host CPU or memory usage. A rate needs two counter samples; missing measurements stay unavailable. The backend does not scrape Kubernetes pod or node addresses.
 
-The Kubernetes preset separately collects node, pod, and container metrics every thirty seconds and new pod stdout/stderr logs across namespaces. It excludes the collector's own logs and adds cluster and Kubernetes resource metadata. See [Kubernetes behavior](../kubernetes-v1.md) and the [API contract](../kubernetes-v1-api.md) for rollout status and manifest details.
+The Kubernetes preset separately collects node, pod, and container metrics every thirty seconds and new pod stdout/stderr logs across namespaces. It excludes the collector's own logs and adds cluster and Kubernetes resource metadata. See [Kubernetes behavior](../kubernetes.md) and the [API contract](../kubernetes-api.md) for rollout status and manifest details.
 
 ## Troubleshooting
 
@@ -104,4 +104,4 @@ The Kubernetes preset separately collects node, pod, and container metrics every
 | Image pull fails | Use a published short commit tag or digest and check registry access and node architecture |
 | Host port `3421` or `8888` is busy | Stop the conflicting local process; these listener addresses are not environment-configurable |
 
-Deleting a pipeline removes its installation credentials and inventory, but running collectors can keep their cached configuration. Uninstall the installation's Kubernetes resources before deleting its pipeline. See the [demo uninstall commands](../kubernetes-v1-demo.md#uninstall-and-inspect).
+Deleting a pipeline removes its installation credentials and inventory, but running collectors can keep their cached configuration. Uninstall the installation's Kubernetes resources before deleting its pipeline. Follow the [uninstall instructions](../kubernetes-setup.md#uninstall-this-installation) to remove installation-specific resources while preserving the shared namespace.

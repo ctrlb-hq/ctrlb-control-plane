@@ -2,7 +2,7 @@
 
 CtrlB Control Plane has a React frontend, a Go API backed by SQLite, and a Go wrapper around the OpenTelemetry Collector. VM collectors and Kubernetes collectors share the pipeline graph model but use different management protocols.
 
-The [collector glossary](../CONTEXT.md) defines pipeline, installation, and collector. A telemetry destination receives exported telemetry; it can be a different service from the control-plane API.
+A pipeline defines telemetry collection, processing, and export. A Kubernetes installation assigns one shared pipeline to its per-node collectors. A telemetry destination receives exported telemetry and is configured separately from the control-plane API.
 
 ```mermaid
 flowchart LR
@@ -75,7 +75,7 @@ Connection status becomes disconnected after 35 seconds without a check-in. Engi
 
 Kubernetes collectors do not receive VM start/stop/config pushes and are excluded from backend scraping. Their local management listener serves health and readiness probes. The default preset sends collected logs and metrics to the configured telemetry destination through OTLP HTTP; graph edits can select other exporters.
 
-See the [Kubernetes scope](kubernetes-v1.md), [check-in API](kubernetes-v1-api.md), and accepted decisions for [outbound check-ins](adr/0001-kubernetes-collector-check-ins.md) and [configuration rollouts](adr/0002-kubernetes-configuration-rollouts.md).
+See [Kubernetes collector management](kubernetes.md) and the [management API](kubernetes-api.md) for check-in and rollout details.
 
 ## Lifecycle and deployment boundaries
 
@@ -137,4 +137,4 @@ erDiagram
     }
 ```
 
-See [base table definitions](../backend/internal/db/setup.go) and the [Kubernetes migration](../backend/internal/db/kubernetes.go) for all fields, constraints, and deletion rules. The PNG files under `docs/assets/` predate Kubernetes management and are historical references rather than current schema or protocol diagrams.
+See [base table definitions](../backend/internal/db/setup.go) and the [Kubernetes migration](../backend/internal/db/kubernetes.go) for all fields, constraints, and deletion rules.

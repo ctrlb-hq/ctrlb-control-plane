@@ -44,4 +44,4 @@ go tool cover -html=/tmp/ctrlb-backend-coverage.out
 
 ## Collector integration
 
-Backend tests validate the preset graph and management API. To check the compiled preset against the collector's actual component factories, follow the cross-module command in [Kubernetes collector management](../kubernetes-v1.md#validation). The [Kubernetes demo](../kubernetes-v1-demo.md) exercises deployment, telemetry, configuration rollout, and recovery against a local cluster.
+Backend tests validate the preset graph and management API. To check the compiled preset against the collector's actual component factories, follow the cross-module command in [Kubernetes collector management](../kubernetes.md#validate-the-collection-preset). Use the [Kubernetes setup guide](../kubernetes-setup.md) to deploy collectors to a cluster and verify enrollment, telemetry delivery, and configuration rollouts.

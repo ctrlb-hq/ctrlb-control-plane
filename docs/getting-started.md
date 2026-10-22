@@ -9,7 +9,7 @@ This guide runs the control plane from source, then connects a VM collector or a
 - Node.js 24 and npm for the frontend.
 - Git and OpenSSL for the examples below.
 
-The Kubernetes demo also needs Docker, kind, kubectl, Python 3, and a Linux host with enough resources to build the collector. Docker is optional for the source-based VM setup.
+Kubernetes installation also needs kubectl and access to a Linux cluster. Docker is optional for the source-based setup and is required when building container images.
 
 ```bash
 git clone https://github.com/ctrlb-hq/ctrlb-control-plane.git
@@ -72,16 +72,7 @@ The Linux systemd installer is another option, but its expected binary filenames
 
 ## Connect Kubernetes collectors
 
-For an existing cluster, follow the [Kubernetes setup guide](kubernetes-setup.md). To create a separate local two-node cluster, use the [Kubernetes demo](kubernetes-v1-demo.md):
-
-```bash
-./scripts/kubernetes/demo.sh up
-./scripts/kubernetes/demo.sh verify
-```
-
-The local demo starts its own backend on port `18096` and a local OTLP HTTP receiver on `14318`. It creates a two-node kind cluster, builds and loads a local collector image, and checks that logs and metrics arrive. Use the guide's `--real` mode only when you have the destination authentication file configured.
-
-For an existing cluster, choose Kubernetes during pipeline creation, set the collector-reachable control-plane URL, and select a published collector image tag or digest. Setup currently suggests `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, while the publication workflows produce short commit tags. Replace that suggestion with a tag that exists. Copy or download the generated manifest and apply it from a machine with kubectl access.
+Follow the [Kubernetes setup guide](kubernetes-setup.md). Choose Kubernetes during pipeline creation, set the collector-reachable control-plane URL, and select a published collector image tag or digest. Setup currently suggests `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, while the publication workflows produce short commit tags. Replace that suggestion with a tag that exists. Copy or download the generated manifest and apply it from a machine with kubectl access.
 
 Kubernetes mode uses outbound check-ins with an installation token and a shared desired configuration. Save the generated YAML and uninstall command. Uninstall cluster resources before deleting the pipeline, because deleting control-plane records does not stop the running DaemonSet.
 

@@ -76,7 +76,7 @@ VM setup asks for a pipeline name and Linux or macOS, then generates an installa
 
 Kubernetes setup creates a pipeline preset and an installation. It accepts a collector-reachable management URL, collector image, OTLP endpoints, an optional Authorization header, and a kubelet certificate verification setting. The management URL must be reachable from cluster nodes; a browser's `localhost` usually does not meet that requirement. Management requests and exported telemetry use separate endpoints. Follow [Kubernetes setup](../kubernetes-setup.md) for the field values and installation commands.
 
-The form currently suggests `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`. The publication workflows use short Git commit tags, so select a published tag or digest before generating the manifest. Kubelet certificate verification is enabled by default; the checkbox disables it for installations that require it, such as a local kind cluster with a self-signed certificate.
+The form currently suggests `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`. The publication workflows use short Git commit tags, so select a published tag or digest before generating the manifest. Kubelet certificate verification is enabled by default; the checkbox disables it for installations that require it, such as a development cluster with self-signed kubelet certificates.
 
 The setup view generates a manifest for download and also provides `curl` and `wget` download commands. The installation token stays in component state and appears in the generated manifest and terminal download request body. Save the manifest before closing setup. The UI does not persist that token for later retrieval. The telemetry Authorization value is sent to the backend with the pipeline and cleared from the setup form after the pipeline is saved.
 
@@ -84,7 +84,7 @@ The `View/edit pipeline configuration` button becomes available after a manifest
 
 The graph editor loads component configuration and UI schemas from the backend. Users add receivers, processors, and exporters, connect them, edit their configuration, and review changes before saving. Saving a Kubernetes graph stores the desired configuration and its revision. Collectors apply a changed revision at their next check-in, so a successful save means the configuration is stored, with rollout status following separately.
 
-Kubernetes details refresh every 10 seconds and report connection status, engine status, desired/applied/attempted revisions, configuration errors, and available self-metrics for each node. A running engine can still have a failed configuration rollout after restoring its previous configuration. Confirm exported telemetry at the destination. See [Kubernetes collector management](../kubernetes-v1.md) for the rollout behavior.
+Kubernetes details refresh every 10 seconds and report connection status, engine status, desired/applied/attempted revisions, configuration errors, and available self-metrics for each node. A running engine can still have a failed configuration rollout after restoring its previous configuration. Confirm exported telemetry at the destination. See [Kubernetes collector management](../kubernetes.md) for the rollout behavior.
 
 Deleting a pipeline removes control-plane records and revokes its Kubernetes installation credentials. Running collectors may continue with their last configuration. The deletion dialog provides per-installation Kubernetes uninstall commands, which remove that installation's resources while preserving the shared `observability` namespace.
 

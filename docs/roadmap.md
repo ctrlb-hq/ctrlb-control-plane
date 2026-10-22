@@ -11,12 +11,11 @@ This page records what the repository implements and what remains from the proje
 - Kubernetes installation manifests, installation tokens, and one collector per eligible node with pod logs and node, pod, and container metrics.
 - Outbound Kubernetes check-ins, stable per-node identity, configuration revision tracking, local validation, rollback after failed updates, and cached operation during control-plane outages.
 - Kubernetes installation views with per-collector connection, engine, and rollout status.
-- A local kind demo with OTLP capture and a real-destination mode.
 - Backend and collector tests, frontend utility tests, and GitHub Actions workflows for release binaries and container publication.
 - Backend, frontend, and collector Dockerfiles; backend and collector GHCR publication using short Git commit tags.
 - Hosted frontend paths and same-origin API proxying under `/control-plane/`.
 
-See [Kubernetes scope](kubernetes-v1.md) for the current collection and rollout contract.
+See [Kubernetes collector management](kubernetes.md) for the current collection and rollout behavior.
 
 ## Current operational gaps
 

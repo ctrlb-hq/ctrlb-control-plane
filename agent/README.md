@@ -31,12 +31,11 @@ The VM installation script expects release assets named `ctrlb-collector-<os>-<a
 
 Choose Kubernetes during pipeline setup, enter the collector-reachable control-plane URL and telemetry destination, and download or copy the generated installation manifest. Apply it to the intended cluster. The manifest runs one collector per eligible Linux node and provides its installation token, Kubernetes metadata, probes, and persistent node storage.
 
-Setup and the manifest API currently default to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, but the checked-in image workflows publish short commit tags. Enter a published tag or digest explicitly, or load the local demo image into the cluster.
+Setup and the manifest API currently default to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, but the checked-in image workflows publish short commit tags. Enter a published tag or digest explicitly.
 
 - [Kubernetes setup](../docs/kubernetes-setup.md)
-- [Kubernetes behavior](../docs/kubernetes-v1.md)
-- [Management API and manifest](../docs/kubernetes-v1-api.md)
-- [Two-node local demo](../docs/kubernetes-v1-demo.md)
+- [Kubernetes behavior](../docs/kubernetes.md)
+- [Management API and manifest](../docs/kubernetes-api.md)
 - [Image builds and publication](../docs/container-images.md)
 
 ## Development

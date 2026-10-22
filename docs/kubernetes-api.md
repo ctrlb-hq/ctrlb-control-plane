@@ -1,8 +1,8 @@
-# Kubernetes v1 management API
+# Kubernetes management API
 
-This contract implements the [v1 scope](kubernetes-v1.md), [collector check-ins](adr/0001-kubernetes-collector-check-ins.md), and [per-collector rollouts](adr/0002-kubernetes-configuration-rollouts.md). Terms follow the [glossary](../CONTEXT.md).
+The management API creates Kubernetes pipelines and installations, renders installation manifests, and exchanges collector status and configuration. A pipeline defines telemetry collection, processing, and export. An installation connects collectors in one named cluster to that shared pipeline. Each collector runs on one node. See [Kubernetes collector management](kubernetes.md) for runtime behavior.
 
-For the UI flow and commands to install into an existing cluster, see [Kubernetes installation](kubernetes-setup.md). The [local demo](kubernetes-v1-demo.md) creates its own kind cluster and control plane.
+For the UI flow and commands to install into an existing cluster, see [Kubernetes installation](kubernetes-setup.md).
 
 Management requests use the external control-plane HTTPS URL. Telemetry uses its separately configured ingestion destination. A collector checks in about every ten seconds with client-side jitter and retries during outages. The management API does not pause pods, upgrade collectors, or uninstall Kubernetes resources.
 
@@ -14,7 +14,7 @@ Create the editable collection pipeline first with `POST /api/frontend/v2/kubern
 
 ```json
 {
-  "name":"Kubernetes demo",
+  "name":"Production Kubernetes",
   "endpoint":"https://ctrlb.explore.ctrlb.ai/engine/api/default",
   "logs_endpoint":"https://ctrlb.explore.ctrlb.ai/engine/api/default/control_plane/_otel/v1/logs",
   "metrics_endpoint":"https://ctrlb.explore.ctrlb.ai/engine/api/default/v1/metrics",
@@ -23,7 +23,7 @@ Create the editable collection pipeline first with `POST /api/frontend/v2/kubern
 }
 ```
 
-The server returns HTTP 201 with `{"pipeline_id":1}`. `name` and the base `endpoint` are required. The per-signal endpoints and headers are optional. All endpoints must use HTTP or HTTPS; embedded URL credentials and fragments are rejected. Headers contain literal string values. `Basic CHANGE_ME` is a placeholder; demo setup supplies the actual authorization value. The CtrlB JSON ingestion route is not an OTLP endpoint. The overrides above use its native protobuf OTLP routes. Export requests use protobuf encoding without compression.
+The server returns HTTP 201 with `{"pipeline_id":1}`. `name` and the base `endpoint` are required. The per-signal endpoints and headers are optional. All endpoints must use HTTP or HTTPS; embedded URL credentials and fragments are rejected. Headers contain literal string values. Replace `Basic CHANGE_ME` with the destination's authorization value, including its authentication scheme. The CtrlB JSON ingestion route is not an OTLP endpoint. The overrides above use its native protobuf OTLP routes. Export requests use protobuf encoding without compression.
 
 The initial graph collects new pod logs from every namespace and node, pod, and container metrics every thirty seconds. It excludes its own pod logs using `POD_NAMESPACE`, `POD_NAME`, and `POD_UID`. It enriches telemetry with Kubernetes resource metadata, applies memory limiting and batching, and exports to the supplied telemetry destination. The kubelet uses the pod's service account and CA; certificate verification is enabled unless the caller explicitly opts out for a development cluster.
 
@@ -34,7 +34,7 @@ Graph compilation follows directed paths per signal. Multiple receivers can shar
 `POST /api/frontend/v2/installations` uses the existing user access token.
 
 ```json
-{"name":"demo","cluster_name":"demo-cluster","pipeline_id":1}
+{"name":"Production Kubernetes","cluster_name":"production-cluster","pipeline_id":1}
 ```
 
 The pipeline must already exist and contain a configuration. All collectors in the installation inherit that pipeline. The server returns HTTP 201.
@@ -43,10 +43,10 @@ The pipeline must already exist and contain a configuration. All collectors in t
 {
   "installation": {
     "id":"<installation-id>",
-    "name":"demo",
-    "cluster_name":"demo-cluster",
+    "name":"Production Kubernetes",
+    "cluster_name":"production-cluster",
     "pipeline_id":1,
-    "created_by":"demo@example.com",
+    "created_by":"operator@example.com",
     "created_at":1792540800,
     "desired_revision":"sha256:<hex>",
     "collectors":[],
@@ -72,7 +72,7 @@ The token is returned only at creation. Store it in a Kubernetes Secret. The ser
 
 Return the installation's resources as `application/yaml`, with `Cache-Control: no-store` and a download filename of `ctrlb-collector-<first 12 installation ID characters>.yaml`. Resource names use the same prefix and ID suffix, in namespace `observability`. The manifest includes the token in a Kubernetes Secret; the API validates it against the stored hash before rendering. Token values are never placed in URLs.
 
-`backend_url` is required and is the collector-reachable management URL, separate from telemetry ingestion. It must be an absolute HTTPS or HTTP URL without embedded credentials, query parameters, or fragments. An explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation. If omitted or empty, the API selects `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, which is also the UI default. The checked-in image workflows publish short commit tags rather than `latest`; provide a published tag or digest explicitly. The local demo builds and loads `ctrlb-otel-collector:k8s-v1`. See [container images](container-images.md).
+`backend_url` is required and is the collector-reachable management URL, separate from telemetry ingestion. It must be an absolute HTTPS or HTTP URL without embedded credentials, query parameters, or fragments. An explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local development. `image` identifies the collector built from this implementation. If omitted or empty, the API selects `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, which is also the UI default. The checked-in image workflows publish short commit tags rather than `latest`; provide a published tag or digest explicitly. See [container images](container-images.md).
 
 The YAML includes the `observability` Namespace, an installation-specific Secret and ServiceAccount, a ClusterRole and ClusterRoleBinding, and a DaemonSet. It selects Linux nodes, tolerates the standard control-plane taint, and uses `IfNotPresent` image pulls. Its rolling update allows at most one unavailable pod. Requests are `100m` CPU and `128Mi` memory; limits are one CPU and `512Mi` memory. A published image must support each eligible node's architecture.
 

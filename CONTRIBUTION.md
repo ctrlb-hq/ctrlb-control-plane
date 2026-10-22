@@ -61,13 +61,7 @@ The frontend utility tests use Node's test runner. There is no configured browse
 
 Use the repository's Prettier configuration for frontend files. To format only changed files, pass their paths to `npx prettier --write`; `npm run format:fix` formats the whole frontend. Keep unrelated formatting changes out of the pull request. If a check fails on unchanged code, include the failure and identify it separately from your changes.
 
-For changes to the local OTLP receiver used by the Kubernetes demo, run from the repository root:
-
-```bash
-python3 -m unittest discover -s scripts/kubernetes -p 'test_*.py'
-```
-
-The [Kubernetes demo guide](docs/kubernetes-v1-demo.md) covers checks with a running cluster.
+For Kubernetes configuration changes, use the [preset compatibility checks](docs/kubernetes.md#validate-the-collection-preset) to validate the backend's generated configuration against the collector's component factories. Follow the [Kubernetes setup guide](docs/kubernetes-setup.md) to verify deployment changes in a test cluster.
 
 ## Commits and pull requests
 
