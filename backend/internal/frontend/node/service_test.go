@@ -21,7 +21,7 @@ func (m *MockFrontendNodeRepository) GetComponentSchemaByName(componentName stri
 	return m.GetComponentSchemaByNameFunc(componentName)
 }
 
-func (m *MockFrontendNodeRepository) GetComponentUISchemaByName(name string) (any, error) { // 🔴 Implement this
+func (m *MockFrontendNodeRepository) GetComponentUISchemaByName(name string) (any, error) {
 	return m.GetComponentUISchemaByNameFunc(name)
 }
 

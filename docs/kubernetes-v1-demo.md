@@ -1,6 +1,6 @@
-# Kubernetes v1 demo
+# Local Kubernetes demo
 
-Run one collector on each of two Linux nodes. The control plane runs on the Docker host, outside the cluster. The demo checks pod logs, node/pod/container metrics, configuration rollout, failed-update recovery, pod replacement, and restart from cached configuration during a control-plane outage.
+This workflow creates an isolated two-node kind cluster and runs the control plane on its Docker host. It checks pod logs, node, pod, and container metrics, configuration rollout, failed-update recovery, pod replacement, and startup from cached configuration during a control-plane outage. To install into a cluster you already manage, use the [existing-cluster installation guide](kubernetes-setup.md).
 
 ## Requirements
 
@@ -64,7 +64,7 @@ The default ingestion destinations are:
 | Logs | `https://ctrlb.explore.ctrlb.ai/engine/api/default/control_plane/_otel/v1/logs` |
 | Metrics | `https://ctrlb.explore.ctrlb.ai/engine/api/default/v1/metrics` |
 
-The base endpoint is `https://ctrlb.explore.ctrlb.ai/engine/api/default`. Override it with `CTRLB_OTLP_ENDPOINT`; override the signal-specific URLs with `CTRLB_LOGS_ENDPOINT` and `CTRLB_METRICS_ENDPOINT`. The exporter sends protobuf without compression. See the [API contract](kubernetes-v1-api.md) for the endpoint distinction and credential handling.
+The base endpoint is `https://ctrlb.explore.ctrlb.ai/engine/api/default`. Override it with `CTRLB_OTLP_ENDPOINT`; override the signal-specific URLs with `CTRLB_LOGS_ENDPOINT` and `CTRLB_METRICS_ENDPOINT`. Changing only the base endpoint leaves the default signal-specific CtrlB URLs in place. The exporter sends protobuf without compression. See the [API contract](kubernetes-v1-api.md) for the endpoint distinction and credential handling.
 
 In real-destination mode, lifecycle checks still run. Confirm `ctrlb-demo-marker` logs from both nodes and node/pod/container metric series in CtrlB. Use `k8s.cluster.name`, `k8s.node.name`, `k8s.namespace.name`, and `k8s.pod.name` to identify this demo. Backend check-ins and successful export responses alone do not establish that CtrlB has indexed the data.
 
@@ -77,29 +77,29 @@ Start the frontend against the host backend:
 ```bash
 cd frontend
 npm ci --legacy-peer-deps
-VITE_API_URL=http://localhost:18096 npm run dev -- --host 127.0.0.1
+VITE_API_BASE_URL=http://localhost:18096/api npm run dev -- --host 127.0.0.1
 ```
 
 Open the Vite URL and sign in using the private demo account in `login.json`, or register another demo account. Open the Kubernetes pipeline to view each node's connectivity, engine state, revisions, rollout status, CPU, and memory. Choose **View/edit configuration** to change the shared pipeline.
 
-For a new installation, choose Kubernetes in pipeline setup. Enter the collector-reachable management URL separately from the telemetry destination and supply an image available to the cluster. The default image is `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`. For the local demo above, enter `ctrlb-otel-collector:k8s-v1`. Copy the manifest YAML, use a displayed `curl` or `wget` command on your cluster-management machine, or download the file in the browser. Keep a copy during setup because the installation token is returned only once. Apply it with the intended kubeconfig/context and watch the displayed node count; copying a command does not mark deployment successful. See the [deployment guide](deployment.md) for hosting beneath `/control-plane/` with the API beneath `/control-plane/api`.
-
-For a frontend container, pass the browser-reachable backend address at build time:
-
-```bash
-docker build -t ctrlb-frontend:k8s-v1 \
-  --build-arg VITE_API_URL=http://localhost:18096 frontend
-```
-
-The frontend Dockerfile uses Node 24 and `npm ci --legacy-peer-deps`, then serves the build with SPA routing through nginx. The production collector Dockerfile builds with Go 1.26 and `CGO_ENABLED=0`; `docker build -t ctrlb-otel-collector:k8s-v1 agent` builds from source without the prebuilt helper.
+The setup flow for an existing cluster is documented in [Kubernetes installation](kubernetes-setup.md). For another installation in this local kind cluster, use its loaded image, `ctrlb-otel-collector:k8s-v1`, and the collector-reachable host address recorded in the private demo state. The browser-local backend URL is not reachable from collector pods.
 
 ## Uninstall and inspect
 
-Remove this installation and stop its host processes:
+From the repository root, remove the default demo installation and stop its host processes:
 
 ```bash
 ./scripts/kubernetes/demo.sh down
 ```
+
+If you used `--dir` during setup, pass the same directory to every later command, including cleanup. For the custom and real-destination examples above, use the matching command:
+
+```bash
+./scripts/kubernetes/demo.sh --dir /tmp/ctrlb-k8s-demo-local down
+./scripts/kubernetes/demo.sh --dir /tmp/ctrlb-k8s-real down
+```
+
+Each command operates on the installation and processes recorded in that directory. Omitting `--dir` selects `/tmp/ctrlb-k8s-demo`, or `DEMO_DIR` if that environment variable is set.
 
 The command deletes only the named DaemonSet, Secret, ServiceAccount, ClusterRole, and ClusterRoleBinding, plus the demo log workload. It confirms that `observability` still exists. It keeps the shared namespace, other installations, saved node offsets, and private evidence files. It does not delete the downloaded manifest with `kubectl delete -f`, because that manifest includes the shared namespace.
 
@@ -109,14 +109,9 @@ To remove the isolated kind cluster too:
 ./scripts/kubernetes/demo.sh down --delete-cluster
 ```
 
-For a manual installation, substitute the ID prefix and always select the intended context:
+For a custom directory, include it here as well, for example `./scripts/kubernetes/demo.sh --dir /tmp/ctrlb-k8s-real down --delete-cluster`.
 
-```bash
-kubectl --context kind-ctrlb-v1-demo -n observability delete \
-  daemonset,secret,serviceaccount ctrlb-collector-<first-12-installation-id-characters>
-kubectl --context kind-ctrlb-v1-demo delete \
-  clusterrole,clusterrolebinding ctrlb-collector-<first-12-installation-id-characters>
-```
+For resources installed outside this demo, follow the [context-specific uninstall commands](kubernetes-setup.md#uninstall-this-installation).
 
 For diagnosis, use the private kubeconfig and resource name from `state.json`:
 
@@ -124,21 +119,19 @@ For diagnosis, use the private kubeconfig and resource name from `state.json`:
 kubectl --kubeconfig /tmp/ctrlb-k8s-demo/kubeconfig \
   --context kind-ctrlb-v1-demo -n observability get pods -o wide
 kubectl --kubeconfig /tmp/ctrlb-k8s-demo/kubeconfig \
-  --context kind-ctrlb-v1-demo -n observability logs daemonset/<resource-name> --tail=100
+  --context kind-ctrlb-v1-demo -n observability logs 'daemonset/<resource-name>' --tail=100
 ```
 
 The log receiver needs root to read node-owned pod log files. The generated pod drops all capabilities, disables privilege escalation, uses a read-only root filesystem, mounts pod logs read-only, and does not use privileged mode or host networking. Its persistent state is isolated under `/var/lib/ctrlb/installations/<installation-id>` on each node. That state survives pod replacement on the same node; replacing the node loses its local state.
 
-## Validation on 2026-10-21
+If you also want to delete the pipeline, uninstall its Kubernetes resources first. Pipeline deletion removes installation credentials and collector records from the control plane; it does not remove pods or stop a collector using cached configuration. The pipeline delete confirmation provides the same installation-specific uninstall commands. Keep the private manifest or demo state until cleanup is complete.
 
-The static Collector binary and prebuilt image were tested in the two-node Kubernetes v1.35.8 kind cluster with the control plane running on its host. Both collectors enrolled under one pipeline, exported logs and node/pod/container metrics with Kubernetes metadata, applied a graph edit, rejected an invalid kubelet duration, preserved their identities through pod replacement, and started from cached configuration while the control plane was stopped. A separate live port-conflict test caused Collector startup to fail on both nodes; both restored their previous working revision.
+## Automated validation
 
-The corrected CtrlB hostname is `ctrlb.explore.ctrlb.ai`. Native OTLP export succeeded with the supplied private authorization value. Bounded queries confirmed indexed demo-marker logs and node, pod, and container memory metrics from both nodes. Credentials are absent from repository files.
+Run the local OTLP receiver tests from the repository root:
 
-The uninstall command removed the named installation resources while preserving `observability` and a separately named test Secret. The isolated test cluster was then removed.
+```bash
+python3 -m unittest discover -s scripts/kubernetes -p 'test_*.py'
+```
 
-The full agent and backend test suites, scoped runtime race checks, frontend production build and focused tests, manifest tests, and local OTLP receiver tests passed. Release workflows were updated but were not published or triggered.
-
-An additional frontend end-to-end run used Chromium against the production UI build, a real backend, and a fresh two-node kind cluster. It covered registration, logout/login, Kubernetes setup, manifest download and installation, shared graph/component-form edits, review/save, discarding unsaved edits, invalid-duration rejection with the previous configuration still running, and recovery after restoring a valid interval. The UI also reflected a stopped control plane, a collector replacement started from cache, and an individual node's disconnection and reconnection without changing collector IDs. The final editor and session runs reported no browser console errors, page errors, or failed HTTP requests. Browser testing exposed missing accessible dialog titles, a nested save button, and an unlabeled historical configuration error after recovery; these were corrected and the affected flows were rerun. A current failure stays prominent, while a retained error from an older rejected revision is labeled and collapsed once the desired revision is applied and running. Six frontend tests passed, including revision comparisons that keep current or uncertain errors prominent.
-
-The same run checked the existing VM overview, graph, and installation wizard, and sent a synthetic OTLP log through a local legacy VM collector to its debug exporter. A separate Kubernetes installation was created and downloaded through the frontend using the real CtrlB destination. Both collectors applied its configuration, and bounded CtrlB queries confirmed indexed marker logs and node, pod, and container memory metrics from both nodes. Browser videos and screenshots used the local telemetry destination with a dummy Authorization value; the real-credential setup was not recorded. Customer secret-variable configuration remains deferred.
+The [Kubernetes validation commands](kubernetes-v1.md#validation) check the generated preset against the collector's component factories. These tests do not deploy a cluster. Run `up` and `verify` as described above to collect current deployment evidence, and inspect the telemetry destination when using real-destination mode.

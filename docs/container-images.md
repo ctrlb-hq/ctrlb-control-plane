@@ -11,7 +11,7 @@ The collector build includes the OpenTelemetry components used by both VM and Ku
 
 ## Publish to GHCR
 
-The container publication workflow builds Linux AMD64 images and pushes:
+The [`container-images.yml`](../.github/workflows/container-images.yml) workflow builds Linux AMD64 images and pushes:
 
 - `ghcr.io/ctrlb-hq/ctrlb-control-plane-backend:<short-commit>`
 - `ghcr.io/ctrlb-hq/ctrlb-otel-collector:<short-commit>`
@@ -25,6 +25,8 @@ git push origin "refs/tags/containers/${image_tag}"
 ```
 
 The workflow uses its repository `GITHUB_TOKEN` with `packages: write`, so a separate registry secret is not required. Each image gets only its short Git commit hash as the version tag, for example `f4b1855`. The full commit remains in the image's revision label, and the Actions summary records the immutable image digest. A manual workflow dispatch is available after the workflow is present on the default branch.
+
+The separate [`agent-release.yml`](../.github/workflows/agent-release.yml) workflow runs on `agent/v*` tags and publishes the collector image for Linux AMD64 and ARM64, also under a short commit tag. It also attaches Linux and macOS binaries for both architectures to the GitHub release. Neither image workflow publishes `latest` or a semantic-version image tag. Use a tag created by a successful run, or pin a known registry digest. An arbitrary source commit does not imply its image has been published.
 
 GitHub makes new GHCR packages private by default, even when the linked repository is public. A package administrator must open each package's settings and change its visibility to **Public** once. Publishing subsequent versions preserves that setting. See [GitHub's package visibility documentation](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility#configuring-visibility-of-packages-for-an-organization).
 
@@ -55,6 +57,8 @@ Use the [hosted deployment guide](deployment.md#frontend-deployment-under-contro
 
 ## Install collectors
 
-In Kubernetes setup, set **Collector image** to `ghcr.io/ctrlb-hq/ctrlb-otel-collector:<short-commit>` and leave the control-plane URL set to `https://ctrlb.explore.ctrlb.ai/control-plane/api`. Copy or download the generated manifest and apply it to the intended cluster. Public images do not require an image pull secret.
+In [Kubernetes setup](kubernetes-setup.md), set **Collector image** to a published `ghcr.io/ctrlb-hq/ctrlb-otel-collector:<short-commit>` or `ghcr.io/ctrlb-hq/ctrlb-otel-collector@sha256:<digest>`. Setup and the manifest API currently default to `:latest`; override that value because the checked-in workflows do not publish it. For the hosted control plane, use `https://ctrlb.explore.ctrlb.ai/control-plane/api` as the management URL. For another deployment, enter its collector-reachable root or API URL. Copy or download the generated manifest and apply it to the intended cluster. Public images do not require an image pull secret.
 
-Kubernetes collectors use persistent node storage and the installation Secret configured in that manifest. The same image also supports legacy VM registration when no installation ID is supplied. See the [Kubernetes API contract](kubernetes-v1-api.md) for check-in and manifest behavior.
+The generated DaemonSet selects Linux nodes and uses `imagePullPolicy: IfNotPresent`. Choose an image that supports every eligible node's CPU. Images from `containers/*` runs support AMD64; use a collector release build or your own multi-platform image for mixed AMD64/ARM64 clusters. The [local demo](kubernetes-v1-demo.md) loads a locally built image into its kind nodes and does not need a published registry image.
+
+Kubernetes collectors use persistent node storage and the installation Secret configured in that manifest. The same image supports VM registration when no installation ID is supplied. Its entrypoint is `/usr/local/bin/ctrlb-agent`, working directory `/app`, and bootstrap configuration `/app/config.yaml`. VM mode needs `BACKEND_URL` and a writable config and log directory, plus backend connectivity to ports `3421` and `8888`. See the [collector guide](collector/overview.md) for environment variables and networking, and the [Kubernetes API contract](kubernetes-v1-api.md) for check-in and manifest behavior.

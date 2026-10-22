@@ -2,7 +2,11 @@
 
 This contract implements the [v1 scope](kubernetes-v1.md), [collector check-ins](adr/0001-kubernetes-collector-check-ins.md), and [per-collector rollouts](adr/0002-kubernetes-configuration-rollouts.md). Terms follow the [glossary](../CONTEXT.md).
 
+For the UI flow and commands to install into an existing cluster, see [Kubernetes installation](kubernetes-setup.md). The [local demo](kubernetes-v1-demo.md) creates its own kind cluster and control plane.
+
 Management requests use the external control-plane HTTPS URL. Telemetry uses its separately configured ingestion destination. A collector checks in about every ten seconds with client-side jitter and retries during outages. The management API does not pause pods, upgrade collectors, or uninstall Kubernetes resources.
+
+Routes below use the backend's `/api` prefix. A hosted reverse proxy can expose them under `/control-plane/api`; use that public prefix for collector and browser requests. User access tokens authenticate frontend routes. Installation tokens authenticate collector check-ins and terminal manifest downloads.
 
 ## Installation creation
 
@@ -62,13 +66,19 @@ The token is returned only at creation. Store it in a Kubernetes Secret. The ser
 {
   "token":"<installation-bearer-token>",
   "backend_url":"https://control-plane.example.com",
-  "image":"ctrlb-otel-collector:k8s-v1"
+  "image":"ghcr.io/ctrlb-hq/ctrlb-otel-collector:<published-short-commit>"
 }
 ```
 
 Return the installation's resources as `application/yaml`, with `Cache-Control: no-store` and a download filename of `ctrlb-collector-<first 12 installation ID characters>.yaml`. Resource names use the same prefix and ID suffix, in namespace `observability`. The manifest includes the token in a Kubernetes Secret; the API validates it against the stored hash before rendering. Token values are never placed in URLs.
 
-`backend_url` is the collector-reachable management URL, separate from telemetry ingestion. HTTPS is the default; an explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation; the local demo builds and loads `ctrlb-otel-collector:k8s-v1` rather than assuming an unpublished registry tag exists.
+`backend_url` is required and is the collector-reachable management URL, separate from telemetry ingestion. It must be an absolute HTTPS or HTTP URL without embedded credentials, query parameters, or fragments. An explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation. If omitted or empty, the API selects `ghcr.io/ctrlb-hq/ctrlb-otel-collector:latest`, which is also the UI default. The checked-in image workflows publish short commit tags rather than `latest`; provide a published tag or digest explicitly. The local demo builds and loads `ctrlb-otel-collector:k8s-v1`. See [container images](container-images.md).
+
+The YAML includes the `observability` Namespace, an installation-specific Secret and ServiceAccount, a ClusterRole and ClusterRoleBinding, and a DaemonSet. It selects Linux nodes, tolerates the standard control-plane taint, and uses `IfNotPresent` image pulls. Its rolling update allows at most one unavailable pod. Requests are `100m` CPU and `128Mi` memory; limits are one CPU and `512Mi` memory. A published image must support each eligible node's architecture.
+
+The service account can get, list, and watch pods and namespaces, and get `nodes/stats`. The collector runs as root to read node log files, drops all capabilities, disables privilege escalation, and uses a read-only root filesystem. It mounts `/var/log/pods` read-only, a writable `/tmp`, and node state at `/var/lib/ctrlb/installations/<installation-id>`, exposed inside the pod as `/var/lib/ctrlb`. Its Secret mounts read-only at `/var/run/secrets/ctrlb`, and `INSTALLATION_TOKEN_FILE` points to the token there.
+
+Port `3421` serves `GET /healthz` and `GET /readyz`. Health reports the management process as alive. Readiness returns HTTP 200 only while the embedded Collector is running, including from cached configuration during a control-plane outage; waiting or failed collectors return HTTP 503. The pod's startup and liveness probes use health, and its readiness probe uses readiness. Managed collectors do not expose `/agent/v1` lifecycle or configuration routes.
 
 `POST /api/agent/v2/installations/{installation_id}/manifest` accepts the same JSON body for terminal downloads. It authenticates with the installation token in `token` and does not require a user access token. Missing, incorrect, or cross-installation tokens return HTTP 401. The frontend route above continues to require both tokens. Setup displays copyable YAML and authenticated `curl` and `wget` commands alongside the browser download.
 

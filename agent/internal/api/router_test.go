@@ -44,7 +44,6 @@ func TestNewRouter_CallsAreWired(t *testing.T) {
 
 	service := &operators.OperatorService{Operator: mockOperator}
 
-	// ✅ THIS is the actual function you want to test for coverage
 	router := api.NewRouter(service)
 
 	routes := []struct {

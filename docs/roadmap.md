@@ -1,105 +1,44 @@
-# 🛣️ CTRLB Control Plane – Public Product Roadmap
+# Capabilities and future work
 
-> This roadmap outlines planned milestones for CTRLB's OpenTelemetry control plane. Timelines are approximate and subject to change. Community feedback is welcome — feel free to [open issues](https://github.com/ctrlb-hq/ctrlb-control-plane/issues) or contribute via PRs.
+This page records what the repository implements and what remains from the project roadmap. Future items have no committed delivery dates. Use [GitHub issues](https://github.com/ctrlb-hq/ctrlb-control-plane/issues) to discuss scope and priorities.
 
----
+## Implemented
 
-## 🔹 Phase 1: Developer Preview (Now – \~1 month)
+- React graph editor with component schemas, configuration forms, and YAML previews.
+- Go backend with embedded component schemas, graph compilation, SQLite metadata, and collector metric storage.
+- User registration, login, access JWTs, and refresh tokens.
+- VM collector registration, configuration pushes, start/stop management, and backend metrics scraping.
+- Kubernetes installation manifests, installation tokens, and one collector per eligible node with pod logs and node, pod, and container metrics.
+- Outbound Kubernetes check-ins, stable per-node identity, configuration revision tracking, local validation, rollback after failed updates, and cached operation during control-plane outages.
+- Kubernetes installation views with per-collector connection, engine, and rollout status.
+- A local kind demo with OTLP capture and a real-destination mode.
+- Backend and collector tests, frontend utility tests, and GitHub Actions workflows for release binaries and container publication.
+- Backend, frontend, and collector Dockerfiles; backend and collector GHCR publication using short Git commit tags.
+- Hosted frontend paths and same-origin API proxying under `/control-plane/`.
 
-> ⚙️ **Goal:** Build trust among OSS users and make the control plane usable for small teams
+See [Kubernetes scope](kubernetes-v1.md) for the current collection and rollout contract.
 
-### ✅ Features
+## Current operational gaps
 
-- Agent install script (with dynamic config pull)
-- Config UI with schema-based generation
-- Graph-based pipeline builder
-- Agent status & metrics dashboard
-- Push-based config update via queue
-- SQLite metadata store
-- Release binaries for backend + agent
+- The Linux installers expect release asset names that differ from the current release workflows. Source and container deployment paths are documented in [deployment](deployment.md#linux-install-scripts).
+- Kubernetes setup suggests a `latest` image tag, while publication workflows produce short commit tags. Operators must choose an available tag or digest.
+- VM collectors use a legacy unauthenticated management protocol and require the backend to reach their management and metrics ports.
+- SQLite is the only implemented database. The backend uses local persistent storage; replicated storage and high availability need further work.
+- Pipeline deletion removes control-plane records but does not uninstall running collector services or Kubernetes resources.
 
-### 📌 Milestones
+## Further collector work
 
-- OSS-ready README, LICENSE, CONTRIBUTING
-- GitHub Releases + install docs
-- Try-it-now hosted demo or video walkthrough
+- Authenticated VM enrollment and management.
+- Collector upgrades from the UI, including signature verification.
+- Kubernetes namespace selection and collection filtering.
+- Kubernetes pause/resume controls and richer installation lifecycle management.
+- User-visible configuration history and explicit rollback controls beyond the collector's automatic recovery after failed updates.
+- Remote pipeline templates and support for additional collector types.
 
----
+## Team and deployment work
 
-## 🔸 Phase 2: OSS Adoption & Hardening (1–2 months)
-
-> ⚙️ **Goal:** Improve stability, allow community usage at scale
-
-### 🛠 Features
-
-- Backend auth (JWT + API keys)
-- Agent auth handshake with secret token
-- Config validation + dry run before apply
-- RBAC for view/edit pipeline access control
-- Remote pipeline templates
-- Collector upgrade feature from UI
-- Postgres metadata store support
-- Improved frontend UI/UX polish
-
-### 🔧 Infrastructure
-
-- Tests: backend services, agent state sync
-- GitHub Actions: build/test/release pipeline
-- Cross-platform binaries for backend/agent
-- Docker images for backend + self-hosted demo
-
----
-
-## 🟦 Phase 3: Enterprise Features (2–4 months)
-
-> ⚙️ **Goal:** Offer CTRLB as a control plane for teams/orgs with scale and compliance needs
-
-### 🧩 Features
-
-- RBAC and org/user/project separation
-- Versioned config history & rollback
-- Alerting integration (Slack/Webhook/email)
-- Hosted cloud offering (alpha)
-- Audit logs and activity tracking
-
-### 🏗 Infrastructure
-
-- Separate operational metadata and time-series telemetry storage:
-- Store metadata (agents, pipelines, configs, users) in PostgreSQL
-- Store metrics and telemetry data in a time-series DB
-
----
-
-## 🟨 Phase 4: Enterprise Readiness (5+ months)
-
-> ⚙️ **Goal:** Ensure the platform is secure, scalable, and production-grade for organizations of all sizes while remaining 100% open source
-
-### 🧱 Deployment & Operations
-
-- Air-gapped deployment support
-- SSO/SAML authentication
-- Advanced logging, backup, and HA setup
-
-### 🔐 Security & Compliance
-
-- SOC2 readiness practices
-- Encryption at rest and in transit
-- Multi-region backend for high availability
-
-### 🧱 Self-hosted Enterprise
-
-- Air-gapped deployment support
-- SSO/SAML auth
-- Advanced logging, backup, HA setup
-
-### ☁️ Hosted SaaS
-
-- Usage-based billing (agents, pipelines)
-- Team management, usage limits
-- Credit-based auto-scaling agents
-
-### 🔐 Security & Compliance
-
-- SOC2 readiness
-- Encryption at rest/in transit
-- Multi-region backend for HA
+- Fine-grained roles, organizations/workspaces, and project isolation.
+- API keys, SSO/SAML, audit logs, and alerting integrations.
+- PostgreSQL metadata storage and a separate time-series store for operational metrics.
+- Helm/Terraform deployment packages, backup and recovery workflows, air-gapped installation, and high availability.
+- Hosted service operations, team management, and usage/billing controls.

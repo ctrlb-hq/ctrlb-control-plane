@@ -9,7 +9,7 @@ The system that manages collector installations, desired pipeline configurations
 _Avoid_: Telemetry destination
 
 **Telemetry destination**:
-The backend that receives collected logs and metrics. The CtrlB backend is the telemetry destination for the Kubernetes v1 demo.
+The service that receives collected logs and metrics. It is configured separately from the control plane.
 _Avoid_: Control plane, backend when the distinction is unclear
 
 **Pipeline**:
@@ -21,5 +21,5 @@ A deployed fleet of collectors in one named Kubernetes cluster, assigned to one 
 _Avoid_: Cluster when referring to the deployed collector fleet
 
 **Collector**:
-A stable per-node member of an installation. Its identity, pipeline assignment, and history survive replacement of its pod.
+A stable per-node member of an installation. Its identity and pipeline assignment survive replacement of its pod.
 _Avoid_: Pod or agent process when referring to the stable collector identity
