@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/auth";
 import { RegisterCredentials } from "../../types/auth.types";
+import ProductBrand from "../ProductBrand";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,9 +66,10 @@ const Register: React.FC = () => {
 	const hasFormError = !!emailError || !!passwordError;
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50">
+		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
 			<div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-				<h2 className="text-center text-3xl font-bold">Create Account</h2>
+				<ProductBrand variant="auth" />
+				<h2 className="text-center text-xl font-semibold">Create Account</h2>
 
 				{error && (
 					<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
