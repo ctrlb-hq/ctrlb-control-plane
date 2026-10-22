@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +17,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/operators"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/core/shutdown"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/managed"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/filewatcher"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/systeminfo"
@@ -22,10 +25,41 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
+	if os.Getenv("INSTALLATION_ID") != "" {
+		runManaged()
+		return
+	}
+	runLegacy()
+}
+
+func runManaged() {
+	if err := logger.InitConsoleLogger(); err != nil {
+		log.Fatal(err)
+	}
+	cfg, err := managed.ConfigFromEnv()
+	if err != nil {
+		logger.Logger.Sugar().Fatalf("Invalid managed Collector configuration: %v", err)
+	}
+	cfg.Version, err = adapters.CollectorVersion()
+	if err != nil {
+		logger.Logger.Sugar().Fatalf("Determine Collector version: %v", err)
+	}
+	manager, err := managed.New(cfg, &adapters.ManagedEngine{})
+	if err != nil {
+		logger.Logger.Sugar().Fatalf("Initialize managed Collector: %v", err)
+	}
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+	if err := manager.Run(ctx); err != nil {
+		logger.Logger.Sugar().Fatalf("Managed Collector stopped: %v", err)
+	}
+}
+
+func runLegacy() {
 	logger.InitLogger()
 
 	var wg sync.WaitGroup
-	_ = godotenv.Load()
 
 	// AGENT_CONFIG_PATH: Optional, with default fallback
 	constants.AGENT_CONFIG_PATH = os.Getenv("AGENT_CONFIG_PATH")

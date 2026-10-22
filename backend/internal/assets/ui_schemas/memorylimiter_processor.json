@@ -26,11 +26,6 @@
       "type": "Control",
       "label": "Spike Limit (%)",
       "scope": "#/properties/spike_limit_percentage"
-    },
-    {
-      "type": "Control",
-      "label": "Ballast Size (MiB)",
-      "scope": "#/properties/ballast_size_mib"
     }
   ]
 }

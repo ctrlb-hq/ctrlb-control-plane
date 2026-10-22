@@ -26,7 +26,7 @@ usage() {
 
 # Require root
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Please run as root or with sudo"
+  echo "Error: run as root or with sudo."
   usage
   exit 1
 fi
@@ -83,7 +83,7 @@ case "$ARCH" in
   x86_64) ARCH="amd64" ;;
   aarch64) ARCH="arm64" ;;
   *)
-    echo "❌ Unsupported architecture: $ARCH"
+    echo "Error: unsupported architecture: $ARCH"
     exit 1
     ;;
 esac
@@ -95,9 +95,9 @@ BINARY_PATH="${INSTALL_DIR}/${BACKEND_NAME}"
 
 mkdir -p "$INSTALL_DIR"
 
-echo "📥 Downloading ${BACKEND_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "Downloading ${BACKEND_NAME} ${VERSION} for ${OS}/${ARCH}..."
 if ! curl -fL "$BINARY_URL" -o "$BINARY_PATH"; then
-  echo "❌ Failed to download binary from $BINARY_URL"
+  echo "Error: failed to download binary from $BINARY_URL"
   exit 1
 fi
 
@@ -105,7 +105,7 @@ chmod +x "$BINARY_PATH"
 
 # Verify it is a valid ELF binary (or Mach-O if on macOS)
 if ! file "$BINARY_PATH" | grep -q 'ELF'; then
-  echo "❌ Downloaded file is not a valid executable (check architecture or release asset)"
+  echo "Error: downloaded file is not a valid executable. Check the architecture and release asset."
   rm -f "$BINARY_PATH"
   exit 1
 fi
@@ -142,10 +142,10 @@ EOF
 # Create working directory if not present
 mkdir -p /var/lib/${BACKEND_NAME}
 
-echo "🔧 Enabling systemd service..."
+echo "Enabling systemd service..."
 sudo systemctl daemon-reexec
 sudo systemctl enable "$BACKEND_NAME"
 sudo systemctl restart "$BACKEND_NAME"
 
-echo "✅ ${BACKEND_NAME} is running on port ${PORT}"
+echo "${BACKEND_NAME} is running on port ${PORT}."
 sudo systemctl status "$BACKEND_NAME" --no-pager

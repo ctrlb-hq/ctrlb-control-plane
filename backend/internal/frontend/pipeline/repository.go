@@ -199,9 +199,43 @@ func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models
 }
 
 func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
-	_, err := f.db.Exec("DELETE FROM pipelines WHERE pipeline_id = ?", pipelineId)
+	tx, err := f.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("begin pipeline deletion: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Collector agents own metrics and other records that must be removed with
+	// their installations. The foreign keys cascade those dependent records.
+	_, err = tx.Exec(`DELETE FROM agents WHERE id IN (
+		SELECT c.agent_id FROM kubernetes_collectors c
+		JOIN kubernetes_installations i ON i.id = c.installation_id
+		WHERE i.pipeline_id = ?
+	)`, pipelineId)
+	if err != nil {
+		return fmt.Errorf("delete pipeline collectors: %w", err)
+	}
+	if _, err := tx.Exec("DELETE FROM kubernetes_installations WHERE pipeline_id = ?", pipelineId); err != nil {
+		return fmt.Errorf("delete pipeline installations: %w", err)
+	}
+	// VM agents remain available for another pipeline. Clear both assignment
+	// fields so the agents list cannot display the deleted pipeline's name.
+	if _, err := tx.Exec("UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE pipeline_id = ?", pipelineId); err != nil {
+		return fmt.Errorf("detach pipeline agents: %w", err)
+	}
+	result, err := tx.Exec("DELETE FROM pipelines WHERE pipeline_id = ?", pipelineId)
+	if err != nil {
+		return fmt.Errorf("delete pipeline: %w", err)
+	}
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read deleted pipeline count: %w", err)
+	}
+	if deleted == 0 {
+		return utils.ErrPipelineDoesNotExists
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit pipeline deletion: %w", err)
 	}
 	return nil
 }
@@ -211,7 +245,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	// Optimized query for SQLite
 	query := `
-		SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, 
+			SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, a.management_mode,
 		       IFNULL(m.logs_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
 		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
 		FROM agents a
@@ -226,7 +260,7 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 
 	for rows.Next() {
 		agent := models.AgentInfoHome{}
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName, &agent.Hostname, &agent.IP,
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName, &agent.Hostname, &agent.IP, &agent.ManagementMode,
 			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
 		if err != nil {
 			return nil, err
@@ -238,22 +272,32 @@ func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId i
 }
 
 func (f *FrontendPipelineRepository) DetachAgentFromPipeline(pipelineId int, agentId int) error {
-	setQuery := `UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE id = ?`
+	setQuery := `UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE id = ? AND management_mode = 'push'`
 
-	_, err := f.db.Exec(setQuery, agentId)
+	result, err := f.db.Exec(setQuery, agentId)
 	if err != nil {
 		return fmt.Errorf("failed to detach agent: %w", err)
+	}
+	if count, err := result.RowsAffected(); err != nil {
+		return err
+	} else if count == 0 {
+		return fmt.Errorf("agent does not exist or belongs to a Kubernetes installation")
 	}
 
 	return nil
 }
 
 func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agentId int) error {
-	setQuery := `UPDATE agents SET pipeline_id = ?, pipeline_name = (SELECT name FROM pipelines WHERE pipeline_id = ?) WHERE id = ?`
+	setQuery := `UPDATE agents SET pipeline_id = ?, pipeline_name = (SELECT name FROM pipelines WHERE pipeline_id = ?) WHERE id = ? AND management_mode = 'push'`
 
-	_, err := f.db.Exec(setQuery, pipelineId, pipelineId, agentId)
+	result, err := f.db.Exec(setQuery, pipelineId, pipelineId, agentId)
 	if err != nil {
 		return fmt.Errorf("failed to attach agent: %w", err)
+	}
+	if count, err := result.RowsAffected(); err != nil {
+		return err
+	} else if count == 0 {
+		return fmt.Errorf("agent does not exist or belongs to a Kubernetes installation")
 	}
 	return nil
 }
@@ -502,7 +546,7 @@ func (f *FrontendPipelineRepository) GetAgentInfo(agentId int) (*models.AgentInf
 	agent := &models.AgentInfoHome{}
 	var pipelineName sql.NullString
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP)
+	err := f.db.QueryRow("SELECT id, name, version, pipeline_name, hostname, ip, management_mode FROM agents WHERE id = ?", agentId).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineName, &agent.Hostname, &agent.IP, &agent.ManagementMode)
 	if err != nil {
 		return nil, err
 	}

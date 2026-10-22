@@ -1,0 +1,61 @@
+{
+  "title": "Kubelet node, pod and container metrics",
+  "type": "object",
+  "properties": {
+    "collection_interval": {
+      "type": "string",
+      "title": "Collection interval",
+      "default": "30s"
+    },
+    "endpoint": {
+      "type": "string",
+      "title": "Kubelet HTTPS endpoint",
+      "default": "https://${env:K8S_NODE_IP}:10250"
+    },
+    "node": {
+      "type": "string",
+      "title": "Node name",
+      "default": "${env:K8S_NODE_NAME}"
+    },
+    "auth_type": {
+      "type": "string",
+      "enum": [
+        "serviceAccount"
+      ],
+      "default": "serviceAccount"
+    },
+    "ca_file": {
+      "type": "string",
+      "title": "Kubelet CA file",
+      "default": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    },
+    "insecure_skip_verify": {
+      "type": "boolean",
+      "title": "Skip kubelet certificate verification",
+      "default": false
+    },
+    "metric_groups": {
+      "type": "array",
+      "title": "Metric groups",
+      "items": {
+        "type": "string",
+        "enum": [
+          "node",
+          "pod",
+          "container"
+        ]
+      },
+      "default": [
+        "node",
+        "pod",
+        "container"
+      ]
+    }
+  },
+  "required": [
+    "collection_interval",
+    "endpoint",
+    "auth_type",
+    "metric_groups"
+  ]
+}

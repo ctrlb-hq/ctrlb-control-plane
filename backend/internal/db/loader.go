@@ -21,9 +21,15 @@ func LoadSchemasFromDirectory(
 	}
 
 	insertQuery := `
-	INSERT OR IGNORE INTO component_schemas (
+		INSERT INTO component_schemas (
 		name, type, display_name, supported_signals, schema_json, ui_schema_json
-	) VALUES (?, ?, ?, ?, ?, ?);
+		) VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT(name) DO UPDATE SET
+			type = excluded.type,
+			display_name = excluded.display_name,
+			supported_signals = excluded.supported_signals,
+			schema_json = excluded.schema_json,
+			ui_schema_json = excluded.ui_schema_json;
 	`
 
 	for _, file := range schemaFiles {

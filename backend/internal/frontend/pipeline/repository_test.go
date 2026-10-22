@@ -110,11 +110,20 @@ func TestDeletePipeline(t *testing.T) {
 	repo, mock, cleanup := setupTestRepo(t)
 	defer cleanup()
 
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM agents WHERE id IN").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("DELETE FROM kubernetes_installations WHERE pipeline_id = \\?").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectExec("UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE pipeline_id = \\?").
+		WithArgs(101).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectExec("DELETE FROM pipelines WHERE pipeline_id = \\?").
 		WithArgs(101).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
 
 	err := repo.DeletePipeline(101)
 	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetAllAgentsAttachedToPipeline(t *testing.T) {
@@ -124,9 +133,9 @@ func TestGetAllAgentsAttachedToPipeline(t *testing.T) {
 	mock.ExpectQuery("SELECT a.id, a.name, a.version, a.pipeline_name, a.hostname, a.IP, (.+) FROM agents a").
 		WithArgs(1).
 		WillReturnRows(sqlmock.NewRows([]string{
-			"id", "name", "version", "pipeline_name", "hostname", "IP",
+			"id", "name", "version", "pipeline_name", "hostname", "IP", "management_mode",
 			"logs_rate_sent", "traces_rate_sent", "metrics_rate_sent", "status",
-		}).AddRow(1, "agent-1", "v1", "p1", "host1", "10.0.0.1", 1, 2, 3, "active"))
+		}).AddRow(1, "agent-1", "v1", "p1", "host1", "10.0.0.1", "push", 1, 2, 3, "active"))
 
 	agents, err := repo.GetAllAgentsAttachedToPipeline(1)
 	assert.NoError(t, err)
@@ -138,10 +147,10 @@ func TestGetAgentInfo(t *testing.T) {
 	repo, mock, cleanup := setupTestRepo(t)
 	defer cleanup()
 
-	mock.ExpectQuery("SELECT id, name, version, pipeline_name, hostname, ip FROM agents WHERE id = \\?").
+	mock.ExpectQuery("SELECT id, name, version, pipeline_name, hostname, ip, management_mode FROM agents WHERE id = \\?").
 		WithArgs(123).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "version", "pipeline_name", "hostname", "ip"}).
-			AddRow(123, "agentX", "v2", "PipeY", "hostY", "192.168.1.1"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "version", "pipeline_name", "hostname", "ip", "management_mode"}).
+			AddRow(123, "agentX", "v2", "PipeY", "hostY", "192.168.1.1", "push"))
 
 	mock.ExpectQuery("SELECT status FROM aggregated_agent_metrics WHERE agent_id = \\?").
 		WithArgs(123).

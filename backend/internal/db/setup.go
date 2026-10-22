@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	_ "github.com/mattn/go-sqlite3"
@@ -10,10 +11,17 @@ import (
 
 // DBInit initializes the DB and creates all tables.
 func DBInit(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	separator := "?"
+	if strings.Contains(dbPath, "?") {
+		separator = "&"
+	}
+	db, err := sql.Open("sqlite3", dbPath+separator+"_foreign_keys=on&_busy_timeout=5000&_txlock=immediate")
 	if err != nil {
 		return nil, err
 	}
+	// SQLite permits one writer. One connection also keeps in-memory databases
+	// and transaction isolation consistent across simultaneous check-ins.
+	db.SetMaxOpenConns(1)
 
 	// Enforce foreign keys in SQLite
 	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
@@ -50,6 +58,9 @@ func DBInit(dbPath string) (*sql.DB, error) {
 		return nil, err
 	}
 	if err := createComponentSchemasTable(db); err != nil {
+		return nil, err
+	}
+	if err := migrateKubernetes(db); err != nil {
 		return nil, err
 	}
 

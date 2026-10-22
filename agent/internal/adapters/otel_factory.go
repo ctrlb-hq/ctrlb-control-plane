@@ -3,6 +3,7 @@ package adapters
 import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
+	"go.opentelemetry.io/collector/confmap/provider/envprovider"
 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
 	"go.opentelemetry.io/collector/connector"
 	"go.opentelemetry.io/collector/exporter"
@@ -16,6 +17,7 @@ import (
 	"go.opentelemetry.io/collector/processor/memorylimiterprocessor"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
+	"go.opentelemetry.io/collector/service/telemetry/otelconftelemetry"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -30,72 +32,108 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/googlecloudmonitoringreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kubeletstatsreceiver"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/storage/filestorage"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
 )
 
 func componentsFactory() (otelcol.Factories, error) {
-	factories := otelcol.Factories{}
+	factories := otelcol.Factories{
+		Telemetry: otelconftelemetry.NewFactory(),
+	}
+	var err error
 
-	// Receivers
-	factories.Receivers = map[component.Type]receiver.Factory{
-		otlpreceiver.NewFactory().Type():                  otlpreceiver.NewFactory(),
-		hostmetricsreceiver.NewFactory().Type():           hostmetricsreceiver.NewFactory(),
-		awscloudwatchmetricsreceiver.NewFactory().Type():  awscloudwatchmetricsreceiver.NewFactory(),
-		awscloudwatchreceiver.NewFactory().Type():         awscloudwatchreceiver.NewFactory(),
-		azuremonitorreceiver.NewFactory().Type():          azuremonitorreceiver.NewFactory(),
-		filelogreceiver.NewFactory().Type():               filelogreceiver.NewFactory(),
-		googlecloudmonitoringreceiver.NewFactory().Type(): googlecloudmonitoringreceiver.NewFactory(),
+	// MakeFactoryMap retains upstream aliases for configurations created before
+	// component types adopted names such as file_log and host_metrics.
+	factories.Receivers, err = otelcol.MakeFactoryMap[receiver.Factory](
+		otlpreceiver.NewFactory(),
+		hostmetricsreceiver.NewFactory(),
+		awscloudwatchmetricsreceiver.NewFactory(),
+		awscloudwatchreceiver.NewFactory(),
+		azuremonitorreceiver.NewFactory(),
+		filelogreceiver.NewFactory(),
+		googlecloudmonitoringreceiver.NewFactory(),
+		kubeletstatsreceiver.NewFactory(),
+	)
+	if err != nil {
+		return otelcol.Factories{}, err
 	}
 
-	// Processors
-	factories.Processors = map[component.Type]processor.Factory{
-		batchprocessor.NewFactory().Type():                batchprocessor.NewFactory(),
-		memorylimiterprocessor.NewFactory().Type():        memorylimiterprocessor.NewFactory(),
-		probabilisticsamplerprocessor.NewFactory().Type(): probabilisticsamplerprocessor.NewFactory(),
-		attributesprocessor.NewFactory().Type():           attributesprocessor.NewFactory(),
-		filterprocessor.NewFactory().Type():               filterprocessor.NewFactory(),
-		tailsamplingprocessor.NewFactory().Type():         tailsamplingprocessor.NewFactory(),
+	factories.Processors, err = otelcol.MakeFactoryMap[processor.Factory](
+		batchprocessor.NewFactory(),
+		memorylimiterprocessor.NewFactory(),
+		probabilisticsamplerprocessor.NewFactory(),
+		attributesprocessor.NewFactory(),
+		filterprocessor.NewFactory(),
+		tailsamplingprocessor.NewFactory(),
+		k8sattributesprocessor.NewFactory(),
+		resourceprocessor.NewFactory(),
+	)
+	if err != nil {
+		return otelcol.Factories{}, err
 	}
 
-	// Exporters
-	factories.Exporters = map[component.Type]exporter.Factory{
-		otlpexporter.NewFactory().Type():       otlpexporter.NewFactory(),
-		otlphttpexporter.NewFactory().Type():   otlphttpexporter.NewFactory(),
-		debugexporter.NewFactory().Type():      debugexporter.NewFactory(),
-		kafkaexporter.NewFactory().Type():      kafkaexporter.NewFactory(),
-		prometheusexporter.NewFactory().Type(): prometheusexporter.NewFactory(),
+	factories.Exporters, err = otelcol.MakeFactoryMap[exporter.Factory](
+		otlpexporter.NewFactory(),
+		otlphttpexporter.NewFactory(),
+		debugexporter.NewFactory(),
+		kafkaexporter.NewFactory(),
+		prometheusexporter.NewFactory(),
+	)
+	if err != nil {
+		return otelcol.Factories{}, err
 	}
 
-	// Connectors (empty for now, but initialized)
+	// This distribution does not register connectors.
 	factories.Connectors = map[component.Type]connector.Factory{}
 
-	// Extensions
-	factories.Extensions = map[component.Type]extension.Factory{
-		healthcheckextension.NewFactory().Type(): healthcheckextension.NewFactory(),
+	factories.Extensions, err = otelcol.MakeFactoryMap[extension.Factory](
+		healthcheckextension.NewFactory(),
+		filestorage.NewFactory(),
+	)
+	if err != nil {
+		return otelcol.Factories{}, err
 	}
 
 	return factories, nil
 }
 
 func getNewOTELCollector() (*otelcol.Collector, error) {
-	fmp := fileprovider.NewFactory()
-	configProviderSettings := otelcol.ConfigProviderSettings{
+	return newCollector(constants.AGENT_CONFIG_PATH, false)
+}
+
+// NewManagedCollector creates a Collector whose lifecycle belongs to the
+// management loop. Its config path is independent of the legacy VM globals.
+func NewManagedCollector(configPath string) (*otelcol.Collector, error) {
+	return newCollector(configPath, true)
+}
+
+func collectorConfigProviderSettings(configPath string) otelcol.ConfigProviderSettings {
+	return otelcol.ConfigProviderSettings{
 		ResolverSettings: confmap.ResolverSettings{
-			URIs:              []string{constants.AGENT_CONFIG_PATH},
-			ProviderFactories: []confmap.ProviderFactory{fmp},
+			URIs:              []string{configPath},
+			ProviderFactories: []confmap.ProviderFactory{fileprovider.NewFactory(), envprovider.NewFactory()},
+			DefaultScheme:     "env",
 		},
 	}
 
+}
+
+func newCollector(configPath string, managed bool) (*otelcol.Collector, error) {
 	settings := otelcol.CollectorSettings{
-		BuildInfo:              component.NewDefaultBuildInfo(),
-		Factories:              componentsFactory,
-		ConfigProviderSettings: configProviderSettings,
+		BuildInfo:               component.NewDefaultBuildInfo(),
+		Factories:               componentsFactory,
+		ConfigProviderSettings:  collectorConfigProviderSettings(configPath),
+		DisableGracefulShutdown: managed,
+		SkipSettingGRPCLogger:   managed,
 		LoggingOptions: []zap.Option{
 			zap.WrapCore(func(_ zapcore.Core) zapcore.Core {
 				return logger.Logger.Core()

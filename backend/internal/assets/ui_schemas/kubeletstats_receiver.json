@@ -1,0 +1,33 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Control",
+      "scope": "#/properties/collection_interval"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/endpoint"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/node"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/auth_type"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/ca_file"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/insecure_skip_verify"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/metric_groups"
+    }
+  ]
+}

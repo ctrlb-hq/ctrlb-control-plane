@@ -1,6 +1,7 @@
 package frontendpipeline
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -111,6 +112,10 @@ func (f *FrontendPipelineHandler) DeletePipeline(w http.ResponseWriter, r *http.
 	err = f.FrontendPipelineService.DeletePipeline(pipelineIdInt)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error deleting pipeline [ID: %s]: %v", pipelineId, err))
+		if errors.Is(err, utils.ErrPipelineDoesNotExists) {
+			utils.SendJSONError(w, http.StatusNotFound, "Pipeline not found")
+			return
+		}
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

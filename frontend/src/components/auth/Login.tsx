@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import authService from "../../services/auth";
 import { LoginCredentials } from "../../types/auth.types";
 import { ROUTES } from "../../constants";
+import ProductBrand from "../ProductBrand";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -77,9 +78,10 @@ const Login: React.FC = () => {
 	const hasValidationError = !!emailError || !!passwordError;
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-50">
+		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
 			<div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-				<h2 className="text-center text-3xl font-bold">Sign In</h2>
+				<ProductBrand variant="auth" />
+				<h2 className="text-center text-xl font-semibold">Sign In</h2>
 
 				{error && (
 					<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">

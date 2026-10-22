@@ -1,177 +1,271 @@
 package configcompiler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
+// CompileGraphToJSON preserves directed processing order. Each signal follows a
+// linear processor chain, with receiver fan-in and exporter fan-out supported.
 func CompileGraphToJSON(graph models.PipelineGraph) (*map[string]any, error) {
-	utils.Logger.Info("Starting pipeline graph compilation")
 	receivers, processors, exporters, pipelines, err := buildPipelines(graph)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("Failed to build pipelines: %v", err))
 		return nil, err
 	}
-
-	utils.Logger.Info(fmt.Sprintf("Successfully compiled pipeline graph: receivers=%d processors=%d exporters=%d pipelines=%d",
-		len(receivers), len(processors), len(exporters), len(pipelines)))
-
-	// Construct the final config map
-	finalConfig := map[string]any{
-		"receivers":  receivers,
-		"processors": processors,
-		"exporters":  exporters,
-		"service": map[string]any{
-			"pipelines": pipelines,
-			"telemetry": constants.TelemetryService,
-		},
+	service := map[string]any{"pipelines": pipelines, "telemetry": constants.TelemetryService}
+	config := map[string]any{"receivers": receivers, "processors": processors, "exporters": exporters, "service": service}
+	extensions := map[string]any{}
+	for _, node := range graph.Nodes {
+		if node.ComponentRole != "receiver" || componentType(node.ComponentName, node.ComponentRole) != "file_log" {
+			continue
+		}
+		storage, exists := node.Config["storage"]
+		if !exists {
+			continue
+		}
+		name, ok := storage.(string)
+		if ok && name == "" {
+			continue
+		}
+		if !ok || (name != "file_storage" && !strings.HasPrefix(name, "file_storage/")) {
+			return nil, fmt.Errorf("file log storage must reference file_storage or a named file_storage instance")
+		}
+		extensions[name] = map[string]any{"directory": "${env:STATE_DIR}/offsets", "create_directory": true}
 	}
-
-	return &finalConfig, nil
+	if len(extensions) > 0 {
+		names := make([]string, 0, len(extensions))
+		for name := range extensions {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		config["extensions"], service["extensions"] = extensions, names
+	}
+	return &config, nil
 }
 
-// intersectSupportedSignals returns the intersection of two string slices.
-func intersectSupportedSignals(firstSignals, secondSignals []string) []string {
-	intersection := []string{}
-	signalSet := make(map[string]bool)
-
-	for _, signal := range firstSignals {
-		signalSet[signal] = true
+// Schema names carry a final role suffix. Internal underscores belong to the
+// component type; old schema spellings remain compatible with existing graphs.
+func componentType(name, role string) string {
+	name = strings.TrimSuffix(name, "_"+role)
+	aliases := map[string]string{
+		"filelog": "file_log", "hostmetrics": "host_metrics", "kubeletstats": "kubelet_stats",
+		"k8sattributes": "k8s_attributes", "memorylimiter": "memory_limiter",
+		"probabilisticsampler": "probabilistic_sampler", "tailsampling": "tail_sampling",
+		"otlp_grpc": "otlp", "otlphttp": "otlp_http",
 	}
+	if canonical, ok := aliases[name]; ok {
+		return canonical
+	}
+	return name
+}
 
-	for _, signal := range secondSignals {
-		if signalSet[signal] {
-			intersection = append(intersection, signal)
+func nodeAlias(node models.PipelineNodes) (string, error) {
+	typ := componentType(node.ComponentName, node.ComponentRole)
+	if typ == "" || strings.ContainsAny(typ, "/ \t\r\n") {
+		return "", fmt.Errorf("invalid component type")
+	}
+	data, err := json.Marshal(node.Config)
+	if err != nil {
+		return "", fmt.Errorf("component configuration is not JSON serializable")
+	}
+	hash := sha256.Sum256(data)
+	name := strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-' || r == '.' {
+			return r
+		}
+		return '_'
+	}, strings.TrimSpace(node.Name))
+	if name == "" {
+		name = "component"
+	}
+	return fmt.Sprintf("%s/%s_%s", typ, name, hex.EncodeToString(hash[:6])), nil
+}
+
+func supports(node models.PipelineNodes, signal string) bool {
+	for _, value := range node.SupportedSignals {
+		if value == signal {
+			return true
 		}
 	}
+	return false
+}
 
-	return intersection
+type graphNode struct {
+	node  models.PipelineNodes
+	alias string
+	next  []string
+}
+
+type signalPath struct {
+	signal     string
+	receivers  []string
+	processors []string
+	exporters  []string
 }
 
 func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any, map[string]any, Pipelines, error) {
 	if len(graph.Nodes) == 0 {
 		return nil, nil, nil, nil, fmt.Errorf("empty pipeline graph")
 	}
-
-	utils.Logger.Info(fmt.Sprintf("Building pipelines from graph: nodes=%d edges=%d",
-		len(graph.Nodes), len(graph.Edges)))
-
-	// Index nodes by ID
-	nodesByID := make(map[string]models.PipelineNodes)
+	nodes := map[string]*graphNode{}
+	aliases := map[string]bool{}
+	ids := make([]string, 0, len(graph.Nodes))
 	for _, node := range graph.Nodes {
-		nodesByID[strconv.Itoa(node.ComponentID)] = node
+		id := strconv.Itoa(node.ComponentID)
+		if node.ComponentID <= 0 || nodes[id] != nil {
+			return nil, nil, nil, nil, fmt.Errorf("component IDs must be unique positive integers")
+		}
+		if node.ComponentRole != "receiver" && node.ComponentRole != "processor" && node.ComponentRole != "exporter" {
+			return nil, nil, nil, nil, fmt.Errorf("unknown component role")
+		}
+		if len(node.SupportedSignals) == 0 {
+			return nil, nil, nil, nil, fmt.Errorf("each component must support at least one signal")
+		}
+		for _, signal := range node.SupportedSignals {
+			if signal != "logs" && signal != "metrics" && signal != "traces" {
+				return nil, nil, nil, nil, fmt.Errorf("unknown telemetry signal")
+			}
+		}
+		alias, err := nodeAlias(node)
+		if err != nil {
+			return nil, nil, nil, nil, err
+		}
+		if aliases[alias] {
+			return nil, nil, nil, nil, fmt.Errorf("component names must distinguish nodes with identical types and configurations")
+		}
+		aliases[alias] = true
+		nodes[id] = &graphNode{node: node, alias: alias}
+		ids = append(ids, id)
 	}
-
-	// Build the adjacency list for graph traversal
-	adjacencyList := make(map[string][]string)
+	sort.Slice(ids, func(i, j int) bool { return nodes[ids[i]].alias < nodes[ids[j]].alias })
+	edges := map[string]bool{}
 	for _, edge := range graph.Edges {
-		if _, exists := nodesByID[edge.Source]; !exists {
-			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent source node: %s", edge.Source)
+		from, to := nodes[edge.Source], nodes[edge.Target]
+		if from == nil || to == nil {
+			return nil, nil, nil, nil, fmt.Errorf("edge references a nonexistent component")
 		}
-		if _, exists := nodesByID[edge.Target]; !exists {
-			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent target node: %s", edge.Target)
+		if from.node.ComponentRole == "exporter" || to.node.ComponentRole == "receiver" {
+			return nil, nil, nil, nil, fmt.Errorf("edges must lead from receivers through processors to exporters")
 		}
-		adjacencyList[edge.Source] = append(adjacencyList[edge.Source], edge.Target)
-		adjacencyList[edge.Target] = append(adjacencyList[edge.Target], edge.Source)
+		key := edge.Source + ":" + edge.Target
+		if edges[key] {
+			return nil, nil, nil, nil, fmt.Errorf("duplicate graph edge")
+		}
+		edges[key] = true
+		from.next = append(from.next, edge.Target)
 	}
-
-	// Find connected components using BFS
-	visitedNodes := make(map[string]bool)
-	var connectedComponents [][]models.PipelineNodes
-
-	for nodeID := range nodesByID {
-		if visitedNodes[nodeID] {
+	state := map[string]int{}
+	var visit func(string) error
+	visit = func(id string) error {
+		if state[id] == 1 {
+			return fmt.Errorf("pipeline graph contains a cycle")
+		}
+		if state[id] == 2 {
+			return nil
+		}
+		state[id] = 1
+		node := nodes[id]
+		sort.Slice(node.next, func(i, j int) bool { return nodes[node.next[i]].alias < nodes[node.next[j]].alias })
+		for _, next := range node.next {
+			if err := visit(next); err != nil {
+				return err
+			}
+		}
+		state[id] = 2
+		return nil
+	}
+	for _, id := range ids {
+		if err := visit(id); err != nil {
+			return nil, nil, nil, nil, err
+		}
+	}
+	paths := map[string]*signalPath{}
+	used := map[string]bool{}
+	for _, id := range ids {
+		if nodes[id].node.ComponentRole != "receiver" {
 			continue
 		}
-
-		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%s", nodeID))
-		nodeQueue := []string{nodeID}
-		var currentComponent []models.PipelineNodes
-		visitedNodes[nodeID] = true
-
-		for len(nodeQueue) > 0 {
-			currentNodeID := nodeQueue[0]
-			nodeQueue = nodeQueue[1:]
-
-			node, exists := nodesByID[currentNodeID]
-			if !exists {
-				return nil, nil, nil, nil, fmt.Errorf("invalid node reference: %s", currentNodeID)
+		for _, signal := range []string{"logs", "metrics", "traces"} {
+			if !supports(nodes[id].node, signal) {
+				continue
 			}
-			currentComponent = append(currentComponent, node)
-
-			for _, neighborID := range adjacencyList[currentNodeID] {
-				if !visitedNodes[neighborID] {
-					visitedNodes[neighborID] = true
-					nodeQueue = append(nodeQueue, neighborID)
+			current := id
+			chain := []string{}
+			exporters := []string{}
+			pathIDs := []string{id}
+			for {
+				processors, destinations := []string{}, []string{}
+				for _, next := range nodes[current].next {
+					if !supports(nodes[next].node, signal) {
+						continue
+					}
+					if nodes[next].node.ComponentRole == "processor" {
+						processors = append(processors, next)
+					} else {
+						destinations = append(destinations, next)
+					}
 				}
-			}
-		}
-		connectedComponents = append(connectedComponents, currentComponent)
-	}
-
-	// Prepare maps for pipeline configurations
-	receiversConfig := make(map[string]any)
-	processorsConfig := make(map[string]any)
-	exportersConfig := make(map[string]any)
-	pipelines := make(Pipelines)
-	pipelineCounter := 1 // Global counter for unique naming across pipelines
-
-	// Process each connected component to build pipelines.
-	for _, componentNodes := range connectedComponents {
-		utils.Logger.Debug(fmt.Sprintf("Building pipeline configuration: componentNodeCount=%d", len(componentNodes)))
-
-		// Compute common supported signals for all nodes in this component.
-		var commonSupportedSignals []string
-		if len(componentNodes) > 0 {
-			commonSupportedSignals = componentNodes[0].SupportedSignals
-			for _, node := range componentNodes[1:] {
-				commonSupportedSignals = intersectSupportedSignals(commonSupportedSignals, node.SupportedSignals)
-			}
-		}
-
-		// Build role-specific alias lists.
-		var receiverAliases, processorAliases, exporterAliases []string
-		for _, node := range componentNodes {
-			// Use meaningful alias formatting: Trims component name after underscore and converts node name to CamelCase.
-			alias := fmt.Sprintf("%s/%s_%s", utils.TrimAfterUnderscore(node.ComponentName), utils.ToCamelCase(node.Name), utils.HashFromConfig(node.Config))
-			switch node.ComponentRole {
-			case "receiver":
-				receiverAliases = append(receiverAliases, alias)
-				receiversConfig[alias] = node.Config
-			case "processor":
-				processorAliases = append(processorAliases, alias)
-				processorsConfig[alias] = node.Config
-			case "exporter":
-				exporterAliases = append(exporterAliases, alias)
-				exportersConfig[alias] = node.Config
-			default:
-				return nil, nil, nil, nil, fmt.Errorf("unknown component role: %s", node.ComponentRole)
-			}
-		}
-
-		// Create separate pipeline per supported signal if multiple signals exist;
-		// if none exist, fall back to "undefined".
-		if len(commonSupportedSignals) > 0 {
-			for _, signal := range commonSupportedSignals {
-				pipelineName := fmt.Sprintf("%s/pipeline_%d", signal, pipelineCounter)
-				pipelines[pipelineName] = Pipeline{
-					Receivers:  receiverAliases,
-					Processors: processorAliases,
-					Exporters:  exporterAliases,
+				if len(processors) > 1 || (len(processors) > 0 && len(destinations) > 0) {
+					return nil, nil, nil, nil, fmt.Errorf("ambiguous processor branch for %s: use one processor chain before exporter fan-out", signal)
 				}
-				pipelineCounter++
+				if len(processors) == 1 {
+					current = processors[0]
+					chain = append(chain, nodes[current].alias)
+					pathIDs = append(pathIDs, current)
+					continue
+				}
+				for _, destination := range destinations {
+					exporters = append(exporters, nodes[destination].alias)
+					pathIDs = append(pathIDs, destination)
+				}
+				break
 			}
-		} else {
-			return nil, nil, nil, nil, fmt.Errorf("no supported signals found for component: %s", componentNodes[0].Name)
+			if len(exporters) == 0 {
+				continue
+			}
+			for _, pathID := range pathIDs {
+				used[pathID] = true
+			}
+			keyJSON, _ := json.Marshal([]any{signal, chain, exporters})
+			key := string(keyJSON)
+			if paths[key] == nil {
+				paths[key] = &signalPath{signal: signal, processors: chain, exporters: exporters}
+			}
+			paths[key].receivers = append(paths[key].receivers, nodes[id].alias)
 		}
 	}
-
-	utils.Logger.Info(fmt.Sprintf("Successfully built pipeline configurations: receivers=%d processors=%d exporters=%d",
-		len(receiversConfig), len(processorsConfig), len(exportersConfig)))
-
-	return receiversConfig, processorsConfig, exportersConfig, pipelines, nil
+	receivers, processors, exporters := map[string]any{}, map[string]any{}, map[string]any{}
+	for _, id := range ids {
+		if !used[id] {
+			return nil, nil, nil, nil, fmt.Errorf("every component must belong to a supported receiver-to-exporter path")
+		}
+		node := nodes[id]
+		switch node.node.ComponentRole {
+		case "receiver":
+			receivers[node.alias] = node.node.Config
+		case "processor":
+			processors[node.alias] = node.node.Config
+		case "exporter":
+			exporters[node.alias] = node.node.Config
+		}
+	}
+	pipelines := Pipelines{}
+	for _, path := range paths {
+		sort.Strings(path.receivers)
+		pipeline := Pipeline{Receivers: path.receivers, Processors: path.processors, Exporters: path.exporters}
+		data, _ := json.Marshal(pipeline)
+		hash := sha256.Sum256(data)
+		name := path.signal + "/pipeline_" + hex.EncodeToString(hash[:6])
+		pipelines[name] = pipeline
+	}
+	return receivers, processors, exporters, pipelines, nil
 }

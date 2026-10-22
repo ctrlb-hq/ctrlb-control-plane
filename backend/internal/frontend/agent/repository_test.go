@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *FrontendAgentRepository) {
@@ -159,10 +160,10 @@ func TestGetLatestAgentSince(t *testing.T) {
 	unixTimestamp := time.Now().Unix()
 	unixTimestampStr := strconv.FormatInt(unixTimestamp, 10)
 
-	mock.ExpectQuery("SELECT id, name, registered_at FROM agents WHERE registered_at > ?").
+	mock.ExpectQuery("SELECT id, name, registered_at, pipeline_id FROM agents WHERE registered_at > \\? AND pipeline_id IS NOT NULL AND management_mode = 'push'").
 		WithArgs(unixTimestampStr).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "registered_at"}).
-			AddRow("id1", "agent1", unixTimestamp))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "registered_at", "pipeline_id"}).
+			AddRow("id1", "agent1", unixTimestamp, 1))
 
 	agent, err := repo.GetLatestAgentSince(unixTimestampStr)
 	if err != nil {
@@ -171,5 +172,34 @@ func TestGetLatestAgentSince(t *testing.T) {
 
 	if agent.Name != "agent1" {
 		t.Errorf("expected agent1, got %s", agent.Name)
+	}
+	if agent.PipelineID != "1" {
+		t.Errorf("expected pipeline 1, got %s", agent.PipelineID)
+	}
+}
+
+func TestVMLatestAgentIgnoresNewerKubernetesEnrollment(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	_, err = db.Exec(`CREATE TABLE agents (
+		id TEXT PRIMARY KEY, name TEXT, registered_at INTEGER,
+		pipeline_id INTEGER, management_mode TEXT
+	);
+	INSERT INTO agents VALUES ('vm', 'VM collector', 101, 1, 'push');
+	INSERT INTO agents VALUES ('kubernetes', 'Kubernetes collector', 102, 1, 'pull');`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repository := NewFrontendAgentRepository(db)
+	latest, err := repository.GetLatestAgentSince("100")
+	if err != nil || latest == nil || latest.ID != "vm" {
+		t.Fatalf("expected the VM enrollment, got %#v, error %v", latest, err)
+	}
+	latest, err = repository.GetLatestAgentSince("101")
+	if err != nil || latest != nil {
+		t.Fatalf("a Kubernetes enrollment must not complete VM setup: got %#v, error %v", latest, err)
 	}
 }

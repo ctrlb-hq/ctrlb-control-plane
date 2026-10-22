@@ -1,0 +1,49 @@
+{
+  "title": "Resource attributes",
+  "type": "object",
+  "properties": {
+    "attributes": {
+      "type": "array",
+      "title": "Resource attribute actions",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "oneOf": [
+              { "type": "string", "title": "Text" },
+              { "type": "number", "title": "Number" },
+              { "type": "boolean", "title": "Boolean" }
+            ],
+            "title": "Value"
+          },
+          "from_attribute": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "insert",
+              "update",
+              "upsert",
+              "delete",
+              "hash",
+              "extract"
+            ],
+            "default": "upsert"
+          }
+        },
+        "required": [
+          "key",
+          "action"
+        ]
+      }
+    }
+  },
+  "required": [
+    "attributes"
+  ]
+}

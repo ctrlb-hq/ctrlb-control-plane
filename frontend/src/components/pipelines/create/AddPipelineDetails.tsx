@@ -11,7 +11,7 @@ import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands } from "@/constants";
 
-type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
+type Platform = "linux" | "macOS";
 
 interface formData {
 	name: string;
@@ -258,7 +258,6 @@ const AddPipelineDetails = ({
 									Select a platform
 								</option>
 								<option value="linux">Linux</option>
-								<option value="kubernetes">Kubernetes</option>
 								<option value="macOS">macOS</option>
 							</select>
 

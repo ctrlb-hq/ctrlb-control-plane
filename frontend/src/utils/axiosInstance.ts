@@ -1,10 +1,8 @@
 import axios from "axios";
-
-const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
+import { AUTH_API_URL, FRONTEND_API_URL } from "../config";
 
 const axiosInstance = axios.create({
-	baseURL: API_BASE_URL,
+	baseURL: FRONTEND_API_URL,
 	headers: {
 		Authorization: `${localStorage.getItem("authToken")}`,
 	},
@@ -63,7 +61,7 @@ axiosInstance.interceptors.response.use(
 
 			try {
 				const refreshToken = localStorage.getItem("refreshToken");
-				const response = await axios.post(`${apiUrl}/api/auth/v1/refresh`, {
+				const response = await axios.post(`${AUTH_API_URL}/refresh`, {
 					refresh_token: refreshToken,
 				});
 
@@ -90,10 +88,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
-// Extend ImportMeta interface to include env property
-interface ImportMetaWithEnv extends ImportMeta {
-	env: {
-		VITE_API_URL: string;
-	};
-}

@@ -11,6 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { useToast } from "@/hooks/useToast";
+import { refreshKubernetesStatus } from "@/hooks/useKubernetesInstallations";
 import pipelineServices from "@/services/pipeline";
 import { ComponentService } from "@/services/component";
 import { Edit, Trash2, Loader2 } from "lucide-react";
@@ -35,11 +36,13 @@ const PipelineEditorSheet = ({
 	name,
 	setIsSheetOpen,
 	isEditModeStart,
+	isKubernetes = false,
 }: {
 	pipelineId: string;
 	name?: string;
 	setIsSheetOpen: Dispatch<SetStateAction<boolean>>;
 	isEditModeStart: boolean;
+	isKubernetes?: boolean;
 }) => {
 	const [isEditMode, setIsEditMode] = useState(isEditModeStart);
 	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
@@ -144,7 +147,7 @@ const PipelineEditorSheet = ({
 
 	const handleDeployChanges = async () => {
 		const toastId = toast({
-			title: "Deploying changes...",
+			title: isKubernetes ? "Saving configuration..." : "Deploying changes...",
 			description: (
 				<div className="flex items-center">
 					<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -178,24 +181,27 @@ const PipelineEditorSheet = ({
 			toastId.dismiss();
 
 			toast({
-				title: "Success",
-				description: "Changes deployed successfully",
+				title: isKubernetes ? "Configuration saved" : "Success",
+				description: isKubernetes
+					? "Rollout is pending. Collectors apply it at their next check-in; follow each node's status."
+					: "Changes deployed successfully",
 				variant: "default",
 			});
 
 			setHasDeployError(false);
 			setIsEditMode(false);
 			clearChangesLog();
-			fetchGraph();
+			if (isKubernetes) refreshKubernetesStatus();
 			setIsSheetOpen(false);
-		} catch (err) {
-			console.error("Deploy error:", err);
+		} catch {
 			toastId.dismiss();
 
 			setHasDeployError(true);
 			toast({
 				title: "Error",
-				description: "Failed to deploy changes",
+				description: isKubernetes
+					? "Could not save this configuration. Check that every source has an ordered path to a destination."
+					: "Failed to deploy changes",
 				variant: "destructive",
 			});
 		}
@@ -286,9 +292,9 @@ const PipelineEditorSheet = ({
 											))}
 										</div>
 									</SheetDescription>
-									<SheetClose className="mt-4">
-										<Button onClick={handleDeployChanges} className="bg-blue-500">
-											Deploy Changes
+									<SheetClose asChild>
+										<Button onClick={handleDeployChanges} className="mt-4 bg-blue-500">
+												{isKubernetes ? "Save configuration" : "Deploy Changes"}
 										</Button>
 									</SheetClose>
 								</div>

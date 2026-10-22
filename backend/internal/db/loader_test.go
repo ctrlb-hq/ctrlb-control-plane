@@ -2,13 +2,42 @@ package database_test
 
 import (
 	"database/sql"
+	"io/fs"
 	"strings"
 	"testing"
 	"testing/fstest"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/assets"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
 )
+
+func TestBundledSchemasRefreshExistingRowsAndIncludeKubernetesComponents(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+	_, err := db.Exec(`INSERT INTO component_schemas (name, type, display_name, supported_signals, schema_json, ui_schema_json)
+		VALUES ('filelog_receiver', 'receiver', 'stale schema', 'logs', '{}', '{}')`)
+	require.NoError(t, err)
+	schemas, err := fs.Sub(assets.Schemas, "schemas")
+	require.NoError(t, err)
+	uiSchemas, err := fs.Sub(assets.UI_Schemas, "ui_schemas")
+	require.NoError(t, err)
+	for iteration := 0; iteration < 2; iteration++ {
+		require.NoError(t, database.LoadSchemasFromDirectory(db, schemas, uiSchemas, database.GetComponentTypeMap(), database.GetSignalSupportMap()))
+	}
+	var schema, ui, name string
+	require.NoError(t, db.QueryRow("SELECT display_name, schema_json, ui_schema_json FROM component_schemas WHERE name = 'filelog_receiver'").Scan(&name, &schema, &ui))
+	require.NotEqual(t, "stale schema", name)
+	require.Contains(t, schema, `"storage"`)
+	require.Contains(t, schema, `"add_metadata_from_filepath"`)
+	require.Contains(t, ui, "#/properties/storage")
+	for _, component := range []string{"kubeletstats_receiver", "k8sattributes_processor", "resource_processor"} {
+		var count int
+		require.NoError(t, db.QueryRow("SELECT COUNT(*) FROM component_schemas WHERE name = ?", component).Scan(&count))
+		require.Equal(t, 1, count)
+	}
+}
 
 func setupTestDB(t *testing.T) *sql.DB {
 	db, err := database.DBInit(":memory:")
@@ -92,7 +121,7 @@ func TestLoadSchemasFromDirectory_InvalidJSON(t *testing.T) {
 	}
 	mockUISchemasFS := fstest.MapFS{
 		"badcomponent.json": &fstest.MapFile{
-			Data: []byte(`{}`), // valid or dummy ui schema
+			Data: []byte(`{}`),
 		},
 	}
 

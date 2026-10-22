@@ -1,5 +1,4 @@
-# Stage 1: Build
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 RUN apk add --no-cache gcc musl-dev
 
@@ -10,17 +9,28 @@ RUN go mod download
 
 COPY . .
 
-# Enable CGO explicitly
 ENV CGO_ENABLED=1
-RUN go build -o backend cmd/backend/main.go
+RUN go build -trimpath -ldflags="-s -w" -o /out/backend ./cmd/backend
 
-# Stage 2: Minimal image with sqlite support
-FROM alpine:latest
+FROM alpine:3.24
 
-RUN apk --no-cache add ca-certificates libc6-compat sqlite
+LABEL org.opencontainers.image.source="https://github.com/ctrlb-hq/ctrlb-control-plane" \
+      org.opencontainers.image.licenses="AGPL-3.0-only"
 
-COPY --from=builder /app/backend /backend
+RUN apk add --no-cache ca-certificates \
+    && addgroup -S -g 10001 ctrlb \
+    && adduser -S -D -H -u 10001 -G ctrlb ctrlb \
+    && mkdir /data \
+    && chown ctrlb:ctrlb /data
+
+COPY --from=builder /out/backend /usr/local/bin/backend
+
+# The application stores backend.db and app.log in its working directory.
+WORKDIR /data
+USER 10001:10001
+
+ENV PORT=8096
 
 EXPOSE 8096
 
-ENTRYPOINT ["/backend"]
+ENTRYPOINT ["/usr/local/bin/backend"]

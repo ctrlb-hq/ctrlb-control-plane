@@ -18,6 +18,14 @@
     },
     {
       "type": "Control",
+      "scope": "#/properties/include_file_path"
+    },
+    {
+      "type": "Control",
+      "scope": "#/properties/storage"
+    },
+    {
+      "type": "Control",
       "scope": "#/properties/poll_interval",
       "label": "Poll Interval"
     },
@@ -59,6 +67,10 @@
             {
               "type": "Control",
               "scope": "#/properties/parse_from"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/add_metadata_from_filepath"
             }
           ]
         }

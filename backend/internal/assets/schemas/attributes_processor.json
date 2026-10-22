@@ -14,10 +14,10 @@
             "minLength": 1
           },
           "value": {
-            "type": [
-              "string",
-              "number",
-              "boolean"
+            "oneOf": [
+              { "type": "string", "title": "Text" },
+              { "type": "number", "title": "Number" },
+              { "type": "boolean", "title": "Boolean" }
             ],
             "title": "Value"
           },

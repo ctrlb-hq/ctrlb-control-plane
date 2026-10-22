@@ -1,100 +1,91 @@
-# Contribution Guidelines
-Welcome! 🚀 We're excited that you're interested in contributing to this project. Please follow these guidelines to ensure a smooth and consistent development experience.
+# Contributing
 
-## ✅ How to Contribute
+The repository has separate Go modules for the backend and collector, plus a React frontend. Run checks in the module you change. There is no root Go module.
 
-### 1. Fork the repo and clone it
+## Set up
 
-```bash
-git clone https://github.com/your-username/ctrlb-control-plane.git
-```
-
-### 2. Create a new branch
+Clone this repository, or your fork if you plan to submit changes from one:
 
 ```bash
-git checkout -b feat/<FEAT_NAME>
+git clone https://github.com/ctrlb-hq/ctrlb-control-plane.git
+cd ctrlb-control-plane
+git switch -c docs/describe-your-change
 ```
 
-### Branch Naming Convention
+Use a short branch name with the appropriate prefix, such as `feat/`, `fix/`, `refactor/`, `sec/`, `test/`, `docs/`, or `chore/`.
 
-Please use the following format for branch names:
+Check the toolchain declarations before installing Go. `backend/go.mod` declares Go 1.23.0 with toolchain `go1.24.4`; `agent/go.mod` requires Go 1.26.0. Backend builds use `github.com/mattn/go-sqlite3`, so they require CGO and a C compiler. Use Node.js 24 and npm for the frontend, matching its Docker build.
 
+The [getting started guide](docs/getting-started.md) explains backend startup and collector setup. For the frontend:
+
+```bash
+cd frontend
+npm ci --legacy-peer-deps
+npm run dev
 ```
-[type]/short-description
+
+The UI runs on port `3030` and defaults to a backend on port `8096`. See the [frontend README](frontend/README.md) for API URL and build configuration.
+
+## Check your changes
+
+For backend changes, run from `backend/`:
+
+```bash
+go test ./...
+go vet ./...
+go build ./cmd/backend
 ```
 
-- `feat/` – New feature
-- `fix/` – Bug fix
-- `refactor/` – Code refactoring
-- `sec/` – Security-related work
-- `test/` – Testing improvements
-- `docs/` – Documentation changes
-- `chore/` – Maintenance or build-related changes
+For collector changes, run from `agent/`:
 
-**Examples:**
-- `feat/agent-label-endpoint`
-- `fix/null-agent-id`
-- `sec/add-auth-validation`
-  
+```bash
+go test ./...
+go vet ./...
+go build ./cmd/ctrlb_collector
+```
 
-### 3. Follow Commit Message Guidelines
+Run focused Go checks while developing, for example `go test ./internal/kubernetes` in `backend/` or `go test ./internal/managed` in `agent/`. Run the relevant module suite before submitting. The collector imports many OpenTelemetry components; its first build and test run can take substantial time and memory. `go test -p 1 ./...` limits concurrent package builds on smaller machines.
 
-Use the following format:
+Format changed Go files with `gofmt`. For concurrency changes, run the affected packages with `go test -race`. See [backend testing](docs/backend/testing.md) for more examples.
+
+For frontend changes, run from `frontend/`:
+
+```bash
+npm test
+npm run build
+npm run lint
+npm run format:check
+```
+
+The frontend utility tests use Node's test runner. There is no configured browser test suite, so exercise changed screens with a running backend and record the result in the pull request. `npm run build` checks TypeScript before creating `dist/`.
+
+Use the repository's Prettier configuration for frontend files. To format only changed files, pass their paths to `npx prettier --write`; `npm run format:fix` formats the whole frontend. Keep unrelated formatting changes out of the pull request. If a check fails on unchanged code, include the failure and identify it separately from your changes.
+
+For Kubernetes configuration changes, use the [preset compatibility checks](docs/kubernetes.md#validate-the-collection-preset) to validate the backend's generated configuration against the collector's component factories. Follow the [Kubernetes setup guide](docs/kubernetes-setup.md) to verify deployment changes in a test cluster.
+
+## Commits and pull requests
+
+Use the existing commit format:
 
 ```text
 [TYPE]: Short description of change
 ```
 
-#### Allowed Types:
+| Type         | Purpose                               |
+| ------------ | ------------------------------------- |
+| `[FEAT]`     | New behavior                          |
+| `[FIX]`      | Bug fix                               |
+| `[REFACTOR]` | Refactoring without a behavior change |
+| `[SEC]`      | Security change                       |
+| `[TEST]`     | Test changes                          |
+| `[DOCS]`     | Documentation                         |
+| `[CHORE]`    | Build, CI, or dependencies            |
+| `[PERF]`     | Performance                           |
+| `[STYLE]`    | Formatting or comments                |
+| `[WIP]`      | Work not ready for review             |
 
-| Tag         | Purpose                                      |
-|-------------|----------------------------------------------|
-| `[FEAT]`     | New feature or functionality                |
-| `[FIX]`      | Bug fix                                     |
-| `[REFACTOR]` | Code refactor (no behavior change)          |
-| `[SEC]`      | Security-related changes                    |
-| `[TEST]`     | Test-related updates                        |
-| `[DOCS]`     | Documentation only                          |
-| `[CHORE]`    | Build, CI, or dependency-related changes    |
-| `[PERF]`     | Performance improvements                    |
-| `[STYLE]`    | Code formatting, comments, no logic change  |
-| `[WIP]`      | Work in progress (not ready to merge)       |
+Before opening a pull request, review the diff for generated binaries, SQLite files, downloaded manifests, and credentials. Kubernetes manifests contain installation credentials; keep them out of commits.
 
-**Examples:**
+Describe the problem, the resulting behavior, and how you checked it. Include screenshots for visible UI changes and the commands and results for automated checks. Add regression tests when fixing behavior that the existing test setup can exercise. Update the affected setup, API, deployment, or collector documentation when its behavior changes.
 
-```text
-[FEAT]: Add endpoint to label agents
-[FIX]: Prevent crash on nil agent ID
-[SEC]: Add input sanitization to auth flow
-```
-
-### 4. Run tests and lint
-
-Make sure everything passes before pushing.
-
-```bash
-go test ./...
-golangci-lint run
-```
-
-### 5. Push and open a PR
-
-```bash
-git push origin feat/<FEAT_NAME>
-```
-
-Then open a Pull Request with a clear explanation of the changes.
-
----
-
-## 🥪 Testing Tips
-
-- All core logic should have unit tests.
-- Avoid tight coupling between handlers and services to enable easier mocking.
-
----
-
-## 🙌 Thank You!
-
-We appreciate all kinds of contributions — bug reports, feature suggestions, code, documentation, or even refactoring!
-
+Push your branch to your fork or repository and open a pull request against the intended base branch. Keep the change focused enough that a reviewer can check its behavior and documentation together.

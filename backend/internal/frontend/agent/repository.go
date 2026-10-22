@@ -138,7 +138,7 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 }
 
 func (f *FrontendAgentRepository) GetAgentNetworkInfoByID(agentID string) (hostname, ip string, err error) {
-	query := `SELECT hostname, ip FROM agents WHERE id = ?`
+	query := `SELECT hostname, ip FROM agents WHERE id = ? AND management_mode = 'push'`
 
 	err = f.db.QueryRow(query, agentID).Scan(&hostname, &ip)
 	if err != nil {
@@ -253,7 +253,7 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 	query := `
 	SELECT id, name, registered_at, pipeline_id
 	FROM agents
-	WHERE registered_at > ? AND pipeline_id IS NOT NULL
+		WHERE registered_at > ? AND pipeline_id IS NOT NULL AND management_mode = 'push'
 	ORDER BY registered_at DESC
 	LIMIT 1;
 `

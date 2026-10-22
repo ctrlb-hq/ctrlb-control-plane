@@ -1,27 +1,20 @@
-# Use the official Golang image to build the binary.
-FROM golang:1.23-alpine AS builder
-
-# Set the Current Working Directory inside the container
-WORKDIR /app
-
-# Copy go mod and sum files
+FROM golang:1.26-alpine AS builder
+WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-
-# Copy the source code.
 COPY . .
+ARG GO_BUILD_PARALLELISM=2
+ARG GO_MEMORY_LIMIT=4GiB
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    GOMEMLIMIT=${GO_MEMORY_LIMIT} GOMAXPROCS=${GO_BUILD_PARALLELISM} CGO_ENABLED=0 \
+    go build -p ${GO_BUILD_PARALLELISM} -trimpath -ldflags="-s -w" -o /out/ctrlb-agent ./cmd/ctrlb_collector
 
-# Build the Go app. Replace "myapp" with your binary name.
-RUN go build -o ctrlb-agent ./cmd/ctrlb_collector/main.go
-
-# Use a minimal base image for deployment.
-FROM alpine:latest
-
+FROM alpine:3.23
+LABEL org.opencontainers.image.source="https://github.com/ctrlb-hq/ctrlb-control-plane" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later"
+RUN apk add --no-cache ca-certificates
 WORKDIR /app
-
-# Copy the binary from the builder stage.
-COPY --from=builder /app/ctrlb-agent .
-COPY --from=builder /app/internal/config/config.yaml .
-
-# Command to run the executable
-CMD ["./ctrlb-agent"]
+COPY --from=builder /out/ctrlb-agent /usr/local/bin/ctrlb-agent
+COPY internal/config/config.yaml /app/config.yaml
+EXPOSE 3421
+ENTRYPOINT ["/usr/local/bin/ctrlb-agent"]

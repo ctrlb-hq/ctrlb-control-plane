@@ -16,7 +16,7 @@ STARTED_BY="${STARTED_BY:-}"
 
 # Require root
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Please run this script with sudo or as root."
+  echo "Error: run this script with sudo or as root."
   exit 1
 fi
 
@@ -27,7 +27,7 @@ fi
 
 # Validate required fields
 if [[ -z "$BACKEND_URL" || -z "$PIPELINE_NAME" || -z "$STARTED_BY" ]]; then
-  echo "❌ BACKEND_URL, PIPELINE_NAME, and STARTED_BY are required."
+  echo "Error: BACKEND_URL, PIPELINE_NAME, and STARTED_BY are required."
   exit 1
 fi
 
@@ -39,7 +39,7 @@ case "$ARCH" in
   x86_64) ARCH="amd64" ;;
   aarch64) ARCH="arm64" ;;
   *)
-    echo "❌ Unsupported architecture: $ARCH"
+    echo "Error: unsupported architecture: $ARCH"
     exit 1
     ;;
 esac
@@ -49,13 +49,13 @@ DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/late
 BINARY_URL="${DOWNLOAD_BASE_URL}/${COLLECTOR_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${COLLECTOR_NAME}"
 
-echo "📥 Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
+echo "Downloading ${COLLECTOR_NAME} ${VERSION} for ${OS}/${ARCH}..."
 mkdir -p "$INSTALL_DIR"
 curl -L "$BINARY_URL" -o "$BINARY_PATH"
 chmod +x "$BINARY_PATH"
 
 # Write configuration
-echo "🧩 Creating configuration..."
+echo "Creating configuration..."
 
 
 cat <<'EOF' > "$CONFIG_FILE"
@@ -116,11 +116,11 @@ WantedBy=multi-user.target
 EOF
 
 # Enable and start service
-echo "🔧 Configuring systemd service..."
+echo "Configuring systemd service..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl enable "$COLLECTOR_NAME"
 sudo systemctl restart "$COLLECTOR_NAME"
 
-echo "✅ ${COLLECTOR_NAME} installed and running!"
+echo "${COLLECTOR_NAME} is installed and running."
 sudo systemctl status "$COLLECTOR_NAME" --no-pager

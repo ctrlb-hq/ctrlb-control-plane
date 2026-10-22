@@ -1,115 +1,140 @@
-# 🏗️ CtrlB Control Plane Architecture
+# Architecture
 
-This document explains the high-level design and internal components of **CtrlB Control Plane**, the telemetry agent control plane built by **CTRLB**.
+CtrlB Control Plane has a React frontend, a Go API backed by SQLite, and a Go wrapper around the OpenTelemetry Collector. VM collectors and Kubernetes collectors share the pipeline graph model but use different management protocols.
 
----
+A pipeline defines telemetry collection, processing, and export. A Kubernetes installation assigns one shared pipeline to its per-node collectors. A telemetry destination receives exported telemetry and is configured separately from the control-plane API.
 
-## 📚 Overview
+```mermaid
+flowchart LR
+    User[User] --> UI[React frontend]
+    UI -->|User access JWT| API[Go backend]
+    API --> DB[(SQLite)]
+    VM[VM collector] -->|Registration and file-change notification| API
+    API -->|Configuration and lifecycle requests on 3421| VM
+    API -->|Metrics scrape on 8888| VM
+    K8s[Kubernetes node collectors] -->|Installation-token check-ins| API
+    API -->|Desired configuration in check-in response| K8s
+    VM -->|Collected telemetry| Destination[Telemetry destination]
+    K8s -->|Collected telemetry| Destination
+```
 
-CtrlB Control Plane is designed to manage distributed telemetry collector (OpenTelemetry Collector instances) across a variety of environments. It includes:
+The Kubernetes response arrow represents the response to an outbound collector request. The backend does not initiate a connection to Kubernetes collector pods.
 
-- A **Control Plane** (frontend + backend)
-- A **Lightweight Agent** installed on target environments
-- **Configuration & Communication Layers** that bind them together
+## Components
 
----
+### Frontend
 
-## 🧹 Core Components
+The UI uses React, TypeScript, Vite, and React Flow. It provides user registration/login, a graph editor with schema-based component forms, VM collector management, and Kubernetes installation setup and status.
 
-### 1. Frontend
+The backend supplies component configuration schemas and UI schemas. The editor connects receivers, processors, and exporters, then sends the graph to the backend for compilation. Pipeline details include configuration previews and health data. Kubernetes views poll installation status every ten seconds and show connection status, engine status, and rollout results separately.
 
-- Built with **React** + **Vite**
-- Provides a **graph-based visual interface** to design and manage OpenTelemetry collector pipelines
-- Allows users to:
-  - **Edit configuration** and **Delete pipelines**
-  - View live **agent metrics**, including:
-    - CPU and memory usage
-    - Pipeline throughput for logs, metrics, and traces
-- Offers configuration previews (YAML) and error validation
-- Communicates with the backend via RESTful APIs
-- Requires `.env` with `VITE_API_URL` for dev setup
+Development runs on port `3030` and defaults to `http://localhost:8096/api`. Production builds default to `/control-plane/`, including the router base path, with a same-origin `/control-plane/api` endpoint. See [frontend configuration](frontend/overview.md).
 
-### 2. Backend
+### Backend
 
-- Implemented in **Go**
-- Handles:
-  - Agent and pipeline **registration**, **lifecycle management**, and **status tracking**
-  - **Graph-to-OTel config compilation**
-  - A background worker that:
-    - Scrapes metrics from `/metrics` endpoint of collector (Prometheus exposition)
-    - Updates the internal **SQLite** DB with health and usage info
-- Supports embedding config files directly in releases
-- API reference is [available here](../backend/api-reference.md)
+The Go backend uses Gorilla mux and serves:
 
-### 3. Agent
+| Prefix | Purpose | Authentication |
+| --- | --- | --- |
+| `/api/auth/v1` | User registration, login, and token refresh | Credentials or refresh token in the request body |
+| `/api/frontend/v2` | Pipeline graphs, collector management, schemas, and Kubernetes installations | User access JWT |
+| `/api/agent/v1` | VM registration and config-change notifications | Legacy unauthenticated protocol |
+| `/api/agent/v2` | Kubernetes check-ins and terminal manifest downloads | Installation token |
 
-- Lightweight wrapper around the **OpenTelemetry Collector**
-- Key roles:
-  - **Receives configuration updates pushed by the backend** (push model)
-  - **Exposes /metrics** endpoint for Prometheus-style scraping by backend
-  - **Auto-reloads** configuration without restarts upon update detection
-  - Packaged as a binary with **systemd service** support for Linux installation
-- Install script is generated from the UI and bootstraps:
-  - Binary download
-  - Environment setup
-  - Systemd service creation
+The graph compiler produces the OpenTelemetry configuration stored with a pipeline. Component schemas and UI schemas are embedded in the binary and loaded into SQLite at startup. The API reference is [here](backend/api-reference.md).
 
----
+The backend opens `backend.db` in its working directory. Startup creates tables and applies the Kubernetes schema migration. Tables store users, pipelines, graph components and edges, agents, labels, metric samples, installations, and per-node collector state. SQLite foreign keys and one database connection keep related writes consistent. PostgreSQL and replicated backend storage are not implemented.
 
-## 🔄 Communication Flow
+### Collector
 
-1. **Collector Bootstraps**:
+The `agent/` module builds a single binary containing the OpenTelemetry Collector and selected receivers, processors, exporters, and extensions. It does not download a second collector binary at runtime. `INSTALLATION_ID` selects managed Kubernetes mode; leaving it unset selects legacy VM mode. Both modes can load environment values from `.env` in the working directory.
 
-   - Collector starts and contacts the backend via `/api/agent/v1/agents`, sending metadata like platform, hostname, version, etc.
-   - Backend registers the collector and responds with the latest configuration.
+See [collector modes and configuration](collector/overview.md) for supported components, environment variables, and state paths.
 
-2. **Heartbeat & Metrics**:
+## VM communication
 
-   - Backend scrapes the Prometheus metrics exposed by the agent on a periodic basis.
-   - Health information and operational metrics are stored in database.
+1. The collector starts with an existing local configuration, then registers metadata with `POST /api/agent/v1/agents`. A nonempty `PIPELINE_NAME` creates a new default pipeline; it does not join an existing pipeline by name. The registration response includes a configuration, which replaces the local file.
+2. Backend monitoring workers scrape `http://<collector>:8888/metrics` and store health samples and raw exporter counters in SQLite. VM fields named `rate` are not calculated per-second rates. Startup restores monitoring for eligible VM collectors with an existing connected or unknown metrics row.
+3. Saving a pipeline graph stores the compiled configuration and sends it directly to attached VM collectors at `POST http://<collector>:3421/agent/v1/config`.
+4. The collector validates a received configuration before writing it. Its file watcher reloads the collector engine and notifies the backend about file changes. The notification is not a periodic configuration poll.
+5. Start and stop requests also travel from the backend to the collector's management API.
 
-3. **Config Change Notification**:
+The monitoring queue schedules metrics collection and retries. Configuration pushes run in the pipeline service, rather than through that queue. VM management therefore requires inbound reachability to each collector from the backend.
 
-   - Agent watches its config file and notifies the backend if it detects a change.
-   - Backend returns the updated configuration, which the agent writes to its local config file before reloading the collector.
-   - Collector reloads itself with the new config.
+## Kubernetes communication and rollout
 
-4. **User-Initiated Configuration Updates**:
-   - Users manage configurations and monitor collector through the frontend.
-   - When a user updates a config, the backend persists the change and queues it for delivery to relevant collector.
+An installation assigns a shared pipeline to one fleet in a named cluster. A generated DaemonSet runs one collector per eligible node. Collector identity is derived from the installation and node name, so replacing a pod on that node preserves its control-plane identity.
 
----
+1. A user creates an installation and receives an installation token once. The backend stores its hash, and the generated manifest places the token in a Kubernetes Secret.
+2. Each collector initiates authenticated check-ins approximately every ten seconds with jitter. Check-ins report pod/node metadata, engine status, configuration revisions, errors, and locally scraped collector metrics.
+3. The backend hashes the canonical JSON configuration with SHA-256. A check-in returns the desired configuration when its revision differs from the collector's applied and attempted revisions.
+4. The collector validates a candidate, stops the previous engine, starts the candidate, and persists it only after confirming startup. A failed update attempts to restore the previous working configuration and reports the failure. Rollback can also fail, leaving the engine stopped with an error.
+5. Cached working configuration and log offsets live in node host storage. Existing collectors continue through a control-plane outage; a new collector without a working cache waits for configuration.
 
-## 🔐 Security (WIP)
+Connection status becomes disconnected after 35 seconds without a check-in. Engine and rollout status remain separate, so a disconnected collector can still have an applied revision recorded. A partial rollout does not roll back collectors that succeeded. A collector does not repeatedly retry the same rejected revision; publish a changed configuration to request another attempt.
 
-- Token-based auth for collector registration
-- User-level RBAC on the frontend/backend
+Kubernetes collectors do not receive VM start/stop/config pushes and are excluded from backend scraping. Their local management listener serves health and readiness probes. The default preset sends collected logs and metrics to the configured telemetry destination through OTLP HTTP; graph edits can select other exporters.
 
----
+See [Kubernetes collector management](kubernetes.md) and the [management API](kubernetes-api.md) for check-in and rollout details.
 
-## 📈 Scalability Notes
+## Lifecycle and deployment boundaries
 
-CtrlB Control Plane was initially designed for small-scale systems with around 40–50 agents and pipelines, with simplicity as the guiding principle.
+Deleting a VM pipeline detaches VM collectors and clears their recorded assignment. The running processes retain their current configuration. Deleting a Kubernetes pipeline also removes its installations, tokens, collector records, and associated metrics. The API does not delete Kubernetes resources or stop running collectors, so uninstall with the saved Kubernetes command first.
 
-Planned improvements for scalability:
+User routes use access and refresh JWTs signed by `JWT_SECRET`. Kubernetes enrollment and check-ins use installation tokens. The legacy VM protocol has no collector token authentication. Fine-grained roles and workspace isolation remain future work.
 
-- Stateless backend (backed by external DB)
-- Agent polling is lightweight and time-interval based
-- Config push model in roadmap
-- Scaling architecture to support 1,000+ agents/pipelines in upcoming iterations
+The backend serves HTTP. A deployment proxy terminates TLS and maps a hosted prefix such as `/control-plane/api/` to `/api/`. The frontend is a separate static deployment. Preserve the backend database and collector host state across upgrades. See [deployment](deployment.md) for commands and proxy configuration.
 
----
+## Storage relationships
 
-## 🧱 Diagrams
+The diagram shows the pipeline, enrollment, and graph relationships in the current SQLite schema. User accounts, component schema documents, labels, extensions, and VM metric samples are additional tables. Kubernetes collectors store their current revisions, error, and self-metrics in the collector row; they do not have a separate rollout or metrics history table.
 
-![CtrlB Control Plane ER Diagram](./assets/CtrlB Control Plane-er-diagram.png)
-_Entity-Relationship Diagram of CtrlB Control Plane's internal database schema_
+```mermaid
+erDiagram
+    pipelines o|--o{ agents : assigns
+    pipelines ||--o{ kubernetes_installations : configures
+    kubernetes_installations ||--o{ kubernetes_collectors : enrolls
+    agents ||--o| kubernetes_collectors : identifies
+    pipelines ||--o{ pipeline_components : contains
+    pipelines ||--o{ pipeline_component_edges : connects
+    pipeline_components ||--o{ pipeline_component_edges : parent
+    pipeline_components ||--o{ pipeline_component_edges : child
 
----
+    pipelines {
+        integer pipeline_id PK
+        text config_json
+    }
+    agents {
+        integer id PK
+        integer pipeline_id FK
+        text management_mode
+    }
+    kubernetes_installations {
+        text id PK
+        integer pipeline_id FK
+        text cluster_name
+        text token_hash
+    }
+    kubernetes_collectors {
+        integer agent_id PK, FK
+        text installation_id FK
+        text node_name
+        text applied_revision
+        text attempted_revision
+        text metrics_json
+    }
+    pipeline_components {
+        integer component_id PK
+        integer pipeline_id FK
+        text component_name
+        text config
+    }
+    pipeline_component_edges {
+        integer edge_id PK
+        integer pipeline_id FK
+        integer parent_component_id FK
+        integer child_component_id FK
+    }
+```
 
-## 🚓️ Roadmap (Architecture)
-
-- Support for multiple tenants/workspaces
-- Cloud-native deployment (Helm, Terraform modules)
-- Plugin system for other agent types
-- Agent auto-upgrade and signature validation
+See [base table definitions](../backend/internal/db/setup.go) and the [Kubernetes migration](../backend/internal/db/kubernetes.go) for all fields, constraints, and deletion rules.

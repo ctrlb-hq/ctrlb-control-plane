@@ -184,6 +184,16 @@ func (f *FrontendPipelineService) SyncConfig(agentId string) error {
 }
 
 func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
+	pushAgents := make([]models.AgentInfoHome, 0, len(agents))
+	for _, agent := range agents {
+		if agent.ManagementMode != "pull" {
+			pushAgents = append(pushAgents, agent)
+		}
+	}
+	agents = pushAgents
+	if len(agents) == 0 {
+		return nil
+	}
 	config, err := configcompiler.CompileGraphToJSON(pipelineGraph)
 	if err != nil {
 		return err

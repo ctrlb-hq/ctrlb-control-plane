@@ -1,80 +1,40 @@
-# 🧠 CTRLB Backend
+# CtrlB backend
 
-The **CTRLB Backend** is the core API and orchestration layer responsible for managing agents, pipelines, and configurations. It exposes a RESTful API and enforces authentication for protected routes.
+The backend manages users, collector inventory, pipeline graphs, and collector configurations. It runs an HTTP API on port `8096` and stores metadata in SQLite.
 
----
+VM collectors register through `/api/agent/v1`; the backend pushes configuration and control commands to them and scrapes their metrics. Kubernetes collectors use `/api/agent/v2` to check in, receive desired configuration, and report rollout status. The browser uses the authenticated `/api/frontend/v2` API for both workflows.
 
-## 🔧 Requirements
+## Run locally
 
-The backend requires the following environment variable:
+Build with a Go toolchain compatible with [go.mod](go.mod). The module declares Go `1.23.0` and toolchain `go1.24.4`. SQLite uses CGO, so install a C compiler and keep `CGO_ENABLED=1`.
 
-- `JWT_SECRET`: A secret key used for signing and verifying JWT tokens.
+From the repository root:
 
----
+```bash
+cd backend
+export JWT_SECRET="$(openssl rand -hex 32)"
+go run ./cmd/backend
+```
 
-## 🚀 API Endpoints
+The backend also loads `.env` from its working directory. `JWT_SECRET` is required. It creates `backend.db` and `app.log` in that directory, creates or migrates the database tables, and loads the embedded component schemas at startup.
 
-### Auth API (v1)
+See the [deployment guide](../docs/backend/deployment.md) for all environment variables, container commands, and persistent storage. The [Kubernetes setup guide](../docs/kubernetes-setup.md) covers installing managed collectors. See the [API reference](../docs/backend/api-reference.md) for routes and request examples, and the [testing guide](../docs/backend/testing.md) for checks.
 
-**Base Path:** `/api/auth/v1`
+## Source layout
 
-- `POST /register` – Register a new user
-- `POST /login` – Authenticate user and issue tokens
-- `POST /refresh` – Refresh access tokens
+| Path | Responsibility |
+| --- | --- |
+| `cmd/backend` | Startup, environment configuration, and service wiring |
+| `internal/api` | HTTP routes |
+| `internal/auth`, `internal/middleware` | User registration, JWTs, and request middleware |
+| `internal/agent` | VM collector registration and configuration notifications |
+| `internal/frontend` | Browser APIs for collectors, pipelines, and component schemas |
+| `internal/kubernetes` | Installations, manifest generation, collector check-ins, and rollout state |
+| `internal/db` | SQLite initialization, migrations, and schema loading |
+| `internal/pkg/configcompiler` | Directed pipeline graph compilation |
+| `internal/pkg/queue` | VM collector monitoring and metric scraping |
+| `internal/assets` | Embedded component schemas and UI schemas |
 
-### Agent API (v1)
+## License
 
-**Base Path:** `/api/agent/v1`
-
-- `POST /agents` – Register a new agent
-- `POST /agents/{id}/config-changed` – Notify backend of agent config changes
-
-### Frontend API (v2, Auth Protected)
-
-**Base Path:** `/api/frontend/v2`
-
-#### Agents
-
-- `GET /agents` – Get all registered agents
-- `GET /agents/{id}` – Get agent details
-- `DELETE /agents/{id}` – Delete an agent
-- `POST /agents/{id}/start` – Start agent
-- `POST /agents/{id}/stop` – Stop agent
-- `POST /agents/{id}/restart-monitoring` – Restart monitoring logic for an agent
-- `GET /agents/{id}/healthmetrics` – Get agent health metrics
-- `GET /agents/{id}/ratemetrics` – Get data rate metrics (logs, traces, metrics)
-- `POST /agents/{id}/labels` – Add/update agent labels
-- `GET /unassigned-agents` – List agents not yet linked to pipelines
-
-#### Pipelines
-
-- `GET /pipelines` – Get all pipelines
-- `POST /pipelines` – Create a new pipeline
-- `GET /pipelines/{id}` – Get pipeline details
-- `DELETE /pipelines/{id}` – Delete pipeline
-- `GET /pipelines/{id}/graph` – Get pipeline configuration graph
-- `POST /pipelines/{id}/graph` – Sync pipeline configuration graph
-- `GET /pipelines/{id}/agents` – List agents attached to a pipeline
-- `POST /pipelines/{id}/agent/{agent_id}` – Attach agent to pipeline
-- `DELETE /pipelines/{id}/agent/{agent_id}` – Detach agent from pipeline
-
-#### Components
-
-- `GET /component` – Get component info
-- `GET /component/schema/{name}` – Get schema for a specific component
-
----
-
-## 🛠️ Tech Stack
-
-- **Go** – Core implementation language
-- **JWT** – Authentication system
-- **Gorilla Mux** – HTTP router
-- **SQLite** – Supported database
-
----
-
-## 📄 License
-
-AGPL License. See [LICENSE](../LICENSE) for more details.
-
+See [LICENSE](LICENSE) for the backend license and attribution terms.

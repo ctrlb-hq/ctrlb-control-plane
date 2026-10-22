@@ -1,152 +1,76 @@
-# Frontend Application Overview
+# Control plane frontend
 
----
+The React 18 and TypeScript application manages VM collectors and Kubernetes collector installations. Vite builds the app, React Flow provides the pipeline editor, and the backend supplies component schemas and collector status.
 
-## Table of Contents
+For the cluster installation workflow, see [Kubernetes setup](../docs/kubernetes-setup.md).
 
-1. [Folder Structure](#folder-structure)
-2. [Key Features](#key-features)
-3. [How to Run](#how-to-run)
+## Run locally
 
----
+Use Node.js 24, as the frontend Docker build does, and npm. The utility tests use Node's built-in TypeScript support.
 
-## Folder Structure
+From the repository root:
 
-### `src/`
+```bash
+cd frontend
+npm ci --legacy-peer-deps
+npm run dev
+```
 
-- **`App.tsx`**: Root component that initializes the application.
-- **`main.tsx`**: Entry point that renders the React application.
-- **`index.css`**: Global styles for the application.
-- **`constants.ts`**: Global constants used across the project.
+Open [http://localhost:3030](http://localhost:3030). Start the backend separately using the [getting started guide](../docs/getting-started.md). Development requests go to `http://localhost:8096/api` by default, so a frontend environment file is optional.
 
-- **`components/`**: Reusable UI components used throughout the application.
+To use a different backend, create `frontend/.env.local`:
 
-  - **`HealthChart.tsx`**: Component to display health metrics (CPU/Memory) charts.
-  - **`Pipelines/`**:
+```dotenv
+VITE_API_BASE_URL=http://localhost:18096/api
+```
 
-    - **`AddPipelineComponents/`**:
-      - `AddPipelineCanvas.tsx`: Canvas for designing new pipelines.
-      - `AddPipelineDetails.tsx`: Form for entering pipeline details.
-      - `AddPipelineSheet.tsx`: Sheet view for adding pipeline steps.
-      - `ProgressFlow.tsx`: Visual progress indicator of pipeline creation.
-    - **`DropdownOptions/`**:
-      - `SourceDropdownOptions.tsx`: Dropdown options for selecting sources.
-      - `ProcessorDropdownOptions.tsx`: Dropdown options for selecting processors.
-      - `DestinationDropdownOptions.tsx`: Dropdown options for selecting destinations.
-    - `ExistingPipelineOverview.tsx`: Displays a list of existing pipelines.
-    - **`Nodes/`**:
-      - `SourceNode.tsx`: Represents a source node in the pipeline.
-      - `ProcessorNode.tsx`: Represents a processor node in the pipeline.
-      - `DestinationNode.tsx`: Represents a destination node in the pipeline.
-    - `PipelineTable.tsx`: Table view of pipelines.
-    - `ViewPipelineDetails.tsx`: Detailed view of a specific pipeline.
+Restart Vite after changing environment files. `npm ci` needs `--legacy-peer-deps` for the current dependency tree.
 
-  - **`ui/`**: Library of UI primitives.
+## Configuration
 
-    - `alert.tsx`, `badge.tsx`, `button.tsx`, `card.tsx`, `chart.tsx`, `checkbox.tsx`, `command.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `form.tsx`, `input.tsx`, `label.tsx`, `multi-select.tsx`, `popover.tsx`, `select.tsx`, `sheet.tsx`, `switch.tsx`, `table.tsx`, `toast.tsx`, `toaster.tsx`, `toggle.tsx`.
+| Variable            | Meaning                                                                                   | Default                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL` | API root, including `/api`. Accepts an absolute HTTP URL or a path on the current origin. | `http://localhost:8096/api` in development; the app base path plus `api` in production.             |
+| `VITE_API_URL`      | Legacy backend root. The app appends `/api`.                                              | Unset. `VITE_API_BASE_URL` takes precedence.                                                        |
+| `VITE_BASE_PATH`    | URL prefix for assets and browser routes. Use a leading and trailing slash.               | `/` in development; `/control-plane/` in the checked-in production environment file and Dockerfile. |
 
-  - **`YAML/`**:
-    - `EditConfig.tsx`: Component for editing configuration in YAML.
-    - `EditPipelineYAML.tsx`: Component for editing pipeline in YAML format.
+Vite embeds these values when it builds the application. Set them before `npm run build`, or pass the corresponding Docker build arguments. Browser configuration is public; keep credentials out of `VITE_*` variables.
 
-- **`context/`**: Custom React hooks for global state and context.
+## Checks and builds
 
-  - `useNodeContext.tsx`, `usePipelineChangesLog.tsx`, `usePipelineDetailContext.tsx`, `usePipelineStatus.tsx`.
+Run these commands in `frontend/`:
 
-- **`hooks/`**: Custom hooks.
+```bash
+npm test
+npm run build
+npm run lint
+npm run format:check
+```
 
-  - `use-toast.ts`: Hook for managing toast notifications.
+`npm test` runs the utility tests in `src/utils/*.test.ts`. These cover API URL resolution, installation commands, manifest requests, rollout summaries, metrics, and YAML output. There is no browser test runner in the package scripts. Check UI changes manually with a running backend.
 
-- **`lib/`**: Utility functions and libraries.
+`npm run build` runs TypeScript checks and writes the production bundle to `dist/`. To inspect it locally:
 
-  - `utils.ts`: General helper functions.
+```bash
+npm run preview
+```
 
-- **`pages/`**: Top-level page components.
+Open the URL Vite prints, including `/control-plane/` for the default production build. Preview uses the production API configuration, so provide an API URL at build time when testing against a separate local backend:
 
-  - `HomePage.tsx`: Main landing page after login.
-  - **`auth/`**:
-    - `Login.tsx`: Login page for user authentication.
-    - `Signup.tsx`: Signup page for user registration.
+```bash
+VITE_API_BASE_URL=http://localhost:8096/api npm run build
+npm run preview
+```
 
-- **`services/`**: API service functions for interacting with the backend.
+## Deploy
 
-  - `agentServices.ts`: Handles agent-related API calls.
-  - `authService.ts`: Handles authentication-related API calls.
-  - `pipelineServices.ts`: Handles pipeline-related API calls.
-  - `queryServices.ts`: Handles generic query-related API calls.
-  - `transporterService.ts`: Handles transporter-related API calls.
+From the repository root:
 
-- **`types/`**: TypeScript type definitions.
+```bash
+docker build -t ctrlb-control-plane-frontend:local frontend
+docker run --rm -p 8080:80 ctrlb-control-plane-frontend:local
+```
 
-  - `agent.types.ts`, `agentValues.type.ts`, `auth.types.ts`, `destination.type.ts`, `node.type.ts`, `pipeline.types.ts`, `source.types.ts`, `sourceConfig.type.ts`.
+The image serves the UI at `http://localhost:8080/control-plane/` and includes the fallback needed to refresh browser routes. Its Nginx configuration serves static files only. Put a reverse proxy in front of it to send `/control-plane/api/*` to the backend's `/api/*`, or build with `--build-arg VITE_API_BASE_URL=http://localhost:8096/api` for local browser access to a separate backend.
 
-- **`utils/`**: Additional utilities.
-  - `axiosInstance.ts`: Axios instance configuration for API calls.
-
----
-
-### `public/`
-
-Contains static assets such as images, icons, and other files that are served directly.
-
----
-
-## Key Features
-
-1. **Agent Management**:
-
-   - View, create, update, and delete agents.
-   - Visualize agent metrics (CPU/Memory usage, health metrics).
-
-2. **Pipeline Management**:
-
-   - Create and configure pipelines with source, processor, and destination nodes.
-   - Visualize pipelines using a drag-and-drop interface.
-   - Assign agents to pipelines and manage their configurations.
-
-3. **Authentication**:
-
-   - Login and signup functionality for users.
-   - Token-based authentication with automatic token refresh.
-
-4. **Error Handling**:
-   - Graceful error handling for API calls and user interactions.
-
----
-
-## How to Run
-
-To set up and run the frontend application, follow these steps:
-
-### Prerequisites
-
-- Ensure you have Node.js (v16 or later) and npm installed on your system.
-
-### Steps
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/your-repo/frontend.git
-   cd frontend
-
-   ```
-
-2. Install the dependencies
-
-   ```bash
-   npm install --legacy-peer-deps
-
-   ```
-
-3. Start the development server:
-
-   ```bash
-   npm run dev
-
-   ```
-
-4. Open your browser and navigate to:
-   ```bash
-   http://localhost:3030
-   ```
+To serve the app at the domain root, build with `--build-arg VITE_BASE_PATH=/`. See [frontend architecture and behavior](../docs/frontend/overview.md) and [deployment](../docs/deployment.md) for more detail.

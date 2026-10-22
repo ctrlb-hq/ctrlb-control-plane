@@ -46,16 +46,12 @@ const pipelineServices = {
 			throw new Error(axiosError.response?.data.message || "Failed to fetch Pipeline by it's Id.");
 		}
 	},
-	deletePipelineById: async (id: string): Promise<any> => {
+	deletePipelineById: async (id: string): Promise<void> => {
 		try {
-			if (!id) return;
-			await axiosInstance.delete(`/pipelines/${id}`);
-		} catch (error: any) {
-			if (error.response.status === 401) {
-				return await pipelineServices.deletePipelineById(id);
-			}
-			const axiosError = error as AxiosError<ApiError>;
-			throw new Error(axiosError.response?.data.message || "Failed to delete pipeline by it's id");
+			await axiosInstance.delete(`/pipelines/${encodeURIComponent(id)}`, { timeout: 15_000 });
+		} catch (error: unknown) {
+			const data = (error as AxiosError<{ error?: string; message?: string }>).response?.data;
+			throw new Error(data?.error || data?.message || "Failed to delete pipeline. Try again.");
 		}
 	},
 	getPipelineGraph: async (id: string): Promise<any> => {

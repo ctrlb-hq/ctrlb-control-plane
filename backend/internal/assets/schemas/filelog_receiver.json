@@ -37,14 +37,14 @@
       "default": "200ms"
     },
     "fingerprint_size": {
-      "type": "integer",
-      "title": "Fingerprint Size",
-      "default": 100
+      "type": "string",
+      "title": "Fingerprint size",
+      "default": "1kb"
     },
     "max_log_size": {
-      "type": "integer",
-      "title": "Max Log Size",
-      "default": 0
+      "type": "string",
+      "title": "Maximum log size",
+      "default": "1MiB"
     },
     "encoding": {
       "type": "string",
@@ -75,6 +75,11 @@
           "parse_from": {
             "type": "string",
             "title": "Parse From Field"
+          },
+          "add_metadata_from_filepath": {
+            "type": "boolean",
+            "title": "Extract Kubernetes metadata from file path",
+            "default": true
           }
         },
         "required": [
@@ -82,14 +87,17 @@
           "id"
         ]
       },
-      "default": [
-        {
-          "type": "",
-          "id": "",
-          "regex": "",
-          "parse_from": ""
-        }
-      ]
+      "default": []
+    },
+    "include_file_path": {
+      "type": "boolean",
+      "title": "Include file path for container metadata",
+      "default": true
+    },
+    "storage": {
+      "type": "string",
+      "title": "Offset storage extension",
+      "description": "file_storage persists offsets in the node state directory."
     }
   },
   "required": [

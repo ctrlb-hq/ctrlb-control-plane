@@ -1,13 +1,5 @@
 import { Edge, Node } from "reactflow";
-
-// Define ImportMetaWithEnv to provide typing for import.meta.env
-interface ImportMetaWithEnv extends ImportMeta {
-  env: {
-	VITE_API_URL: string;
-	[key: string]: any;
-  };
-}
-
+import { API_BASE_URL } from "./config";
 
 export interface PipelineNodeData {
 	component_id: string;
@@ -129,34 +121,18 @@ export const formatTimestampWithDate = (timestamp: number | undefined) => {
 	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
-// helpers.ts
 export const installCommands = {
-  linux: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install.sh \
+	linux: (pipelineName: string) => {
+		const backendUrl = API_BASE_URL.replace(/\/api$/, "");
+		const startedBy = localStorage.getItem("userEmail") ?? "";
+		return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install.sh \
 | sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
-  },
+	},
 
-  macOS: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install.sh \
+	macOS: (pipelineName: string) => {
+		const backendUrl = API_BASE_URL.replace(/\/api$/, "");
+		const startedBy = localStorage.getItem("userEmail") ?? "";
+		return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/agent-install.sh \
 | sudo BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" bash`;
-  },
-
-  kubernetes: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-daemonset.yaml.template \
-| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | kubectl apply -f -`;
-  },
-
-  openShift: (pipelineName: string) => {
-    const backendUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-    const startedBy  = localStorage.getItem("userEmail") ?? "";
-    return `curl -fsSL https://raw.githubusercontent.com/ctrlb-hq/ctrlb-control-plane/refs/heads/main/scripts/control-plane-collector-daemonset.yaml.template \
-| BACKEND_URL="${backendUrl}" PIPELINE_NAME="${pipelineName}" STARTED_BY="${startedBy}" envsubst | oc apply -f -`;
-  },
+	},
 };
-

@@ -60,7 +60,7 @@ func recoverFromPanic() {
 	}
 }
 
-// For testing purposes, we can use a development logger
+// Initialize the default logger before application startup configures logging.
 func init() {
 	logger, _ := zap.NewDevelopment()
 	Logger = logger
