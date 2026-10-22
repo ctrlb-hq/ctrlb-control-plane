@@ -50,7 +50,7 @@ func (c Config) validate() error {
 		loopback = ip.IsLoopback()
 	}
 	if u.Scheme != "https" && !(u.Scheme == "http" && (loopback || c.AllowInsecureHTTP)) {
-		return errors.New("BACKEND_URL must use HTTPS; set ALLOW_INSECURE_HTTP=true explicitly for an HTTP demo")
+		return errors.New("BACKEND_URL must use HTTPS; set ALLOW_INSECURE_HTTP=true explicitly to allow HTTP for local development")
 	}
 	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(c.InstallationID) {
 		return errors.New("INSTALLATION_ID must contain only letters, numbers, hyphens and underscores")

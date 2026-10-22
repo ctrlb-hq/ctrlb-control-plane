@@ -39,8 +39,8 @@ function collector(overrides: Partial<KubernetesCollector>): KubernetesCollector
 function installation(collectors: KubernetesCollector[]): KubernetesInstallation {
 	return {
 		id,
-		name: "demo",
-		cluster_name: "demo",
+		name: "test-installation",
+		cluster_name: "test-cluster",
 		pipeline_id: 1,
 		created_by: "tester",
 		created_at: 1000,
@@ -141,20 +141,20 @@ test("manifest request sends its token only in the POST body", () => {
 	});
 	assert.ok(!request.url.includes(token));
 	assert.equal(
-		buildManifestRequest(id, token, "http://localhost:8096", "local:demo").data.backend_url,
+		buildManifestRequest(id, token, "http://localhost:8096", "local:test").data.backend_url,
 		"http://localhost:8096",
 	);
-	assert.throws(() => buildManifestRequest(id, token, "", "local:demo"), /Control-plane URL/);
+	assert.throws(() => buildManifestRequest(id, token, "", "local:test"), /Control-plane URL/);
 	assert.throws(
-		() => buildManifestRequest(id, token, "https://user:password@example.com", "local:demo"),
+		() => buildManifestRequest(id, token, "https://user:password@example.com", "local:test"),
 		/without credentials/,
 	);
 	assert.throws(
-		() => buildManifestRequest(id, token, "https://example.com?token=secret", "local:demo"),
+		() => buildManifestRequest(id, token, "https://example.com?token=secret", "local:test"),
 		/without credentials/,
 	);
 	assert.throws(
-		() => buildManifestRequest(id, "", "https://example.com", "local:demo"),
+		() => buildManifestRequest(id, "", "https://example.com", "local:test"),
 		/token is unavailable/,
 	);
 	assert.throws(

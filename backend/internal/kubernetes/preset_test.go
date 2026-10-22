@@ -21,7 +21,7 @@ import (
 
 func presetRequest() kubernetes.CreatePipelineRequest {
 	return kubernetes.CreatePipelineRequest{
-		Name: "Kubernetes demo", Endpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default",
+		Name: "Kubernetes test pipeline", Endpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default",
 		LogsEndpoint:    "https://ctrlb.explore.ctrlb.ai/engine/api/default/control_plane/_otel/v1/logs",
 		MetricsEndpoint: "https://ctrlb.explore.ctrlb.ai/engine/api/default/v1/metrics",
 		Headers:         map[string]string{"Authorization": "Basic CHANGE_ME"},
@@ -127,7 +127,7 @@ func TestKubernetesPipelinePersistsEditableGraphAndStorageExtension(t *testing.T
 		}
 	}
 	require.NoError(t, frontendpipeline.NewFrontendPipelineService(repository).SyncPipelineGraph(created.PipelineID, *graph))
-	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "demo", ClusterName: "demo", PipelineID: created.PipelineID}, "tester")
+	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "test-installation", ClusterName: "test-cluster", PipelineID: created.PipelineID}, "tester")
 	require.NoError(t, err)
 	require.NotEqual(t, originalRevision, i.Installation.DesiredRevision)
 	response := checkIn(t, service, i, kubernetes.CheckInRequest{NodeName: "worker", EngineStatus: "waiting"})
@@ -188,7 +188,7 @@ func TestKubernetesPipelineRouteAndInputValidation(t *testing.T) {
 	exporterHeaders := graph.Nodes[len(graph.Nodes)-1].Config["headers"].(map[string]string)
 	require.Equal(t, "literal-$${env:NOT_A_CREDENTIAL_VARIABLE}-$$", exporterHeaders["Authorization"])
 	require.Equal(t, "literal-${env:NOT_A_CREDENTIAL_VARIABLE}-$", req.Headers["Authorization"])
-	// A plain HTTP destination is supported when intentionally used in a demo.
+	// A local OTLP receiver can use a plain HTTP endpoint.
 	req = presetRequest()
 	req.Endpoint = "http://localhost:4318"
 	require.Equal(t, http.StatusCreated, request(token, req).Code)

@@ -34,10 +34,10 @@ func TestGeneratedKubernetesPresetCompatibility(t *testing.T) {
 	t.Setenv("STATE_DIR", t.TempDir())
 	t.Setenv("K8S_NODE_NAME", "worker-1")
 	t.Setenv("K8S_NODE_IP", "127.0.0.1")
-	t.Setenv("K8S_CLUSTER_NAME", "demo")
-	t.Setenv("POD_NAME", "ctrlb-collector-demo")
+	t.Setenv("K8S_CLUSTER_NAME", "test-cluster")
+	t.Setenv("POD_NAME", "ctrlb-collector-test")
 	t.Setenv("POD_NAMESPACE", "observability")
-	t.Setenv("POD_UID", "demo-pod-uid")
+	t.Setenv("POD_UID", "test-pod-uid")
 	provider, err := otelcol.NewConfigProvider(collectorConfigProviderSettings(path))
 	if err != nil {
 		t.Fatal(err)
@@ -129,8 +129,8 @@ func TestCollectorKubernetesConfig(t *testing.T) {
 	// DryRun constructs the kubelet client. Use its unauthenticated mode here so
 	// this compatibility test does not require in-cluster service account files.
 	t.Setenv("CTRL_TEST_KUBELET_ENDPOINT", "http://127.0.0.1:10255")
-	t.Setenv("CTRL_TEST_NODE_NAME", "demo-node")
-	t.Setenv("CTRL_TEST_CLUSTER_NAME", "demo-cluster")
+	t.Setenv("CTRL_TEST_NODE_NAME", "test-node")
+	t.Setenv("CTRL_TEST_CLUSTER_NAME", "test-cluster")
 
 	config := fmt.Sprintf(`
 extensions:

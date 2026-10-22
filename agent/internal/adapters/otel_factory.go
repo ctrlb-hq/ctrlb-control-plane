@@ -92,7 +92,7 @@ func componentsFactory() (otelcol.Factories, error) {
 		return otelcol.Factories{}, err
 	}
 
-	// Connectors (empty for now, but initialized)
+	// This distribution does not register connectors.
 	factories.Connectors = map[component.Type]connector.Factory{}
 
 	factories.Extensions, err = otelcol.MakeFactoryMap[extension.Factory](

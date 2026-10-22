@@ -121,7 +121,6 @@ export const formatTimestampWithDate = (timestamp: number | undefined) => {
 	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
-// helpers.ts
 export const installCommands = {
 	linux: (pipelineName: string) => {
 		const backendUrl = API_BASE_URL.replace(/\/api$/, "");

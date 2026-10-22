@@ -131,7 +131,7 @@ func TestManifestHasIsolatedStateSecretAndLeastPrivilege(t *testing.T) {
 
 func TestManifestRejectsUnsafeInputsAndKeepsUserValuesAsScalars(t *testing.T) {
 	_, service := fixture(t)
-	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "demo", ClusterName: "quoted\"\n---\nkind: Pod", PipelineID: 1}, "tester")
+	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "test-installation", ClusterName: "quoted\"\n---\nkind: Pod", PipelineID: 1}, "tester")
 	require.NoError(t, err)
 	for _, address := range []string{"", "control.example.com", "ftp://control.example.com", "https://user:secret@control.example.com", "https://control.example.com?token=secret", "https://control.example.com?", "https://control.example.com#fragment", "https://control.example.com#", " https://control.example.com", "https://control.example.com:99999", "https://control.example.com/\nkind: Pod"} {
 		_, _, err := service.Manifest(context.Background(), i.Installation.ID, kubernetes.ManifestRequest{Token: i.Token, BackendURL: address})

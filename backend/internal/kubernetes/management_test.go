@@ -34,14 +34,14 @@ func fixture(t *testing.T) (*sql.DB, *kubernetes.Service) {
 	db, err := database.DBInit(filepath.Join(t.TempDir(), "management.db"))
 	require.NoError(t, err)
 	t.Cleanup(func() { db.Close() })
-	_, err = db.Exec("INSERT INTO pipelines (pipeline_id, name, created_by, config_json) VALUES (1, 'demo', 'tester', ?)", initialConfig)
+	_, err = db.Exec("INSERT INTO pipelines (pipeline_id, name, created_by, config_json) VALUES (1, 'test-pipeline', 'tester', ?)", initialConfig)
 	require.NoError(t, err)
 	return db, kubernetes.NewService(kubernetes.NewRepository(db))
 }
 
 func installation(t *testing.T, service *kubernetes.Service) *kubernetes.CreateInstallationResponse {
 	t.Helper()
-	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "demo", ClusterName: "demo-cluster", PipelineID: 1}, "tester")
+	i, err := service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "test-installation", ClusterName: "test-cluster", PipelineID: 1}, "tester")
 	require.NoError(t, err)
 	return i
 }
@@ -70,11 +70,11 @@ func TestInstallationCreationBeforeEnrollmentAndTokenStorage(t *testing.T) {
 	require.NotContains(t, string(encoded), hash)
 	require.NotContains(t, string(encoded), "config_json")
 
-	_, err = service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "missing", ClusterName: "demo", PipelineID: 999}, "tester")
+	_, err = service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "missing", ClusterName: "test-cluster", PipelineID: 999}, "tester")
 	require.ErrorIs(t, err, kubernetes.ErrNotFound)
 	_, err = db.Exec("INSERT INTO pipelines (pipeline_id, name, created_by) VALUES (2, 'empty', 'tester')")
 	require.NoError(t, err)
-	_, err = service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "empty", ClusterName: "demo", PipelineID: 2}, "tester")
+	_, err = service.Create(context.Background(), kubernetes.CreateInstallationRequest{Name: "empty", ClusterName: "test-cluster", PipelineID: 2}, "tester")
 	require.ErrorIs(t, err, kubernetes.ErrInvalid)
 	_, err = db.Exec("DELETE FROM pipelines WHERE pipeline_id = 1")
 	require.Error(t, err, "an installation must retain its assigned pipeline")
@@ -273,7 +273,7 @@ func TestManagementRoutesRequireUserAndInstallationTokens(t *testing.T) {
 		router.ServeHTTP(recorder, req)
 		return recorder
 	}
-	creation := kubernetes.CreateInstallationRequest{Name: "demo", ClusterName: "demo-cluster", PipelineID: 1}
+	creation := kubernetes.CreateInstallationRequest{Name: "test-installation", ClusterName: "test-cluster", PipelineID: 1}
 	require.Equal(t, http.StatusUnauthorized, request("POST", "/api/frontend/v2/installations", "", creation).Code)
 	created := request("POST", "/api/frontend/v2/installations", userToken, creation)
 	require.Equal(t, http.StatusCreated, created.Code, created.Body.String())

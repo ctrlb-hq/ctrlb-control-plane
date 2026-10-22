@@ -121,7 +121,7 @@ func TestLoadSchemasFromDirectory_InvalidJSON(t *testing.T) {
 	}
 	mockUISchemasFS := fstest.MapFS{
 		"badcomponent.json": &fstest.MapFile{
-			Data: []byte(`{}`), // valid or dummy ui schema
+			Data: []byte(`{}`),
 		},
 	}
 
