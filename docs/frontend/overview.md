@@ -2,6 +2,8 @@
 
 The frontend is a React 18 and TypeScript application built with Vite 7. It provides login and registration, a pipeline list, a React Flow editor, VM collector installation instructions, and Kubernetes installation and rollout status.
 
+For instructions on using these screens, see the [usage guide with screenshots](../usage.md).
+
 For installation commands, environment variables, checks, and a Docker example, use the [frontend README](../../frontend/README.md). Local development runs at `http://localhost:3030` and uses `http://localhost:8096/api` unless configured otherwise.
 
 ## Source layout

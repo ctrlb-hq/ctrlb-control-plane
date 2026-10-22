@@ -2,6 +2,8 @@
 
 This guide runs the control plane from source, then connects a VM collector or a Kubernetes installation. For hosted services and persistent container storage, see [deployment](deployment.md).
 
+For a walkthrough of the UI, including pipeline editing and collector status, see the [usage guide with screenshots](usage.md).
+
 ## Prerequisites
 
 - Go 1.26 or later to build both Go modules. The backend module declares Go 1.23 and a Go 1.24.4 toolchain; the collector requires Go 1.26.
