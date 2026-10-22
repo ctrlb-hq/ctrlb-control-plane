@@ -22,6 +22,43 @@ func runtimeConfig(t *testing.T, backend string) Config {
 		PodName: "collector-abc", PodUID: "pod-uid", Namespace: "observability", StateDir: t.TempDir(), MetricsURL: "http://127.0.0.1:1/metrics"}
 }
 
+func TestRuntimeCheckInPreservesBackendAPIPrefix(t *testing.T) {
+	for _, test := range []struct {
+		name, basePath, expectedPath string
+	}{
+		{"legacy root", "", "/api/agent/v2/installations/installation/check-in"},
+		{"legacy root slash", "/", "/api/agent/v2/installations/installation/check-in"},
+		{"explicit API", "/api", "/api/agent/v2/installations/installation/check-in"},
+		{"hosted root", "/control-plane", "/control-plane/api/agent/v2/installations/installation/check-in"},
+		{"hosted root slash", "/control-plane/", "/control-plane/api/agent/v2/installations/installation/check-in"},
+		{"hosted API", "/control-plane/api", "/control-plane/api/agent/v2/installations/installation/check-in"},
+		{"hosted API slash", "/control-plane/api/", "/control-plane/api/agent/v2/installations/installation/check-in"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			type requestDetails struct{ path, authorization string }
+			requests := make(chan requestDetails, 1)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				requests <- requestDetails{req.URL.Path, req.Header.Get("Authorization")}
+				w.WriteHeader(http.StatusUnauthorized)
+			}))
+			t.Cleanup(server.Close)
+			r, err := New(runtimeConfig(t, server.URL+test.basePath), &fakeEngine{})
+			require.NoError(t, err)
+			_, err = r.CheckIn(context.Background())
+			require.ErrorContains(t, err, "401")
+			request := <-requests
+			require.Equal(t, test.expectedPath, request.path)
+			require.Equal(t, "Bearer installation-secret", request.authorization)
+		})
+	}
+}
+
+func TestRuntimeAPIHostnameStillGetsAPIPath(t *testing.T) {
+	r, err := New(runtimeConfig(t, "https://api"), &fakeEngine{})
+	require.NoError(t, err)
+	require.Equal(t, "https://api/api/agent/v2/installations/installation/check-in", r.url)
+}
+
 func TestRuntimeBackendSequenceAndOfflineRestart(t *testing.T) {
 	ctx := context.Background()
 	good := minimalConfig(t)

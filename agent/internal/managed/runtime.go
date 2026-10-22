@@ -53,10 +53,14 @@ func New(cfg Config, engine Engine) (*Runtime, error) {
 	if err != nil {
 		return nil, err
 	}
-	endpoint, err := url.JoinPath(cfg.BackendURL, "api", "agent", "v2", "installations", cfg.InstallationID, "check-in")
+	apiBase, err := url.Parse(cfg.BackendURL)
 	if err != nil {
 		return nil, err
 	}
+	if !strings.HasSuffix(strings.TrimRight(apiBase.Path, "/"), "/api") {
+		apiBase = apiBase.JoinPath("api")
+	}
+	endpoint := apiBase.JoinPath("agent", "v2", "installations", cfg.InstallationID, "check-in").String()
 	if cfg.PollInterval <= 0 {
 		cfg.PollInterval = 10 * time.Second
 	}

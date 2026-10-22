@@ -40,14 +40,24 @@ const kubernetesService = {
 		),
 	getPipelineInstallations: (id: string, signal?: AbortSignal) =>
 		request<KubernetesInstallation[]>(
-			() => axiosInstance.get(`/pipelines/${encodeURIComponent(id)}/installations`, { signal, timeout: 8_000 }),
+			() =>
+				axiosInstance.get(`/pipelines/${encodeURIComponent(id)}/installations`, {
+					signal,
+					timeout: 8_000,
+				}),
 			"Could not refresh collector status.",
 		),
-	manifest: (id: string, token: string, backendURL: string, image: string) => {
+	manifest: async (
+		id: string,
+		token: string,
+		backendURL: string,
+		image: string,
+		signal?: AbortSignal,
+	) => {
 		const config = buildManifestRequest(id, token, backendURL, image);
 		return request<string>(
-			() => axiosInstance.request({ ...config, timeout: 15_000 }),
-			"Could not generate the manifest. Retry the download.",
+			() => axiosInstance.request({ ...config, signal, timeout: 15_000 }),
+			"Could not generate the manifest. Try again.",
 		);
 	},
 };

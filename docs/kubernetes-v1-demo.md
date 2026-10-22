@@ -82,7 +82,7 @@ VITE_API_URL=http://localhost:18096 npm run dev -- --host 127.0.0.1
 
 Open the Vite URL and sign in using the private demo account in `login.json`, or register another demo account. Open the Kubernetes pipeline to view each node's connectivity, engine state, revisions, rollout status, CPU, and memory. Choose **View/edit configuration** to change the shared pipeline.
 
-For a new installation, choose Kubernetes in pipeline setup. Enter the collector-reachable management URL separately from the telemetry destination and supply an image available to the cluster. The default `ctrlb-agent:k8s-v1` is the local image built above. Download the manifest during setup because the installation token is returned only once. Apply it with the intended kubeconfig/context and watch the displayed node count; copying a command does not mark deployment successful.
+For a new installation, choose Kubernetes in pipeline setup. Enter the collector-reachable management URL separately from the telemetry destination and supply an image available to the cluster. The default `ctrlb-agent:k8s-v1` is the local image built above. Copy the manifest YAML, use a displayed `curl` or `wget` command on your cluster-management machine, or download the file in the browser. Keep a copy during setup because the installation token is returned only once. Apply it with the intended kubeconfig/context and watch the displayed node count; copying a command does not mark deployment successful. See the [deployment guide](deployment.md) for hosting beneath `/control-plane/` with the API beneath `/control-plane/api`.
 
 For a frontend container, pass the browser-reachable backend address at build time:
 

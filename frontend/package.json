@@ -10,7 +10,7 @@
 		"preview": "vite preview",
 		"format:check": "npx prettier . --check",
 		"format:fix": "npx prettier . --write",
-		"test": "node --experimental-strip-types src/utils/kubernetes.test.ts"
+		"test": "node --experimental-strip-types --test src/utils/*.test.ts"
 	},
 	"dependencies": {
 		"@emotion/react": "^11.14.0",

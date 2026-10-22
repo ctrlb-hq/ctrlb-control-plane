@@ -108,3 +108,37 @@ export function buildManifestRequest(id: string, token: string, backendURL: stri
 		responseType: "text" as const,
 	};
 }
+
+// Quote each argument for POSIX shells, including URLs containing apostrophes or shell syntax.
+function shellQuote(value: string) {
+	return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+export function manifestDownloadCommands(
+	id: string,
+	token: string,
+	backendURL: string,
+	image: string,
+	apiBaseURL: string,
+) {
+	const request = buildManifestRequest(id, token, backendURL, image);
+	const url = `${validateHTTPURL(apiBaseURL, "API URL")}/agent/v2/installations/${id}/manifest`;
+	const body = shellQuote(JSON.stringify(request.data));
+	const filename = shellQuote(installationCommands(id).filename);
+	return {
+		curl: [
+			"curl --fail --silent --show-error",
+			"  --header 'Content-Type: application/json'",
+			`  --data ${body}`,
+			`  --output ${filename}`,
+			`  ${shellQuote(url)}`,
+		].join(" \\\n"),
+		wget: [
+			"wget",
+			"  --header='Content-Type: application/json'",
+			`  --post-data=${body}`,
+			`  --output-document=${filename}`,
+			`  ${shellQuote(url)}`,
+		].join(" \\\n"),
+	};
+}

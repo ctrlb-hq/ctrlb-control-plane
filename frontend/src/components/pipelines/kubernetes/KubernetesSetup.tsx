@@ -1,15 +1,22 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import kubernetesService from "@/services/kubernetes";
-import { installationCommands, kubernetesDefaults, validateHTTPURL } from "@/utils/kubernetes";
+import {
+	installationCommands,
+	kubernetesDefaults,
+	manifestDownloadCommands,
+	validateHTTPURL,
+} from "@/utils/kubernetes";
+import { API_BASE_URL } from "@/config";
 import {
 	refreshKubernetesStatus,
 	useKubernetesInstallations,
 } from "@/hooks/useKubernetesInstallations";
 import type { InstallationCreation } from "@/types/kubernetes.types";
 import { InstallationStatus } from "./InstallationStatus";
+import { ManifestCodeBlock } from "./ManifestCodeBlock";
 
 export default function KubernetesSetup({
 	onConfigure,
@@ -20,9 +27,7 @@ export default function KubernetesSetup({
 }) {
 	const [name, setName] = useState("");
 	const [clusterName, setClusterName] = useState("");
-	const [backendURL, setBackendURL] = useState(
-		(import.meta as ImportMeta & { env: { VITE_API_URL?: string } }).env.VITE_API_URL ?? "",
-	);
+	const [backendURL, setBackendURL] = useState(API_BASE_URL);
 	const [endpoint, setEndpoint] = useState(kubernetesDefaults.endpoint);
 	const [logsEndpoint, setLogsEndpoint] = useState(kubernetesDefaults.logsEndpoint);
 	const [metricsEndpoint, setMetricsEndpoint] = useState(kubernetesDefaults.metricsEndpoint);
@@ -32,8 +37,9 @@ export default function KubernetesSetup({
 	const [pipelineId, setPipelineId] = useState<number>();
 	const [creation, setCreation] = useState<InstallationCreation>();
 	const [busy, setBusy] = useState(false);
-	const [downloadBusy, setDownloadBusy] = useState(false);
-	const [downloaded, setDownloaded] = useState(false);
+	const [manifest, setManifest] = useState<{ yaml: string; backendURL: string; image: string }>();
+	const [manifestSaved, setManifestSaved] = useState(false);
+	const [manifestAttempt, setManifestAttempt] = useState(0);
 	const [error, setError] = useState("");
 	const [downloadError, setDownloadError] = useState("");
 	const status = useKubernetesInstallations({
@@ -41,6 +47,31 @@ export default function KubernetesSetup({
 		enabled: !!creation,
 	});
 	const current = status.installations[0] ?? creation?.installation;
+	const currentManifest =
+		manifest?.backendURL === backendURL && manifest?.image === image ? manifest.yaml : undefined;
+
+	useEffect(() => {
+		if (!creation) return;
+		const controller = new AbortController();
+		setManifest(undefined);
+		setManifestSaved(false);
+		setDownloadError("");
+		const timer = window.setTimeout(() => {
+			void kubernetesService
+				.manifest(creation.installation.id, creation.token, backendURL, image, controller.signal)
+				.then(yaml => {
+					if (!controller.signal.aborted) setManifest({ yaml, backendURL, image });
+				})
+				.catch((error: unknown) => {
+					if (!controller.signal.aborted)
+						setDownloadError(error instanceof Error ? error.message : "Could not generate the manifest.");
+				});
+		}, 300);
+		return () => {
+			window.clearTimeout(timer);
+			controller.abort();
+		};
+	}, [creation, backendURL, image, manifestAttempt]);
 
 	const create = async (event: FormEvent) => {
 		event.preventDefault();
@@ -84,19 +115,12 @@ export default function KubernetesSetup({
 		}
 	};
 
-	const download = async () => {
-		if (!creation) return;
+	const download = () => {
+		if (!creation || !currentManifest) return;
 		setDownloadError("");
-		setDownloadBusy(true);
 		try {
-			const manifest = await kubernetesService.manifest(
-				creation.installation.id,
-				creation.token,
-				backendURL,
-				image,
-			);
 			const commands = installationCommands(creation.installation.id);
-			const url = URL.createObjectURL(new Blob([manifest], { type: "application/yaml" }));
+			const url = URL.createObjectURL(new Blob([currentManifest], { type: "application/yaml" }));
 			const link = document.createElement("a");
 			link.href = url;
 			link.download = commands.filename;
@@ -104,22 +128,29 @@ export default function KubernetesSetup({
 			link.click();
 			link.remove();
 			window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
-			setDownloaded(true);
+			setManifestSaved(true);
 		} catch (error) {
 			setDownloadError(error instanceof Error ? error.message : "Could not download the manifest.");
-		} finally {
-			setDownloadBusy(false);
 		}
 	};
 
 	if (creation && current) {
 		const commands = installationCommands(creation.installation.id);
+		const downloads = currentManifest
+			? manifestDownloadCommands(
+					creation.installation.id,
+					creation.token,
+					backendURL,
+					image,
+					API_BASE_URL,
+				)
+			: undefined;
 		return (
 			<div className="space-y-6">
 				<div>
 					<h2 className="text-2xl font-semibold">Install collectors in {current.cluster_name}</h2>
 					<p className="mt-1 text-sm text-gray-600">
-						The shared pipeline is saved. Download the manifest and apply it to your cluster.
+						The shared pipeline is saved. Copy or download the manifest, then apply it to your cluster.
 					</p>
 				</div>
 				<div className="space-y-4 rounded-lg border p-4">
@@ -139,29 +170,54 @@ export default function KubernetesSetup({
 						</div>
 					</div>
 					<p className="text-sm text-gray-600">
-						The manifest includes the installation Secret. Download it before closing setup; its token is
-						available only during this setup session.
+						The YAML and download commands include the installation token. Keep a private copy before
+						closing setup; the token is available only during this setup session.
 					</p>
-					<Button onClick={() => void download()} disabled={downloadBusy}>
-						{downloadBusy
-							? "Generating manifest..."
-							: downloaded
-								? "Download manifest again"
-								: "Download installation manifest"}
+					<Button
+						className="h-auto max-w-full whitespace-normal"
+						onClick={download}
+						disabled={!currentManifest}
+					>
+						Download installation manifest
 					</Button>
-					{downloadError && (
-						<p role="alert" className="text-sm text-red-700">
-							{downloadError}
+					{!currentManifest && !downloadError && (
+						<p role="status" className="text-sm text-gray-600">
+							Generating manifest...
 						</p>
 					)}
-					{downloaded && (
+					{downloadError && (
+						<div className="space-y-2">
+							<p role="alert" className="text-sm text-red-700">
+								{downloadError}
+							</p>
+							<Button variant="outline" onClick={() => setManifestAttempt(attempt => attempt + 1)}>
+								Retry manifest generation
+							</Button>
+						</div>
+					)}
+					{currentManifest && downloads && (
 						<div className="space-y-3 text-sm">
-							<p>Run these commands from the directory containing the downloaded file.</p>
-							<pre className="overflow-auto rounded bg-slate-900 p-3 text-slate-100">
-								{commands.apply}
-								{"\n"}
-								{commands.rollout}
-							</pre>
+							<ManifestCodeBlock
+								title="Manifest YAML"
+								code={currentManifest}
+								onCopy={() => setManifestSaved(true)}
+							/>
+							<p>Run either download command on the machine you use to control your cluster.</p>
+							<ManifestCodeBlock
+								title="curl"
+								code={downloads.curl}
+								onCopy={() => setManifestSaved(true)}
+							/>
+							<ManifestCodeBlock
+								title="wget"
+								code={downloads.wget}
+								onCopy={() => setManifestSaved(true)}
+							/>
+							<p>Save the YAML as {commands.filename}, or use a download command above. Then run:</p>
+							<ManifestCodeBlock
+								title="Apply and check rollout"
+								code={`${commands.apply}\n${commands.rollout}`}
+							/>
 							<details>
 								<summary className="cursor-pointer text-gray-600">Uninstall this installation</summary>
 								<pre className="mt-2 overflow-auto rounded bg-gray-100 p-3">{commands.uninstall}</pre>
@@ -178,14 +234,16 @@ export default function KubernetesSetup({
 					</p>
 				)}
 				<InstallationStatus installation={current} />
-				<div className="flex items-center justify-between gap-3">
+				<div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
 					<p className="text-xs text-gray-500">
 						Collector status refreshes every 10 seconds.{" "}
-						{!downloaded && "Download the manifest before opening the editor."}
+						{!manifestSaved &&
+							"Copy the YAML or a download command, or download the file, before opening the editor."}
 					</p>
 					<Button
+						className="h-auto max-w-full whitespace-normal"
 						variant="outline"
-						disabled={!downloaded}
+						disabled={!manifestSaved || !currentManifest}
 						onClick={() => onConfigure(String(current.pipeline_id), name)}
 					>
 						View/edit pipeline configuration
@@ -229,7 +287,7 @@ export default function KubernetesSetup({
 					<Input
 						id="k8s-backend"
 						type="url"
-						placeholder="https://control-plane.example.com"
+						placeholder="https://ctrlb.explore.ctrlb.ai/control-plane/api"
 						value={backendURL}
 						onChange={event => setBackendURL(event.target.value)}
 						required

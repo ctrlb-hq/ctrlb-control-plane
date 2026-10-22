@@ -85,37 +85,64 @@ sudo systemctl start control-plane-backend.service
 
 ---
 
-## 🌐 Frontend Deployment
+## Frontend deployment under `/control-plane/`
 
-### 1. Set Up Environment Variables
+The production frontend defaults to `/control-plane/`. It uses the browser's origin to reach `/control-plane/api`, so the same build works at `https://ctrlb.explore.ctrlb.ai/control-plane/` and on a staging hostname.
 
-Create a `.env` file in the `frontend/` directory:
+### Build and proxy
 
-```bash
-cd frontend
-tee .env > /dev/null <<EOF
-VITE_API_URL=http://localhost:8080
-EOF
-```
-
-This sets the backend URL for API requests during local development.
-
-### 2. Build Frontend Assets
+Build the frontend container and expose it to the local reverse proxy:
 
 ```bash
-cd frontend
-npm install
-npm run build
+docker build -t ctrlb-frontend \
+  --build-arg VITE_BASE_PATH=/control-plane/ frontend
+docker run -d --name ctrlb-frontend -p 127.0.0.1:8080:80 ctrlb-frontend
 ```
 
-### 2. Serve with Any Static File Server
+Run the backend on port `8096` with `JWT_SECRET` set and persistent storage for its database. In the HTTPS nginx server for `ctrlb.explore.ctrlb.ai`, add these locations:
 
-```bash
-npm install -g serve
-serve -s dist -l 3000
+```nginx
+location = /control-plane {
+    return 308 /control-plane/;
+}
+
+location ^~ /control-plane/api/ {
+    proxy_pass http://127.0.0.1:8096/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+location /control-plane/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
 ```
 
-Or deploy via Nginx, Netlify, Vercel, etc.
+The API proxy removes `/control-plane` and preserves `/api`. For example, `/control-plane/api/auth/v1/login` reaches the backend as `/api/auth/v1/login`. The frontend proxy preserves the complete path. Its container serves assets and page refreshes beneath `/control-plane/`.
+
+For a static build, run `npm ci --legacy-peer-deps` and `npm run build` in `frontend`. Serve `frontend/dist` at `/control-plane/`, with unknown frontend routes falling back to `/control-plane/index.html`. Keep the API proxy above separate from the frontend fallback.
+
+Frontend configuration is applied at build time:
+
+| Variable | Meaning | Production default |
+| --- | --- | --- |
+| `VITE_BASE_PATH` | Frontend asset and router prefix | `/control-plane/` |
+| `VITE_API_BASE_URL` | Full API root, absolute or relative to the origin | Same-origin `/control-plane/api` |
+| `VITE_API_URL` | Legacy backend root, with `/api` appended | Unset |
+
+Use `VITE_API_BASE_URL=https://ctrlb.explore.ctrlb.ai/control-plane/api` to set the API root explicitly. It takes precedence over `VITE_API_URL`. Docker builds accept the same variables as build arguments. For root hosting, set `VITE_BASE_PATH=/` and proxy `/api/` to the backend. Local Vite development defaults to `http://localhost:8096/api`; existing `VITE_API_URL=http://localhost:18096` demo commands still work.
+
+### Install Kubernetes collectors from a remote machine
+
+After creating a Kubernetes installation, setup displays the manifest YAML with a copy button, plus `curl` and `wget` commands. The existing browser download remains available. Run either command on the VM or host where you use `kubectl`, then run the displayed apply and rollout commands there.
+
+The collector-reachable control-plane URL defaults to the public API root, such as `https://ctrlb.explore.ctrlb.ai/control-plane/api`. Both legacy backend roots and API roots ending in `/api` work for Kubernetes collector check-ins. The cluster nodes must be able to reach this URL and pull the collector image you select.
+
+Terminal downloads authenticate with the installation token in a JSON POST body. They do not need a browser session, and the token is never included in the URL. The server returns the same YAML as the browser preview with `Cache-Control: no-store`. Keep the YAML or a download command before closing setup, because setup only receives the installation token once. Both contain that token.
+
+To verify a deployment, sign in beneath `/control-plane/`, reload `/control-plane/home`, and create an installation. Copy a terminal download command to another machine and check that it returns YAML from `/control-plane/api/agent/v2/installations/<id>/manifest`. Apply it and confirm that node collectors appear in setup.
 
 ---
 
@@ -132,7 +159,7 @@ Each collector:
 
 ## 🔒 Security Notes
 
-- Token-based authentication for collector is under development.
+- Kubernetes collector check-ins and terminal manifest downloads require an installation token.
 - Use HTTPS reverse proxies (e.g., Nginx, Caddy) in production.
 
 ---

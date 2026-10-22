@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { AUTH_API_URL } from "../config";
 import {
 	LoginCredentials,
 	RegisterCredentials,
@@ -7,14 +8,10 @@ import {
 	ApiError,
 } from "../types/auth.types";
 
-const apiUrl = (import.meta as ImportMetaWithEnv).env.VITE_API_URL;
-const API_BASE_URL = `${apiUrl}/api/auth/v1`;
-
-
 const authService = {
 	login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
 		try {
-			const response = await axios.post(`${API_BASE_URL}/login`, credentials);
+			const response = await axios.post(`${AUTH_API_URL}/login`, credentials);
 			const data = response.data;
 			localStorage.clear();
 
@@ -32,7 +29,7 @@ const authService = {
 
 	register: async (userDetails: RegisterCredentials): Promise<AuthResponse> => {
 		try {
-			const response = await axios.post(`${API_BASE_URL}/register`, userDetails);
+			const response = await axios.post(`${AUTH_API_URL}/register`, userDetails);
 			const data = response.data;
 
 			if (data.access_token && data.refresh_token) {
@@ -54,7 +51,7 @@ const authService = {
 				return null;
 			}
 
-			const response = await axios.post(`${API_BASE_URL}/refresh`, { refresh_token: refreshToken });
+			const response = await axios.post(`${AUTH_API_URL}/refresh`, { refresh_token: refreshToken });
 			const data = response.data;
 
 			if (data.access_token) {
@@ -82,11 +79,5 @@ const authService = {
 		}
 	},
 };
-
-interface ImportMetaWithEnv extends ImportMeta {
-	env: {
-		VITE_API_URL: string;
-	};
-}
 
 export default authService;

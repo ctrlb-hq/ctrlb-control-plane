@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import {
 	buildManifestRequest,
 	formatMetric,
 	installationCommands,
+	manifestDownloadCommands,
 	isPreviousConfigurationError,
 	summarizeInstallations,
 } from "./kubernetes.ts";
@@ -173,6 +176,57 @@ test("installation commands target one fleet and preserve the shared namespace",
 	assert.ok(!commands.uninstall.includes("delete -f"));
 	assert.ok(!commands.uninstall.includes("delete namespace"));
 	assert.throws(() => installationCommands("unsafe; command"), /Invalid installation/);
+});
+
+test("terminal downloads preserve hosted API paths and quote credentials as literal shell arguments", async () => {
+	const token = "private'$(printf injected)`printf injected`$HOME";
+	const backend = "https://ctrlb.explore.ctrlb.ai/control-plane/api";
+	const commands = manifestDownloadCommands(
+		id,
+		token,
+		backend,
+		"registry.example.com/agent:v1",
+		backend + "/",
+	);
+	const expectedURL = `${backend}/agent/v2/installations/${id}/manifest`;
+	const body = JSON.stringify({
+		token,
+		backend_url: backend,
+		image: "registry.example.com/agent:v1",
+	});
+	for (const client of ["curl", "wget"] as const) {
+		// Capture the actual arguments a POSIX shell would pass, without making a network request.
+		const result = await promisify(execFile)(
+			"sh",
+			["-c", `${client}() { printf '%s\\0' "$@"; }\n${commands[client]}`],
+			{
+				encoding: "utf8",
+			},
+		);
+		const args = result.stdout.split("\0").filter(Boolean);
+		assert.equal(args.at(-1), expectedURL);
+		assert.ok(!expectedURL.includes(token));
+		if (client === "curl") {
+			assert.equal(args[args.indexOf("--data") + 1], body);
+			assert.equal(args[args.indexOf("--output") + 1], installationCommands(id).filename);
+			assert.ok(args.includes("--fail"));
+		} else {
+			assert.ok(args.includes(`--post-data=${body}`));
+			assert.ok(args.includes(`--output-document=${installationCommands(id).filename}`));
+		}
+	}
+	const local = manifestDownloadCommands(
+		id,
+		"local-token",
+		"http://localhost:8096",
+		"agent:local",
+		"http://localhost:8096/api",
+	);
+	assert.ok(local.curl.includes(`http://localhost:8096/api/agent/v2/installations/${id}/manifest`));
+	assert.throws(
+		() => manifestDownloadCommands(id, token, backend, "agent:v1", "/control-plane/api"),
+		/API URL/,
+	);
 });
 
 test("YAML preview retains valid enabled settings", () => {

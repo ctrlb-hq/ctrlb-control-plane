@@ -201,3 +201,89 @@ func TestManifestRouteRequiresBothTokensWithoutLoggingSecrets(t *testing.T) {
 		require.NotContains(t, string(encoded), access)
 	}
 }
+
+func TestTerminalManifestRouteAuthenticatesInstallationTokenWithoutLoggingSecrets(t *testing.T) {
+	_, service := fixture(t)
+	first, second := installation(t, service), installation(t, service)
+	previousLogger := utils.Logger
+	core, logs := observer.New(zap.DebugLevel)
+	utils.Logger = zap.New(core)
+	t.Cleanup(func() { utils.Logger = previousLogger })
+	router := api.NewRouter(&api.Handler{KubernetesHandler: kubernetes.NewHandler(service)})
+	payload := func(token string) string {
+		data, err := json.Marshal(kubernetes.ManifestRequest{Token: token, BackendURL: "https://ctrlb.explore.ctrlb.ai/control-plane/api"})
+		require.NoError(t, err)
+		return string(data)
+	}
+	for _, test := range []struct {
+		name, id, body string
+		status         int
+	}{
+		{"valid installation token", first.Installation.ID, payload(first.Token), http.StatusOK},
+		{"missing installation token", first.Installation.ID, payload(""), http.StatusUnauthorized},
+		{"invalid installation token", first.Installation.ID, payload("wrong-secret"), http.StatusUnauthorized},
+		{"other installation token", second.Installation.ID, payload(first.Token), http.StatusUnauthorized},
+		{"unknown installation", strings.Repeat("a", 32), payload(first.Token), http.StatusUnauthorized},
+		{"invalid installation ID", "invalid-id", payload(first.Token), http.StatusUnauthorized},
+		{"malformed JSON", first.Installation.ID, `{"token":`, http.StatusBadRequest},
+		{"empty body", first.Installation.ID, "", http.StatusBadRequest},
+		{"multiple JSON values", first.Installation.ID, payload(first.Token) + `{}`, http.StatusBadRequest},
+		{"wrong token type", first.Installation.ID, `{"token":123}`, http.StatusBadRequest},
+		{"missing backend URL", first.Installation.ID, `{"token":"` + first.Token + `"}`, http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/api/agent/v2/installations/"+test.id+"/manifest", strings.NewReader(test.body))
+			req.Header.Set("Content-Type", "application/json")
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, req)
+			require.Equal(t, test.status, response.Code, response.Body.String())
+			require.Equal(t, "no-store", response.Header().Get("Cache-Control"))
+			if test.status == http.StatusOK {
+				require.Equal(t, "application/yaml", response.Header().Get("Content-Type"))
+				require.Equal(t, "nosniff", response.Header().Get("X-Content-Type-Options"))
+				require.Equal(t, `attachment; filename="ctrlb-collector-`+first.Installation.ID[:12]+`.yaml"`, response.Header().Get("Content-Disposition"))
+				documents := manifestDocuments(t, response.Body.Bytes())
+				require.Len(t, documents, 6)
+				require.Equal(t, map[string]any{"token": first.Token}, documents["Secret"]["stringData"])
+			} else {
+				for _, secret := range []string{first.Token, second.Token, "wrong-secret"} {
+					require.NotContains(t, response.Body.String(), secret)
+				}
+			}
+		})
+	}
+	for _, entry := range logs.All() {
+		encoded, err := json.Marshal(entry.ContextMap())
+		require.NoError(t, err)
+		for _, secret := range []string{first.Token, second.Token, "wrong-secret"} {
+			require.NotContains(t, entry.Message, secret)
+			require.NotContains(t, string(encoded), secret)
+		}
+	}
+}
+
+func TestTerminalManifestRoutePreservesHostedAPIURL(t *testing.T) {
+	_, service := fixture(t)
+	i := installation(t, service)
+	router := api.NewRouter(&api.Handler{KubernetesHandler: kubernetes.NewHandler(service)})
+	// The hosting proxy removes the application mount prefix and preserves /api.
+	hosted := http.StripPrefix("/control-plane", router)
+	const backendURL = "https://ctrlb.explore.ctrlb.ai/control-plane/api"
+	payload, err := json.Marshal(kubernetes.ManifestRequest{Token: i.Token, BackendURL: backendURL, Image: "registry.example.com/collector:v1"})
+	require.NoError(t, err)
+	req := httptest.NewRequest(http.MethodPost, backendURL+"/agent/v2/installations/"+i.Installation.ID+"/manifest", bytes.NewReader(payload))
+	response := httptest.NewRecorder()
+	hosted.ServeHTTP(response, req)
+	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
+	documents := manifestDocuments(t, response.Body.Bytes())
+	container := documents["DaemonSet"]["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["containers"].([]any)[0].(map[string]any)
+	require.Equal(t, "registry.example.com/collector:v1", container["image"])
+	for _, item := range container["env"].([]any) {
+		env := item.(map[string]any)
+		if env["name"] == "BACKEND_URL" {
+			require.Equal(t, backendURL, env["value"])
+			return
+		}
+	}
+	t.Fatal("generated manifest has no BACKEND_URL")
+}

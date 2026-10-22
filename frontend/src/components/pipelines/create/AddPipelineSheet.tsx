@@ -140,7 +140,7 @@ const AddPipelineSheet = () => {
 					</DialogTitle>
 					<DialogDescription>
 						{kubernetesCreated
-							? "The installation and saved pipeline remain available. Keep your downloaded manifest; its installation token is available only during this setup session. Unsaved configuration edits will be lost."
+							? "The installation and saved pipeline remain available. Keep a copy of the manifest or a download command; its installation token is available only during this setup session. Unsaved configuration edits will be lost."
 							: "Unsaved form settings and configuration edits will be lost."}
 					</DialogDescription>
 					<DialogFooter>

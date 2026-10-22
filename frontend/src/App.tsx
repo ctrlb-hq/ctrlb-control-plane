@@ -42,7 +42,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
 	return (
-		<Router>
+		<Router basename={import.meta.env.BASE_URL}>
 			<Routes>
 				{/* Public Routes */}
 				<Route

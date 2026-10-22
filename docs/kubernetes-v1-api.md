@@ -70,6 +70,10 @@ Return the installation's resources as `application/yaml`, with `Cache-Control: 
 
 `backend_url` is the collector-reachable management URL, separate from telemetry ingestion. HTTPS is the default; an explicitly supplied HTTP URL enables `ALLOW_INSECURE_HTTP=true` for local demos. `image` identifies the collector built from this implementation; the local demo builds and loads `ctrlb-agent:k8s-v1` rather than assuming an unpublished registry tag exists.
 
+`POST /api/agent/v2/installations/{installation_id}/manifest` accepts the same JSON body for terminal downloads. It authenticates with the installation token in `token` and does not require a user access token. Missing, incorrect, or cross-installation tokens return HTTP 401. The frontend route above continues to require both tokens. Setup displays copyable YAML and authenticated `curl` and `wget` commands alongside the browser download.
+
+For hosted deployments, the public API prefix can be `/control-plane/api`. Set `backend_url` to `https://ctrlb.explore.ctrlb.ai/control-plane/api`; collector check-ins preserve this prefix without adding a second `/api`. Existing control-plane roots such as `https://control-plane.example.com` continue to work. See the [deployment guide](deployment.md) for reverse proxy configuration.
+
 The manifest can create the shared namespace during installation. Uninstall commands remove only the named DaemonSet, Secret, ServiceAccount, ClusterRole, and ClusterRoleBinding. They preserve the namespace and other installations.
 
 ## Collector check-in
